@@ -411,5 +411,3 @@ class WebtoonFolderManagement:
         if does_thumbnail_exist:
             shutil.move(alt_thumbnail_dir, realt_thumbnail_dir)
             os.removedirs(self.TEMP_DIR)
-
-WebtoonFolderManagement().divide_all_webtoons(5)
