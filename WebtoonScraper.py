@@ -2,14 +2,13 @@ import requests
 from bs4 import BeautifulSoup as bs
 import re
 import os
-import pickle
 import re
 import asyncio
 import functools
 import getsoup
 from tqdm import tqdm
 import shutil
- 
+from collections import defaultdict
 class NaverWebtoonScraper:
     def __init__(self):
         # for aviod 403 error / user agent or Chrome
@@ -218,11 +217,6 @@ class NaverWebtoonScraper:
             image.write(image_raw)
 
 # 폴더 다시 묶기
-import os
-import shutil
-import re
-from collections import defaultdict
-
 class WebtoonFolderManagement:
     def __init__(self, alt_dir):
         self.BASE_DIR = r'webtoon'
