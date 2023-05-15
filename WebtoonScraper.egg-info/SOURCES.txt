@@ -1,0 +1,9 @@
+LICENSE
+README.md
+setup.py
+WebtoonScraper.egg-info/PKG-INFO
+WebtoonScraper.egg-info/SOURCES.txt
+WebtoonScraper.egg-info/dependency_links.txt
+WebtoonScraper.egg-info/not-zip-safe
+WebtoonScraper.egg-info/requires.txt
+WebtoonScraper.egg-info/top_level.txt

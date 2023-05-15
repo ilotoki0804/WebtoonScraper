@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: WebtoonScraper
+Version: 0.0.1
+Summary: Scraping webtoons and some utils
+Home-page: https://github.com/ilotoki0804/WebtoonScraper
+Author: ilotoki0804
+Author-email: ilotoki0804@gmail.com
+Keywords: webtoon,webtoon scraper,python datasets,python tutorial,pypi
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Requires-Python: >=3.6
+License-File: LICENSE
