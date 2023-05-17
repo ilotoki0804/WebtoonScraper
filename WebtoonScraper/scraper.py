@@ -3,11 +3,10 @@ import requests
 from bs4 import BeautifulSoup as bs
 import re
 import os
-import pickle
 import re
 import asyncio
 import functools
-import getsoup
+import WebtoonScraper.getsoup as getsoup
 from tqdm import tqdm
 import shutil
 
@@ -21,7 +20,7 @@ class NaverWebtoonScraper:
 
     def get_webtoons(self, *webtoons):
         '''Run crawler in sync function'''
-        asyncio.run(self.get_webtoons_async(*webtoons))
+        self.loop.run_until_complete(self.get_webtoons_async(*webtoons))
 
     async def get_webtoons_async(self, *webtoons):
         '''Get webtoons automatically.\n

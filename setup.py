@@ -9,7 +9,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='WebtoonScraper',
-    version='0.0.6',
+    version='0.0.10',
     description='Scraping webtoons and some utils for it',
     author='ilotoki0804',
     author_email='ilotoki0804@gmail.com',
@@ -24,13 +24,13 @@ setup(
     package_data={},
     zip_safe=False,
     classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
     ],
 )
