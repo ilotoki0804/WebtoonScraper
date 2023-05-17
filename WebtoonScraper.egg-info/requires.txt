@@ -1,3 +1,0 @@
-tqdm
-bs4
-requests

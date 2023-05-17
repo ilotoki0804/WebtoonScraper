@@ -7,7 +7,7 @@ import pickle
 import re
 import asyncio
 import functools
-import getsoup as getsoup
+import getsoup
 from tqdm import tqdm
 import shutil
 
