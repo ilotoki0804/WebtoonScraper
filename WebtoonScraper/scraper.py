@@ -36,11 +36,11 @@ class NaverWebtoonScraper:
         for webtoon in webtoons:
             if type(webtoon) == int or type(webtoon) == str:
                 titleid = int(webtoon)
-                await self.download_one_webtoon(None, titleid=titleid, best_challenge=self.determine_best_challenge(titleid))
+                await self.download_one_webtoon_async(None, titleid=titleid, best_challenge=None)
             elif type(webtoon) == dict:
-                # dict를 받으면 kwargs로 변환해서 download_one_webtoon으로 변환
-                async def default_for_kwargs(value_range=None, titleid=0, best_challenge=self.determine_best_challenge(webtoon['titleid']), attempt=10):
-                    await self.download_one_webtoon(value_range=value_range, titleid=titleid, best_challenge=best_challenge, attempt=attempt)
+                # dict를 받으면 kwargs로 변환해서 download_one_webtoon_async으로 변환
+                async def default_for_kwargs(value_range=None, titleid=0, best_challenge=None, attempt=50):
+                    await self.download_one_webtoon_async(value_range=value_range, titleid=titleid, best_challenge=best_challenge, attempt=attempt)
                 await default_for_kwargs(**webtoon)
             else:
                 raise TypeError
@@ -54,12 +54,15 @@ class NaverWebtoonScraper:
         else:
             return True
         
-    async def download_one_webtoon(self, value_range=None, titleid=766648, best_challenge=False, attempt=10):
+    async def download_one_webtoon_async(self, value_range=None, titleid=766648, best_challenge=None, attempt=50):
         '''Check out doc of get_webtoons_async.'''
         if value_range:
             start, end = value_range
             if end == None:
                 end = start
+        
+        if best_challenge == None:
+            best_challenge = self.determine_best_challenge(titleid)
             
         # 제목 추출
         if best_challenge:
