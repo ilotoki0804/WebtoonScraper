@@ -1,3 +1,3 @@
-from scraper import NaverWebtoonScraper
-from foldermanagement import WebtoonFolderManagement
+from WebtoonScraper.scraper import NaverWebtoonScraper
+from WebtoonScraper.foldermanagement import WebtoonFolderManagement
 import getsoup
