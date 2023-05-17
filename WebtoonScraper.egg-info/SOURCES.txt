@@ -1,9 +1,16 @@
 LICENSE
+MANIFEST.in
 README.md
 setup.py
+WebtoonScraper/__init__.py
+WebtoonScraper/foldermanagement.py
+WebtoonScraper/getsoup.py
+WebtoonScraper/scraper.py
 WebtoonScraper.egg-info/PKG-INFO
 WebtoonScraper.egg-info/SOURCES.txt
 WebtoonScraper.egg-info/dependency_links.txt
 WebtoonScraper.egg-info/not-zip-safe
 WebtoonScraper.egg-info/requires.txt
 WebtoonScraper.egg-info/top_level.txt
+tests/__init__.py
+tests/tests.py

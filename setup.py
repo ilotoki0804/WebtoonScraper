@@ -1,8 +1,11 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
+# this_directory = Path(__file__).parent
+# long_description = (this_directory / "README.md").read_text()
+
+with open('README.md', 'r', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='WebtoonScraper',
@@ -12,9 +15,9 @@ setup(
     author_email='ilotoki0804@gmail.com',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    license='MIT'
+    license='MIT',
     url='https://github.com/ilotoki0804/WebtoonScraper',
-    install_requires=['tqdm', 'bs4', 'requests', 'selenium'],
+    install_requires=['tqdm', 'bs4', 'requests'],
     packages=find_packages(exclude=[]),
     keywords=['Webtoon', 'Webtoon Scraper', 'Never Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
     python_requires='>=3.6',

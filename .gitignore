@@ -1,1 +1,11 @@
 /.vscode
+*~
+.#*
+\#*
+.tox
+dist/
+.eggs/
+*.pyc
+*.pyo
+*.egg
+*.egg-info
