@@ -1,0 +1,2 @@
+from scraper import NaverWebtoonScraper
+import getsoup
