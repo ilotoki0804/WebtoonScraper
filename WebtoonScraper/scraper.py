@@ -31,7 +31,7 @@ class NaverWebtoonScraper:
             value_range(Optional) : range of episode you want to download. Kepp in mind this means 'id' of that, webtoon, not what author determines.\n
                                     Form of value range: (start, stop) or None
                                         주의: start와 stop에서 stop은 해당 stop에 해당하는 id도 포함됩니다. range함수와는 다릅니다.
-                                        None일 경우 자동으로 값이 잡힙니다. 하지만 굳이 작성할 필요는 없습니다.
+                                        None일 경우 자동으로 값이 잡힙니다. 하지만 굳이 명시적으로 None 작성할 필요는 없습니다.
             best_challenge(Optional) : if webtoon is best chellenge, make it True. Otherwise, False.'''
         for webtoon in webtoons:
             if type(webtoon) == int or type(webtoon) == str:
