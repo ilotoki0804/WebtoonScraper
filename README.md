@@ -56,7 +56,7 @@
    folder = WebtoonFolderManagement('webtoon_merge')
    folder.divide_all_webtoons(5)
    ```
-3. webtoons 폴더에 있는 **모든** 웹툰이 'webtoons_merge' 폴더에 5화씩 묶여져 다운로드됩니다.
+3. webtoons 폴더에 있는 **모든** 웹툰이 'webtoon_merge' 폴더에 5화씩 묶여져 다운로드됩니다.
 
 ## 주의사항
 
