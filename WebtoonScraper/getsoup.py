@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup as bs
 
 USER_AGENT = {'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.68'}
 
-def get_soup_from_requests(url, select: str|None=None, user_agent: dict|bool=True) -> bs|list:
+def get_soup_from_requests(url, select: str|None=None, select_one: str|None=None, user_agent: dict|bool=True) -> bs|list|str|None:
     if user_agent:
         if user_agent == True:
             request = requests.get(url, headers=USER_AGENT)
@@ -13,7 +13,8 @@ def get_soup_from_requests(url, select: str|None=None, user_agent: dict|bool=Tru
         request = requests.get(url)
 
     soup = bs(request.text, "html.parser")
-    if select:
+    if select != None:
         return soup.select(select)
-    else:
-        return soup
+    if select_one != None:
+        return soup.select_one(select)
+    return soup
