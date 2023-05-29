@@ -67,13 +67,14 @@
    ```python
    from WebtoonScraper import *
 
-   webtoon = WebtoonsScraper()
-   webtoon.get_webtoons(5291, 1435) # titleid를 여기에다 붙여넣으세요. 길이에 제한은 없습니다.
+   webtoons = WebtoonsScraper()
+   webtoons.get_webtoons(5291, 1435) # titleid를 여기에다 붙여넣으세요. 길이에 제한은 없습니다.
    ```
 3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
 
 ## 주의사항
 
+* 클래스의 이름이 Webtoon**s**Scraper임에 주의하세요. 마찬가지로, 예시 인스턴스의 이름이 webtoon**s**인 것에도 주의하세요.
 * 중간에 웹툰 다운로드가 멈춘 듯이 보여도 정상입니다. 그대로 가만히 있으면 다운로드가 다시 진행됩니다.
 * CANVAS는 아직 지원하지 않습니다.
 
