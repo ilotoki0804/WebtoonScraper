@@ -20,7 +20,7 @@
 # 네이버 웹툰(국내) 다운로드하기
 
 1. 원하는 웹툰으로 가서 titleid를 복사하세요.
-   ![img](example1.png)
+   ![img](titleid_from_nw.png)
 2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
 
    ```python
