@@ -4,7 +4,7 @@
 
 # 시작하기
 
-1. 파이썬을 PATH를 추가한 뒤 설치합니다.
+1. 파이썬을 설치합니다.
 2. cmd 창을 열어 다음과 같은 명령어를 칩니다.
 
    ```
@@ -17,66 +17,28 @@
    pip3 install WebtoonScraper
    ```
 
-# 네이버 웹툰(국내) 다운로드하기
+# 웹툰 다운로드하기
 
-1. 원하는 웹툰으로 가서 titleid를 복사하세요.
+1. 원하는 웹툰으로 가서 titleid 또는 title_no를 복사하세요.
    ![img](titleid_from_nw.png)
-2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
+   국내의 경우 여기에서,
+   ![img](title_no_from_webtoons.com.png)
+   북미판의 경우는 여기에서 확인할 수 있습니다.
+2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요. 웹툰은 정식 연재와 베스트 도전, Webtoons 오리지널과 캔버스 모두 가능합니다.
 
    ```python
-   from WebtoonScraper import *
+   from WebtoonScraper import Webtoon
 
-   webtoon = NaverWebtoonScraper()
-   webtoon.get_webtoons(76648) # titleid를 여기에다 붙여넣으세요
+   webtoon = Webtoon()
+   webtoon.get_webtoon(76648, webtoon.NAVER) # titleid를 여기에다 붙여넣으세요. 뒤 인자인 webtoon.NAVER는 생략할 수 있습니다. 예) webtoon.get_webtoon(76648)
    ```
-
    이제 웹툰이 webtoons 폴더에 다운로드됩니다.
-
-   만약 여러 웹툰을 한 번에 다운로드 받고 싶다면 다음과 같이 코드를 짤 수 있습니다.
-
-   ```python
-   from WebtoonScraper import *
-
-   webtoon = NaverWebtoonScraper()
-   webtoon.get_webtoons(748105, 81482, 728128) # titleid를 여기에다 붙여넣으세요. 길이에 제한은 없습니다.
-   ```
 3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
 
 ## 주의사항
 
 * 중간에 웹툰 다운로드가 멈춘 듯이 보여도 정상입니다. 그대로 가만히 있으면 다운로드가 다시 진행됩니다.
 * 만약 작동하지 않는다면 윈도우에서 Python 3.11.3을 설치하고 앞의 과정을 반복해 보세요.
-
-# webtoons.com(해외/북미) 다운로드하기
-
-1. 원하는 웹툰으로 가서 titleid를 복사하세요.
-   ![img](title_no_from_webtoons.com.png)
-2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
-
-   ```python
-   from WebtoonScraper import *
-
-   webtoons = WebtoonsScraper()
-   webtoons.get_webtoons(1435) # titleid를 여기에다 붙여넣으세요
-   ```
-
-   이제 웹툰이 webtoons 폴더에 다운로드됩니다.
-
-   만약 여러 웹툰을 한 번에 다운로드 받고 싶다면 다음과 같이 코드를 짤 수 있습니다.
-
-   ```python
-   from WebtoonScraper import *
-
-   webtoons = WebtoonsScraper()
-   webtoons.get_webtoons(5291, 1435) # titleid를 여기에다 붙여넣으세요. 길이에 제한은 없습니다.
-   ```
-3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
-
-## 주의사항
-
-* 클래스의 이름이 Webtoon**s**Scraper임에 주의하세요. 마찬가지로, 예시 인스턴스의 이름이 webtoon**s**인 것에도 주의하세요.
-* 중간에 웹툰 다운로드가 멈춘 듯이 보여도 정상입니다. 그대로 가만히 있으면 다운로드가 다시 진행됩니다.
-* CANVAS는 아직 지원하지 않습니다.
 
 # 여러 회차 하나로 묶기
 
@@ -110,7 +72,7 @@
 
 # QNA
 
-## 회차가 띄엄띄엄 있거나 설정된 회차 번호가 작가가 설정한 회차 번호와 다릅니다/회차 묶기를 사용했는데 묶인 회차 수가 설정한 수보다 더 적습니다.
+## 회차가 띄엄띄엄 있거나 설정된 회차 번호가 작가가 설정한 회차 번호와 다릅니다./회차 묶기를 사용했는데 묶인 회차 수가 설정한 수보다 더 적습니다.
 
 ### 생기는 이유
 
