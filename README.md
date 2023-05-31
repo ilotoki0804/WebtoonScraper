@@ -30,7 +30,7 @@
    from WebtoonScraper import Webtoon
 
    webtoon = Webtoon()
-   webtoon.get_webtoon(76648, webtoon.NAVER) # titleid를 여기에다 붙여넣으세요. 뒤 인자인 webtoon.NAVER는 생략할 수 있습니다. 예) webtoon.get_webtoon(76648)
+   webtoon.get_webtoon(76648) # titleid를 여기에다 붙여넣으세요.
    ```
    이제 웹툰이 webtoons 폴더에 다운로드됩니다.
 3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
