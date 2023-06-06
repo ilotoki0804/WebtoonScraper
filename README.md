@@ -2,7 +2,7 @@
 
 웹툰을 다운로드하는 프로젝트입니다. 그 외에도 웹툰 모아서 보기 등 몇 가지 편의 기능을 지원합니다.
 
-안정화 버전: 0.0.12(네이버 웹툰, 베스트 도전 지원), 0.0.17(네이버 웹툰, 베스트 도전, 웹툰즈 오리지널, 캔버스 지원)
+안정화 버전: 0.0.12(네이버 웹툰, 베스트 도전 지원), 0.0.17(네이버 웹툰, 베스트 도전, 웹툰즈 오리지널, 캔버스 지원), 0.0.18(만화경 지원, 리팩토링됨(Scraper Abstract Base Class 추가), 느려짐))
 
 # 시작하기
 
@@ -10,13 +10,13 @@
 2. cmd 창을 열어 다음과 같은 명령어를 칩니다.
 
    ```
-   pip install WebtoonScraper
+   pip install -U WebtoonScraper
    ```
 
    또는
 
    ```
-   pip3 install WebtoonScraper
+   pip3 install -U WebtoonScraper
    ```
 
 # 웹툰 다운로드하기
@@ -25,15 +25,28 @@
    ![img](titleid_from_nw.png)
    국내의 경우 여기에서,
    ![img](title_no_from_webtoons.com.png)
-   북미판의 경우는 여기에서 확인할 수 있습니다.
+   해외의 경우는 여기에서,
+   ![img](number_from_manhwakyung.png)
+   만화경의 경우는 여기에서 확인할 수 있습니다.
 2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요. 웹툰은 정식 연재와 베스트 도전, Webtoons 오리지널과 캔버스 모두 가능합니다.
 
    ```python
    from WebtoonScraper import Webtoon
 
    webtoon = Webtoon()
-   webtoon.get_webtoon(76648) # titleid를 여기에다 붙여넣으세요.
+
+   # 네이버 웹툰
+   webtoon.get_webtoon(76648, Webtoon.N) # titleid를 여기에다 붙여넣으세요.
+   # 베스트 도전만화
+   webtoon.get_webtoon(763952, Webtoon.B) # titleid를 여기에다 붙여넣으세요.
+   # 해외 웹툰 오리지널
+   webtoon.get_webtoon(1435, Webtoon.O) # titleid를 여기에다 붙여넣으세요.
+   # 해외 웹툰 캔버스
+   webtoon.get_webtoon(304446, Webtoon.C) # titleid를 여기에다 붙여넣으세요.
+   # 만화경
+   webtoon.get_webtoon(146, Webtoon.M) # titleid를 여기에다 붙여넣으세요.
    ```
+
    이제 웹툰이 webtoons 폴더에 다운로드됩니다.
 3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
 
