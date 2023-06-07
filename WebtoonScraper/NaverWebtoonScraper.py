@@ -64,3 +64,4 @@ class NaverWebtoonScraper(Scraper):
     
 if __name__ == '__main__':
     wt = NaverWebtoonScraper()
+    wt.download_one_webtoon(809590)

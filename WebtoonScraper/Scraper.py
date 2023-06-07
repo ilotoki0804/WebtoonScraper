@@ -44,7 +44,8 @@ class Scraper(metaclass=ABCMeta):
     @abstract_attribute
     def IS_STABLE_CONNECTION(self):
         pass
-
+    
+    # @profile
     async def get_internet(
             self, get_type: str, 
             url: str, selector=None, 
@@ -72,6 +73,7 @@ class Scraper(metaclass=ABCMeta):
             for _ in range(attempt):
                 try:
                     response = await send_get_request()
+                    break
                 except Exception as e:
                     print('An error occured. Retrying...')
                     print(f'Error detail: {e}')
@@ -136,10 +138,11 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, value_range: tuple|int|None, titleid: int, attempt: int) -> None:
+    def download_one_webtoon(self, titleid: int, value_range: tuple|int|None=None) -> None:
         '''async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다.'''
-        self.loop.run_until_complete(self.download_one_webtoon_async(value_range, titleid, attempt))
+        self.loop.run_until_complete(self.download_one_webtoon_async(titleid, value_range))
 
+    # @profile
     async def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None) -> None:
         '''웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -187,6 +190,7 @@ class Scraper(metaclass=ABCMeta):
         '''웹툰에서 전체 에피소드를 가져온다.'''
         pass
 
+    # @profile
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list) -> None|bool:
         '''episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
         None를 return한다면 회차를 다운로드해야 한다는 의미이다.
@@ -205,6 +209,7 @@ class Scraper(metaclass=ABCMeta):
                 self._set_pbar(f'skipping {episode_no=}')
                 return True
 
+    # @profile
     async def download_one_episode(self, episode_no: int, titleid: int, webtoon_dir: Path) -> None:
         '''한 회차를 다운로드받는다.'''
         subtitle = await self.get_subtitle(titleid, episode_no, file_acceptable=True)
@@ -234,6 +239,7 @@ class Scraper(metaclass=ABCMeta):
         '''해당 회차를 구성하는 이미지들을 불러온다.'''
         pass
 
+    # @profile
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
         '''download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}'''
         image_extension = self.get_file_extension(url)
