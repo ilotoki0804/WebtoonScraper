@@ -10,3 +10,4 @@ build/
 *.pyo
 *.egg
 *.egg-info
+/.scraper-beta
