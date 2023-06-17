@@ -40,7 +40,7 @@ class TelescopeScraper(Scraper):
             "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57',
             "version": '3'
         }
-        seasons = requests.get(f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADER).json() # get_internet으로(필요는 없어도)
+        seasons = self.get_internet('requests', f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADER).json()
         episodes = []
         for season in seasons['seasons']:
             episodes += season['episodes']
@@ -91,4 +91,7 @@ class TelescopeScraper(Scraper):
         return [element.get('data-src') for element in elemetents]
 
 if __name__ == '__main__':
-    wt = TelescopeScraper()
+    # from WebtoonScraper import Webtoon
+    import Webtoon
+    Webtoon.get_webtoon(146, Webtoon.M)
+    
