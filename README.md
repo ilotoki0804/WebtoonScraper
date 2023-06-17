@@ -31,23 +31,23 @@
    ```python
    from WebtoonScraper import Webtoon
 
-   webtoon = Webtoon()
-
    # 네이버 웹툰
-   webtoon.get_webtoon(76648, Webtoon.N) # titleid를 여기에다 붙여넣으세요.
+   Webtoon.get_webtoon(76648, Webtoon.N) # titleid를 여기에다 붙여넣으세요.
    # 베스트 도전만화
-   webtoon.get_webtoon(763952, Webtoon.B) # titleid를 여기에다 붙여넣으세요.
+   Webtoon.get_webtoon(763952, Webtoon.B) # titleid를 여기에다 붙여넣으세요.
    # 해외 웹툰 오리지널
-   webtoon.get_webtoon(1435, Webtoon.O) # titleid를 여기에다 붙여넣으세요.
+   Webtoon.get_webtoon(1435, Webtoon.O) # titleid를 여기에다 붙여넣으세요.
    # 해외 웹툰 캔버스
-   webtoon.get_webtoon(304446, Webtoon.C) # titleid를 여기에다 붙여넣으세요.
+   Webtoon.get_webtoon(304446, Webtoon.C) # titleid를 여기에다 붙여넣으세요.
    # 만화경
-   webtoon.get_webtoon(146, Webtoon.M) # titleid를 여기에다 붙여넣으세요. Webtoon.T 태그도 사용 가능합니다.
+   Webtoon.get_webtoon(146, Webtoon.M) # titleid를 여기에다 붙여넣으세요. Webtoon.T 태그도 사용 가능합니다.
    ```
 
    이제 웹툰이 webtoons 폴더에 다운로드됩니다.
 
    cf. 웹툰 태그를 생략하면 해당 웹툰이 어떤 사이트의 웹툰 id인지 자동으로 알아냅니다. 하지만 이 방식은 서로 다른 사이트에서 id가 겹치는 웹툰이 존재하면 오작동할 수 있으니 꼭 태그를 붙이는 것을 추천합니다.
+
+   또 merge 태그를 이용하면 
 3. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
 
 ## 주의사항
@@ -100,6 +100,7 @@
 따라서 작가가 설정한 회차를 그대로 사용하는 것도 어렵고, 만약 가능하다 할 지라도 무결성 체크를 포기하기 어렵기 때문에 현재는 ID를 회차 번호로 사용하고 있습니다.
 
 ## 전 버전과의 차이
+0.0.19.2: merge 속성 추가, get_webtoon 함수로 변경
 0.0.19.1: pbar에 표시되는 내용 변경, 내부적 개선
 0.0.18: 만화경 지원, 리팩토링됨(Scraper Abstract Base Class 추가)
 0.0.17: 웹툰즈 오리지널, 캔버스 지원
