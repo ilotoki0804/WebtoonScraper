@@ -1,4 +1,3 @@
-import WebtoonScraper.getsoup as getsoup
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
 from WebtoonScraper.foldermanagement import WebtoonFolderManagement
 from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper

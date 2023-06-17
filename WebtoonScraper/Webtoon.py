@@ -1,9 +1,11 @@
 '''Download webtoons automatiallly or easily'''
-from WebtoonScraper import NaverWebtoonScraper
-from WebtoonScraper import WebtoonOriginalsScraper
-from WebtoonScraper import BestChallengeScraper
-from WebtoonScraper import WebtoonCanvasScraper
-from WebtoonScraper import TelescopeScraper
+from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
+from WebtoonScraper.foldermanagement import WebtoonFolderManagement
+from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
+from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
+from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
+from WebtoonScraper.Webtoon import Webtoon
+from WebtoonScraper.TelescopeScraper import TelescopeScraper
 
 import asyncio
 from WebtoonScraper.getsoup import *
@@ -26,31 +28,30 @@ class Webtoon:
 
     async def auto_webtoon_type(self, webtoon_id):
         '''If webtoon is best challenge, this returns True. Otherwise, False.'''
-        title = get_soup_from_requests(f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
-        title = title[0].get('content')
-    
+        webtoonscraper = NaverWebtoonScraper()
+        title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
+        title = title.get('content')
+        print(title)
         if title:
             return self.NAVER_WEBTOON
         
-        title = get_soup_from_requests(f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
-        title = title[0].get('content')
-    
+        title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
+        title = title.get('content')
         if title:
             return self.BEST_CHALLENGE
         
-        webtoonscraper = WebtoonOriginalsScraper()
-        title = webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
+        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
         if title is not None:
+            print(title)
             return self.ORIGINALS
 
-
-        title = webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
+        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
         if title is not None:
             return self.CANVAS
         
         return self.TELESCOPE
     
-    def get_webtoon_type(self, webtoon_type):
+    async def get_webtoon_type(self, webtoon_type):
         if webtoon_type.lower() == self.NAVER_WEBTOON:
             webtoonscraper = NaverWebtoonScraper()
         elif webtoon_type.lower() == self.BEST_CHALLENGE:
@@ -65,21 +66,16 @@ class Webtoon:
             raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
         return webtoonscraper
     
-    def get_webtoon(self, webtoon_id:int, webtoon_type:str=None):
-        loop = asyncio.get_event_loop()
-        if webtoon_type is None:
-            webtoon_type = loop.run_until_complete(self.auto_webtoon_type(webtoon_id))
-            # loop.stop()
-        webtoonscraper = self.get_webtoon_type(webtoon_type)
-        # webtoonscraper.download_one_webtoon(None, webtoon_id, 50)
-        loop.run_until_complete(webtoonscraper.download_one_webtoon_async(titleid=webtoon_id))
-
     async def get_webtoon_async(self, webtoon_id:int, webtoon_type:str=None):
         if webtoon_type is None:
             webtoon_type = await self.auto_webtoon_type(webtoon_id)
-        webtoonscraper = self.get_webtoon_type(webtoon_type)
+        webtoonscraper = await self.get_webtoon_type(webtoon_type)
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
+
+    def get_webtoon(self, webtoon_id:int, webtoon_type:str=None):
+        wt = Webtoon()
+        asyncio.run(wt.get_webtoon_async(webtoon_id, webtoon_type))
 
 if __name__ == '__main__':
     wt = Webtoon()
-    # wt.get_webtoon(263735)
+    wt.get_webtoon(263735)
