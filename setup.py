@@ -4,7 +4,8 @@ from setuptools import setup, find_packages
 # long_description = (this_directory / "README.md").read_text()
 
 with open('README.md', 'r', encoding='utf-8') as f:
-    long_description = f.read()
+    long_description = '이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [여기](https://github.com/ilotoki0804/WebtoonScraper)를 참고하세요.\n'
+    long_description += f.read()
     long_description = long_description.replace('titleid_from_nw.png', 'https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/titleid_from_nw.png')
     long_description = long_description.replace('title_no_from_webtoons.com.png', 'https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/title_no_from_webtoons.com.png')
     long_description = long_description.replace('number_from_manhwakyung.png', 'https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/number_from_manhwakyung.png')
