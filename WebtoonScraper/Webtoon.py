@@ -20,7 +20,7 @@ T = 'telescope'
 M = 'telescope'
 TELESCOPE = 'telescope'
 
-async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:bool=False) -> None:
+async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|int=None) -> None:
     async def auto_webtoon_type(webtoon_id: int) -> str:
         """If webtoon is best challenge, this returns True. Otherwise, False."""
         webtoonscraper = NaverWebtoonScraper()
@@ -72,9 +72,9 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:bool=Fa
     await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
         fd = WebtoonFolderManagement('webtoon_merge')
-        fd.divide_all_webtoons(5)
+        fd.divide_all_webtoons(merge)
 
-def get_webtoon(webtoon_id:int, webtoon_type:str=None, merge:bool=False) -> None:
+def get_webtoon(webtoon_id:int, webtoon_type:str=None, merge:None|int=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge))
 
 if __name__ == '__main__':
