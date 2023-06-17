@@ -80,3 +80,4 @@ class WebtoonOriginalsScraper(Scraper):
 
 if __name__ == '__main__':
     wt = WebtoonOriginalsScraper()
+    wt.download_one_webtoon(5384)
