@@ -225,7 +225,7 @@ class Scraper(metaclass=ABCMeta):
         if self._check_validate_of_files(episode_dir, episode_no, episode_images_url):
             return
 
-        self._set_pbar('downloading')
+        self._set_pbar(f'{episode_no:04d}. {subtitle}')
         get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
         await asyncio.gather(*get_image_coroutines)
 
@@ -245,7 +245,7 @@ class Scraper(metaclass=ABCMeta):
         image_extension = self.get_file_extension(url)
         file_name = f'{image_no:03d}.{image_extension}'
 
-        self._set_pbar(f'{episode_dir}|{file_name}')
+        # self._set_pbar(f'{episode_dir}|{file_name}')
         image_raw = await self.get_internet(get_type='requests', url=url, is_run_in_executor=True)
         image_raw = image_raw.content
 
