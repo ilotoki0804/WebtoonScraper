@@ -7,7 +7,6 @@ from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
 from WebtoonScraper.TelescopeScraper import TelescopeScraper
 
 import asyncio
-from WebtoonScraper.getsoup import *
 
 class Webtoon:
     N = 'naver_webtoon'
@@ -22,10 +21,7 @@ class Webtoon:
     M = 'telescope'
     TELESCOPE = 'telescope'
 
-    def __init__(self):
-        pass
-
-    async def auto_webtoon_type(self, webtoon_id):
+    async def auto_webtoon_type(self, webtoon_id: int) -> str:
         '''If webtoon is best challenge, this returns True. Otherwise, False.'''
         webtoonscraper = NaverWebtoonScraper()
         title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
@@ -50,7 +46,7 @@ class Webtoon:
         
         return self.TELESCOPE
     
-    async def get_webtoon_type(self, webtoon_type):
+    async def get_webtoon_type(self, webtoon_type: int):
         if webtoon_type.lower() == self.NAVER_WEBTOON:
             webtoonscraper = NaverWebtoonScraper()
         elif webtoon_type.lower() == self.BEST_CHALLENGE:
@@ -65,15 +61,18 @@ class Webtoon:
             raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
         return webtoonscraper
     
-    async def get_webtoon_async(self, webtoon_id:int, webtoon_type:str=None):
+    async def get_webtoon_async(self, webtoon_id:int, webtoon_type:str=None) -> None:
         if webtoon_type is None:
             webtoon_type = await self.auto_webtoon_type(webtoon_id)
         webtoonscraper = await self.get_webtoon_type(webtoon_type)
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
 
-    def get_webtoon(self, webtoon_id:int, webtoon_type:str=None):
+    def get_webtoon(self, webtoon_id:int, webtoon_type:str=None, merge:bool=False) -> None:
         wt = Webtoon()
         asyncio.run(wt.get_webtoon_async(webtoon_id, webtoon_type))
+        if merge:
+            fd = WebtoonFolderManagement('webtoon_merge')
+            fd.divide_all_webtoons(5)
 
 if __name__ == '__main__':
     wt = Webtoon()
