@@ -12,7 +12,7 @@ import asyncio
 import shutil
 import html
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Literal
 # from abc import ABCMeta
 from abc import abstractmethod
 
@@ -47,7 +47,7 @@ class Scraper(metaclass=ABCMeta):
     
     # @profile
     async def get_internet(
-            self, get_type: str, 
+            self, get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'], 
             url: str, selector=None, 
             is_run_in_executor=False, 
             attempt: int=10, 
@@ -55,7 +55,7 @@ class Scraper(metaclass=ABCMeta):
             ) -> requests.Response|bs|list|bsTag|None:
         '''get anything from internet
         NOT FULLY DOCUMENTED!
-        TODO: timeout
+        resolved: timeout
         '''
         async def send_get_request():
             if is_run_in_executor:
