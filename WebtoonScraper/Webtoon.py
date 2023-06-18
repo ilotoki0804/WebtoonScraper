@@ -14,56 +14,54 @@ B = BEST_CHALLENGE = 'best_challenge'
 O = ORIGINALS = 'originals'
 C = CANVAS = 'canvas'
 T = M = TELESCOPE = 'telescope'
-BU = BUFFTOON = 'bufftoon'
+BU = BT = BUFFTOON = 'bufftoon'
+
+async def auto_webtoon_type(webtoon_id: int) -> str:
+    """If webtoon is best challenge, this returns True. Otherwise, False."""
+    webtoonscraper = NaverWebtoonScraper()
+
+    title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
+    title = title.get('content')
+    print(title)
+    if title:
+        return NAVER_WEBTOON
+    
+    title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
+    title = title.get('content')
+    if title:
+        return BEST_CHALLENGE
+    
+    webtoonscraper.IS_STABLE_CONNECTION = False
+    
+    title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
+    if title is not None:
+        print(title)
+        return ORIGINALS
+
+    title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
+    if title is not None:
+        return CANVAS
+    
+    return TELESCOPE
+
+async def get_webtoon_type(webtoon_type: int):
+    if webtoon_type.lower() == NAVER_WEBTOON:
+        webtoonscraper = NaverWebtoonScraper()
+    elif webtoon_type.lower() == BEST_CHALLENGE:
+        webtoonscraper = BestChallengeScraper()
+    elif webtoon_type.lower() == ORIGINALS:
+        webtoonscraper = WebtoonOriginalsScraper()
+    elif webtoon_type.lower() == CANVAS:
+        webtoonscraper = WebtoonCanvasScraper()
+    elif webtoon_type.lower() == TELESCOPE:
+        webtoonscraper = TelescopeScraper()
+    elif webtoon_type.lower() == BUFFTOON:
+        webtoonscraper = BufftoonScraper()
+    else:
+        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
+    return webtoonscraper
 
 async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|int=None) -> None:
-    async def auto_webtoon_type(webtoon_id: int) -> str:
-        """If webtoon is best challenge, this returns True. Otherwise, False."""
-        webtoonscraper = NaverWebtoonScraper()
-
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
-        title = title.get('content')
-        print(title)
-        if title:
-            return NAVER_WEBTOON
-        
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
-        title = title.get('content')
-        if title:
-            return BEST_CHALLENGE
-        
-        webtoonscraper.IS_STABLE_CONNECTION = False
-        
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
-        if title is not None:
-            print(title)
-            return ORIGINALS
-
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
-        if title is not None:
-            return CANVAS
-        
-        return TELESCOPE
-
-    async def get_webtoon_type(webtoon_type: int):
-        if webtoon_type.lower() == NAVER_WEBTOON:
-            webtoonscraper = NaverWebtoonScraper()
-        elif webtoon_type.lower() == BEST_CHALLENGE:
-            webtoonscraper = BestChallengeScraper()
-        elif webtoon_type.lower() == ORIGINALS:
-            webtoonscraper = WebtoonOriginalsScraper()
-        elif webtoon_type.lower() == CANVAS:
-            webtoonscraper = WebtoonCanvasScraper()
-        elif webtoon_type.lower() == TELESCOPE:
-            webtoonscraper = TelescopeScraper()
-        elif webtoon_type.lower() == BUFFTOON:
-            webtoonscraper = BufftoonScraper()
-        else:
-            raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
-        return webtoonscraper
-
-    ##### MAIN #####
-
     if webtoon_type is None:
         webtoon_type = await auto_webtoon_type(webtoon_id)
     webtoonscraper = await get_webtoon_type(webtoon_type)
