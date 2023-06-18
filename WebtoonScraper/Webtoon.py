@@ -7,18 +7,14 @@ from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
 from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
 from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
 from WebtoonScraper.TelescopeScraper import TelescopeScraper
+from WebtoonScraper.BufftoonScraper import BufftoonScraper
 
-N = 'naver_webtoon'
-NAVER_WEBTOON = 'naver_webtoon'
-B = 'best_challenge'
-BEST_CHALLENGE = 'best_challenge'
-O = 'originals'
-ORIGINALS = 'originals'
-C = 'canvas'
-CANVAS = 'canvas'
-T = 'telescope'
-M = 'telescope'
-TELESCOPE = 'telescope'
+N = NAVER_WEBTOON = 'naver_webtoon'
+B = BEST_CHALLENGE = 'best_challenge'
+O = ORIGINALS = 'originals'
+C = CANVAS = 'canvas'
+T = M = TELESCOPE = 'telescope'
+BU = BUFFTOON = 'bufftoon'
 
 async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|int=None) -> None:
     async def auto_webtoon_type(webtoon_id: int) -> str:
@@ -60,6 +56,8 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|in
             webtoonscraper = WebtoonCanvasScraper()
         elif webtoon_type.lower() == TELESCOPE:
             webtoonscraper = TelescopeScraper()
+        elif webtoon_type.lower() == BUFFTOON:
+            webtoonscraper = BufftoonScraper()
         else:
             raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
         return webtoonscraper
