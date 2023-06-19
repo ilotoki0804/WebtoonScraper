@@ -41,6 +41,8 @@
    wt.get_webtoon(304446, wt.C) # titleid를 여기에다 붙여넣으세요.
    # 만화경
    wt.get_webtoon(146, wt.M) # titleid를 여기에다 붙여넣으세요. Webtoon.T 태그도 사용 가능합니다.
+   # 버프툰
+   wt.get_webtoon(1007888, wt.BU) # titleid를 여기에다 붙여넣으세요. Webtoon.BT 태그도 사용 가능합니다.
    ```
 
    이제 웹툰이 webtoons 폴더에 다운로드됩니다.
