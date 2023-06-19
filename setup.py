@@ -19,7 +19,7 @@ setup(
     url='https://github.com/ilotoki0804/WebtoonScraper',
     install_requires=['tqdm', 'bs4', 'requests', 'better_abc'],
     packages=find_packages(exclude=[]),
-    keywords=['Webtoon', 'Webtoon Scraper', 'Never Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
+    keywords=['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
     python_requires='>=3.10',
     package_data={},
     zip_safe=False,
