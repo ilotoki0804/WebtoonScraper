@@ -34,9 +34,9 @@ class BufftoonScraper(Scraper):
                 print(f"Episode '{raw_episode['title']}' is not opened for non-login users.")
                 continue
             episode_no = raw_episode['episodeOrder']
-            print(raw_episode_id)
             raw_episode_id = raw_episode['listImgPath']
-            episode_id = int(re.search(r'(?<=contents\/.\/1007888\/)(\d+)(?=\/)', raw_episode_id).group(0))
+            # print(raw_episode_id)
+            episode_id = int(re.search(rf'(?<=contents\/.\/{titleid}\/)(\d+)(?=\/)', raw_episode_id).group(0))
             episode_ids[episode_no] = episode_id
             subtitles[episode_no] = raw_episode['title']
         return subtitles, episode_ids

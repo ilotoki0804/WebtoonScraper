@@ -1,8 +1,5 @@
 from setuptools import setup, find_packages
 
-# this_directory = Path(__file__).parent
-# long_description = (this_directory / "README.md").read_text()
-
 with open('README.md', 'r', encoding='utf-8') as f:
     long_description = '이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [여기](https://github.com/ilotoki0804/WebtoonScraper)를 참고하세요.\n'
     long_description += f.read()
@@ -12,7 +9,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='WebtoonScraper',
-    version='0.0.19.3',
+    version='0.1.0a1',
     description='Scraping webtoons and some utils for it',
     author='ilotoki0804',
     author_email='ilotoki0804@gmail.com',
@@ -23,7 +20,7 @@ setup(
     install_requires=['tqdm', 'bs4', 'requests', 'better_abc'],
     packages=find_packages(exclude=[]),
     keywords=['Webtoon', 'Webtoon Scraper', 'Never Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     package_data={},
     zip_safe=False,
     classifiers=[
