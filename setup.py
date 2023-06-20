@@ -17,7 +17,7 @@ setup(
     long_description_content_type='text/markdown',
     license='MIT',
     url='https://github.com/ilotoki0804/WebtoonScraper',
-    install_requires=['tqdm', 'bs4', 'requests', 'better_abc'],
+    install_requires=['tqdm', 'bs4', 'requests', 'better_abc', 'async_lru'],
     packages=find_packages(exclude=[]),
     keywords=['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
     python_requires='>=3.10',
