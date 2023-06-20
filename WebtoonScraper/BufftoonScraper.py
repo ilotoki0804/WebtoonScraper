@@ -5,6 +5,7 @@ from pathlib import Path
 import time
 from async_lru import alru_cache
 from WebtoonScraper.Scraper import Scraper
+
 class BufftoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
     def __init__(self, pbar_independent=False, short_connection=False, cookie=None):

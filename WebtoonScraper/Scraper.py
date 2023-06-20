@@ -169,7 +169,8 @@ class Scraper(metaclass=ABCMeta):
         Returns:
             파일 확장자를 반환합니다.
         """
-        return re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I).group()
+        serch_result: re.Match = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
+        return serch_result.group()
         # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
@@ -197,7 +198,7 @@ class Scraper(metaclass=ABCMeta):
             return strict_checked_string
         return processed
     
-    def set_folders(self, base_dir: str='Python/files/webtoon') -> str:
+    def set_folders(self, base_dir: str='Python/files/webtoon') -> None:
         """Set base folder."""
         self.BASE_DIR = Path(base_dir)
 
