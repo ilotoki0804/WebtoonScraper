@@ -119,7 +119,7 @@ class NaverPostScraper(Scraper):
         # 문서 내에 있는 모든 이미지 링크를 불러옴
         for tag in soup_content.select('div.se_component_wrap.sect_dsc.__se_component_area > div > div > div > div > a > img'):
             episode_images_url.append(tag['data-src'])
-        return episode_images_url
+        return [url for url in episode_images_url if not url.startswith('https://mail.naver.com/read/image/')]
     
 if __name__ == '__main__':
     # np = NaverPost()
@@ -132,6 +132,8 @@ if __name__ == '__main__':
     # wt.member_no = 19803452
     # print(asyncio.run(wt.get_episode_images_url(577056, 2)))
 
-    from NaverPost import NaverPostScraper
+    # from NaverPost import NaverPostScraper
     wt = NaverPostScraper()
-    wt.download_one_webtoon(597061, 19803452)
+    # wt.download_one_webtoon(614921, 19803452)
+    wt.download_one_webtoon(577056, 19803452)
+    wt.download_one_webtoon(625402, 19803452)
