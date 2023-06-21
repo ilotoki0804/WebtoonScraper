@@ -179,7 +179,7 @@ class Scraper(metaclass=ABCMeta):
 
         Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
-        table = str.maketrans('\\/:*?"<>|\t', '⧵／：＊？＂＜＞∣  ')
+        table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')
 
         processed = html.unescape(file_or_diretory_name) # change things like "&amp;" to "'".
         
@@ -312,6 +312,7 @@ class Scraper(metaclass=ABCMeta):
     # @profile
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
+        # print(url)
         image_extension = self.get_file_extension(url)
         file_name = f'{image_no:03d}.{image_extension}'
 
