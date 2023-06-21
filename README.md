@@ -78,27 +78,34 @@
 
    wt.get_webtoon(1007888, wt.BU) # 첫 번째로 복사했던 숫자를 여기에다 붙여넣으세요.
    ```
+   혹은 다음과 같이 cookie를 코드 내에 포함할 수도 있습니다.
+   ```python
+   from WebtoonScraper import Webtoon as wt
+
+   wt.get_webtoon(1007888, wt.BU, cookie='') # 첫 번째로 복사했던 숫자를 여기에다 붙여넣으세요.
+   ```
 6. 'Enter cookie of 1007888(시리즈 id) (Enter nothing to preceed without cookie)'라는 문구와 함께 입력란이 나오면 두 번째로 복사했던 일련의 문자열을 붙여넣기합니다.
 4. 로그인하면 볼 수 있는 모든 에피소드가 다운로드됩니다.
 # 네이버 포스트 다운로드하기
 
 1. 웹툰이 있는 페이지로 가서 seriesNo와 memberNo를 복사하세요. 예시에서는 각각 597061과 19803452입니다.
    ![img](naver_post.png)
-<!-- 2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
-   ```python
-   from WebtoonScraper import Webtoon as wt
-
-   wt.get_post(597061, 19803452) # seriesNo와 memberNo를 차례대로 입력해주세요.
-   ``` -->
 2. 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
    ```python
    from WebtoonScraper import Webtoon as wt
 
    wt.get_webtoon(597061, wt.M) # 우선 seriesNo만 여기에 입력해주세요.
    ```
-3. 'Enter memberNo of 597061(해당 웹툰의 seriesNo)'라는 말과 함께 입력란이 나오면 거기에 아까 복사해 놓은 memberNo를 붙여넣습니다.
+   혹은 memberNo를 코드 내에 포함할 수 있습니다. 
+   ```python
+   from WebtoonScraper import Webtoon as wt
+
+   wt.get_webtoon(597061, wt.M, member_no='19803452')
    ```
-   Enter memberNo 19803452
+3. 'Enter memberNo of 597061(해당 웹툰의 seriesNo)'라는 말과 함께 입력란이 나오면 거기에 아까 복사해 놓은 memberNo를 붙여넣습니다.
+   만약 앞에서 이미 member_no를 사용했다면 이 단계는 건너뛰어집니다.
+   ```
+   Enter memberNo  of 597061: 19803452
    ...진행됨...
    ```
 4. 만화 뷰어 앱을 통해 다운로드한 웹툰을 시청할 수 있습니다.
