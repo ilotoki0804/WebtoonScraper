@@ -69,7 +69,14 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|in
     if webtoon_type is None:
         webtoon_type = await auto_webtoon_type(webtoon_id)
     webtoonscraper = await get_webtoon_type(webtoon_type)
-    await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
+    if webtoon_type.lower() == BUFFTOON:
+        webtoonscraper.COOKIE = input('Enter cookie (Enter nothing to preceed without cookie)')
+    if webtoon_type.lower() == NAVER_POST:
+        # webtoonscraper.member_no = int(input('Enter memberNo'))
+        member_no = int(input('Enter memberNo'))
+        await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id, member_no=member_no)
+    else:
+        await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
         fd = WebtoonFolderManagement('webtoon_merge')
         fd.divide_all_webtoons(merge)
@@ -77,18 +84,18 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, merge:None|in
 def get_webtoon(webtoon_id:int, webtoon_type:str=None, merge:None|int|bool=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge))
 
-async def get_post_async(webtoon_id:int, member_no:int, merge:None|int=None) -> None:
-    webtoonscraper = await get_webtoon_type(NAVER_POST)
-    await webtoonscraper.download_one_webtoon_async(webtoon_id, member_no)
-    if merge:
-        fd = WebtoonFolderManagement('webtoon_merge')
-        if merge is True:
-            fd.divide_all_webtoons(5)
-        else:
-            fd.divide_all_webtoons(merge)
+# async def get_post_async(webtoon_id:int, member_no:int, merge:None|int=None) -> None:
+#     webtoonscraper = await get_webtoon_type(NAVER_POST)
+#     await webtoonscraper.download_one_webtoon_async(webtoon_id, member_no)
+#     if merge:
+#         fd = WebtoonFolderManagement('webtoon_merge')
+#         if merge is True:
+#             fd.divide_all_webtoons(5)
+#         else:
+#             fd.divide_all_webtoons(merge)
 
-def get_post(webtoon_id:int, member_no:int, merge:None|int=None) -> None:
-    asyncio.run(get_webtoon_async(webtoon_id, member_no, merge))
+# def get_post(webtoon_id:int, member_no:int, merge:None|int=None) -> None:
+#     asyncio.run(get_webtoon_async(webtoon_id, member_no, merge))
 
 if __name__ == '__main__':
     get_webtoon(263735)
