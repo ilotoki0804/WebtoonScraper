@@ -8,7 +8,7 @@ from WebtoonScraper.Scraper import Scraper
 
 class BufftoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
-    def __init__(self, pbar_independent=False, short_connection=False, cookie=None):
+    def __init__(self, pbar_independent=False, short_connection=False, cookie: str=''):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://bufftoon.plaync.com'
         if not short_connection:
