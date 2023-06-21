@@ -260,7 +260,7 @@ class Scraper(metaclass=ABCMeta):
         pass
 
     # @profile
-    def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list) -> None|bool:
+    def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None|bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
 
         None를 return한다면 회차를 다운로드해야 한다는 의미이다.
@@ -269,14 +269,14 @@ class Scraper(metaclass=ABCMeta):
         try:
             episode_dir.mkdir()
         except FileExistsError:
-            self._set_pbar(f'checking integrity of {episode_no=}')
+            self._set_pbar(f'checking integrity of {subtitle}')
             is_filename_appropriate = all(re.match(r"\d{3}[.](png|jpg|jpeg|bmp|gif)", file) for file in os.listdir(episode_dir))
             if not is_filename_appropriate or not len(image_urls) == len(os.listdir(episode_dir)):
-                self._set_pbar(f'{episode_no=} is not vaild. Automatically restore files.')
+                self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
                 shutil.rmtree(episode_dir)
                 episode_dir.mkdir()
             else:
-                self._set_pbar(f'skipping {episode_no=}')
+                self._set_pbar(f'skipping {subtitle}')
                 return True
 
     # @profile
@@ -292,10 +292,10 @@ class Scraper(metaclass=ABCMeta):
         episode_images_url = await self.get_episode_images_url(titleid, episode_no)
 
         episode_dir = webtoon_dir / f'{episode_no:04d}. {subtitle}'
-        if self._check_validate_of_files(episode_dir, episode_no, episode_images_url):
+        if self._check_validate_of_files(episode_dir, episode_no, episode_images_url, subtitle):
             return
 
-        self._set_pbar('downloading')
+        self._set_pbar(f'downloading {subtitle}')
         get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
         await asyncio.gather(*get_image_coroutines)
 
