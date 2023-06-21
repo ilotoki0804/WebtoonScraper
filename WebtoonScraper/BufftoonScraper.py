@@ -27,12 +27,12 @@ class BufftoonScraper(Scraper):
             if not get_payment and raw_episode['isPaymentEpisode']:
                 if self.PBAR_INDEPENDENT:
                     pass
-                print(f"Episode '{raw_episode['title']}' is not free of charge episode")
+                print(f"Episode '{raw_episode['title']}' is not free of charge episode. It'll be not downloaded.")
                 continue
             if not self.COOKIE and not raw_episode['isOpenFreeEpisode']:
                 if self.PBAR_INDEPENDENT:
                     pass
-                print(f"Episode '{raw_episode['title']}' is not opened for non-login users.")
+                print(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
                 continue
             episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode['listImgPath']

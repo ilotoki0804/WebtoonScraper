@@ -6,6 +6,7 @@ from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
 from WebtoonScraper import Webtoon
 from WebtoonScraper.TelescopeScraper import TelescopeScraper
 from WebtoonScraper.BufftoonScraper import BufftoonScraper
+from WebtoonScraper.NaverPostScraper import NaverPostScraper
 
 if __name__ == '__main__':
     print('Testing codes.')

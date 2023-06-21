@@ -9,7 +9,7 @@ from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
 # from WebtoonScraper.Scraper import Scraper
-from Scraper import Scraper
+from WebtoonScraper.Scraper import Scraper
 
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
@@ -104,10 +104,13 @@ class NaverPostScraper(Scraper):
             content = await self.get_internet(get_type='soup_select_one', url=url,
                                                     selector='#__clipContent')
             if content is None:
-                # 재현 불가 버그 : '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류
+                # '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류 : 아마 episode_id에 titleid가 잘못 들어가면 생기는 오류인 듯.
+                # 하지만 오류 이유는 불명, 가끔씩 생기는 문제.
                 print(f'episode {titleid} invalid. retrying...')
             else:
                 break
+        else:
+            raise ConnectionError('Unknown error occurred. Please try again later.')
         content = content.text
         soup_content = BeautifulSoup(content, 'lxml')
         # import requests
