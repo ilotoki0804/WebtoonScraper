@@ -69,12 +69,12 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None
     if webtoon_type is None:
         webtoon_type = await auto_webtoon_type(webtoon_id)
     webtoonscraper = await get_webtoon_type(webtoon_type)
-    if webtoon_type.lower() == BUFFTOON:
+    if webtoon_type.lower() == BUFFTOON or cookie is not None:
         if cookie is None:
             webtoonscraper.COOKIE = cookie
         else:
             webtoonscraper.COOKIE = input(f'Enter cookie of {webtoon_id} (Enter nothing to preceed without cookie)')
-    if webtoon_type.lower() == NAVER_POST:
+    if webtoon_type.lower() == NAVER_POST or member_no is not None:
         if not member_no:
             member_no = int(input(f'Enter memberNo of {webtoon_id}: '))
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id, member_no=member_no)
