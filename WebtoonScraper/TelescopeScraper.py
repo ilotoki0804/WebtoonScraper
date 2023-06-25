@@ -12,12 +12,12 @@ class TelescopeScraper(Scraper):
         self.IS_STABLE_CONNECTION = False
         self.TIMEOUT = 3
 
-    def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None):
-        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = self._get_episode_infomation(titleid)
+    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None):
+        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_episode_infomation(titleid)
         # return await super().download_one_webtoon_async(titleid, episode_no_range)
-        return super().download_one_webtoon_async(titleid, episode_no_range)
+        await super().download_one_webtoon_async(titleid, episode_no_range)
 
-    def _get_episode_infomation(self, titleid):
+    async def _get_episode_infomation(self, titleid):
         XHR_HEADER = {
             "authority": 'api.manhwakyung.com',
             "method": 'GET',
@@ -40,7 +40,8 @@ class TelescopeScraper(Scraper):
             "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57',
             "version": '3'
         }
-        seasons = self.get_internet('requests', f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADER).json()
+        seasons = await self.get_internet('requests', f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADER)
+        seasons = seasons.json()
         episodes = []
         for season in seasons['seasons']:
             episodes += season['episodes']
