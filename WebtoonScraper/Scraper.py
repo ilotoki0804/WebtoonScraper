@@ -198,7 +198,7 @@ class Scraper(metaclass=ABCMeta):
             return strict_checked_string
         return processed
     
-    def set_folders(self, base_dir: str='Python/files/webtoon') -> None:
+    def set_folders(self, base_dir: str='webtoon') -> None:
         """Set base folder."""
         self.BASE_DIR = Path(base_dir)
 
