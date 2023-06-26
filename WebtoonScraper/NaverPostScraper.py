@@ -1,8 +1,6 @@
 '''Download Webtoons from Naver Post.
 '''
-import re
 from pathlib import Path
-import time
 from itertools import count
 import asyncio
 from async_lru import alru_cache
@@ -13,7 +11,7 @@ from WebtoonScraper.Scraper import Scraper
 
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
-    def __init__(self, pbar_independent=False, short_connection=False, cookie=None):
+    def __init__(self, pbar_independent=False, short_connection=False):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://post.naver.com'
         if not short_connection:
@@ -41,7 +39,7 @@ class NaverPostScraper(Scraper):
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demres가 필요
             demres = demjson3.decode(response.text)['html']
-            soup = BeautifulSoup(demres, 'lxml')
+            soup = BeautifulSoup(demres, 'html.parser')
             
             # subtitle data만듦.
             for tag in soup.select('ul > li > a > div > span.ell'):
@@ -112,12 +110,12 @@ class NaverPostScraper(Scraper):
         else:
             raise ConnectionError('Unknown error occurred. Please try again later.')
         content = content.text
-        soup_content = BeautifulSoup(content, 'lxml')
+        soup_content = BeautifulSoup(content, 'html.parser')
         # import requests
         # res = requests.get(f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={self.member_no}&navigationType=push')
         # soup = BeautifulSoup(res.text, 'html.parser')
         # content = soup.select_one('#__clipContent').text
-        # soup_content = BeautifulSoup(content, 'lxml')
+        # soup_content = BeautifulSoup(content, 'html.parser')
         episode_images_url = []
         # 문서 내에 있는 모든 이미지 링크를 불러옴
         for tag in soup_content.select('div.se_component_wrap.sect_dsc.__se_component_area > div > div > div > div > a > img'):
