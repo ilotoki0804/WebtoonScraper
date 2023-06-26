@@ -9,8 +9,7 @@ from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
 from WebtoonScraper.TelescopeScraper import TelescopeScraper
 from WebtoonScraper.BufftoonScraper import BufftoonScraper 
 from WebtoonScraper.NaverPostScraper import NaverPostScraper 
-# from WebtoonScraper.NaverGameScraper import NaverGameScraper 
-from NaverGameScraper import NaverGameScraper 
+from WebtoonScraper.NaverGameScraper import NaverGameScraper
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
@@ -19,12 +18,14 @@ C = CANVAS = 'canvas'
 T = M = TELESCOPE = 'telescope'
 BU = BT = BUFFTOON = 'bufftoon'
 P = POST = NAVER_POST = 'naver_post'
+G = NAVER_GAME = 'naver_game'
 
 async def auto_webtoon_type(webtoon_id: int) -> str:
     """If webtoon is best challenge, this returns True. Otherwise, False."""
     available_webtoon = []
     webtoonscraper = NaverGameScraper()
 
+    # 네이버 웹툰
     title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'meta[property="og:title"]')
     try:
         title = title.get('content')
@@ -33,6 +34,7 @@ async def auto_webtoon_type(webtoon_id: int) -> str:
     except AttributeError:
         pass
     
+    # 베스트 도전
     title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
     try:
         title = title.get('content')
@@ -43,10 +45,12 @@ async def auto_webtoon_type(webtoon_id: int) -> str:
     
     webtoonscraper.IS_STABLE_CONNECTION = False
     
+    # originals
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
     if title:
-        available_webtoon.append((BEST_CHALLENGE, title))
+        available_webtoon.append((ORIGINALS, title))
 
+    # canvas
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
     try:
         title = title.get('content')
@@ -55,26 +59,25 @@ async def auto_webtoon_type(webtoon_id: int) -> str:
     except AttributeError:
         pass
     
-    # return TELESCOPE
+    # 만화경
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
     title = title["content"][:-6]
     title = None if title == "에러 페이지" else title
     if title:
         available_webtoon.append((TELESCOPE, title))
 
-
+    # 버프툰
     title = await webtoonscraper.get_internet('soup_select_one', f'https://bufftoon.plaync.com/series/{webtoon_id}', 'meta[property="og:title"]')
     title = title["content"]
     title = None if title == "이야기 던전에 입장하라, 버프툰" else title
     if title:
         available_webtoon.append((BUFFTOON, title))
-    print(f'{title=}')
     
+    # 네이버 게임
     try:
         title, _ = await webtoonscraper.get_webtoon_data(webtoon_id)
         if title:
-            available_webtoon.append((BUFFTOON, title))
-        print(f'{title=}')
+            available_webtoon.append((NAVER_GAME, title))
     except Exception:
         pass
 
@@ -113,8 +116,10 @@ async def get_webtoon_type(webtoon_type: int):
         webtoonscraper = BufftoonScraper()
     elif webtoon_type.lower() == NAVER_POST:
         webtoonscraper = NaverPostScraper()
+    elif webtoon_type.lower() == NAVER_GAME:
+        webtoonscraper = NaverGameScraper()
     else:
-        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, and telescope.')
+        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, telescope, and naver_game.')
     return webtoonscraper
 
 async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None|int=None, cookie: None|str=None, member_no: None|int=None) -> None:
@@ -141,8 +146,9 @@ def get_webtoon(webtoon_id:int, webtoon_type:str=None, *, merge:None|int|bool=No
 
 if __name__ == '__main__':
     # get_webtoon(263735)
-    # get_webtoon(263735, merge=True)
-    # asyncio.run(auto_webtoon_type(31))
-    asyncio.run(auto_webtoon_type(1007888))
+    # get_webtoon(40, merge=True)
+    get_webtoon(40)
+    # asyncio.run(auto_webtoon_type(40))
+    # asyncio.run(auto_webtoon_type(1007888))
     # asyncio.run(auto_webtoon_type(493850238058309))
     # asyncio.run(auto_webtoon_type(263735))
