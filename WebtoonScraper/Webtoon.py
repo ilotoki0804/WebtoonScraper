@@ -2,7 +2,7 @@
 import asyncio
 
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
-from WebtoonScraper.foldermanagement import WebtoonFolderManagement
+from WebtoonScraper.FolderManager import FolderManager
 from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
 from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
 from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
@@ -138,8 +138,8 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None
     else:
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
-        fd = WebtoonFolderManagement('webtoon_merge')
-        fd.divide_all_webtoons(merge)
+        fd = FolderManager('webtoon_merge')
+        fd.merge_all_webtoon_episodes(merge)
 
 def get_webtoon(webtoon_id:int, webtoon_type:str=None, *, merge:None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))

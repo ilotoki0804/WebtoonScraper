@@ -1,5 +1,5 @@
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
-from WebtoonScraper.foldermanagement import WebtoonFolderManagement
+from WebtoonScraper.FolderManager import FolderManager
 from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
 from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
 from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
