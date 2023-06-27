@@ -35,17 +35,15 @@ class FolderManager:
             # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
             temp_alt_webtoon_dir = self.ALT_DIR / (webtoon + '(merged)') # why do I have to?
             base_webtoon_dir = self.BASE_DIR / webtoon
-            self.merge_webtoon_episodes(base_webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amout)
+            self._merge_webtoon_episodes(base_webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amout)
             shutil.rmtree(base_webtoon_dir)
-            alt_webtoon_dir.mkdir(parents=True, exist_ok=True)
-            episode_diretories = os.listdir(temp_alt_webtoon_dir)
-            for episode_diretory in episode_diretories:
-                episode_diretory = temp_alt_webtoon_dir / episode_diretory
-                shutil.move(episode_diretory, alt_webtoon_dir)
-            os.rmdir(temp_alt_webtoon_dir)
+            temp_alt_webtoon_dir.rename(alt_webtoon_dir)
             # break
+    
+    # def merge_webtoon_episodes(self, webtoon_dir, merge_amount, merge_last_bundle=True):
+        
 
-    def merge_webtoon_episodes(self, base_webtoon_dir, alt_webtoon_dir: Path, merge_amount, merge_last_bundle=True):
+    def _merge_webtoon_episodes(self, base_webtoon_dir, alt_webtoon_dir: Path, merge_amount, merge_last_bundle=True):
         # base_webtoon_dir와 alt_webtoon_dir가 같으면 안됨!
         if base_webtoon_dir == alt_webtoon_dir:
             raise NotImplementedError('base_webtoon_dir and alt_webtoon_dir cannot be same.')
@@ -240,5 +238,5 @@ if __name__ == "__main__":
     # fm.merge_webtoon_episodes(fm.BASE_DIR, fm.ALT_DIR, 5)
     # fm.restore_webtoon(fm.ALT_DIR)
 
-    # fm.merge_all_webtoon_episodes(10)
-    # fm.restore_all_webtoons()
+    # fm.merge_webtoons_in_directory(10)
+    # fm.restore_webtoons_in_directory()
