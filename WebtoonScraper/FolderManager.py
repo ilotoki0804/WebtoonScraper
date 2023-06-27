@@ -28,20 +28,25 @@ class FolderManager:
     
     ############### MAIN FUNCTIONALITY ###############
 
-    def merge_webtoons_in_directory(self, merge_amout):
+    def merge_webtoons_in_directory(self, merge_amount):
         webtoons = os.listdir(self.BASE_DIR)
         for webtoon in webtoons:
             alt_webtoon_dir = self.ALT_DIR / webtoon
             # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
             temp_alt_webtoon_dir = self.ALT_DIR / (webtoon + '(merged)') # why do I have to?
             base_webtoon_dir = self.BASE_DIR / webtoon
-            self._merge_webtoon_episodes(base_webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amout)
+            self._merge_webtoon_episodes(base_webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount)
             shutil.rmtree(base_webtoon_dir)
             temp_alt_webtoon_dir.rename(alt_webtoon_dir)
             # break
     
-    # def merge_webtoon_episodes(self, webtoon_dir, merge_amount, merge_last_bundle=True):
-        
+    def merge_webtoon_episodes(self, webtoon_dir: Path, merge_amount, merge_last_bundle=True):
+        # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
+        # temp_alt_webtoon_dir = Path(str(webtoon_dir.parents)) / (webtoon_dir.name + '(merged)') # why do I have to?
+        temp_alt_webtoon_dir = Path(str(webtoon_dir) + '(merged)')
+        self._merge_webtoon_episodes(webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount, merge_last_bundle=merge_last_bundle)
+        os.rmdir(webtoon_dir)
+        temp_alt_webtoon_dir.rename(webtoon_dir)
 
     def _merge_webtoon_episodes(self, base_webtoon_dir, alt_webtoon_dir: Path, merge_amount, merge_last_bundle=True):
         # base_webtoon_dir와 alt_webtoon_dir가 같으면 안됨!
@@ -198,31 +203,6 @@ class FolderManager:
         self._move_thumbnail(temp_thumbnail_path, directory)
         temp_thumbnail_path.rmdir()
 
-        # # Thumbnail 옮기기
-        # does_thumbnail_exist, alt_thumbnail_dir, realt_thumbnail_dir = self._move_thumbnail(directory, directory)
-
-        # if not self._is_unified(directory):
-        #     self._unify_webtoon(directory)
-        
-        # images = os.listdir(directory)
-        # for image in images:
-        #     image_nos = image.split('.')
-        #     episode_no = image_nos[0]
-        #     image_no = image_nos[1]
-        #     episode_name = '.'.join(image_nos[2:-1])
-        #     image_extension = image_nos[-1]
-        #     episode_dir = directory / f'{episode_no}.{episode_name}'
-        #     alt_image_name = f'{image_no}.{image_extension}'
-        #     episode_dir.mkdir(parents=True, exist_ok=True)
-        #     base_image_dir = directory / image
-        #     alt_image_dir = episode_dir / alt_image_name
-        #     shutil.move(base_image_dir, alt_image_dir)
-        
-        # # Thumbnail 다시 옮기기
-        # if does_thumbnail_exist:
-        #     shutil.move(alt_thumbnail_dir, realt_thumbnail_dir)
-        #     shutil.rmtree(self.TEMP_DIR)
-
 if __name__ == "__main__":
     print(os.curdir)
     fm = FolderManager()
@@ -240,3 +220,4 @@ if __name__ == "__main__":
 
     # fm.merge_webtoons_in_directory(10)
     # fm.restore_webtoons_in_directory()
+    fm.merge_webtoon_episodes(Path('webtoon/(699830)'), 5)
