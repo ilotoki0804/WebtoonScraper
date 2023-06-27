@@ -101,7 +101,7 @@ async def auto_webtoon_type(webtoon_id: int) -> str:
         except ValueError:
             raise ValueError('Webtoon ID should be integer.')
 
-async def get_webtoon_type(webtoon_type: int):
+async def get_webtoon_scraper(webtoon_type: int):
     if webtoon_type.lower() == NAVER_WEBTOON:
         webtoonscraper = NaverWebtoonScraper()
     elif webtoon_type.lower() == BEST_CHALLENGE:
@@ -125,7 +125,7 @@ async def get_webtoon_type(webtoon_type: int):
 async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None|int=None, cookie: None|str=None, member_no: None|int=None) -> None:
     if webtoon_type is None:
         webtoon_type = await auto_webtoon_type(webtoon_id)
-    webtoonscraper = await get_webtoon_type(webtoon_type)
+    webtoonscraper = await get_webtoon_scraper(webtoon_type)
     if webtoon_type.lower() == BUFFTOON or cookie is not None:
         if cookie is None:
             webtoonscraper.COOKIE = cookie
@@ -138,7 +138,7 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None
     else:
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
-        fd = FolderManager('webtoon_merge')
+        fd = FolderManager()
         fd.merge_webtoons_in_directory(merge)
 
 def get_webtoon(webtoon_id:int, webtoon_type:str=None, *, merge:None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
