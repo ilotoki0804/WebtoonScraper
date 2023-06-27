@@ -139,7 +139,7 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
         fd = FolderManager('webtoon_merge')
-        fd.merge_all_webtoon_episodes(merge)
+        fd.merge_webtoons_in_directory(merge)
 
 def get_webtoon(webtoon_id:int, webtoon_type:str=None, *, merge:None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))
