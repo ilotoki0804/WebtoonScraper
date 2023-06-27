@@ -1,8 +1,9 @@
 '''Download Webtoons from Webtoon Originals.
 '''
+from bs4 import BeautifulSoup as bs
+
 from WebtoonScraper.Scraper import Scraper
 
-from bs4 import BeautifulSoup as bs
 class WebtoonOriginalsScraper(Scraper):
     '''Scrape webtoons from Webtoon Originals.'''
     def __init__(self, pbar_independent=False, short_connection=False):
