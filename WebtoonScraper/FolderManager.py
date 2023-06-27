@@ -45,17 +45,6 @@ class FolderManager:
             os.rmdir(temp_alt_webtoon_dir)
             # break
 
-    def _move_thumbnail(self, base_webtoon_dir, alt_webtoon_dir):
-        if self._is_unified(base_webtoon_dir):
-            logging.debug('Webtoon look unified already, so _move_thumbnail is skipped.')
-            return
-        for episode_or_thumbnail in os.listdir(base_webtoon_dir):
-            if re.match(r'.+[.](jpg|jpeg|png)$', episode_or_thumbnail, re.I):
-                base_thumbnail_dir = base_webtoon_dir / episode_or_thumbnail
-                alt_thumbnail_dir = alt_webtoon_dir / episode_or_thumbnail
-                shutil.move(base_thumbnail_dir, alt_thumbnail_dir)
-                return
-            
     def merge_webtoon_episodes(self, base_webtoon_dir, alt_webtoon_dir: Path, merge_amount, merge_last_bundle=True):
         # base_webtoon_dir와 alt_webtoon_dir가 같으면 안됨!
         if base_webtoon_dir == alt_webtoon_dir:
@@ -99,6 +88,17 @@ class FolderManager:
                 image_dir = base_webtoon_dir / image
                 shutil.move(image_dir, images_dir)
 
+    def _move_thumbnail(self, base_webtoon_dir, alt_webtoon_dir):
+        if self._is_unified(base_webtoon_dir):
+            logging.debug('Webtoon look unified already, so _move_thumbnail is skipped.')
+            return
+        for episode_or_thumbnail in os.listdir(base_webtoon_dir):
+            if re.match(r'.+[.](jpg|jpeg|png)$', episode_or_thumbnail, re.I):
+                base_thumbnail_dir = base_webtoon_dir / episode_or_thumbnail
+                alt_thumbnail_dir = alt_webtoon_dir / episode_or_thumbnail
+                shutil.move(base_thumbnail_dir, alt_thumbnail_dir)
+                return
+            
     ############### SUB FUNCTIONALITY ###############
 
     def _make_dir_name(self, images):
@@ -160,7 +160,7 @@ class FolderManager:
     
     ############### RESTORE FUNCTIONALITY ###############
 
-    def restore_all_webtoons(self):
+    def restore_webtoons_in_directory(self):
         webtoons = os.listdir(self.BASE_DIR)
         for webtoon in webtoons:
             webtoon_dir = self.BASE_DIR / webtoon
