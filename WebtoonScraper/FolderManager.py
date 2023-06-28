@@ -9,9 +9,9 @@ import logging
 
 class FolderManager:
     def __init__(self):
+        
         self.BASE_DIR = 'webtoon'
         self.ALT_DIR = 'webtoon'
-        # self._make_directory(self.TEMP_DIR)
 
     @property
     def BASE_DIR(self):
@@ -28,7 +28,6 @@ class FolderManager:
     @ALT_DIR.setter
     def ALT_DIR(self, ALT_DIR):
         self._ALT_DIR = Path(ALT_DIR)
-        # self.ALT_DIR.mkdir(parents=True, exist_ok=True)
 
     ############### MAIN FUNCTIONALITY ###############
 
@@ -228,4 +227,4 @@ if __name__ == "__main__":
 
     # fm.merge_webtoons_in_directory(10)
     # fm.restore_webtoons_in_directory()
-    fm.merge_webtoon_episodes(Path('webtoon/(699830)'), 5)
+    # fm.merge_webtoon_episodes(Path('webtoon/(699830)'), 5)
