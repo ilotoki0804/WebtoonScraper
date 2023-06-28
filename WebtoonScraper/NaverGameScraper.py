@@ -103,6 +103,6 @@ if __name__ == '__main__':
     # wt.download_one_webtoon(614921, 19803452)
     # wt.download_one_webtoon(577056, 19803452)
     # wt.download_one_webtoon(625402, 19803452)
-    wt.set_folders('webtoon')
+    # wt.set_folders('webtoon')
     # wt.download_one_webtoon(31)
     wt.download_one_webtoon(5)

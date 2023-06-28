@@ -27,7 +27,7 @@ class BufftoonScraper(Scraper):
             if not get_payment and raw_episode['isPaymentEpisode']:
                 if self.PBAR_INDEPENDENT:
                     pass
-                print(f"Episode '{raw_episode['title']}' is not free of charge episode. It'll be not downloaded.")
+                print(f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded.")
                 continue
             if not self.COOKIE and not raw_episode['isOpenFreeEpisode']:
                 if self.PBAR_INDEPENDENT:
@@ -42,7 +42,7 @@ class BufftoonScraper(Scraper):
             subtitles[episode_no] = raw_episode['title']
         return subtitles, episode_ids
 
-    async def get_title(self, titleid, file_acceptable, limit: int=500):
+    async def get_title(self, titleid, file_acceptable):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='#content > div > div > div.series-info > div.cont > div.title')
