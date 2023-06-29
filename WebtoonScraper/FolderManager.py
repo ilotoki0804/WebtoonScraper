@@ -81,8 +81,7 @@ class FolderManager:
             merged_images[(episode_no - 1)//merge_amount].append(episode)
 
         # merge_last_bundle을 적용함
-        merged_images = list(merged_images.items())
-        merged_images.sort()
+        merged_images = sorted(merged_images.items())
         _, last_images = merged_images[-1]
         if merge_last_bundle and len(self._find_episode_id(last_images)) != merge_amount:
             merged_second_last_list = merged_images[-2][1]
@@ -117,8 +116,7 @@ class FolderManager:
     
     @staticmethod
     def _find_episode_id(images):
-        episode_id = set(int(image.split('.')[0]) for image in images)
-        return episode_id
+        return {int(image.split('.')[0]) for image in images}
     
     def _move_images(self, base_episode_dir: Path, alt_webtoon_dir: Path,
                      episode_name: str|None=None, ignore_folders: bool=False, rename: bool=False):
@@ -154,7 +152,7 @@ class FolderManager:
     def _rename_image(self, image_name, episode_name):
         episode_split = re.search(r'^(\d+)[.] (.+)', episode_name)
         image_no, image_extension = image_name.split('.')[0], image_name.split('.')[-1]
-        return f'{episode_split.group(1)}.{image_no}. {episode_split.group(2)}.{image_extension}'
+        return f'{episode_split[1]}.{image_no}. {episode_split[2]}.{image_extension}'
     
     def _is_unified(self, directory):
         episodes_or_images = os.listdir(directory)
@@ -180,20 +178,20 @@ class FolderManager:
         temp_thumbnail_path = directory / 'thumbnail-TEMP'
         temp_thumbnail_path.mkdir(parents=True)
         self._move_thumbnail(directory, temp_thumbnail_path)
-        
+
         if not self._is_unified(directory):
             # self._unify_webtoon(directory)
             directories = os.listdir(directory)
             directories = (directory_ for directory_ in directories
                            if not directory_ == 'thumbnail-TEMP')
-            
+
             for directory_ in directories:
                 directory_ = directory / directory_
                 self._move_images(directory_, directory)
                 directory_.rmdir()
 
         images = os.listdir(directory)
-        images = (image for image in images if not image == 'thumbnail-TEMP')
+        images = (image for image in images if image != 'thumbnail-TEMP')
 
         for image in images:
             image_info = re.match(r'(\d+)\.(\d+)\. (.+?)\.(\w.+)', image)
