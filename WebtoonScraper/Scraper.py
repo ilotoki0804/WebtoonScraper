@@ -7,14 +7,12 @@ import shutil
 import html
 from pathlib import Path
 from typing import Iterable, Literal
-# from abc import ABCMeta
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
-from better_abc import ABCMeta, abstract_attribute
 import requests
 from bs4 import BeautifulSoup as bs
+from bs4.element import Tag
 from tqdm import tqdm
-from bs4.element import Tag as bsTag
 
 class Scraper(metaclass=ABCMeta):
     """Abstract class of all scrapers.
@@ -34,27 +32,18 @@ class Scraper(metaclass=ABCMeta):
                 만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
                 False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
         """
-        # self.loop = asyncio.get_event_loop()
+        # BASE_URL and IS_STABLE_CONNECTION have to defined!
         self.HEADERS = {
             'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
             '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
             }
-        self.set_folders()
+        # self.set_folders()
+        self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
         self.PBAR_INDEPENDENT = pbar_independent
         if short_connection:
             self.TIMEOUT = 3
             self.IS_STABLE_CONNECTION = False
-    
-    @abstract_attribute
-    def BASE_URL(self):
-        """Abstract 'attribute' for self.BASE_URL."""
-        pass
-    
-    @abstract_attribute
-    def IS_STABLE_CONNECTION(self):
-        """Abstract 'attribute' for self.IS_STABLE_CONNECTION."""
-        pass
     
     # @profile
     async def get_internet(
@@ -63,7 +52,7 @@ class Scraper(metaclass=ABCMeta):
             is_run_in_executor=False, 
             attempt: int=10, 
             headers=None
-            ) -> requests.Response|bs|list|bsTag|None:
+            ) -> requests.Response|bs|list|Tag|None:
         """Get response/beautifulsoup/beautifulsoup tag list/beautifulsoup tag from internet.
 
         Args:
@@ -197,10 +186,14 @@ class Scraper(metaclass=ABCMeta):
                     strict_checked_string += chractor
             return strict_checked_string
         return processed
-    
-    def set_folders(self, base_dir: str='webtoon') -> None:
-        """Set base folder."""
-        self.BASE_DIR = Path(base_dir)
+
+    @property
+    def BASE_DIR(self):
+        return self._BASE_DIR
+
+    @BASE_DIR.setter
+    def BASE_DIR(self, BASE_DIR):
+        self._BASE_DIR = Path(BASE_DIR)
 
 ################################## MAIN ACTION ##################################
 
@@ -226,6 +219,7 @@ class Scraper(metaclass=ABCMeta):
 
         title = await self.get_title(titleid, file_acceptable=True)
         webtoon_dir = self.BASE_DIR / f'{title}({titleid})'
+        self.webtoon_dir = webtoon_dir
 
         webtoon_dir.mkdir(parents=True, exist_ok=True)
 
@@ -247,17 +241,14 @@ class Scraper(metaclass=ABCMeta):
     @abstractmethod
     async def get_title(self, titleid: int, file_acceptable: bool) -> str:
         """웹툰의 title을 불러온다."""
-        pass
 
     @abstractmethod
     async def save_webtoon_thumbnail(self, titleid: int, title: str, thumbnail_dir: Path) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
-        pass
     
     @abstractmethod
     async def get_all_episode_no(self, titleid: int, attempt: int) -> Iterable:
         """웹툰에서 전체 에피소드를 가져온다."""
-        pass
 
     # @profile
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None|bool:
@@ -302,12 +293,10 @@ class Scraper(metaclass=ABCMeta):
     @abstractmethod
     async def get_subtitle(self, titleid: int, episode_no: int, file_acceptable: bool) -> str:
         """부제목, 즉 회차의 제목을 불러온다."""
-        pass
 
     @abstractmethod
     async def get_episode_images_url(self, titleid: int, episode_no: int) -> list:
         """해당 회차를 구성하는 이미지들을 불러온다."""
-        pass
 
     # @profile
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
@@ -322,3 +311,4 @@ class Scraper(metaclass=ABCMeta):
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
+        
