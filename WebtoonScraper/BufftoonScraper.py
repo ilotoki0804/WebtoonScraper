@@ -1,5 +1,4 @@
-'''Download Webtoons from Bufftoon.
-'''
+'''Download Webtoons from Bufftoon.'''
 import re
 from pathlib import Path
 import time
@@ -16,28 +15,22 @@ class BufftoonScraper(Scraper):
         self.COOKIE = cookie
     
     @alru_cache(maxsize=4)
-    async def get_data(self, titleid, get_payment: bool=False, limit: int=500):
+    async def _get_webtoon_infomation(self, titleid, get_payment: bool=False, limit: int=500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = await self.get_internet('requests', url)
         raw_data = raw_data.json()
-        # print(raw_data)
         subtitles = {}
         episode_ids = {}
         for raw_episode in raw_data['result']['episodes']:
             if not get_payment and raw_episode['isPaymentEpisode']:
-                if self.PBAR_INDEPENDENT:
-                    pass
                 print(f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded.")
                 continue
             if not self.COOKIE and not raw_episode['isOpenFreeEpisode']:
-                if self.PBAR_INDEPENDENT:
-                    pass
                 print(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
                 continue
             episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode['listImgPath']
-            # print(raw_episode_id)
-            episode_id = int(re.search(rf'(?<=contents\/.\/{titleid}\/)(\d+)(?=\/)', raw_episode_id).group(0))
+            episode_id = int(re.search(rf'(?<=contents\/.\/{titleid}\/)(\d+)(?=\/)', raw_episode_id)[0])
             episode_ids[episode_no] = episode_id
             subtitles[episode_no] = raw_episode['title']
         return subtitles, episode_ids
@@ -56,20 +49,20 @@ class BufftoonScraper(Scraper):
         image_url = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='#content > div > div > div.series-info > div.img')
         image_url = image_url['style']
-        image_url = re.search(r'(?<=background-image:url\().+(?=\);)', image_url).group(0)
+        image_url = re.search(r'(?<=background-image:url\().+(?=\);)', image_url)[0]
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
         image_raw = image_raw.content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
 
     async def get_all_episode_no(self, titleid):
-        _, episode_ids = await self.get_data(titleid)
+        _, episode_ids = await self._get_webtoon_infomation(titleid)
         return list(episode_ids)
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable, sleep=True):
         if sleep:
             time.sleep(1)
-        subtitles, _ = await self.get_data(titleid)
+        subtitles, _ = await self._get_webtoon_infomation(titleid)
         subtitle = subtitles[episode_no]
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle)
@@ -98,24 +91,19 @@ class BufftoonScraper(Scraper):
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43',
             }
-        _, episode_ids = await self.get_data(titleid)
+        _, episode_ids = await self._get_webtoon_infomation(titleid)
         url = f'{self.BASE_URL}/series/{titleid}/{episode_ids[episode_no]}'
         selector = '#content > div > div > div.viewer-wrapper > div > img'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                             selector=selector, headers=HEADERS)
-        return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
+        
+        for element in episode_images_url:
+            if 'agerate' in element['src'] or 'ctguide' in element['src']:
+                continue
+            yield element['src']
     
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
-        '''download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}'''
-        image_extension = 'png' # 이곳만 바뀜
-        file_name = f'{image_no:03d}.{image_extension}'
-
-        # self._set_pbar(f'{episode_dir}|{file_name}')
-        image_raw = await self.get_internet(get_type='requests', url=url, is_run_in_executor=True)
-        image_raw = image_raw.content
-
-        file_dir = episode_dir / file_name
-        file_dir.write_bytes(image_raw)
+        super().download_single_image(episode_dir, url, image_no, 'png')
     
 if __name__ == '__main__':
     bt = BufftoonScraper()

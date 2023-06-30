@@ -1,5 +1,4 @@
-'''Download Webtoons from Naver Webtoon Best Challenge.
-'''
+'''Download Webtoons from Naver Webtoon Best Challenge.'''
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
 
 

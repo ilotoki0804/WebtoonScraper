@@ -159,11 +159,8 @@ class Scraper(metaclass=ABCMeta):
             파일 확장자를 반환합니다.
         """
         serch_result: re.Match|None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
-        
-        if serch_result is None:
-            return None
-        
-        return serch_result.group()
+
+        return None if serch_result is None else serch_result.group()
         # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
