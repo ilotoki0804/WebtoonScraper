@@ -74,12 +74,13 @@ class WebtoonOriginalsScraper(Scraper):
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
         subtitles = await self._get_webtoon_infomation(titleid)
-        subtitle = subtitles[titleid]
+        subtitle = subtitles[episode_no]
         
         if file_acceptable:
-            subtitle = self.get_acceptable_file_name(subtitle.text)
+            subtitle = self.get_acceptable_file_name(subtitle)
         else:
-            subtitle = subtitle.text
+            subtitle = subtitle
+            
         return subtitle
     
     async def get_episode_images_url(self, titleid, episode_no):

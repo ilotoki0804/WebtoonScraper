@@ -60,9 +60,9 @@ class NaverWebtoonScraper(Scraper):
         subtitle = subtitles[episode_no]
 
         if file_acceptable:
-            subtitle = self.get_acceptable_file_name(subtitle.text)
+            subtitle = self.get_acceptable_file_name(subtitle)
         else:
-            subtitle = subtitle.text
+            subtitle = subtitle
 
         return subtitle
 
