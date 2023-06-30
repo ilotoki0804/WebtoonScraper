@@ -1,6 +1,7 @@
 '''Download Webtoons from Webtoon Originals.
 '''
 from bs4 import BeautifulSoup as bs
+from async_lru import alru_cache
 
 from WebtoonScraper.Scraper import Scraper
 
@@ -23,6 +24,26 @@ class WebtoonOriginalsScraper(Scraper):
         if file_acceptable:
             title = self.get_acceptable_file_name(title)
         return title
+    
+    @alru_cache(maxsize=4)
+    async def _get_webtoon_infomation(self, titleid):
+        # getting title_no
+        url = f'{self.BASE_URL}/list?title_no={titleid}'
+        title_no = await self.get_internet('soup_select_one', url, '#_listUl > li')
+        title_no = int(title_no['data-episode-no'])
+                
+        # getting list of titles
+        selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
+        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={title_no}'
+        selected = await self.get_internet(get_type='soup_select', url=url,
+                                            selector=selector)
+        
+        subtitles = {}
+        for element in selected:
+            episode_no = int(element["data-episode-no"])
+            subtitles[episode_no] = element.select_one("span.subj").text
+            
+        return subtitles
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
@@ -48,27 +69,12 @@ class WebtoonOriginalsScraper(Scraper):
         thumbnail_path.write_bytes(image_raw)
 
     async def get_all_episode_no(self, titleid):
-        # getting title_no
-        url = f'{self.BASE_URL}/list?title_no={titleid}'
-        title_no = await self.get_internet('soup_select_one', url, '#_listUl > li')
-        title_no = int(title_no['data-episode-no'])
-        
-        # getting list of titles
-        selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
-        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={title_no}'
-        selected = await self.get_internet(get_type='soup_select', url=url,
-                                            selector=selector)
-        
-        return (int(selected_one.get('data-episode-no')) for selected_one in selected)
+        subtitles = await self._get_webtoon_infomation(titleid)
+        return list(subtitles)
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
-        # TODO API 등 없는지 확인
-        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
-        subtitle = await self.get_internet(get_type='soup_select_one', url=url,
-                                            selector='#toolbar > div.info > div > h1')
-        
-        if not subtitle:
-            return None
+        subtitles = await self._get_webtoon_infomation(titleid)
+        subtitle = subtitles[titleid]
         
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle.text)

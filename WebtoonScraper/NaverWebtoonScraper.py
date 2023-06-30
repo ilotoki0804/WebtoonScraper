@@ -1,5 +1,6 @@
 '''Download Webtoons from Naver Webtoon.'''
 from itertools import count
+from async_lru import alru_cache
 
 from WebtoonScraper.Scraper import Scraper
 class NaverWebtoonScraper(Scraper):
@@ -11,6 +12,7 @@ class NaverWebtoonScraper(Scraper):
             self.IS_STABLE_CONNECTION = True
         self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img' # for best challenge
 
+    @alru_cache(maxsize=4)
     async def _get_webtoon_data(self, titleid: int):
         prev_articleList = []
         subtitles = {}
