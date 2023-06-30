@@ -97,10 +97,7 @@ class BufftoonScraper(Scraper):
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                             selector=selector, headers=HEADERS)
         
-        for element in episode_images_url:
-            if 'agerate' in element['src'] or 'ctguide' in element['src']:
-                continue
-            yield element['src']
+        return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
     
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
         super().download_single_image(episode_dir, url, image_no, 'png')
