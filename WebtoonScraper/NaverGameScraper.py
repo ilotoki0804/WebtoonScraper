@@ -1,15 +1,12 @@
 '''Download Webtoons from Naver Post.
 '''
-import re
+
+import contextlib
 from pathlib import Path
-import time
 from itertools import count
-import asyncio
 import json
 from async_lru import alru_cache
-import demjson3
-from bs4 import BeautifulSoup
-# from WebtoonScraper.Scraper import Scraper
+
 from WebtoonScraper.Scraper import Scraper
 
 class NaverGameScraper(Scraper):
@@ -40,7 +37,7 @@ class NaverGameScraper(Scraper):
             if not res['content']:
                 break
             content_raw_data += res['content']['data']
-        
+
         # 부제목, 이미지 데이터 불러옴
         episodes_data = {}
         for i, episode in enumerate(content_raw_data, 1):
@@ -50,12 +47,10 @@ class NaverGameScraper(Scraper):
             content_json_data = json.loads(episode['feed']['contents'])
             image_urls = []
             for image_url in content_json_data['document']['components']:
-                try:
+                with contextlib.suppress(KeyError):
                     image_urls.append(image_url['src'])
-                except KeyError:
-                    pass
             episodes_data[i] = {'subtitle': subtitle, 'image_urls': image_urls}
-        
+
         return episodes_data
 
     async def get_title(self, titleid, file_acceptable=True):
@@ -71,7 +66,7 @@ class NaverGameScraper(Scraper):
         image_raw = image_raw.content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
 
-    async def get_all_episode_no(self, titleid, attempt):
+    async def get_all_episode_no(self, titleid):
         episodes_data = await self._get_episode_infomation(titleid)
         return list(episodes_data)
 

@@ -1,5 +1,5 @@
 """Abstract Class of all scrapers."""
-
+# TODO: file_acceptable built-in으로 만들기
 import re
 import os
 import asyncio

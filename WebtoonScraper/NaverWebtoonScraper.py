@@ -1,5 +1,4 @@
-'''Download Webtoons from Naver Webtoon.
-'''
+'''Download Webtoons from Naver Webtoon.'''
 from itertools import count
 
 from WebtoonScraper.Scraper import Scraper
