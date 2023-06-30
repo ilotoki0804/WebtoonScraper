@@ -1,4 +1,5 @@
+tqdm
 bs4
 requests
-tqdm
-better_abc
+async_lru
+demjson3
