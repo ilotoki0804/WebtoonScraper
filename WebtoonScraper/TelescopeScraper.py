@@ -1,5 +1,6 @@
 """Download Webtoons from Manhwakyung."""
 from WebtoonScraper.Scraper import Scraper
+from async_lru import alru_cache
 
 import time
 
@@ -16,6 +17,7 @@ class TelescopeScraper(Scraper):
         self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_webtoon_infomation(titleid)
         await super().download_one_webtoon_async(titleid, episode_no_range)
 
+    @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):
         XHR_HEADER = {
             "authority": 'api.manhwakyung.com',
