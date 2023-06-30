@@ -158,7 +158,11 @@ class Scraper(metaclass=ABCMeta):
         Returns:
             파일 확장자를 반환합니다.
         """
-        serch_result: re.Match = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
+        serch_result: re.Match|None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
+        
+        if serch_result is None:
+            return None
+        
         return serch_result.group()
         # return filename_or_url.split('.')[-1].lower()
 
@@ -213,7 +217,6 @@ class Scraper(metaclass=ABCMeta):
                                     예) (1,10): 1회차부터 10회차를 다운로드함
                                 int일 경우: 한 회차만 다운로드 받는다.
                                 None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
-        :attempt(deprecated): episode_no_range가 None이어서 자동으로 웹툰을 다운로드 받을 경우 몇 번째 episode까지 다운로드 받을지 결정한다.
         """
         self.loop = asyncio.get_running_loop()
 
@@ -226,7 +229,7 @@ class Scraper(metaclass=ABCMeta):
         await self.save_webtoon_thumbnail(titleid, title, webtoon_dir)
 
         if not episode_no_range:
-            titleids = await self.get_all_episode_no(titleid, attempt=50)
+            titleids = await self.get_all_episode_no(titleid)
         elif isinstance(episode_no_range, int):
             titleids = (episode_no_range,)
         else:
@@ -247,7 +250,7 @@ class Scraper(metaclass=ABCMeta):
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
     
     @abstractmethod
-    async def get_all_episode_no(self, titleid: int, attempt: int) -> Iterable:
+    async def get_all_episode_no(self, titleid: int) -> Iterable:
         """웹툰에서 전체 에피소드를 가져온다."""
 
     # @profile
@@ -262,7 +265,7 @@ class Scraper(metaclass=ABCMeta):
         except FileExistsError:
             self._set_pbar(f'checking integrity of {subtitle}')
             is_filename_appropriate = all(re.match(r"\d{3}[.](png|jpg|jpeg|bmp|gif)", file) for file in os.listdir(episode_dir))
-            if not is_filename_appropriate or not len(image_urls) == len(os.listdir(episode_dir)):
+            if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
                 self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
                 shutil.rmtree(episode_dir)
                 episode_dir.mkdir()
@@ -299,10 +302,17 @@ class Scraper(metaclass=ABCMeta):
         """해당 회차를 구성하는 이미지들을 불러온다."""
 
     # @profile
-    async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
+    async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str|None=None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
         # print(url)
         image_extension = self.get_file_extension(url)
+        
+        # for Bufftoon
+        if image_extension is None:
+            if default_file_extension is not None:
+                raise ValueError('File extension not detected.')
+            image_extension = default_file_extension
+        
         file_name = f'{image_no:03d}.{image_extension}'
 
         # self._set_pbar(f'{episode_dir}|{file_name}')

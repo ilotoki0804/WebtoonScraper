@@ -21,7 +21,7 @@ class NaverGameScraper(Scraper):
             self.IS_STABLE_CONNECTION = True
 
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid):
+    async def _get_webtoon_infomation(self, titleid):
         url = f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}'
         webtoon_raw_data = await self.get_internet(get_type='requests', url=url)
         webtoon_raw_data = webtoon_raw_data.json()
@@ -30,8 +30,7 @@ class NaverGameScraper(Scraper):
         return title, thumbnail
 
     @alru_cache(maxsize=4)
-    async def get_episode_data(self, titleid, episode_max_limit=500):
-        
+    async def _get_episode_infomation(self, titleid, episode_max_limit=500):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):
@@ -60,31 +59,31 @@ class NaverGameScraper(Scraper):
         return episodes_data
 
     async def get_title(self, titleid, file_acceptable=True):
-        title, _ = await self.get_webtoon_data(titleid)
+        title, _ = await self._get_webtoon_infomation(titleid)
         if file_acceptable:
             title = self.get_acceptable_file_name(title)
         return title
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        _, image_url = await self.get_webtoon_data(titleid)
+        _, image_url = await self._get_webtoon_infomation(titleid)
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
         image_raw = image_raw.content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
 
     async def get_all_episode_no(self, titleid, attempt):
-        episodes_data = await self.get_episode_data(titleid)
+        episodes_data = await self._get_episode_infomation(titleid)
         return list(episodes_data)
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
-        episodes_data = await self.get_episode_data(titleid)
+        episodes_data = await self._get_episode_infomation(titleid)
         subtitle = episodes_data[episode_no]['subtitle']
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle)
         return subtitle
 
-    async def get_episode_images_url(self, titleid, episode_no, attempt=3):
-        episodes_data = await self.get_episode_data(titleid)
+    async def get_episode_images_url(self, titleid, episode_no):
+        episodes_data = await self._get_episode_infomation(titleid)
         return episodes_data[episode_no]['image_urls']
     
 if __name__ == '__main__':

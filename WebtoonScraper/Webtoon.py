@@ -1,6 +1,7 @@
 """Download webtoons automatiallly or easily"""
+
 import asyncio
-from pathlib import Path
+import contextlib
 
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
 from WebtoonScraper.FolderManager import FolderManager
@@ -8,8 +9,8 @@ from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
 from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
 from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
 from WebtoonScraper.TelescopeScraper import TelescopeScraper
-from WebtoonScraper.BufftoonScraper import BufftoonScraper 
-from WebtoonScraper.NaverPostScraper import NaverPostScraper 
+from WebtoonScraper.BufftoonScraper import BufftoonScraper
+from WebtoonScraper.NaverPostScraper import NaverPostScraper
 from WebtoonScraper.NaverGameScraper import NaverGameScraper
 
 N = NAVER_WEBTOON = 'naver_webtoon'
@@ -21,29 +22,26 @@ BF = BUFFTOON = 'bufftoon'
 P = POST = NAVER_POST = 'naver_post'
 G = NAVER_GAME = 'naver_game'
 
-async def get_webtoon_platform(webtoon_id: int) -> str:
+async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
+    # sourcery skip: low-code-quality
     """If webtoon is best challenge, this returns True. Otherwise, False."""
     available_webtoon = []
     webtoonscraper = NaverGameScraper()
 
     # 네이버 웹툰
     title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}', 'span.text')
-    try:
+    with contextlib.suppress(AttributeError):
         title = title.text
         if title:
             available_webtoon.append((NAVER_WEBTOON, title))
-    except AttributeError:
-        pass
-    
+
     # 베스트 도전
     title = await webtoonscraper.get_internet('soup_select_one', f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}', 'meta[property="og:title"]')
-    try:
+    with contextlib.suppress(AttributeError):
         title = title.get('content')
         if title:
             available_webtoon.append((BEST_CHALLENGE, title))
-    except AttributeError:
-        pass
-    
+
     # 만화경
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
     title = title["content"][:-6]
@@ -59,15 +57,12 @@ async def get_webtoon_platform(webtoon_id: int) -> str:
         available_webtoon.append((BUFFTOON, title))
 
     # 네이버 게임
-    try:
-        title, _ = await webtoonscraper.get_webtoon_data(webtoon_id)
+    with contextlib.suppress(Exception):
+        title, _ = await webtoonscraper._get_webtoon_infomation(webtoon_id)
         if title:
             available_webtoon.append((NAVER_GAME, title))
-    except Exception:
-        pass
-
     webtoonscraper.IS_STABLE_CONNECTION = False
-    
+
     # originals
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
     if title:
@@ -75,13 +70,10 @@ async def get_webtoon_platform(webtoon_id: int) -> str:
 
     # canvas
     title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}', 'meta[property="og:title"]')
-    try:
-        title = title.get('content')
-        if title:
+    with contextlib.suppress(AttributeError):
+        if title := title.get('content'):
             available_webtoon.append((CANVAS, title))
-    except AttributeError:
-        pass
-    
+
     # 베스트 도전과 네이버 웹툰이 겹치고 둘의 이름이 같을 경우 베스트 도전을 배제함.
     for i, (platform, title) in enumerate(available_webtoon):
         if platform == NAVER_WEBTOON:
@@ -89,13 +81,10 @@ async def get_webtoon_platform(webtoon_id: int) -> str:
         if platform == BEST_CHALLENGE:
             bc_title = title
             bc_order = i
-    try:
+    with contextlib.suppress(UnboundLocalError):
         if nw_title == bc_title:
             del available_webtoon[bc_order]
-    except UnboundLocalError:
-        pass
 
-    # print(available_webtoon)
     if (webtoon_length := len(available_webtoon)) == 1:
         print(f'Webtoon\'s platform is assumed to be {available_webtoon[0][0]}')
         return available_webtoon[0][0]
@@ -105,19 +94,19 @@ async def get_webtoon_platform(webtoon_id: int) -> str:
         for i, (platform, name) in enumerate(available_webtoon, 1):
             print(f'{i}. {platform}: {name}')
         try:
-            platform_no = input('Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select autometically): ')
-            if platform_no == '':
-                platform_no = 1
+            if not is_auto_select:
+                platform_no = input('Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select autometically): ')
             else:
-                platform_no = int(platform_no)
+                platform_no = ''
+            platform_no = 1 if platform_no == '' else int(platform_no)
             try:
                 selected_platform, selected_webtoon = available_webtoon[platform_no - 1]
             except IndexError:
                 print('Exceeded the range of webtoons.')
             print(f'Webtoon {selected_webtoon} is selected.')
             return selected_platform
-        except ValueError:
-            raise ValueError('Webtoon ID should be integer.')
+        except ValueError as e:
+            raise ValueError('Webtoon ID should be integer.') from e
 
 async def get_scraper_instance(webtoon_type: int):
     if webtoon_type.lower() == NAVER_WEBTOON:
@@ -140,9 +129,16 @@ async def get_scraper_instance(webtoon_type: int):
         raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, telescope, and naver_game.')
     return webtoonscraper
 
-async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None|int=None, cookie: None|str=None, member_no: None|int=None) -> None:
+async def get_webtoon_async(
+        webtoon_id: int,
+        webtoon_type: None|str=None,
+        *, merge: None|int=None,
+        cookie: None|str=None,
+        member_no: None|int=None,
+        is_auto_select=False) -> None:
+    
     if webtoon_type is None:
-        webtoon_type = await get_webtoon_platform(webtoon_id)
+        webtoon_type = await get_webtoon_platform(webtoon_id, is_auto_select)
     webtoonscraper = await get_scraper_instance(webtoon_type)
     if webtoon_type.lower() == BUFFTOON or cookie is not None:
         if cookie is None:
@@ -159,10 +155,8 @@ async def get_webtoon_async(webtoon_id:int, webtoon_type:str=None, *, merge:None
         fd = FolderManager()
         fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir)
 
-def get_webtoon(webtoon_id:int, webtoon_type:str=None, *, merge:None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
+def get_webtoon(webtoon_id: int, webtoon_type: str=None, *, merge: None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))
-    
-    
 
 if __name__ == '__main__':
     # get_webtoon(263735)

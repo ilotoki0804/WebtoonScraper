@@ -167,9 +167,9 @@
    from WebtoonScraper import FolderManager
 
    fm= FolderManager()
-   fm.restore_webtoons_in_directory('webtoon/1초(725586)')
+   fm.restore_webtoons_in_directory()
    ```
-3. 'webtoon/1초(725586)' 폴더에 있던 모든 웹툰이 웹툰을 처음 다운로드했던 상태로 되돌아갑니다.
+3. 'webtoon' 폴더에 있던 모든 웹툰이 웹툰을 처음 다운로드했던 상태로 되돌아갑니다.
 
 # QNA
 

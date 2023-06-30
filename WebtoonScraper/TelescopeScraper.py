@@ -1,11 +1,11 @@
-'''Download Webtoons from Manhwakyung.
-'''
+"""Download Webtoons from Manhwakyung."""
 from WebtoonScraper.Scraper import Scraper
 
 import time
 
 class TelescopeScraper(Scraper):
-    '''Scrape webtoons from Manhwakyung.'''
+    """Scrape webtoons from Manhwakyung."""
+    
     def __init__(self, pbar_independent=False, short_connection=False):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://www.manhwakyung.com'
@@ -13,15 +13,14 @@ class TelescopeScraper(Scraper):
         self.TIMEOUT = 3
 
     async def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None):
-        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_episode_infomation(titleid)
-        # return await super().download_one_webtoon_async(titleid, episode_no_range)
+        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_webtoon_infomation(titleid)
         await super().download_one_webtoon_async(titleid, episode_no_range)
 
-    async def _get_episode_infomation(self, titleid):
+    async def _get_webtoon_infomation(self, titleid):
         XHR_HEADER = {
             "authority": 'api.manhwakyung.com',
             "method": 'GET',
-            "path": '/episodes?titleId=180',
+            "path": f'/episodes?titleId={titleid}',
             "scheme": 'https',
             "accept": 'application/json, text/plain, */*',
             "accept-encoding": 'gzip, deflate, br',
@@ -71,11 +70,9 @@ class TelescopeScraper(Scraper):
         image_raw = image_raw.content
         thumbnail_file = thumbnail_dir / f'{title}.{image_extension}'
         thumbnail_file.write_bytes(image_raw)
-        # with open(f'{thumbnail_dir}/{title}.{image_extension}', 'wb') as image:
-        #     image.write(image_raw) # write_byte로 변환
 
-    async def get_all_episode_no(self, titleid, attempt):
-        return reversed(list(self.episode_infomation))
+    async def get_all_episode_no(self, titleid):
+        return reversed(self.episode_infomation)
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
         time.sleep(1)
@@ -88,11 +85,8 @@ class TelescopeScraper(Scraper):
         episode_id = self.episode_infomation[episode_no]['episode_id']
         elemetents = await self.get_internet('soup_select', f'https://www.manhwakyung.com/episode/{episode_id}',
                                              '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
-        # elemetents = get_soup_from_requests(f'https://www.manhwakyung.com/episode/{episode_id}', '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img') # get_internet으로
         return [element.get('data-src') for element in elemetents]
 
 if __name__ == '__main__':
-    # from WebtoonScraper import Webtoon
-    import Webtoon
-    Webtoon.get_webtoon(146, Webtoon.M)
+    pass
     

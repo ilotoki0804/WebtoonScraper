@@ -7,7 +7,7 @@ from async_lru import alru_cache
 from WebtoonScraper.Scraper import Scraper
 
 class BufftoonScraper(Scraper):
-    '''Scrape webtoons from Naver Webtoon.'''
+    '''Scrape webtoons from Bufftoon.'''
     def __init__(self, pbar_independent=False, short_connection=False, cookie: str=''):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://bufftoon.plaync.com'
@@ -16,7 +16,7 @@ class BufftoonScraper(Scraper):
         self.COOKIE = cookie
     
     @alru_cache(maxsize=4)
-    async def get_data(self, titleid, get_payment=False, limit=500):
+    async def get_data(self, titleid, get_payment: bool=False, limit: int=500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = await self.get_internet('requests', url)
         raw_data = raw_data.json()
@@ -62,7 +62,7 @@ class BufftoonScraper(Scraper):
         image_raw = image_raw.content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
 
-    async def get_all_episode_no(self, titleid, attempt):
+    async def get_all_episode_no(self, titleid):
         _, episode_ids = await self.get_data(titleid)
         return list(episode_ids)
 

@@ -44,22 +44,25 @@ class WebtoonOriginalsScraper(Scraper):
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
         image_raw = image_raw.content
-        thumbnail_file = thumbnail_dir / f'{title}.{image_extension}'
-        thumbnail_file.write_bytes(image_raw)
+        thumbnail_path = thumbnail_dir / f'{title}.{image_extension}'
+        thumbnail_path.write_bytes(image_raw)
 
-    async def get_all_episode_no(self, titleid, attempt):
+    async def get_all_episode_no(self, titleid):
+        # getting title_no
+        url = f'{self.BASE_URL}/list?title_no={titleid}'
+        title_no = await self.get_internet('soup_select_one', url, '#_listUl > li')
+        title_no = int(title_no['data-episode-no'])
+        
+        # getting list of titles
         selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
-        for i in range(1, attempt + 1):
-            url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={1}'
-            selected = await self.get_internet(get_type='soup_select', url=url,
-                                               selector=selector)
-            if selected:
-                break
-        if not selected:
-            raise ConnectionRefusedError('soup is empty. Maybe attempt is too low?')
+        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={title_no}'
+        selected = await self.get_internet(get_type='soup_select', url=url,
+                                            selector=selector)
+        
         return (int(selected_one.get('data-episode-no')) for selected_one in selected)
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
+        # TODO API 등 없는지 확인
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
         subtitle = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='#toolbar > div.info > div > h1')
