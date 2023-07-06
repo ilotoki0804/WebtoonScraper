@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from itertools import starmap
 
 from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
 from WebtoonScraper.FolderManager import FolderManager
@@ -25,14 +26,18 @@ G = NAVER_GAME = 'naver_game'
 async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
     # sourcery skip: low-code-quality
     """If webtoon is best challenge, this returns True. Otherwise, False."""
+    loop = asyncio.get_running_loop()
     async def skip_when_errored(func, platform_name):
         try:
-            await func()
+            # await func()
+            await loop.run_in_executor(None, lambda: asyncio.run(func()))
+            # print(f'Complete {platform_name}')
         except Exception as e:
             print(f'An error occured. Skipping {platform_name}')
             print(f'error: {e}')
     
     available_webtoon = []
+    # 네이버 게임은 제목을 받는 데 특수한 함수가 필요하기 때문에 이 클래스를 이용
     webtoonscraper = NaverGameScraper()
 
     # 네이버 웹툰
@@ -42,7 +47,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
             title = title.text
             if title:
                 available_webtoon.append((NAVER_WEBTOON, title))
-    await skip_when_errored(naver_webtoon_fetch, NAVER_WEBTOON)
+    # await skip_when_errored(naver_webtoon_fetch, NAVER_WEBTOON)
 
     # 베스트 도전
     async def best_challenge_fetch():
@@ -51,7 +56,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
             title = title.get('content')
             if title:
                 available_webtoon.append((BEST_CHALLENGE, title))
-    await skip_when_errored(best_challenge_fetch, BEST_CHALLENGE)
+    # await skip_when_errored(best_challenge_fetch, BEST_CHALLENGE)
 
     # 만화경
     async def telescope_fetch():
@@ -60,7 +65,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
         title = None if title == "에러 페이지" else title
         if title:
             available_webtoon.append((TELESCOPE, title))
-    await skip_when_errored(telescope_fetch, TELESCOPE)
+    # await skip_when_errored(telescope_fetch, TELESCOPE)
 
     # 버프툰
     async def bufftoon_fetch():
@@ -69,7 +74,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
         title = None if title == "이야기 던전에 입장하라, 버프툰" else title
         if title:
             available_webtoon.append((BUFFTOON, title))
-    await skip_when_errored(bufftoon_fetch, BUFFTOON)
+    # await skip_when_errored(bufftoon_fetch, BUFFTOON)
 
     # 네이버 게임
     async def naver_game_fetch():
@@ -78,14 +83,14 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
             if title:
                 available_webtoon.append((NAVER_GAME, title))
         webtoonscraper.IS_STABLE_CONNECTION = False
-    await skip_when_errored(naver_game_fetch, NAVER_GAME)
+    # await skip_when_errored(naver_game_fetch, NAVER_GAME)
 
     # originals
     async def originals_fetch():
         title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}', 'meta[property="og:title"]')
         if title:
             available_webtoon.append((ORIGINALS, title))
-    await skip_when_errored(originals_fetch, ORIGINALS)
+    # await skip_when_errored
 
     # canvas
     async def canvas_fetch():
@@ -93,7 +98,20 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
         with contextlib.suppress(AttributeError):
             if title := title.get('content'):
                 available_webtoon.append((CANVAS, title))
-    await skip_when_errored(canvas_fetch, CANVAS)
+    # await skip_when_errored(canvas_fetch, CANVAS)
+    
+    # 전체 동시 실행
+    webtoon_getters = starmap(skip_when_errored, (
+            (naver_webtoon_fetch, NAVER_WEBTOON),
+            (best_challenge_fetch, BEST_CHALLENGE),
+            (telescope_fetch, TELESCOPE),
+            (bufftoon_fetch, BUFFTOON),
+            (naver_game_fetch, NAVER_GAME),
+            (originals_fetch, ORIGINALS),
+            (canvas_fetch, CANVAS)
+        )
+    )
+    await asyncio.gather(*webtoon_getters)
 
     # 베스트 도전과 네이버 웹툰이 겹치고 둘의 이름이 같을 경우 베스트 도전을 배제함.
     for i, (platform, title) in enumerate(available_webtoon):
