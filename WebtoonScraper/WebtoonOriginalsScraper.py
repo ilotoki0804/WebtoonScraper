@@ -3,7 +3,10 @@
 from bs4 import BeautifulSoup as bs
 from async_lru import alru_cache
 
-from WebtoonScraper.Scraper import Scraper
+if __name__ == "__main__":
+    from Scraper import Scraper
+else:
+    from .Scraper import Scraper
 
 class WebtoonOriginalsScraper(Scraper):
     '''Scrape webtoons from Webtoon Originals.'''

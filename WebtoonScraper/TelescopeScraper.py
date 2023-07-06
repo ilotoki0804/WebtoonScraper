@@ -1,8 +1,12 @@
 """Download Webtoons from Manhwakyung."""
-from WebtoonScraper.Scraper import Scraper
+import time
+
 from async_lru import alru_cache
 
-import time
+if __name__ == "__main__":
+    from Scraper import Scraper
+else:
+    from .Scraper import Scraper
 
 class TelescopeScraper(Scraper):
     """Scrape webtoons from Manhwakyung."""

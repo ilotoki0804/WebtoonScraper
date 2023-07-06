@@ -2,7 +2,10 @@
 from itertools import count
 from async_lru import alru_cache
 
-from WebtoonScraper.Scraper import Scraper
+if __name__ == "__main__":
+    from Scraper import Scraper
+else:
+    from .Scraper import Scraper
 class NaverWebtoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
     def __init__(self, pbar_independent=False, short_connection=False):
@@ -75,4 +78,7 @@ class NaverWebtoonScraper(Scraper):
 
 if __name__ == '__main__':
     wt = NaverWebtoonScraper()
-    wt.download_one_webtoon(809590)
+    # wt.download_one_webtoon(809590)
+    import asyncio
+    wt.IS_STABLE_CONNECTION = False
+    asyncio.run(wt.get_internet('requests', 'https://koifoiewofi.com', ))

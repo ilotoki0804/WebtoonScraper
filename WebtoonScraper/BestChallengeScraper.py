@@ -1,5 +1,8 @@
 '''Download Webtoons from Naver Webtoon Best Challenge.'''
-from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
+if __name__ == "__main__":
+    from NaverWebtoonScraper import NaverWebtoonScraper
+else:
+    from .NaverWebtoonScraper import NaverWebtoonScraper
 
 
 class BestChallengeScraper(NaverWebtoonScraper):

@@ -1,6 +1,12 @@
 '''Download Webtoons from Webtoon Canvas.
 '''
-from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
+
+if __name__ == "__main__":
+    from WebtoonOriginalsScraper import WebtoonOriginalsScraper
+else:
+    from .WebtoonOriginalsScraper import WebtoonOriginalsScraper
+
+
 class WebtoonCanvasScraper(WebtoonOriginalsScraper):
     '''Scrape webtoons from Webtoon Originals.'''
     def __init__(self, pbar_independent=False, short_connection=False):

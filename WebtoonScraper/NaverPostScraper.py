@@ -7,7 +7,11 @@ import asyncio
 from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
-from WebtoonScraper.Scraper import Scraper
+
+if __name__ == "__main__":
+    from Scraper import Scraper
+else:
+    from .Scraper import Scraper
 
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''

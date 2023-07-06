@@ -4,15 +4,26 @@ import asyncio
 import contextlib
 from itertools import starmap
 
-from WebtoonScraper.NaverWebtoonScraper import NaverWebtoonScraper
-from WebtoonScraper.FolderManager import FolderManager
-from WebtoonScraper.WebtoonOriginalsScraper import WebtoonOriginalsScraper
-from WebtoonScraper.BestChallengeScraper import BestChallengeScraper
-from WebtoonScraper.WebtoonCanvasScraper import WebtoonCanvasScraper
-from WebtoonScraper.TelescopeScraper import TelescopeScraper
-from WebtoonScraper.BufftoonScraper import BufftoonScraper
-from WebtoonScraper.NaverPostScraper import NaverPostScraper
-from WebtoonScraper.NaverGameScraper import NaverGameScraper
+if __name__ == "__main__":
+    from NaverWebtoonScraper import NaverWebtoonScraper
+    from FolderManager import FolderManager
+    from WebtoonOriginalsScraper import WebtoonOriginalsScraper
+    from BestChallengeScraper import BestChallengeScraper
+    from WebtoonCanvasScraper import WebtoonCanvasScraper
+    from TelescopeScraper import TelescopeScraper
+    from BufftoonScraper import BufftoonScraper
+    from NaverPostScraper import NaverPostScraper
+    from NaverGameScraper import NaverGameScraper
+else:
+    from .NaverWebtoonScraper import NaverWebtoonScraper
+    from .FolderManager import FolderManager
+    from .WebtoonOriginalsScraper import WebtoonOriginalsScraper
+    from .BestChallengeScraper import BestChallengeScraper
+    from .WebtoonCanvasScraper import WebtoonCanvasScraper
+    from .TelescopeScraper import TelescopeScraper
+    from .BufftoonScraper import BufftoonScraper
+    from .NaverPostScraper import NaverPostScraper
+    from .NaverGameScraper import NaverGameScraper
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
@@ -147,7 +158,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
         except ValueError as e:
             raise ValueError('Webtoon ID should be integer.') from e
 
-async def get_scraper_instance(webtoon_type: int):
+async def get_scraper_instance(webtoon_type: str):
     if webtoon_type.lower() == NAVER_WEBTOON:
         webtoonscraper = NaverWebtoonScraper()
     elif webtoon_type.lower() == BEST_CHALLENGE:
@@ -194,7 +205,7 @@ async def get_webtoon_async(
         fd = FolderManager()
         fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir)
 
-def get_webtoon(webtoon_id: int, webtoon_type: str=None, *, merge: None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
+def get_webtoon(webtoon_id: int, webtoon_type: str|None=None, *, merge: None|int|bool=None, cookie: None|str=None, member_no: None|int=None) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))
 
 if __name__ == '__main__':

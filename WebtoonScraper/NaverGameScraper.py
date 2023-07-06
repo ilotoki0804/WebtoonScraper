@@ -7,7 +7,10 @@ from itertools import count
 import json
 from async_lru import alru_cache
 
-from WebtoonScraper.Scraper import Scraper
+if __name__ == "__main__":
+    from Scraper import Scraper
+else:
+    from .Scraper import Scraper
 
 class NaverGameScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''

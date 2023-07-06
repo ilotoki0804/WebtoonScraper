@@ -3,17 +3,22 @@ import re
 from pathlib import Path
 import time
 from async_lru import alru_cache
-from WebtoonScraper.Scraper import Scraper
+
+if __name__ == "__main__":
+    from WebtoonScraper.Scraper import Scraper
+else:
+    from .Scraper import Scraper
+
 
 class BufftoonScraper(Scraper):
     '''Scrape webtoons from Bufftoon.'''
-    def __init__(self, pbar_independent=False, short_connection=False, cookie: str=''):
+    def __init__(self, pbar_independent: bool= False, short_connection: bool = False, cookie: str = ''):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://bufftoon.plaync.com'
         if not short_connection:
             self.IS_STABLE_CONNECTION = True
         self.COOKIE = cookie
-    
+
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid, get_payment: bool=False, limit: int=500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
