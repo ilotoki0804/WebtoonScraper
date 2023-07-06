@@ -10,6 +10,7 @@ from typing import Iterable, Literal
 from abc import abstractmethod, ABCMeta
 
 import requests
+from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup as bs
 from bs4.element import Tag
 from tqdm import tqdm
@@ -106,12 +107,13 @@ class Scraper(metaclass=ABCMeta):
                     response = await send_get_request()
                     is_success = True
                     break
-                except Exception as e:
-                    print('An error occured. Retrying...')
-                    print(f'Error detail: {e}')
+                except ConnectionError as e:
+                    # print('An error occured. Retrying...')
+                    # print(f'Error detail: {e}')
+                    print('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
             if not is_success:
                 raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason.'
-                                      ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titldid.')
+                                      ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
 
         if get_type in ('soup', 'soup_select', 'soup_select_one'):
             soup = bs(response.text, "html.parser")
@@ -147,7 +149,7 @@ class Scraper(metaclass=ABCMeta):
             self.pbar.set_description(description)
 
     @staticmethod
-    def get_file_extension(filename_or_url: str) -> str:
+    def get_file_extension(filename_or_url: str) -> str|None:
         """Get file extionsion of filename_or_url.
         
         only supports jpg/png/jpeg/gif file format. If URL has queries, this ignores it.
@@ -318,4 +320,3 @@ class Scraper(metaclass=ABCMeta):
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
-        
