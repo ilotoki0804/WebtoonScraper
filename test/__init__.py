@@ -5,4 +5,5 @@ else:
     from . import test
 
 if __name__ == "__main__":
-    test.total_test()
+    # test.test_download_ability()
+    test.test_get_webtoon_platform()

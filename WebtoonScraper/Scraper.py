@@ -35,12 +35,11 @@ class Scraper(metaclass=ABCMeta):
                 만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
                 False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
         """
-        # BASE_URL and IS_STABLE_CONNECTION have to defined!
+        # BASE_URL and IS_STABLE_CONNECTION have to be defined!
         self.HEADERS = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
             '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
-        # self.set_folders()
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
         self.PBAR_INDEPENDENT = pbar_independent
@@ -162,7 +161,7 @@ class Scraper(metaclass=ABCMeta):
         """
         serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
 
-        return None if serch_result is None else serch_result.group()
+        return None if serch_result is None else serch_result[0]
         # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
@@ -205,9 +204,7 @@ class Scraper(metaclass=ABCMeta):
     def download_one_webtoon(self, titleid: int, value_range: tuple | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, value_range))
-        # self.loop.run_until_complete(self.download_one_webtoon_async(titleid, value_range))
 
-    # @profile
     async def download_one_webtoon_async(self, titleid, episode_no_range: tuple | int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
