@@ -35,21 +35,18 @@ class FolderManager:
         webtoons = os.listdir(self.BASE_DIR)
         for webtoon in webtoons:
             alt_webtoon_dir = self.ALT_DIR / webtoon
-            # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
-            temp_alt_webtoon_dir = self.ALT_DIR / (webtoon + '(merged)') # why do I have to?
-            base_webtoon_dir = self.BASE_DIR / webtoon
-            self._merge_webtoon_episodes(base_webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount)
-            shutil.rmtree(base_webtoon_dir)
-            temp_alt_webtoon_dir.rename(alt_webtoon_dir)
-            # break
+            self.merge_webtoon_episodes()
 
     def merge_webtoon_episodes(self,
                                webtoon_dir: Path,
                                merge_amount,
                                merge_last_bundle=True):
+        """
+        _merge_webtoon_episodes는 base_dir/alt_dir 두 가지 input을 받고 두 값이 같아서는 안 되지만,
+        merge_webtoon_episodes는 한 가지 input만 받고 한 폴더 내의 상태를 바꿔주
+        """
         # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
-        # temp_alt_webtoon_dir = Path(str(webtoon_dir.parents)) / (webtoon_dir.name + '(merged)') # why do I have to?
-        temp_alt_webtoon_dir = Path(str(webtoon_dir) + '(merged)')
+        temp_alt_webtoon_dir = Path(f'{webtoon_dir}(merged)')
         self._merge_webtoon_episodes(webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount, merge_last_bundle=merge_last_bundle)
         os.rmdir(webtoon_dir)
         temp_alt_webtoon_dir.rename(webtoon_dir)
@@ -75,7 +72,7 @@ class FolderManager:
         episodes = os.listdir(base_webtoon_dir)
 
         # merge_last_bundle을 고려하지 않고 컬랙션을 제작함
-        merged_images: list[list[str]] = defaultdict(list)
+        merged_images: dict[int, list[str]] = defaultdict(list)
         for episode in episodes:
             episode_no = int(episode.split('.')[0])
             merged_images[(episode_no - 1)//merge_amount].append(episode)
@@ -118,9 +115,9 @@ class FolderManager:
     def _find_episode_id(images):
         return {int(image.split('.')[0]) for image in images}
     
-    def _move_images(self, base_episode_dir: Path, alt_webtoon_dir: Path,
+    def _transit_folder_insides(self, base_episode_dir: Path, alt_webtoon_dir: Path,
                      episode_name: str|None=None, ignore_folders: bool=False, rename: bool=False):
-        """이미지가 들어있는 폴더를 받아서 rename하거나 하지 않고 alt_webtoon_dir로 보내는 함수
+        """base와 alt 두 종류의 폴더를 받아 base 안의 내용물을 alt로 보내는 함수
 
         Args:
             base_episode_dir (Path): 이미지가 들어있는 폴더
@@ -146,7 +143,7 @@ class FolderManager:
         episodes = os.listdir(directory)
         for episode in episodes:
             base_episode_dir = directory / episode
-            self._move_images(base_episode_dir, directory, episode, rename=True)
+            self._transit_folder_insides(base_episode_dir, directory, episode, rename=True)
             os.rmdir(base_episode_dir)
 
     def _rename_image(self, image_name, episode_name):
@@ -156,14 +153,11 @@ class FolderManager:
     
     def _is_unified(self, directory):
         episodes_or_images = os.listdir(directory)
-        number_of_images = 0
-        for episode_or_image in episodes_or_images:
-            number_of_images += 1 if re.match(r'.+[.](jpg|jpeg|png)$',
-                                              episode_or_image, re.I) else 0
-        if number_of_images == 1 or number_of_images == 0:
-            return False
-        else:
-            return True
+        number_of_images = sum(
+            1 if re.match(r'.+[.](jpg|jpeg|png)$', episode_or_image, re.I) else 0
+            for episode_or_image in episodes_or_images
+        )
+        return number_of_images not in [1, 0]
     
     ############### RESTORE FUNCTIONALITY ###############
 
@@ -182,12 +176,15 @@ class FolderManager:
         if not self._is_unified(directory):
             # self._unify_webtoon(directory)
             directories = os.listdir(directory)
-            directories = (directory_ for directory_ in directories
-                           if not directory_ == 'thumbnail-TEMP')
+            directories = (
+                directory_
+                for directory_ in directories
+                if directory_ != 'thumbnail-TEMP'
+            )
 
             for directory_ in directories:
                 directory_ = directory / directory_
-                self._move_images(directory_, directory)
+                self._transit_folder_insides(directory_, directory)
                 directory_.rmdir()
 
         images = os.listdir(directory)
@@ -195,8 +192,8 @@ class FolderManager:
 
         for image in images:
             image_info = re.match(r'(\d+)\.(\d+)\. (.+?)\.(\w.+)', image)
-            episode_no, image_no = image_info.group(1), image_info.group(2)
-            episode_name, image_extension = image_info.group(3), image_info.group(4)
+            episode_no, image_no = image_info[1], image_info[2]
+            episode_name, image_extension = image_info[3], image_info[4]
 
             episode_dir = directory / f'{episode_no}. {episode_name}'
             alt_image_name = f'{image_no}.{image_extension}'
@@ -226,3 +223,6 @@ if __name__ == "__main__":
     # fm.merge_webtoons_in_directory(10)
     # fm.restore_webtoons_in_directory()
     # fm.merge_webtoon_episodes(Path('webtoon/(699830)'), 5)
+
+    # fm.merge_webtoons_in_directory(5)
+    # fm.restore_webtoons_in_directory()
