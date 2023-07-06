@@ -85,11 +85,5 @@ class NaverGameScraper(Scraper):
 
 
 if __name__ == '__main__':
-    # wt = NaverPost()
-    # asyncio.run(wt.get_data(625402, 19803452))
-
-    # wt = NaverPost()
-    # wt.member_no = 19803452
-    # print(asyncio.run(wt.get_episode_images_url(577056, 2)))
-
-    pass
+    wt = NaverGameScraper()
+    wt.get_webtoon(5)  # 모배툰

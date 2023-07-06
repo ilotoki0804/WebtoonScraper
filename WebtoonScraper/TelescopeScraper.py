@@ -94,5 +94,7 @@ class TelescopeScraper(Scraper):
                                              '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
         return [element.get('data-src') for element in elemetents]
 
+
 if __name__ == '__main__':
-    pass
+    wt = TelescopeScraper()
+    wt.download_one_webtoon(137)  # 물망초

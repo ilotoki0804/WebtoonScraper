@@ -1,5 +1,6 @@
 """Abstract Class of all scrapers."""
 # TODO: file_acceptable built-in으로 만들기
+# TODO: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
 import re
 import os
 import asyncio
@@ -302,13 +303,13 @@ class Scraper(metaclass=ABCMeta):
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
         image_extension = self.get_file_extension(url)
-        
+
         # for Bufftoon
         if image_extension is None:
             if default_file_extension is not None:
                 raise ValueError('File extension not detected.')
             image_extension = default_file_extension
-        
+
         file_name = f'{image_no:03d}.{image_extension}'
 
         # self._set_pbar(f'{episode_dir}|{file_name}')

@@ -15,7 +15,7 @@ class NaverWebtoonScraper(Scraper):
         self.BASE_URL = 'https://comic.naver.com/webtoon'
         if not short_connection:
             self.IS_STABLE_CONNECTION = True
-        self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img' # for best challenge
+        self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'  # for best challenge
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_data(self, titleid: int):
@@ -75,12 +75,10 @@ class NaverWebtoonScraper(Scraper):
 
 
 if __name__ == '__main__':
-    # wt = NaverWebtoonScraper()
-    # wt.download_one_webtoon(809590)
-   
+    wt = NaverWebtoonScraper()
+    wt.download_one_webtoon(809590)  # 이번 생
+
     # # get_internet test(Scraper는 abstract class라 직접 실행이 불가해서 대신 사용)
     # import asyncio
     # wt.IS_STABLE_CONNECTION = False
     # asyncio.run(wt.get_internet('requests', 'https://koifoiewofi.com'))
-
-    pass

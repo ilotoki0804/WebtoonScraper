@@ -16,3 +16,4 @@ class WebtoonCanvasScraper(WebtoonOriginalsScraper):
 
 if __name__ == '__main__':
     wt = WebtoonCanvasScraper()
+    wt.download_one_webtoon(263735)  # Spookman

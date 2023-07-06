@@ -80,15 +80,10 @@ class WebtoonOriginalsScraper(Scraper):
         subtitles = await self._get_webtoon_infomation(titleid)
         subtitle = subtitles[episode_no]
 
-        if file_acceptable:
-            subtitle = self.get_acceptable_file_name(subtitle)
-        else:
-            subtitle = subtitle
-
-        return subtitle
+        return self.get_acceptable_file_name(subtitle) if file_acceptable else subtitle
 
     async def get_episode_images_url(self, titleid, episode_no):
-        url =  f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
+        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                                      selector='#_imageList > img')
         return [
@@ -99,4 +94,4 @@ class WebtoonOriginalsScraper(Scraper):
 
 if __name__ == '__main__':
     wt = WebtoonOriginalsScraper()
-    wt.download_one_webtoon(5384)
+    wt.download_one_webtoon(5291)  # Wumpus

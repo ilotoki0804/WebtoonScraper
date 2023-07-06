@@ -164,6 +164,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
         except ValueError as e:
             raise ValueError('Webtoon ID should be integer.') from e
 
+
 async def get_scraper_instance(webtoon_type: str):
     if webtoon_type.lower() == NAVER_WEBTOON:
         webtoonscraper = NaverWebtoonScraper()
@@ -185,13 +186,16 @@ async def get_scraper_instance(webtoon_type: str):
         raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, telescope, and naver_game.')
     return webtoonscraper
 
+
 async def get_webtoon_async(
         webtoon_id: int,
         webtoon_type: None | str = None,
-        *, merge: None | int = None,
+        *,
+        merge: None | int = None,
         cookie: None | str = None,
         member_no: None | int = None,
-        is_auto_select=False) -> None:
+        is_auto_select=False
+) -> None:
 
     if webtoon_type is None:
         webtoon_type = await get_webtoon_platform(webtoon_id, is_auto_select)
@@ -212,10 +216,16 @@ async def get_webtoon_async(
         fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir)
 
 
-def get_webtoon(webtoon_id: int, webtoon_type: str | None = None, *, merge: None | int | bool = None, cookie: None | str = None, member_no: None | int = None) -> None:
+def get_webtoon(
+    webtoon_id: int,
+    webtoon_type: str | None = None,
+    *,
+    merge: None | int | bool = None,
+    cookie: None | str = None,
+    member_no: None | int = None
+) -> None:
     asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))
 
 
 if __name__ == '__main__':
     asyncio.run(get_webtoon_platform(18))  # 네이버 게임
-    # pass

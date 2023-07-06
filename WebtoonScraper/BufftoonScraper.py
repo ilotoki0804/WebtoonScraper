@@ -110,7 +110,5 @@ class BufftoonScraper(Scraper):
 
 
 if __name__ == '__main__':
-    # bt = BufftoonScraper()
-    # bt.download_one_webtoon(1007888)
-
-    pass
+    wt = BufftoonScraper()
+    wt.get_webtoon(1007888)  # 겜덕툰

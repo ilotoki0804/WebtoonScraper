@@ -14,3 +14,4 @@ class BestChallengeScraper(NaverWebtoonScraper):
 
 if __name__ == '__main__':
     wt = BestChallengeScraper()
+    wt.get_webtoon(763952)  # 과학고

@@ -22,11 +22,11 @@ class NaverPostScraper(Scraper):
         if not short_connection:
             self.IS_STABLE_CONNECTION = True
 
-    def download_one_webtoon(self, titleid: int, member_no: int,  value_range: tuple|int|None=None) -> None:
+    def download_one_webtoon(self, titleid: int, member_no: int,  value_range: tuple | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, member_no,  value_range))
 
-    async def download_one_webtoon_async(self, titleid, member_no: int, episode_no_range: tuple|int|None=None) -> None:
+    async def download_one_webtoon_async(self, titleid, member_no: int, episode_no_range: tuple | int | None = None) -> None:
         """포스트는 member_no도 받아야 하기 때문에 불가피하게 수정이 필요."""
         self.member_no = member_no
         await super().download_one_webtoon_async(titleid, episode_no_range)
@@ -122,11 +122,11 @@ class NaverPostScraper(Scraper):
 
 
 if __name__ == '__main__':
-    # wt = NaverPostScraper()
+    wt = NaverPostScraper()
+    wt.download_one_webtoon(597061, 19803452)  # 겜덕겜소
+
     # asyncio.run(wt.get_data(625402, 19803452))
 
     # wt = NaverPostScraper()
     # wt.member_no = 19803452
     # print(asyncio.run(wt.get_episode_images_url(577056, 2)))
-
-    pass
