@@ -1,5 +1,4 @@
-'''Download Webtoons from Naver Post.
-'''
+'''Download Webtoons from Naver Post.'''
 
 import contextlib
 from pathlib import Path
@@ -11,6 +10,7 @@ if __name__ == "__main__":
     from Scraper import Scraper
 else:
     from .Scraper import Scraper
+
 
 class NaverGameScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
@@ -34,7 +34,8 @@ class NaverGameScraper(Scraper):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):
-            url = f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}/seasons/{season}/contents?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}'
+            url = f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}/seasons/{season}/contents'\
+                  f'?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}'
             res = await self.get_internet(get_type='requests', url=url)
             res = res.json()
             if not res['content']:
@@ -44,9 +45,7 @@ class NaverGameScraper(Scraper):
         # 부제목, 이미지 데이터 불러옴
         episodes_data = {}
         for i, episode in enumerate(content_raw_data, 1):
-            # print(episode['feedId'])
             subtitle = episode['feed']['title']
-            # print(json.loads(episode['feed']['contents']))
             content_json_data = json.loads(episode['feed']['contents'])
             image_urls = []
             for image_url in content_json_data['document']['components']:
@@ -83,11 +82,9 @@ class NaverGameScraper(Scraper):
     async def get_episode_images_url(self, titleid, episode_no):
         episodes_data = await self._get_episode_infomation(titleid)
         return episodes_data[episode_no]['image_urls']
-    
-if __name__ == '__main__':
-    # np = NaverPost()
-    # np.download_one_webtoon(625402, 19803452)
 
+
+if __name__ == '__main__':
     # wt = NaverPost()
     # asyncio.run(wt.get_data(625402, 19803452))
 
@@ -95,11 +92,4 @@ if __name__ == '__main__':
     # wt.member_no = 19803452
     # print(asyncio.run(wt.get_episode_images_url(577056, 2)))
 
-    # from NaverPost import NaverPostScraper
-    wt = NaverGameScraper()
-    # wt.download_one_webtoon(614921, 19803452)
-    # wt.download_one_webtoon(577056, 19803452)
-    # wt.download_one_webtoon(625402, 19803452)
-    # wt.set_folders('webtoon')
-    # wt.download_one_webtoon(31)
-    wt.download_one_webtoon(5)
+    pass

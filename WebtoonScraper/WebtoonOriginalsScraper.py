@@ -8,6 +8,7 @@ if __name__ == "__main__":
 else:
     from .Scraper import Scraper
 
+
 class WebtoonOriginalsScraper(Scraper):
     '''Scrape webtoons from Webtoon Originals.'''
     def __init__(self, pbar_independent=False, short_connection=False):
@@ -15,7 +16,7 @@ class WebtoonOriginalsScraper(Scraper):
         self.BASE_URL = 'https://www.webtoons.com/en/fantasy/watermelon'
         self.IS_STABLE_CONNECTION = False
         self.USER_AGENT = {
-            'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
             "Referer": "http://www.webtoons.com"
         }
 
@@ -27,25 +28,25 @@ class WebtoonOriginalsScraper(Scraper):
         if file_acceptable:
             title = self.get_acceptable_file_name(title)
         return title
-    
+
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={titleid}'
         title_no = await self.get_internet('soup_select_one', url, '#_listUl > li')
         title_no = int(title_no['data-episode-no'])
-                
+
         # getting list of titles
         selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={title_no}'
         selected = await self.get_internet(get_type='soup_select', url=url,
-                                            selector=selector)
-        
+                                           selector=selector)
+
         subtitles = {}
         for element in selected:
             episode_no = int(element["data-episode-no"])
             subtitles[episode_no] = element.select_one("span.subj").text
-            
+
         return subtitles
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
@@ -78,19 +79,23 @@ class WebtoonOriginalsScraper(Scraper):
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
         subtitles = await self._get_webtoon_infomation(titleid)
         subtitle = subtitles[episode_no]
-        
+
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle)
         else:
             subtitle = subtitle
-            
+
         return subtitle
-    
+
     async def get_episode_images_url(self, titleid, episode_no):
         url =  f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
-                                            selector='#_imageList > img')
-        return [element['data-url'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
+                                                     selector='#_imageList > img')
+        return [
+            element['data-url']
+            for element in episode_images_url
+            if not ('agerate' in element['src'] or 'ctguide' in element['src'])
+        ]
 
 if __name__ == '__main__':
     wt = WebtoonOriginalsScraper()

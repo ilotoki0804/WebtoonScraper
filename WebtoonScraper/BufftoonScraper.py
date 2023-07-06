@@ -12,7 +12,7 @@ else:
 
 class BufftoonScraper(Scraper):
     '''Scrape webtoons from Bufftoon.'''
-    def __init__(self, pbar_independent: bool= False, short_connection: bool = False, cookie: str = ''):
+    def __init__(self, pbar_independent: bool = False, short_connection: bool = False, cookie: str = ''):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://bufftoon.plaync.com'
         if not short_connection:
@@ -20,7 +20,7 @@ class BufftoonScraper(Scraper):
         self.COOKIE = cookie
 
     @alru_cache(maxsize=4)
-    async def _get_webtoon_infomation(self, titleid, get_payment: bool=False, limit: int=500):
+    async def _get_webtoon_infomation(self, titleid, get_payment: bool = False, limit: int = 500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = await self.get_internet('requests', url)
         raw_data = raw_data.json()
@@ -72,8 +72,9 @@ class BufftoonScraper(Scraper):
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle)
         return subtitle
-    
+
     async def get_episode_images_url(self, titleid, episode_no):
+        # sourcery skip: de-morgan
         HEADERS = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -95,18 +96,21 @@ class BufftoonScraper(Scraper):
             'Sec-Gpc': '1',
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43',
-            }
+        }
         _, episode_ids = await self._get_webtoon_infomation(titleid)
         url = f'{self.BASE_URL}/series/{titleid}/{episode_ids[episode_no]}'
         selector = '#content > div > div > div.viewer-wrapper > div > img'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
-                                            selector=selector, headers=HEADERS)
-        
+                                                     selector=selector, headers=HEADERS)
+
         return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
-    
+
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
         super().download_single_image(episode_dir, url, image_no, 'png')
-    
+
+
 if __name__ == '__main__':
-    bt = BufftoonScraper()
-    bt.download_one_webtoon(1007888)
+    # bt = BufftoonScraper()
+    # bt.download_one_webtoon(1007888)
+
+    pass

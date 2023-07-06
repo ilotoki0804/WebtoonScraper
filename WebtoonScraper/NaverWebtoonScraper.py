@@ -6,6 +6,8 @@ if __name__ == "__main__":
     from Scraper import Scraper
 else:
     from .Scraper import Scraper
+
+
 class NaverWebtoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
     def __init__(self, pbar_independent=False, short_connection=False):
@@ -23,7 +25,7 @@ class NaverWebtoonScraper(Scraper):
             url = f"https://comic.naver.com/api/article/list?titleId={titleid}&page={i}&sort=ASC"
             res = await self.get_internet('requests', url)
             res = res.json()
-            
+
             curr_articleList = res["articleList"]
             if prev_articleList == curr_articleList:
                 break
@@ -31,7 +33,7 @@ class NaverWebtoonScraper(Scraper):
                 subtitles[article["no"]] = article["subtitle"]
 
             prev_articleList = curr_articleList
-            
+
         return subtitles
 
     async def get_title(self, titleid, file_acceptable):
@@ -62,12 +64,7 @@ class NaverWebtoonScraper(Scraper):
         subtitles = await self._get_webtoon_data(titleid)
         subtitle = subtitles[episode_no]
 
-        if file_acceptable:
-            subtitle = self.get_acceptable_file_name(subtitle)
-        else:
-            subtitle = subtitle
-
-        return subtitle
+        return self.get_acceptable_file_name(subtitle) if file_acceptable else subtitle
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan
@@ -76,9 +73,14 @@ class NaverWebtoonScraper(Scraper):
                                                      selector=self.EPISODE_IMAGES_URL_SELECTOR)
         return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
 
+
 if __name__ == '__main__':
-    wt = NaverWebtoonScraper()
+    # wt = NaverWebtoonScraper()
     # wt.download_one_webtoon(809590)
-    import asyncio
-    wt.IS_STABLE_CONNECTION = False
-    asyncio.run(wt.get_internet('requests', 'https://koifoiewofi.com', ))
+   
+    # # get_internet test(Scraper는 abstract class라 직접 실행이 불가해서 대신 사용)
+    # import asyncio
+    # wt.IS_STABLE_CONNECTION = False
+    # asyncio.run(wt.get_internet('requests', 'https://koifoiewofi.com'))
+
+    pass

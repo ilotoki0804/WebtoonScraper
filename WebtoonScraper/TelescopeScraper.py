@@ -8,16 +8,17 @@ if __name__ == "__main__":
 else:
     from .Scraper import Scraper
 
+
 class TelescopeScraper(Scraper):
     """Scrape webtoons from Manhwakyung."""
-    
+
     def __init__(self, pbar_independent=False, short_connection=False):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://www.manhwakyung.com'
         self.IS_STABLE_CONNECTION = False
         self.TIMEOUT = 3
 
-    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None):
+    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple | int | None = None):
         self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_webtoon_infomation(titleid)
         await super().download_one_webtoon_async(titleid, episode_no_range)
 
@@ -63,7 +64,7 @@ class TelescopeScraper(Scraper):
             episode_no = episode['episodeNumber']
             episode_id = episode['id']
             episode_infomation[episode_no] = {'subtitle': subtitle, 'episode_id': episode_id}
-            
+
         return title, list_thumbnail_url, grid_thumbnail_url, episode_infomation
 
     async def get_title(self, titleid, file_acceptable):
@@ -86,7 +87,7 @@ class TelescopeScraper(Scraper):
         if file_acceptable:
             subtitle = self.get_acceptable_file_name(subtitle)
         return subtitle
-    
+
     async def get_episode_images_url(self, titleid, episode_no):
         episode_id = self.episode_infomation[episode_no]['episode_id']
         elemetents = await self.get_internet('soup_select', f'https://www.manhwakyung.com/episode/{episode_id}',
@@ -95,4 +96,3 @@ class TelescopeScraper(Scraper):
 
 if __name__ == '__main__':
     pass
-    

@@ -13,6 +13,7 @@ if __name__ == "__main__":
 else:
     from .Scraper import Scraper
 
+
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
     def __init__(self, pbar_independent=False, short_connection=False):
@@ -32,6 +33,7 @@ class NaverPostScraper(Scraper):
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid: int) -> list:
+        # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
         subtitle_list = []
         for i in count(1):
             subtitle_sublist = []
@@ -43,15 +45,15 @@ class NaverPostScraper(Scraper):
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
             demres = demjson3.decode(response.text)['html']
             soup = BeautifulSoup(demres, 'html.parser')
-            
+
             # subtitle data만듦.
             for tag in soup.select('ul > li > a > div > span.ell'):
-                subtitle_sublist.append({'subtitle' : tag.text.strip()})
+                subtitle_sublist.append({'subtitle': tag.text.strip()})
             for j, tag in enumerate(soup.select('ul > li > a > div > span.spot_post_like')):
                 # 버려지는 값은 member_no/그냥 member_no라고 해도 되지만 혹시 모를 corruption을 막기 위한 조치
                 episode_id, _ = map(int, tag['data-cid'].split('_'))
                 subtitle_sublist[j].update({'episode_id': episode_id, 'member_no': self.member_no})
-            
+
             # 지금 받아온 데이터가 이전 데이터와 같은지 확인
             if subtitle_sublist == subtitle_list[-len(subtitle_sublist):]:
                 break
@@ -85,8 +87,6 @@ class NaverPostScraper(Scraper):
         return (i + 1 for i in range(len(subtitle_list)))
 
     async def get_subtitle(self, titleid, episode_no, file_acceptable):
-        # if sleep:
-        #     time.sleep(1)
         subtitle_list = await self._get_webtoon_infomation(titleid)
         subtitle_info = subtitle_list[episode_no - 1]
         subtitle = subtitle_info['subtitle']
@@ -100,7 +100,7 @@ class NaverPostScraper(Scraper):
         url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={self.member_no}&navigationType=push'
         for _ in range(attempt):
             content = await self.get_internet(get_type='soup_select_one', url=url,
-                                                    selector='#__clipContent')
+                                              selector='#__clipContent')
             if content is None:
                 # '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류
                 # 아마 episode_id에 titleid가 잘못 들어가면 생기는 오류로 추정하지만
@@ -112,27 +112,21 @@ class NaverPostScraper(Scraper):
             raise ConnectionError('Unknown error occurred. Please try again later.')
         content = content.text
         soup_content = BeautifulSoup(content, 'html.parser')
-        
+
         # 문서 내에 있는 모든 이미지 링크를 불러옴
         selector = 'div.se_component_wrap.sect_dsc.__se_component_area > div > div > div > div > a > img'
         episode_images_url = [tag['data-src'] for tag in soup_content.select(selector)]
-        
-        return [url for url in episode_images_url 
-                if not url.startswith('https://mail.naver.com/read/image/')]
-    
-if __name__ == '__main__':
-    # np = NaverPost()
-    # np.download_one_webtoon(625402, 19803452)
 
-    # wt = NaverPost()
+        return [url for url in episode_images_url
+                if not url.startswith('https://mail.naver.com/read/image/')]
+
+
+if __name__ == '__main__':
+    # wt = NaverPostScraper()
     # asyncio.run(wt.get_data(625402, 19803452))
 
-    # wt = NaverPost()
+    # wt = NaverPostScraper()
     # wt.member_no = 19803452
     # print(asyncio.run(wt.get_episode_images_url(577056, 2)))
 
-    # from NaverPost import NaverPostScraper
-    wt = NaverPostScraper()
-    # wt.download_one_webtoon(614921, 19803452)
-    wt.download_one_webtoon(577056, 19803452)
-    wt.download_one_webtoon(625402, 19803452)
+    pass

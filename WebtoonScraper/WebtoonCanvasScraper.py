@@ -13,5 +13,6 @@ class WebtoonCanvasScraper(WebtoonOriginalsScraper):
         super().__init__(pbar_independent, short_connection)
         self.BASE_URL = 'https://www.webtoons.com/en/challenge/meme-girls'
 
+
 if __name__ == '__main__':
     wt = WebtoonCanvasScraper()

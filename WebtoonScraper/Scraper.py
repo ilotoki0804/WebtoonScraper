@@ -15,18 +15,19 @@ from bs4 import BeautifulSoup as bs
 from bs4.element import Tag
 from tqdm import tqdm
 
+
 class Scraper(metaclass=ABCMeta):
     """Abstract class of all scrapers.
-    
+
     init, get_internet, 전반적인 로직 등은 모두 이 페이지에서 관리하고, 구체적인 다운로드 방법은 각각의 scraper들에게 맡깁니다.
     따라서 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 역할은 각자 scraper들에 구현되어 있습니다.
     """
 
-    def __init__(self, pbar_independent: bool=False, short_connection=False) -> None:
+    def __init__(self, pbar_independent: bool = False, short_connection=False) -> None:
         """시작에 필요한 여러가지를 관여합니다.
-        
+
         header, timeout을 구성하고 set_folders()를 호출합니다.
-        
+
         Args:
             pbar_independent: 만약 True라면 tqdm을 이용해서 로그를 표시하고, False라면 print를 통해서 로그를 표시합니다.
             short_connection:
@@ -35,9 +36,9 @@ class Scraper(metaclass=ABCMeta):
         """
         # BASE_URL and IS_STABLE_CONNECTION have to defined!
         self.HEADERS = {
-            'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
             '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
-            }
+        }
         # self.set_folders()
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
@@ -45,15 +46,16 @@ class Scraper(metaclass=ABCMeta):
         if short_connection:
             self.TIMEOUT = 3
             self.IS_STABLE_CONNECTION = False
-    
-    # @profile
+
     async def get_internet(
-            self, get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'], 
-            url: str, selector=None, 
-            is_run_in_executor=False, 
-            attempt: int=10, 
+            self,
+            get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
+            url: str,
+            selector: str = None,
+            is_run_in_executor: bool = False,
+            attempt: int = 10,
             headers=None
-            ) -> requests.Response|bs|list|Tag|None:
+    ) -> requests.Response | bs | list | Tag | None:
         """Get response/beautifulsoup/beautifulsoup tag list/beautifulsoup tag from internet.
 
         Args:
@@ -71,7 +73,6 @@ class Scraper(metaclass=ABCMeta):
             headers: requests.get을 보낼 때 사용할 header를 받습니다. 만약 없을 경우 self.HEADERS를 대신 사용합니다.
         Returns:
             반환값은 어떤 get_type을 사용했는가에 따라 다르다.
-            
             'requests': requests.Response
             'soup': BeautifulSoup
             'soup_select': list[bs4.element.Tag]
@@ -107,9 +108,7 @@ class Scraper(metaclass=ABCMeta):
                     response = await send_get_request()
                     is_success = True
                     break
-                except ConnectionError as e:
-                    # print('An error occured. Retrying...')
-                    # print(f'Error detail: {e}')
+                except ConnectionError:
                     print('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
             if not is_success:
                 raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason.'
@@ -149,45 +148,47 @@ class Scraper(metaclass=ABCMeta):
             self.pbar.set_description(description)
 
     @staticmethod
-    def get_file_extension(filename_or_url: str) -> str|None:
+    def get_file_extension(filename_or_url: str) -> str | None:
         """Get file extionsion of filename_or_url.
-        
+
         only supports jpg/png/jpeg/gif file format. If URL has queries, this ignores it.
 
         Args:
             filename_or_url: 파일 확장자가 궁금한 파일명이나 URL. 이때 URL 쿼리는 무시됩니다.
-        
+
         Returns:
             파일 확장자를 반환합니다.
         """
-        serch_result: re.Match|None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
+        serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
 
         return None if serch_result is None else serch_result.group()
         # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
-    def get_acceptable_file_name(file_or_diretory_name: str, strict_checking: bool=False) -> str:
+    def get_acceptable_file_name(file_or_diretory_name: str, strict_checking: bool = False) -> str:
         """Translate file or diretory name to accaptable name.
 
         Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
         table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')
 
-        processed = html.unescape(file_or_diretory_name) # change things like "&amp;" to "'".
-        
+        processed = html.unescape(file_or_diretory_name)  # change things like "&amp;" to "'".
+
         processed = processed.translate(table).strip()
 
         processed = re.sub(r'\.$', '．', processed)
 
         if strict_checking:
-            strict_checked_string = ''
-            for chractor in processed:
-                if ord(chractor) in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-                                     22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 34, 42, 58, 60, 62, 63, 124):
-                    strict_checked_string += ' '
-                else:
-                    strict_checked_string += chractor
-            return strict_checked_string
+            return ''.join(
+                ' '
+                if ord(chractor)
+                in {
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 34, 42, 58, 60, 62, 63, 124,
+                }
+                else chractor
+                for chractor in processed
+            )
         return processed
 
     @property
@@ -200,13 +201,13 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, titleid: int, value_range: tuple|int|None=None) -> None:
+    def download_one_webtoon(self, titleid: int, value_range: tuple | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, value_range))
         # self.loop.run_until_complete(self.download_one_webtoon_async(titleid, value_range))
 
     # @profile
-    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple|int|None=None) -> None:
+    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple | int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -247,13 +248,12 @@ class Scraper(metaclass=ABCMeta):
     @abstractmethod
     async def save_webtoon_thumbnail(self, titleid: int, title: str, thumbnail_dir: Path) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
-    
+
     @abstractmethod
     async def get_all_episode_no(self, titleid: int) -> Iterable:
         """웹툰에서 전체 에피소드를 가져온다."""
 
-    # @profile
-    def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None|bool:
+    def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
 
         None를 return한다면 회차를 다운로드해야 한다는 의미이다.
@@ -272,7 +272,6 @@ class Scraper(metaclass=ABCMeta):
                 self._set_pbar(f'skipping {subtitle}')
                 return True
 
-    # @profile
     async def download_one_episode(self, episode_no: int, titleid: int, webtoon_dir: Path) -> None:
         """한 회차를 다운로드받는다."""
         subtitle = await self.get_subtitle(titleid, episode_no, file_acceptable=True)
@@ -300,10 +299,8 @@ class Scraper(metaclass=ABCMeta):
     async def get_episode_images_url(self, titleid: int, episode_no: int) -> list:
         """해당 회차를 구성하는 이미지들을 불러온다."""
 
-    # @profile
-    async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str|None=None) -> None:
+    async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
-        # print(url)
         image_extension = self.get_file_extension(url)
         
         # for Bufftoon
