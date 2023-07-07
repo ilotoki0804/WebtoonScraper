@@ -1,6 +1,7 @@
 """Abstract Class of all scrapers."""
 # TODO: file_acceptable built-in으로 만들기
 # TODO: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
+# TODO: get_webtoon 리스트 형식으로 변경하기
 import re
 import os
 import asyncio
