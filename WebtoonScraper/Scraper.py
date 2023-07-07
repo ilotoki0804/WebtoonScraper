@@ -9,6 +9,7 @@ import html
 from pathlib import Path
 from typing import Iterable, Literal
 from abc import abstractmethod, ABCMeta
+from collections import namedtuple
 
 import requests
 from requests.exceptions import ConnectionError
@@ -51,7 +52,7 @@ class Scraper(metaclass=ABCMeta):
             self,
             get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
             url: str,
-            selector: str = None,
+            selector: str | None = None,
             is_run_in_executor: bool = False,
             attempt: int = 10,
             headers=None
@@ -102,8 +103,8 @@ class Scraper(metaclass=ABCMeta):
         if self.IS_STABLE_CONNECTION:
             response = await send_get_request()
         else:
+            is_success = False
             for _ in range(attempt):
-                is_success = False
                 try:
                     response = await send_get_request()
                     is_success = True
@@ -201,11 +202,11 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, titleid: int, value_range: tuple | int | None = None) -> None:
+    def download_one_webtoon(self, titleid: int, episode_no_range: tuple | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
-        asyncio.run(self.download_one_webtoon_async(titleid, value_range))
+        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range))
 
-    async def download_one_webtoon_async(self, titleid, episode_no_range: tuple | int | None = None) -> None:
+    async def download_one_webtoon_async(self, titleid: int | tuple, episode_no_range: tuple | int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -218,7 +219,7 @@ class Scraper(metaclass=ABCMeta):
         """
         self.loop = asyncio.get_running_loop()
 
-        title = await self.get_title(titleid, file_acceptable=True)
+        title = self.get_acceptable_file_name(await self.get_title(titleid))
         webtoon_dir = self.BASE_DIR / f'{title}({titleid})'
         self.webtoon_dir = webtoon_dir
 
@@ -240,7 +241,7 @@ class Scraper(metaclass=ABCMeta):
         print(f'A webtoon {title} download ended.')
 
     @abstractmethod
-    async def get_title(self, titleid: int, file_acceptable: bool) -> str:
+    async def get_title(self, titleid: int | tuple) -> str:
         """웹툰의 title을 불러온다."""
 
     @abstractmethod
