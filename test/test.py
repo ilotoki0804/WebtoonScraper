@@ -3,8 +3,10 @@ import asyncio
 if __name__ == "__main__":
     # 파일을 이용하는 것은 아님. 만약 제대로 사용하려면 상대 경로로 실행해야 함.
     from WebtoonScraper import Webtoon as wt
+    from WebtoonScraper import FolderManager
 else:
     from ..WebtoonScraper import Webtoon as wt
+    from ..WebtoonScraper.FolderManager import FolderManager
 
 
 def skip_by_KeyboadInterrupt(func):
@@ -25,10 +27,16 @@ def test_download_ability():
     skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(597061, wt.P, member_no=19803452))  # 네이버 포스트
 
 
+def test_merge_ability():
+    fd = FolderManager()
+    fd.merge_webtoons_in_directory(5)
+
+
 def test_get_webtoon_platform():
     asyncio.run(wt.get_webtoon_platform(18))
 
 
 if __name__ == "__main__":
     # test_download_ability()
-    test_get_webtoon_platform()
+    # test_get_webtoon_platform()
+    test_merge_ability()
