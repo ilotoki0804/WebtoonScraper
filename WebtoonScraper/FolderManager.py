@@ -37,7 +37,7 @@ class FolderManager:
         webtoons = os.listdir(self.BASE_DIR)
         for webtoon in webtoons:
             webtoon_dir = self.ALT_DIR / webtoon
-            self.merge_webtoon_episodes(webtoon_dir)
+            self.merge_webtoon_episodes(webtoon_dir, merge_amount)
 
     def merge_webtoon_episodes(self,
                                webtoon_dir: Path,
@@ -74,20 +74,20 @@ class FolderManager:
         episodes = os.listdir(base_webtoon_dir)
 
         # merge_last_bundle을 고려하지 않고 컬랙션을 제작함
-        merged_images: dict[int, list[str]] = defaultdict(list)
+        merged_images = defaultdict(list)
         for episode in episodes:
             episode_no = int(episode.split('.')[0])
             merged_images[(episode_no - 1) // merge_amount].append(episode)
 
         # merge_last_bundle을 적용함
-        merged_images = sorted(merged_images.items())
-        _, last_images = merged_images[-1]
-        if merge_last_bundle and len(self._find_episode_id(last_images)) != merge_amount:
-            merged_second_last_list = merged_images[-2][1]
-            merged_second_last_list += merged_images.pop()[1]
+        merged_images_list: list[tuple[int, list[str]]] = sorted(merged_images.items())
+        _, last_images = merged_images_list[-1]
+        if merge_last_bundle and len(self._find_episode_id(last_images)) > merge_amount:
+            merged_second_last_list = merged_images_list[-2][1]
+            merged_second_last_list += merged_images_list.pop()[1]
 
         # 폴더에 넣는 과정
-        for _, images in merged_images:
+        for _, images in merged_images_list:
             alt_dir_name = self._make_dir_name(images)
             images_dir = alt_webtoon_dir / alt_dir_name
             images_dir.mkdir(parents=True, exist_ok=True)
@@ -154,6 +154,12 @@ class FolderManager:
 
     def _rename_image(self, image_name, episode_name):
         episode_split = re.search(r'^(\d+)[.] (.+)', episode_name)
+        if not episode_split:
+            if re.search(r'^(\d+)~(\d+)', episode_name):
+                raise ValueError(
+                    'Episode name is not valid. It\'s because you tried merging already merged webtoon folder.'
+                )
+            raise ValueError('Episode name is not valid.')
         image_no, image_extension = image_name.split('.')[0], image_name.split('.')[-1]
         return f'{episode_split[1]}.{image_no}. {episode_split[2]}.{image_extension}'
 
@@ -198,6 +204,8 @@ class FolderManager:
 
         for image in images:
             image_info = re.match(r'(\d+)\.(\d+)\. (.+?)\.(\w.+)', image)
+            if not image_info:
+                raise ValueError('image name is not valid. Possibly trying not merged webtoon folder.')
             episode_no, image_no = image_info[1], image_info[2]
             episode_name, image_extension = image_info[3], image_info[4]
 
@@ -223,7 +231,7 @@ if __name__ == "__main__":
     # print(fm.BASE_DIR, fm.ALT_DIR)
 
     # # test main functions
-    # fm.merge_webtoons_in_directory(5)
+    fm.merge_webtoons_in_directory(5)
     # fm.merge_webtoon_episodes(Path('webtoon/somewebtoon(webtoonid)'), 5)
 
     # # test restore functions
