@@ -67,7 +67,7 @@
    ```python
    from WebtoonScraper import Webtoon as wt
 
-   wt.get_webtoon(1007888, wt.BU) # 복사했던 수를 여기에다 붙여넣으세요.
+   wt.get_webtoon(1007888, wt.BF) # 복사했던 수를 여기에다 붙여넣으세요.
    ```
 3. 'Enter cookie of 1007888(시리즈 id) (Enter nothing to preceed without cookie)'라는 문구와 함께 입력란이 나오면 그냥 enter를 눌러줍니다.
 4. 로그인하지 않고 볼 수 있는 모든 에피소드가 다운로드됩니다.
@@ -188,7 +188,9 @@
 
 # Relese Note
 
-1.0.1: 코드 개선 및 리팩토링, api를 통한 로직으로 변경
+1.0.2: 대형 리팩토링, get_webtoon_platform 비동기 방식으로 속도 개선, 상대경로로 변경, 테스트 추가
+
+1.0.1: 코드 개선 및 리팩토링, api를 통한 로직으로 변경 (버그가 많기에 사용을 권장하지 않음)
 
 1.0.0: 네이버 게임 추가, FolderManager 리펙토링 및 개선, 정식 버전, docs 개선
 
