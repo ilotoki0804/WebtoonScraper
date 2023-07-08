@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterable, Literal
 from abc import abstractmethod, ABCMeta
 from collections import namedtuple
+from contextlib import suppress
 
 import requests
 from requests.exceptions import ConnectionError
@@ -47,6 +48,16 @@ class Scraper(metaclass=ABCMeta):
         if short_connection:
             self.TIMEOUT = 3
             self.IS_STABLE_CONNECTION = False
+
+    @property
+    def short_connection(self, short_connection: bool):
+        if short_connection:
+            self._prev_TIMEOUT = self.TIMEOUT
+            if 
+            self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
+            self.TIMEOUT = 3
+            self.IS_STABLE_CONNECTION = False
+        else:
 
     async def get_internet(
             self,
@@ -107,10 +118,11 @@ class Scraper(metaclass=ABCMeta):
             for _ in range(attempt):
                 try:
                     response = await send_get_request()
-                    is_success = True
-                    break
                 except ConnectionError:
                     print('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
+                else:
+                    is_success = True
+                    break
             if not is_success:
                 raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason.'
                                       ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
@@ -202,7 +214,7 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, titleid: int, episode_no_range: tuple | int | None = None) -> None:
+    def download_one_webtoon(self, titleid: int | tuple, episode_no_range: tuple | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range))
 
@@ -245,11 +257,11 @@ class Scraper(metaclass=ABCMeta):
         """웹툰의 title을 불러온다."""
 
     @abstractmethod
-    async def save_webtoon_thumbnail(self, titleid: int, title: str, thumbnail_dir: Path) -> None:
+    async def save_webtoon_thumbnail(self, titleid: int | tuple, title: str, thumbnail_dir: Path) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
 
     @abstractmethod
-    async def get_all_episode_no(self, titleid: int) -> Iterable:
+    async def get_all_episode_no(self, titleid: int | tuple) -> Iterable:
         """웹툰에서 전체 에피소드를 가져온다."""
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
@@ -271,7 +283,7 @@ class Scraper(metaclass=ABCMeta):
                 self._set_pbar(f'skipping {subtitle}')
                 return True
 
-    async def download_one_episode(self, episode_no: int, titleid: int, webtoon_dir: Path) -> None:
+    async def download_one_episode(self, episode_no: int, titleid: int | tuple, webtoon_dir: Path) -> None:
         """한 회차를 다운로드받는다."""
         subtitle = await self.get_subtitle(titleid, episode_no, file_acceptable=True)
 
@@ -291,11 +303,11 @@ class Scraper(metaclass=ABCMeta):
         await asyncio.gather(*get_image_coroutines)
 
     @abstractmethod
-    async def get_subtitle(self, titleid: int, episode_no: int, file_acceptable: bool) -> str:
+    async def get_subtitle(self, titleid: int | tuple, episode_no: int, file_acceptable: bool) -> str:
         """부제목, 즉 회차의 제목을 불러온다."""
 
     @abstractmethod
-    async def get_episode_images_url(self, titleid: int, episode_no: int) -> list:
+    async def get_episode_images_url(self, titleid: int | tuple, episode_no: int) -> list:
         """해당 회차를 구성하는 이미지들을 불러온다."""
 
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
@@ -311,8 +323,7 @@ class Scraper(metaclass=ABCMeta):
         file_name = f'{image_no:03d}.{image_extension}'
 
         # self._set_pbar(f'{episode_dir}|{file_name}')
-        image_raw = await self.get_internet(get_type='requests', url=url, is_run_in_executor=True)
-        image_raw = image_raw.content
+        image_raw: bytes = (await self.get_internet(get_type='requests', url=url, is_run_in_executor=True)).content
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
