@@ -34,13 +34,13 @@ class NaverPostScraper(Scraper):
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid: int) -> list:
         # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
-        subtitle_list = []
+        subtitle_list: list[dict[str, str]] = []
         for i in count(1):
             subtitle_sublist = []
             # n번째 리스트 불러옴
             url = f'https://post.naver.com/my/series/detail/more.nhn?memberNo={self.member_no}&seriesNo={titleid}&lastSortOrder=49&prevVolumeNo=&fromNo={i}&totalCount=68'
             # print(url)
-            response = await self.get_internet('requests', url)
+            response: str = await self.get_internet('requests', url)
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
             demres = demjson3.decode(response.text)['html']
@@ -64,7 +64,7 @@ class NaverPostScraper(Scraper):
 
     async def get_title(self, titleid, file_acceptable=True):
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={titleid}&memberNo={self.member_no}'
-        title = await self.get_internet(get_type='soup_select_one', url=url,
+        title: str = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='h2.tit_series > span')
         title = title.text.strip()
         if file_acceptable:
