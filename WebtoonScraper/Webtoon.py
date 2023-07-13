@@ -4,6 +4,8 @@ import asyncio
 import contextlib
 from itertools import starmap
 
+from bs4.element import Tag
+
 if __name__ == "__main__":
     from NaverWebtoonScraper import NaverWebtoonScraper
     from FolderManager import FolderManager
@@ -35,7 +37,7 @@ P = POST = NAVER_POST = 'naver_post'
 G = NAVER_GAME = 'naver_game'
 
 
-async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
+async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str | None:
     # sourcery skip: low-code-quality
     """If webtoon is best challenge, this returns True. Otherwise, False."""
     loop = asyncio.get_running_loop()
@@ -74,8 +76,8 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
 
     # 만화경
     async def telescope_fetch():
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
-        title = title["content"][:-6]
+        title: Tag = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
+        title = title["content"].removesuffix(' | 만화경')
         title = None if title == "에러 페이지" else title
         if title:
             available_webtoon.append((TELESCOPE, title))
@@ -83,7 +85,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
 
     # 버프툰
     async def bufftoon_fetch():
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://bufftoon.plaync.com/series/{webtoon_id}', 'meta[property="og:title"]')
+        title = (await webtoonscraper.get_internet('soup_select_one', f'https://bufftoon.plaync.com/series/{webtoon_id}', 'meta[property="og:title"]'))
         title = title["content"]
         title = None if title == "이야기 던전에 입장하라, 버프툰" else title
         if title:
@@ -101,8 +103,8 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str:
 
     # originals
     async def originals_fetch():
-        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}',
-                                                  'meta[property="og:title"]')
+        title = (await webtoonscraper.get_internet('soup_select_one', f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}',
+                                                  'meta[property="og:title"]'))['content']
         if title:
             available_webtoon.append((ORIGINALS, title))
     # await skip_when_errored(originals_fetch, ORIGINALS)
@@ -213,7 +215,7 @@ async def get_webtoon_async(
         await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
     if merge:
         fd = FolderManager()
-        fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir)
+        fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir, merge)
 
 
 def get_webtoon(
@@ -228,4 +230,5 @@ def get_webtoon(
 
 
 if __name__ == '__main__':
-    asyncio.run(get_webtoon_platform(18))  # 네이버 게임
+    # asyncio.run(get_webtoon_platform(18))  # 네이버 게임
+    asyncio.run(get_webtoon_platform(1022))  # 오리지널스

@@ -3,7 +3,7 @@
 from bs4 import BeautifulSoup as bs
 from async_lru import alru_cache
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "WebtoonOriginalsScraper"):
     from Scraper import Scraper
 else:
     from .Scraper import Scraper
@@ -26,7 +26,7 @@ class WebtoonOriginalsScraper(Scraper):
                                         selector='meta[property="og:title"]')
         title = title['content']
         if file_acceptable:
-            title = self.get_acceptable_file_name(title)
+            title = self.get_safe_file_name(title)
         return title
 
     @alru_cache(maxsize=4)
@@ -80,7 +80,7 @@ class WebtoonOriginalsScraper(Scraper):
         subtitles = await self._get_webtoon_infomation(titleid)
         subtitle = subtitles[episode_no]
 
-        return self.get_acceptable_file_name(subtitle) if file_acceptable else subtitle
+        return self.get_safe_file_name(subtitle) if file_acceptable else subtitle
 
     async def get_episode_images_url(self, titleid, episode_no):
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'

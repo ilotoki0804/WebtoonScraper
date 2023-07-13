@@ -2,9 +2,11 @@
 from itertools import count
 from async_lru import alru_cache
 
-if __name__ == "__main__":
+print(__name__)
+if __name__ in ("__main__", "NaverWebtoonScraper"):
     from Scraper import Scraper
 else:
+    # from Scraper import Scraper
     from .Scraper import Scraper
 
 
@@ -42,7 +44,7 @@ class NaverWebtoonScraper(Scraper):
                                         selector='meta[property="og:title"]')
         title = title['content']
         if file_acceptable:
-            title = self.get_acceptable_file_name(title)
+            title = self.get_safe_file_name(title)
         return title
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
@@ -64,7 +66,7 @@ class NaverWebtoonScraper(Scraper):
         subtitles = await self._get_webtoon_data(titleid)
         subtitle = subtitles[episode_no]
 
-        return self.get_acceptable_file_name(subtitle) if file_acceptable else subtitle
+        return self.get_safe_file_name(subtitle) if file_acceptable else subtitle
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan
