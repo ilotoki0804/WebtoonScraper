@@ -1,6 +1,8 @@
 """Abstract Class of all scrapers."""
 # TODO: file_acceptable built-in으로 만들기
 # TODO: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
+# TODO: 카카오 웹툰도 만들기
+# TODO: get_data 시 list로 정보 받아오기
 import re
 import os
 import asyncio
@@ -11,6 +13,7 @@ from typing import Iterable, Literal
 from abc import abstractmethod, ABCMeta
 from collections import namedtuple
 from contextlib import suppress
+from typing import overload
 
 import requests
 from requests.exceptions import ConnectionError
@@ -45,28 +48,81 @@ class Scraper(metaclass=ABCMeta):
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
         self.PBAR_INDEPENDENT = pbar_independent
-        if short_connection:
-            self.TIMEOUT = 3
-            self.IS_STABLE_CONNECTION = False
+        # if short_connection:
+        #     self.TIMEOUT = 3
+        #     self.IS_STABLE_CONNECTION = False
+        self.short_connection = False
 
     @property
+    def short_connection(self):
+        return self._short_connection
+
+    @short_connection.setter
     def short_connection(self, short_connection: bool):
         if short_connection:
             self._prev_TIMEOUT = self.TIMEOUT
-            if 
-            self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
+            if not hasattr(self, 'IS_STABLE_CONNECTION'):
+                self._prev_IS_STABLE_CONNECTION = None
+            else:
+                self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
             self.TIMEOUT = 3
             self.IS_STABLE_CONNECTION = False
         else:
+            pass
+        self._short_connection = short_connection
+
+    @overload
+    async def get_internet(
+        self,
+        get_type: Literal['requests'],
+        url: str,
+        selector: None = None,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
+    ) -> requests.Response: ...
+
+    @overload
+    async def get_internet(
+        self,
+        get_type: Literal['soup'],
+        url: str,
+        selector: None = None,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
+    ) -> bs: ...
+
+    @overload
+    async def get_internet(
+        self,
+        get_type: Literal['soup_select'],
+        url: str,
+        selector: str,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
+    ) -> list: ...
+
+    @overload
+    async def get_internet(
+        self,
+        get_type: Literal['soup_select_one'],
+        url: str,
+        selector: str,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
+    ) -> Tag | None: ...
 
     async def get_internet(
-            self,
-            get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
-            url: str,
-            selector: str | None = None,
-            is_run_in_executor: bool = False,
-            attempt: int = 10,
-            headers=None
+        self,
+        get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
+        url: str,
+        selector: str | None = None,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
     ) -> requests.Response | bs | list | Tag | None:
         """Get response/beautifulsoup/beautifulsoup tag list/beautifulsoup tag from internet.
 
@@ -114,6 +170,7 @@ class Scraper(metaclass=ABCMeta):
         if self.IS_STABLE_CONNECTION:
             response = await send_get_request()
         else:
+            response = requests.Response()
             is_success = False
             for _ in range(attempt):
                 try:
@@ -128,6 +185,8 @@ class Scraper(metaclass=ABCMeta):
                                       ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
 
         if get_type in ('soup', 'soup_select', 'soup_select_one'):
+            if selector is None:
+                raise ValueError('Selector can\'t be None.')
             soup = bs(response.text, "html.parser")
             if get_type == 'soup':
                 return soup
@@ -178,30 +237,22 @@ class Scraper(metaclass=ABCMeta):
         # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
-    def get_acceptable_file_name(file_or_diretory_name: str, strict_checking: bool = False) -> str:
+    def get_safe_file_name(file_or_diretory_name: str) -> str:
         """Translate file or diretory name to accaptable name.
 
         Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
         table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')
+        table.update(
+            {i : 32 for i in range(0, 31)}
+        )
 
         processed = html.unescape(file_or_diretory_name)  # change things like "&amp;" to "'".
 
         processed = processed.translate(table).strip()
 
         processed = re.sub(r'\.$', '．', processed)
-
-        if strict_checking:
-            return ''.join(
-                ' '
-                if ord(chractor)
-                in {
-                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 34, 42, 58, 60, 62, 63, 124,
-                }
-                else chractor
-                for chractor in processed
-            )
+        
         return processed
 
     @property
@@ -231,7 +282,7 @@ class Scraper(metaclass=ABCMeta):
         """
         self.loop = asyncio.get_running_loop()
 
-        title = self.get_acceptable_file_name(await self.get_title(titleid))
+        title = self.get_safe_file_name(await self.get_title(titleid))
         webtoon_dir = self.BASE_DIR / f'{title}({titleid})'
         self.webtoon_dir = webtoon_dir
 

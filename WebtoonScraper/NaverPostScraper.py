@@ -68,7 +68,7 @@ class NaverPostScraper(Scraper):
                                         selector='h2.tit_series > span')
         title = title.text.strip()
         if file_acceptable:
-            title = self.get_acceptable_file_name(title)
+            title = self.get_safe_file_name(title)
         return title
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
@@ -91,7 +91,7 @@ class NaverPostScraper(Scraper):
         subtitle_info = subtitle_list[episode_no - 1]
         subtitle = subtitle_info['subtitle']
         if file_acceptable:
-            subtitle = self.get_acceptable_file_name(subtitle)
+            subtitle = self.get_safe_file_name(subtitle)
         return subtitle
 
     async def get_episode_images_url(self, titleid, episode_no, attempt=3):
