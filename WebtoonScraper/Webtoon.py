@@ -6,7 +6,7 @@ from itertools import starmap
 
 from bs4.element import Tag
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "Webtoon"):
     from NaverWebtoonScraper import NaverWebtoonScraper
     from FolderManager import FolderManager
     from WebtoonOriginalsScraper import WebtoonOriginalsScraper
@@ -76,7 +76,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str | N
 
     # 만화경
     async def telescope_fetch():
-        title: Tag = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
+        title = await webtoonscraper.get_internet('soup_select_one', f'https://www.manhwakyung.com/title/{webtoon_id}', 'meta[property="og:title"]')
         title = title["content"].removesuffix(' | 만화경')
         title = None if title == "에러 페이지" else title
         if title:
@@ -160,7 +160,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str | N
             try:
                 selected_platform, selected_webtoon = available_webtoon[platform_no - 1]
             except IndexError:
-                print('Exceeded the range of webtoons.')
+                raise ValueError('Exceeded the range of webtoons.')
             print(f'Webtoon {selected_webtoon} is selected.')
             return selected_platform
         except ValueError as e:

@@ -2,7 +2,6 @@
 from itertools import count
 from async_lru import alru_cache
 
-print(__name__)
 if __name__ in ("__main__", "NaverWebtoonScraper"):
     from Scraper import Scraper
 else:

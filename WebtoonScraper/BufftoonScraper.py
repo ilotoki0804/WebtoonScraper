@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 from async_lru import alru_cache
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "BufftoonScraper"):
     from WebtoonScraper.Scraper import Scraper
 else:
     from .Scraper import Scraper

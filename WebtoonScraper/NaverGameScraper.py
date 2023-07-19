@@ -6,7 +6,7 @@ from itertools import count
 import json
 from async_lru import alru_cache
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "NaverGameScraper"):
     from Scraper import Scraper
 else:
     from .Scraper import Scraper

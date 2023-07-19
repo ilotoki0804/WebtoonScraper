@@ -1,5 +1,5 @@
 '''Download Webtoons from Naver Webtoon Best Challenge.'''
-if __name__ == "__main__":
+if __name__ in ("__main__", "BestChallengeScraper"):
     from NaverWebtoonScraper import NaverWebtoonScraper
 else:
     from .NaverWebtoonScraper import NaverWebtoonScraper

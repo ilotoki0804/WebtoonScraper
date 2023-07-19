@@ -3,7 +3,7 @@ import time
 
 from async_lru import alru_cache
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "TelescopeScraper"):
     from Scraper import Scraper
 else:
     from .Scraper import Scraper
