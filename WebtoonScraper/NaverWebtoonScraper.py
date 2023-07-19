@@ -11,11 +11,10 @@ else:
 
 class NaverWebtoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
-    def __init__(self, pbar_independent=False, short_connection=False):
-        super().__init__(pbar_independent, short_connection)
+    def __init__(self, pbar_independent=False):
+        super().__init__(pbar_independent)
         self.BASE_URL = 'https://comic.naver.com/webtoon'
-        if not short_connection:
-            self.IS_STABLE_CONNECTION = True
+        self.IS_STABLE_CONNECTION = True
         self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'  # for best challenge
 
     @alru_cache(maxsize=4)

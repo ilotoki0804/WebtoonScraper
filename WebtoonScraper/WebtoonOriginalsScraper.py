@@ -11,8 +11,8 @@ else:
 
 class WebtoonOriginalsScraper(Scraper):
     '''Scrape webtoons from Webtoon Originals.'''
-    def __init__(self, pbar_independent=False, short_connection=False):
-        super().__init__(pbar_independent, short_connection)
+    def __init__(self, pbar_independent=False):
+        super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.webtoons.com/en/fantasy/watermelon'
         self.IS_STABLE_CONNECTION = False
         self.USER_AGENT = {

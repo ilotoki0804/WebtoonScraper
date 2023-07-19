@@ -54,6 +54,7 @@ async def get_webtoon_platform(webtoon_id: int, is_auto_select=False) -> str | N
     available_webtoon = []
     # 네이버 게임은 제목을 받는 데 특수한 함수가 필요하기 때문에 이 클래스를 이용
     webtoonscraper = NaverGameScraper()
+    webtoonscraper.IS_STABLE_CONNECTION = False
 
     # 네이버 웹툰
     async def naver_webtoon_fetch():

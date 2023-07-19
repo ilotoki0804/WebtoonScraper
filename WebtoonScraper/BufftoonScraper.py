@@ -12,11 +12,10 @@ else:
 
 class BufftoonScraper(Scraper):
     '''Scrape webtoons from Bufftoon.'''
-    def __init__(self, pbar_independent: bool = False, short_connection: bool = False, cookie: str = ''):
-        super().__init__(pbar_independent, short_connection)
+    def __init__(self, pbar_independent: bool = False, cookie: str = ''):
+        super().__init__(pbar_independent)
         self.BASE_URL = 'https://bufftoon.plaync.com'
-        if not short_connection:
-            self.IS_STABLE_CONNECTION = True
+        self.IS_STABLE_CONNECTION = True
         self.COOKIE = cookie
 
     @alru_cache(maxsize=4)

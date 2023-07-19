@@ -12,8 +12,8 @@ else:
 class TelescopeScraper(Scraper):
     """Scrape webtoons from Manhwakyung."""
 
-    def __init__(self, pbar_independent=False, short_connection=False):
-        super().__init__(pbar_independent, short_connection)
+    def __init__(self, pbar_independent=False):
+        super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.manhwakyung.com'
         self.IS_STABLE_CONNECTION = False
         self.TIMEOUT = 3
