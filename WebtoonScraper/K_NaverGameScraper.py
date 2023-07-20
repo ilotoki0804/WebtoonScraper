@@ -7,7 +7,7 @@ import json
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "NaverGameScraper"):
-    from Scraper import Scraper
+    from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
 
@@ -33,8 +33,8 @@ class NaverGameScraper(Scraper):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):
-            url = f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}/seasons/{season}/contents'\
-                  f'?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}'
+            url = (f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}/seasons/{season}/contents'
+                   f'?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}')
             res = await self.get_internet(get_type='requests', url=url)
             res = res.json()
             if not res['content']:
