@@ -1,6 +1,6 @@
 '''Download Webtoons from Naver Webtoon Best Challenge.'''
 if __name__ in ("__main__", "BestChallengeScraper"):
-    from NaverWebtoonScraper import NaverWebtoonScraper
+    from D_NaverWebtoonScraper import NaverWebtoonScraper
 else:
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
 
@@ -14,4 +14,4 @@ class BestChallengeScraper(NaverWebtoonScraper):
 
 if __name__ == '__main__':
     wt = BestChallengeScraper()
-    wt.get_webtoon(763952)  # 과학고
+    wt.download_one_webtoon(763952)  # 과학고

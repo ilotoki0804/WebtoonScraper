@@ -22,8 +22,8 @@ from bs4 import BeautifulSoup as bs
 from bs4.element import Tag
 from tqdm import tqdm
 
-
 TitleId = int | tuple[int, int]
+
 
 class Scraper(metaclass=ABCMeta):
     """Abstract class of all scrapers.

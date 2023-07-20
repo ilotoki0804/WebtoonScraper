@@ -33,7 +33,9 @@ class NaverPostScraper(Scraper):
         prev_data = None
         for i in count(1):
             # n번째 리스트 불러옴
-            url = f'https://post.naver.com/my/series/detail/more.nhn?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49&prevVolumeNo=&fromNo={i}&totalCount=68'
+            url = (f'https://post.naver.com/my/series/detail/more.nhn'
+                   f'?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49'
+                   f'&prevVolumeNo=&fromNo={i}&totalCount=68')
             # print(url)
             response_text: str = (await self.get_internet('requests', url)).text
 
@@ -117,7 +119,7 @@ class NaverPostScraper(Scraper):
 if __name__ == '__main__':
     # logger = logging.getLogger()
     # logger.setLevel(logging.INFO)
-    
+
     wt = NaverPostScraper()
     wt.download_one_webtoon((597061, 19803452))  # 겜덕겜소
 

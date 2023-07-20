@@ -49,9 +49,11 @@ class BufftoonScraper(Scraper):
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
-        image_url = await self.get_internet(get_type='soup_select_one', url=url,
+        image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='#content > div > div > div.series-info > div.img')
-        image_url = image_url['style']
+        if not image_url_original:
+            raise ConnectionError('Bufftoon changed their api specification. Contect developer to update save_webtoon_thumbnail.')
+        image_url = image_url_original['style']
         image_url = re.search(r'(?<=background-image:url\().+(?=\);)', image_url)[0]
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
@@ -101,9 +103,9 @@ class BufftoonScraper(Scraper):
         return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
 
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
-        super().download_single_image(episode_dir, url, image_no, 'png')
+        await super().download_single_image(episode_dir, url, image_no, 'png')
 
 
 if __name__ == '__main__':
     wt = BufftoonScraper()
-    wt.get_webtoon(1007888)  # 겜덕툰
+    wt.download_one_webtoon(1007888)  # 겜덕툰

@@ -3,7 +3,7 @@ from itertools import count
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "NaverWebtoonScraper"):
-    from Scraper import Scraper
+    from C_Scraper import Scraper
 else:
     # from Scraper import Scraper
     from .C_Scraper import Scraper
@@ -40,13 +40,17 @@ class NaverWebtoonScraper(Scraper):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='meta[property="og:title"]')
+        if not title:
+            raise ConnectionError('Naver Webtoon changed their api specification. Contect developer to update get_title.')
         return title['content']
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
-        image_url = await self.get_internet(get_type='soup_select_one', url=url,
+        image_url_tag = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='meta[property="og:image"]')
-        image_url = image_url['content']
+        if not image_url_tag:
+            raise ConnectionError('Naver Webtoon changed their api specification. Contect developer to update get_title.')
+        image_url: str = image_url_tag['content']
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
         image_raw = image_raw.content

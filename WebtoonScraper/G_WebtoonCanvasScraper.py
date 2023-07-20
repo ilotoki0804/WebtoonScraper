@@ -2,7 +2,7 @@
 '''
 
 if __name__ in ("__main__", 'WebtoonCanvasScraper'):
-    from WebtoonOriginalsScraper import WebtoonOriginalsScraper
+    from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
 else:
     from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
 

@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as bs
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "WebtoonOriginalsScraper"):
-    from Scraper import Scraper
+    from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
 
@@ -25,14 +25,18 @@ class WebtoonOriginalsScraper(Scraper):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='meta[property="og:title"]')
+        if not title:
+            raise ConnectionError('Webtoon Originals changed their api specification. Contect developer to update get_title.')
         return title['content']
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        title_no = await self.get_internet('soup_select_one', url, '#_listUl > li')
-        title_no = int(title_no['data-episode-no'])
+        title_no_tag = await self.get_internet('soup_select_one', url, '#_listUl > li')
+        if not title_no_tag:
+            raise ConnectionError('Webtoon Originals changed their api specification. Contect developer to update get_title.')
+        title_no = int(title_no_tag['data-episode-no'])
 
         # getting list of titles
         selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
@@ -49,9 +53,11 @@ class WebtoonOriginalsScraper(Scraper):
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        image_url = await self.get_internet(get_type='soup_select_one', url=url,
+        image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='meta[property="og:image"]')
-        image_url = image_url['content']
+        if not image_url_original:
+            raise ConnectionError('Webtoon Originals changed their api specification. Contect developer to update get_title.')
+        image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
         image_raw = image_raw.content
