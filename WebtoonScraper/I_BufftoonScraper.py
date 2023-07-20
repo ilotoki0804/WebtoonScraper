@@ -19,17 +19,19 @@ class BufftoonScraper(Scraper):
         self.COOKIE: str = cookie
 
     @alru_cache(maxsize=4)
-    async def _get_webtoon_infomation(self, titleid, get_payment: bool = False, limit: int = 500):
+    async def _get_webtoon_infomation(self, titleid, get_payment: bool = False, get_login_requiered: bool | None = None,limit: int = 500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = await self.get_internet('requests', url)
         raw_data = raw_data.json()
         subtitles = {}
         episode_ids = {}
+        if get_login_requiered is None:
+            get_login_requiered = bool(self.COOKIE)
         for raw_episode in raw_data['result']['episodes']:
             if not get_payment and raw_episode['isPaymentEpisode']:
                 print(f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded.")
                 continue
-            if not self.COOKIE and not raw_episode['isOpenFreeEpisode']:
+            if not get_login_requiered and not raw_episode['isOpenFreeEpisode']:
                 print(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
                 continue
             episode_no = raw_episode['episodeOrder']
