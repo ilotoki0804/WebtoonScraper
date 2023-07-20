@@ -11,8 +11,8 @@ import html
 from pathlib import Path
 from typing import Iterable, Literal
 from abc import abstractmethod, ABCMeta
-from collections import namedtuple
-from contextlib import suppress
+# from collections import namedtuple
+# from contextlib import suppress
 from typing import overload
 
 import requests
@@ -22,6 +22,8 @@ from bs4.element import Tag
 from tqdm import tqdm
 
 
+TitleId = int | tuple[int, int]
+
 class Scraper(metaclass=ABCMeta):
     """Abstract class of all scrapers.
 
@@ -29,16 +31,13 @@ class Scraper(metaclass=ABCMeta):
     따라서 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 역할은 각자 scraper들에 구현되어 있습니다.
     """
 
-    def __init__(self, pbar_independent: bool = False, short_connection=False) -> None:
+    def __init__(self, pbar_independent: bool = False) -> None:
         """시작에 필요한 여러가지를 관여합니다.
 
         header, timeout을 구성하고 set_folders()를 호출합니다.
 
         Args:
             pbar_independent: 만약 True라면 tqdm을 이용해서 로그를 표시하고, False라면 print를 통해서 로그를 표시합니다.
-            short_connection:
-                만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
-                False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
         """
         # BASE_URL and IS_STABLE_CONNECTION have to be defined!
         self.HEADERS = {
@@ -48,9 +47,7 @@ class Scraper(metaclass=ABCMeta):
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
         self.PBAR_INDEPENDENT = pbar_independent
-        # if short_connection:
-        #     self.TIMEOUT = 3
-        #     self.IS_STABLE_CONNECTION = False
+        self.IS_STABLE_CONNECTION = None  # IS_STABLE_CONNECTION must be defined!
         self.short_connection = False
 
     @property
@@ -59,20 +56,45 @@ class Scraper(metaclass=ABCMeta):
 
     @short_connection.setter
     def short_connection(self, short_connection: bool):
-        if short_connection:
+        """
+        이 함수는 short_connection을 설정합니다.
+        short_connection에는 특징이 있는데, True로 바꾸는 순간 그 전에 설정한 IS_STABLE_CONNECTION과
+        TIMEOUT이 날아가고 각각 False와 3으로 변합니다. 이 함수는 short_connection을 False로 바꿀 때
+        기존의 설정으로 돌아갈 수 있도록 돕습니다.
+
+        Args:
+            short_connection(bool):
+                만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
+                False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
+
+        Exceptions:
+            AttributeError: short_connection 값을 선언하기 이전에 반드시 self.IS_STABLE_CONNECTION과
+                self.TIMEOUT을 선언해야 합니다. 만약 그렇지 않으면 AttributeError가 raise됩니다.
+        """
+        def save_prev_settings():
+            # is_stable_connection and timeout must be defined prior to short_connection.
+            self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
             self._prev_TIMEOUT = self.TIMEOUT
-            if not hasattr(self, 'IS_STABLE_CONNECTION'):
-                self._prev_IS_STABLE_CONNECTION = None
-            else:
-                self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
             self.TIMEOUT = 3
-            self.IS_STABLE_CONNECTION = False
+
+        def load_prev_settings():
+            self.IS_STABLE_CONNECTION = self._prev_IS_STABLE_CONNECTION
+            self.TIMEOUT = self._prev_TIMEOUT
+
+        if not hasattr(self, '_short_connection'):
+            if short_connection:
+                self._prev_IS_STABLE_CONNECTION = None  # to suppress error
+                self._prev_TIMEOUT = None  # to suppress error
+                save_prev_settings()
         else:
-            pass
+            if short_connection and not self._short_connection:
+                save_prev_settings()
+            else:
+                load_prev_settings()
         self._short_connection = short_connection
 
     @overload
-    async def get_internet(
+    async def get_internet(  # noqa
         self,
         get_type: Literal['requests'],
         url: str,
@@ -83,7 +105,7 @@ class Scraper(metaclass=ABCMeta):
     ) -> requests.Response: ...
 
     @overload
-    async def get_internet(
+    async def get_internet(  # noqa
         self,
         get_type: Literal['soup'],
         url: str,
@@ -94,7 +116,7 @@ class Scraper(metaclass=ABCMeta):
     ) -> bs: ...
 
     @overload
-    async def get_internet(
+    async def get_internet(  # noqa
         self,
         get_type: Literal['soup_select'],
         url: str,
@@ -105,7 +127,7 @@ class Scraper(metaclass=ABCMeta):
     ) -> list: ...
 
     @overload
-    async def get_internet(
+    async def get_internet(  # noqa
         self,
         get_type: Literal['soup_select_one'],
         url: str,
@@ -115,7 +137,7 @@ class Scraper(metaclass=ABCMeta):
         headers: dict | None = None
     ) -> Tag | None: ...
 
-    async def get_internet(
+    async def get_internet(  # noqa
         self,
         get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
         url: str,
@@ -242,9 +264,10 @@ class Scraper(metaclass=ABCMeta):
 
         Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
+        # sourcery skip: remove-zero-from-range
         table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')
         table.update(
-            {i : 32 for i in range(0, 31)}
+            {i: 32 for i in range(0, 31)}
         )
 
         processed = html.unescape(file_or_diretory_name)  # change things like "&amp;" to "'".
@@ -252,7 +275,7 @@ class Scraper(metaclass=ABCMeta):
         processed = processed.translate(table).strip()
 
         processed = re.sub(r'\.$', '．', processed)
-        
+
         return processed
 
     @property
@@ -265,11 +288,11 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, titleid: int | tuple, episode_no_range: tuple | int | None = None) -> None:
+    def download_one_webtoon(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range))
 
-    async def download_one_webtoon_async(self, titleid: int | tuple, episode_no_range: tuple | int | None = None) -> None:
+    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -304,15 +327,15 @@ class Scraper(metaclass=ABCMeta):
         print(f'A webtoon {title} download ended.')
 
     @abstractmethod
-    async def get_title(self, titleid: int | tuple) -> str:
+    async def get_title(self, titleid: TitleId) -> str:
         """웹툰의 title을 불러온다."""
 
     @abstractmethod
-    async def save_webtoon_thumbnail(self, titleid: int | tuple, title: str, thumbnail_dir: Path) -> None:
+    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
 
     @abstractmethod
-    async def get_all_episode_no(self, titleid: int | tuple) -> Iterable:
+    async def get_all_episode_no(self, titleid: TitleId) -> Iterable:
         """웹툰에서 전체 에피소드를 가져온다."""
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
@@ -334,9 +357,9 @@ class Scraper(metaclass=ABCMeta):
                 self._set_pbar(f'skipping {subtitle}')
                 return True
 
-    async def download_one_episode(self, episode_no: int, titleid: int | tuple, webtoon_dir: Path) -> None:
+    async def download_one_episode(self, episode_no: int, titleid: TitleId, webtoon_dir: Path) -> None:
         """한 회차를 다운로드받는다."""
-        subtitle = await self.get_subtitle(titleid, episode_no, file_acceptable=True)
+        subtitle = self.get_safe_file_name(await self.get_subtitle(titleid, episode_no))
 
         if not subtitle:
             print(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
@@ -354,11 +377,11 @@ class Scraper(metaclass=ABCMeta):
         await asyncio.gather(*get_image_coroutines)
 
     @abstractmethod
-    async def get_subtitle(self, titleid: int | tuple, episode_no: int, file_acceptable: bool) -> str:
+    async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
         """부제목, 즉 회차의 제목을 불러온다."""
 
     @abstractmethod
-    async def get_episode_images_url(self, titleid: int | tuple, episode_no: int) -> list:
+    async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
         """해당 회차를 구성하는 이미지들을 불러온다."""
 
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:

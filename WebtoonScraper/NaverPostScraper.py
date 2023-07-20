@@ -4,11 +4,14 @@
 from pathlib import Path
 from itertools import count
 import asyncio
+# import logging
+
 from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "NaverPostScraper"):
+    # logging.warning('Using ')
     from Scraper import Scraper
 else:
     from .Scraper import Scraper
@@ -16,88 +19,78 @@ else:
 
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
-    def __init__(self, pbar_independent=False, short_connection=False):
-        super().__init__(pbar_independent, short_connection)
+    def __init__(self, pbar_independent=False):
+        super().__init__(pbar_independent)
+        self.IS_STABLE_CONNECTION = True
         self.BASE_URL = 'https://post.naver.com'
-        if not short_connection:
-            self.IS_STABLE_CONNECTION = True
-
-    def download_one_webtoon(self, titleid: int, member_no: int,  value_range: tuple | int | None = None) -> None:
-        """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
-        asyncio.run(self.download_one_webtoon_async(titleid, member_no,  value_range))
-
-    async def download_one_webtoon_async(self, titleid, member_no: int, episode_no_range: tuple | int | None = None) -> None:
-        """포스트는 member_no도 받아야 하기 때문에 불가피하게 수정이 필요."""
-        self.member_no = member_no
-        await super().download_one_webtoon_async(titleid, episode_no_range)
 
     @alru_cache(maxsize=4)
-    async def _get_webtoon_infomation(self, titleid: int) -> list:
+    async def _get_webtoon_infomation(self, titleid: tuple[int, int]) -> tuple[list[str], list[int]]:
         # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
-        subtitle_list: list[dict[str, str]] = []
+        series_no, member_no = titleid
+        subtitle_list: list[str] = []
+        episode_id_list: list[int] = []
+        prev_data = None
         for i in count(1):
-            subtitle_sublist = []
             # n번째 리스트 불러옴
-            url = f'https://post.naver.com/my/series/detail/more.nhn?memberNo={self.member_no}&seriesNo={titleid}&lastSortOrder=49&prevVolumeNo=&fromNo={i}&totalCount=68'
+            url = f'https://post.naver.com/my/series/detail/more.nhn?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49&prevVolumeNo=&fromNo={i}&totalCount=68'
             # print(url)
-            response: str = await self.get_internet('requests', url)
+            response_text: str = (await self.get_internet('requests', url)).text
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
-            demres = demjson3.decode(response.text)['html']
-            soup = BeautifulSoup(demres, 'html.parser')
+            decoded_response_data: str = demjson3.decode(response_text)['html']
+            soup = BeautifulSoup(decoded_response_data, 'html.parser')
 
             # subtitle data만듦.
             for tag in soup.select('ul > li > a > div > span.ell'):
-                subtitle_sublist.append({'subtitle': tag.text.strip()})
-            for j, tag in enumerate(soup.select('ul > li > a > div > span.spot_post_like')):
-                # 버려지는 값은 member_no/그냥 member_no라고 해도 되지만 혹시 모를 corruption을 막기 위한 조치
+                # subtitle_list.append({'subtitle': tag.text.strip()})
+                subtitle_list.append(tag.text.strip())
+            for tag in soup.select('ul > li > a > div > span.spot_post_like'):
                 episode_id, _ = map(int, tag['data-cid'].split('_'))
-                subtitle_sublist[j].update({'episode_id': episode_id, 'member_no': self.member_no})
+                episode_id_list.append(episode_id)
 
-            # 지금 받아온 데이터가 이전 데이터와 같은지 확인
-            if subtitle_sublist == subtitle_list[-len(subtitle_sublist):]:
+            if prev_data == decoded_response_data:
                 break
-            else:
-                subtitle_list += subtitle_sublist
-        # 1화부터로 변경
-        return subtitle_list[::-1]
 
-    async def get_title(self, titleid, file_acceptable=True):
-        url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={titleid}&memberNo={self.member_no}'
-        title: str = await self.get_internet(get_type='soup_select_one', url=url,
-                                        selector='h2.tit_series > span')
-        title = title.text.strip()
-        if file_acceptable:
-            title = self.get_safe_file_name(title)
-        return title
+            prev_data = decoded_response_data
+
+        # 1화부터로 변경
+        return subtitle_list[::-1], episode_id_list[::-1]
+
+    async def get_title(self, titleid: tuple[int, int]):
+        series_no, member_no = titleid
+        url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
+        title: str = (await self.get_internet(get_type='soup_select_one', url=url,
+                                        selector='h2.tit_series > span')).text
+        return title.strip()
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={titleid}&memberNo={self.member_no}'
-        image_url = await self.get_internet(get_type='soup_select_one', url=url,
+        series_no, member_no = titleid
+        url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
+        image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
                                             selector='meta[property="og:image"]')
-        image_url = image_url['content']
+        if not image_url_original:
+            raise ConnectionError('Naver Post changed their api specification. Contect developer to update save_webtoon_thumbnail.')
+        image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
-        image_raw = image_raw.content
+        image_raw: bytes = (await self.get_internet(get_type='requests', url=image_url)).content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
+        (thumbnail_dir / f'{title}.{image_extension}').write_bytes(image_raw)
 
     async def get_all_episode_no(self, titleid):
         """1부터 시작하니 주의!!"""
-        subtitle_list = await self._get_webtoon_infomation(titleid)
+        subtitle_list, _ = await self._get_webtoon_infomation(titleid)
         return (i + 1 for i in range(len(subtitle_list)))
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable):
-        subtitle_list = await self._get_webtoon_infomation(titleid)
-        subtitle_info = subtitle_list[episode_no - 1]
-        subtitle = subtitle_info['subtitle']
-        if file_acceptable:
-            subtitle = self.get_safe_file_name(subtitle)
-        return subtitle
+    async def get_subtitle(self, titleid, episode_no):
+        subtitle_list, _ = await self._get_webtoon_infomation(titleid)
+        return subtitle_list[episode_no]
 
     async def get_episode_images_url(self, titleid, episode_no, attempt=3):
-        subtitle_list = await self._get_webtoon_infomation(titleid)
-        episode_id = subtitle_list[episode_no - 1]['episode_id']
-        url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={self.member_no}&navigationType=push'
+        series_no, member_no = titleid
+        _, episode_id_list = await self._get_webtoon_infomation(titleid)
+        episode_id = episode_id_list[episode_no]
+        url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}&navigationType=push'
         for _ in range(attempt):
             content = await self.get_internet(get_type='soup_select_one', url=url,
                                               selector='#__clipContent')
@@ -115,17 +108,20 @@ class NaverPostScraper(Scraper):
 
         # 문서 내에 있는 모든 이미지 링크를 불러옴
         selector = 'div.se_component_wrap.sect_dsc.__se_component_area > div > div > div > div > a > img'
-        episode_images_url = [tag['data-src'] for tag in soup_content.select(selector)]
+        episode_images_url: list[str] = [tag['data-src'] for tag in soup_content.select(selector)]
 
         return [url for url in episode_images_url
                 if not url.startswith('https://mail.naver.com/read/image/')]
 
 
 if __name__ == '__main__':
+    # logger = logging.getLogger()
+    # logger.setLevel(logging.INFO)
+    
     wt = NaverPostScraper()
-    wt.download_one_webtoon(597061, 19803452)  # 겜덕겜소
+    wt.download_one_webtoon((597061, 19803452))  # 겜덕겜소
 
-    # asyncio.run(wt.get_data(625402, 19803452))
+    asyncio.run(wt._get_webtoon_infomation((577056, 19803452)))  # 겜덕툰
 
     # wt = NaverPostScraper()
     # wt.member_no = 19803452

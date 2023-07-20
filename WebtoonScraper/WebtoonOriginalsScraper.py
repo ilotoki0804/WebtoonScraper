@@ -15,19 +15,16 @@ class WebtoonOriginalsScraper(Scraper):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.webtoons.com/en/fantasy/watermelon'
         self.IS_STABLE_CONNECTION = False
-        self.USER_AGENT = {
+        self.HEADERS = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
             "Referer": "http://www.webtoons.com"
         }
 
-    async def get_title(self, titleid, file_acceptable):
+    async def get_title(self, titleid):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='meta[property="og:title"]')
-        title = title['content']
-        if file_acceptable:
-            title = self.get_safe_file_name(title)
-        return title
+        return title['content']
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):
@@ -76,11 +73,9 @@ class WebtoonOriginalsScraper(Scraper):
         subtitles = await self._get_webtoon_infomation(titleid)
         return list(subtitles)
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable):
+    async def get_subtitle(self, titleid, episode_no):
         subtitles = await self._get_webtoon_infomation(titleid)
-        subtitle = subtitles[episode_no]
-
-        return self.get_safe_file_name(subtitle) if file_acceptable else subtitle
+        return subtitles[episode_no]
 
     async def get_episode_images_url(self, titleid, episode_no):
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
