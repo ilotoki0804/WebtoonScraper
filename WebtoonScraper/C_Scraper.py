@@ -1,7 +1,7 @@
 """Abstract Class of all scrapers."""
 # solved: file_acceptable built-in으로 만들기
 # solved: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# TODO: get_data 시 list로 정보 받아오기
+# TODO: get_data 시 list로 정보 받아오기 (get_all_episode_no 제거하기)
 # TODO: download vs save : 용어 정리하기
 # TODO: 카카오 웹툰도 만들기
 import re
@@ -327,18 +327,6 @@ class Scraper(metaclass=ABCMeta):
             await self.download_one_episode(episode_no, titleid, webtoon_dir)
         print(f'A webtoon {title} download ended.')
 
-    @abstractmethod
-    async def get_title(self, titleid: TitleId) -> str:
-        """웹툰의 title을 불러온다."""
-
-    @abstractmethod
-    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
-        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다."""
-
-    @abstractmethod
-    async def get_all_episode_no(self, titleid: TitleId) -> Iterable:
-        """웹툰에서 전체 에피소드를 가져온다."""
-
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
 
@@ -377,14 +365,6 @@ class Scraper(metaclass=ABCMeta):
         get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
         await asyncio.gather(*get_image_coroutines)
 
-    @abstractmethod
-    async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
-        """부제목, 즉 회차의 제목을 불러온다."""
-
-    @abstractmethod
-    async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
-        """해당 회차를 구성하는 이미지들을 불러온다."""
-
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
         image_extension = self.get_file_extension(url)
@@ -402,3 +382,43 @@ class Scraper(metaclass=ABCMeta):
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
+
+    @abstractmethod
+    async def get_title(self, titleid: TitleId) -> str:
+        """웹툰의 title을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+
+    @abstractmethod
+    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
+        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다. 기본 구현을 사용할 시 super()를 이용할 것."""
+
+    @abstractmethod
+    async def get_all_episode_no(self, titleid: TitleId) -> Iterable:
+        """웹툰에서 전체 에피소드를 가져온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+
+    @abstractmethod
+    async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
+        """부제목, 즉 회차의 제목을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+
+    @abstractmethod
+    async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
+        """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+
+    @abstractmethod
+    async def get_webtoon_data(self, titleid: TitleId) -> dict:
+        """웹툰에서 데이터를 불러옵니다.
+
+        Args:
+            titleid (TitleId): titleid를 받습니다.
+
+        Returns:
+            dict: key에 따라 각각 자동으로 불러올 정보를 정의합니다.
+                keys:
+                    'title' (str): 웹툰의 제목 정보를 불러옵니다.
+                    'subtitle' (list[str]): 웹툰의 부제목(에피소드 제목) 정보를 불러옵니다.
+                    'title' (str): 웹툰의 제목 정보를 불러옵니다.
+                    'webtoon_thumbnail' (str/bytes): 웹툰의 썸네일 정보를 불러옵니다.
+                        만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
+                        bytes일 경우에는 thumbnail raw data로 추론하고 thumbnail_dir에 저장합니다.
+                    'episode_images_url' (list[str]): 실제 웹툰 이미지드릐 url로 구성된 list입니다.
+                이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
+        """
