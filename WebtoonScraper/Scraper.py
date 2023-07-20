@@ -1,8 +1,9 @@
 """Abstract Class of all scrapers."""
-# TODO: file_acceptable built-in으로 만들기
-# TODO: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# TODO: 카카오 웹툰도 만들기
+# solved: file_acceptable built-in으로 만들기
+# solved: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
 # TODO: get_data 시 list로 정보 받아오기
+# TODO: download vs save : 용어 정리하기
+# TODO: 카카오 웹툰도 만들기
 import re
 import os
 import asyncio
