@@ -39,14 +39,13 @@ class BufftoonScraper(Scraper):
             subtitles[episode_no] = raw_episode['title']
         return subtitles, episode_ids
 
-    async def get_title(self, titleid, file_acceptable):
+    async def get_title(self, titleid):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='#content > div > div > div.series-info > div.cont > div.title')
-        title = title.text.strip()
-        if file_acceptable:
-            title = self.get_safe_file_name(title)
-        return title
+        if title is None:
+            raise ValueError('Bufftoon may change their API specification. Contect Developer to update program.')
+        return title.text.strip()
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
@@ -63,14 +62,11 @@ class BufftoonScraper(Scraper):
         _, episode_ids = await self._get_webtoon_infomation(titleid)
         return list(episode_ids)
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable, sleep=True):
+    async def get_subtitle(self, titleid, episode_no, sleep=True):
         if sleep:
             time.sleep(1)
         subtitles, _ = await self._get_webtoon_infomation(titleid)
-        subtitle = subtitles[episode_no]
-        if file_acceptable:
-            subtitle = self.get_safe_file_name(subtitle)
-        return subtitle
+        return subtitles[episode_no]
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan

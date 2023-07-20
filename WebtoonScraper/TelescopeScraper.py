@@ -67,7 +67,7 @@ class TelescopeScraper(Scraper):
 
         return title, list_thumbnail_url, grid_thumbnail_url, episode_infomation
 
-    async def get_title(self, titleid, file_acceptable):
+    async def get_title(self, titleid):
         return self.title
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
@@ -81,12 +81,9 @@ class TelescopeScraper(Scraper):
     async def get_all_episode_no(self, titleid):
         return reversed(self.episode_infomation)
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable):
+    async def get_subtitle(self, titleid, episode_no):
         time.sleep(1)
-        subtitle = self.episode_infomation[episode_no]['subtitle']
-        if file_acceptable:
-            subtitle = self.get_safe_file_name(subtitle)
-        return subtitle
+        return self.episode_infomation[episode_no]['subtitle']
 
     async def get_episode_images_url(self, titleid, episode_no):
         episode_id = self.episode_infomation[episode_no]['episode_id']

@@ -36,14 +36,11 @@ class NaverWebtoonScraper(Scraper):
 
         return subtitles
 
-    async def get_title(self, titleid, file_acceptable):
+    async def get_title(self, titleid):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='meta[property="og:title"]')
-        title = title['content']
-        if file_acceptable:
-            title = self.get_safe_file_name(title)
-        return title
+        return title['content']
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
@@ -60,11 +57,9 @@ class NaverWebtoonScraper(Scraper):
         subtitles = await self._get_webtoon_data(titleid)
         return list(subtitles)
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable):
+    async def get_subtitle(self, titleid, episode_no):
         subtitles = await self._get_webtoon_data(titleid)
-        subtitle = subtitles[episode_no]
-
-        return self.get_safe_file_name(subtitle) if file_acceptable else subtitle
+        return subtitles[episode_no]
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan

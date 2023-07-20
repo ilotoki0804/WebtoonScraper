@@ -54,11 +54,8 @@ class NaverGameScraper(Scraper):
 
         return episodes_data
 
-    async def get_title(self, titleid, file_acceptable=True):
-        title, _ = await self._get_webtoon_infomation(titleid)
-        if file_acceptable:
-            title = self.get_safe_file_name(title)
-        return title
+    async def get_title(self, titleid):
+        return (await self._get_webtoon_infomation(titleid))[0]
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         _, image_url = await self._get_webtoon_infomation(titleid)
@@ -71,12 +68,9 @@ class NaverGameScraper(Scraper):
         episodes_data = await self._get_episode_infomation(titleid)
         return list(episodes_data)
 
-    async def get_subtitle(self, titleid, episode_no, file_acceptable):
+    async def get_subtitle(self, titleid, episode_no):
         episodes_data = await self._get_episode_infomation(titleid)
-        subtitle = episodes_data[episode_no]['subtitle']
-        if file_acceptable:
-            subtitle = self.get_safe_file_name(subtitle)
-        return subtitle
+        return episodes_data[episode_no]['subtitle']
 
     async def get_episode_images_url(self, titleid, episode_no):
         episodes_data = await self._get_episode_infomation(titleid)
