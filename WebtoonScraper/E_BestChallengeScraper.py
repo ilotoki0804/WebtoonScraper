@@ -2,7 +2,7 @@
 if __name__ in ("__main__", "BestChallengeScraper"):
     from NaverWebtoonScraper import NaverWebtoonScraper
 else:
-    from .NaverWebtoonScraper import NaverWebtoonScraper
+    from .D_NaverWebtoonScraper import NaverWebtoonScraper
 
 
 class BestChallengeScraper(NaverWebtoonScraper):

@@ -9,7 +9,7 @@ from async_lru import alru_cache
 if __name__ in ("__main__", "NaverGameScraper"):
     from Scraper import Scraper
 else:
-    from .Scraper import Scraper
+    from .C_Scraper import Scraper
 
 
 class NaverGameScraper(Scraper):
@@ -17,7 +17,7 @@ class NaverGameScraper(Scraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://game.naver.com/original_series'
-        self.IS_STABLE_CONNECTION = True
+        self.IS_STABLE_CONNECTION: bool = True
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):

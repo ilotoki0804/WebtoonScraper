@@ -6,7 +6,7 @@ from async_lru import alru_cache
 if __name__ in ("__main__", "TelescopeScraper"):
     from Scraper import Scraper
 else:
-    from .Scraper import Scraper
+    from .C_Scraper import Scraper
 
 
 class TelescopeScraper(Scraper):

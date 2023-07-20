@@ -1,12 +1,14 @@
 import asyncio
+import logging
 
-if __name__ == "__main__":
+if __name__ in ("__main__", "test"):
     # 파일을 이용하는 것은 아님. 만약 제대로 사용하려면 상대 경로로 실행해야 함.
-    from WebtoonScraper import Webtoon as wt
-    from WebtoonScraper import FolderManager
+    logging.warning('파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다.')
+    from WebtoonScraper import B_Webtoon as wt
+    from WebtoonScraper import A_FolderManager as FolderManager
 else:
-    from ..WebtoonScraper import Webtoon as wt
-    from ..WebtoonScraper.FolderManager import FolderManager
+    from ..WebtoonScraper import B_Webtoon as wt
+    from ..WebtoonScraper.A_FolderManager import FolderManager
 
 
 def skip_by_KeyboadInterrupt(func):

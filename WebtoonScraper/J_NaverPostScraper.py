@@ -14,7 +14,7 @@ if __name__ in ("__main__", "NaverPostScraper"):
     # logging.warning('Using ')
     from Scraper import Scraper
 else:
-    from .Scraper import Scraper
+    from .C_Scraper import Scraper
 
 
 class NaverPostScraper(Scraper):

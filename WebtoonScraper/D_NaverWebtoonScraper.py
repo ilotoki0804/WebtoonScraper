@@ -6,7 +6,7 @@ if __name__ in ("__main__", "NaverWebtoonScraper"):
     from Scraper import Scraper
 else:
     # from Scraper import Scraper
-    from .Scraper import Scraper
+    from .C_Scraper import Scraper
 
 
 class NaverWebtoonScraper(Scraper):

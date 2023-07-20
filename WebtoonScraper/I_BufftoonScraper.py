@@ -5,9 +5,9 @@ import time
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "BufftoonScraper"):
-    from WebtoonScraper.Scraper import Scraper
+    from WebtoonScraper.C_Scraper import Scraper
 else:
-    from .Scraper import Scraper
+    from .C_Scraper import Scraper
 
 
 class BufftoonScraper(Scraper):
@@ -16,7 +16,7 @@ class BufftoonScraper(Scraper):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://bufftoon.plaync.com'
         self.IS_STABLE_CONNECTION = True
-        self.COOKIE = cookie
+        self.COOKIE: str = cookie
 
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid, get_payment: bool = False, limit: int = 500):
