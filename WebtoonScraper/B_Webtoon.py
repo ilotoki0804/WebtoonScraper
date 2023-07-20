@@ -184,36 +184,38 @@ async def get_scraper_instance(webtoon_type: str):
     elif webtoon_type.lower() == NAVER_GAME:
         webtoonscraper = NaverGameScraper()
     else:
-        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, telescope, and naver_game.')
+        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, bufftoon, telescope, naver_post, and naver_game.')
     return webtoonscraper
 
 
 async def get_webtoon_async(
-        webtoon_id: int,
+        webtoon_id: int | tuple[int, int],
         webtoon_type: None | str = None,
         *,
         merge: None | int = None,
         cookie: None | str = None,
-        member_no: None | int = None,
-        is_auto_select=False
+        is_auto_select=False,
+        episode_no_range: tuple[int, int] | int | None = None,
 ) -> None:
+    if webtoon_type is None and cookie is not None:
+        if isinstance(webtoon_id, tuple):
+            webtoon_type = NAVER_POST
+        else:
+            webtoon_type = await get_webtoon_platform(webtoon_id, is_auto_select)
+            if webtoon_type is None:
+                raise ValueError('You must select item.')
 
-    if webtoon_type is None:
-        webtoon_type = await get_webtoon_platform(webtoon_id, is_auto_select)
-    if webtoon_type is None:
-        raise ValueError('You must select item.')
-    webtoonscraper = await get_scraper_instance(webtoon_type)
     if webtoon_type.lower() == BUFFTOON or cookie is not None:
+        webtoonscraper = await get_scraper_instance(BUFFTOON)
         if cookie:
             webtoonscraper.COOKIE = cookie
         else:
             webtoonscraper.COOKIE = input(f'Enter cookie of {webtoon_id} (Enter nothing to proceed without cookie): ')
-    if webtoon_type.lower() == NAVER_POST or member_no is not None:
-        if not member_no:
-            member_no = int(input(f'Enter memberNo of {webtoon_id}: '))
-        await webtoonscraper.download_one_webtoon_async(titleid=(webtoon_id, member_no))
     else:
-        await webtoonscraper.download_one_webtoon_async(titleid=webtoon_id)
+        webtoonscraper = await get_scraper_instance(webtoon_type)
+
+    await webtoonscraper.download_one_webtoon_async(webtoon_id, episode_no_range)
+
     if merge:
         fd = FolderManager()
         fd.merge_webtoon_episodes(webtoonscraper.webtoon_dir, merge)
@@ -225,9 +227,9 @@ def get_webtoon(
     *,
     merge: None | int | bool = None,
     cookie: None | str = None,
-    member_no: None | int = None
+    episode_no_range: tuple[int, int] | int | None = None,
 ) -> None:
-    asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, member_no=member_no))
+    asyncio.run(get_webtoon_async(webtoon_id, webtoon_type, merge=merge, cookie=cookie, episode_no_range=episode_no_range))
 
 
 if __name__ == '__main__':
