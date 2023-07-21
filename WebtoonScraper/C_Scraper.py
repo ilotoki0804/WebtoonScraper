@@ -15,6 +15,7 @@ from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
 from typing import overload
+# import logging
 
 import requests
 from requests.exceptions import ConnectionError
@@ -384,28 +385,43 @@ class Scraper(metaclass=ABCMeta):
         file_dir.write_bytes(image_raw)
 
     @abstractmethod
-    async def get_title(self, titleid: TitleId) -> str:
-        """웹툰의 title을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
-
-    @abstractmethod
-    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
-        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장한다. 기본 구현을 사용할 시 super()를 이용할 것."""
-
-    @abstractmethod
     async def get_all_episode_no(self, titleid: TitleId) -> Iterable:
-        """웹툰에서 전체 에피소드를 가져온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+        """웹툰에서 전체 에피소드를 가져온다."""  #! Needs to be removed!
+        return len((await self.get_webtoon_data(titleid))['subtitles'])
+
+    @abstractmethod
+    async def get_title(self, titleid: TitleId) -> str:
+        """웹툰의 title을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        return (await self.get_webtoon_data(titleid))['title']
 
     @abstractmethod
     async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
-        """부제목, 즉 회차의 제목을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+        """부제목, 즉 회차의 제목을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
+
+    @abstractmethod
+    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
+        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
+        if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
+            image_extension = self.get_file_extension(thumbnail_data)
+            image_raw = (await self.get_internet(get_type='requests', url=thumbnail_data)).content
+        elif isinstance(thumbnail_data, tuple):  # It means thumnail_data is raw image data
+            image_raw, image_extension = thumbnail_data
+        else:
+            raise ValueError('Thumbnail_data is invalid; It must be string or bytes.')
+
+        image_path = thumbnail_dir / f'{title}.{image_extension}'
+        image_path.write_bytes(image_raw)
 
     @abstractmethod
     async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
-        """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용할 것."""
+        """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        return (await self.get_webtoon_data(titleid))['episode_images_url'][episode_no]
 
     @abstractmethod
     async def get_webtoon_data(self, titleid: TitleId) -> dict:
-        """웹툰에서 데이터를 불러옵니다.
+        """웹툰에서 데이터를 불러옵니다. 많이 불리기 때문에 무조건 @lru_cache를 사용해야 합니다.
 
         Args:
             titleid (TitleId): titleid를 받습니다.
@@ -414,11 +430,13 @@ class Scraper(metaclass=ABCMeta):
             dict: key에 따라 각각 자동으로 불러올 정보를 정의합니다.
                 keys:
                     'title' (str): 웹툰의 제목 정보를 불러옵니다.
-                    'subtitle' (list[str]): 웹툰의 부제목(에피소드 제목) 정보를 불러옵니다.
-                    'title' (str): 웹툰의 제목 정보를 불러옵니다.
-                    'webtoon_thumbnail' (str/bytes): 웹툰의 썸네일 정보를 불러옵니다.
+                    'subtitles' (list[str]): 웹툰의 부제목(에피소드 제목) 정보를 불러옵니다.
+                    'webtoon_thumbnail' (str/tuple[bytes, str]): 웹툰의 썸네일 정보를 불러옵니다.
                         만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
-                        bytes일 경우에는 thumbnail raw data로 추론하고 thumbnail_dir에 저장합니다.
-                    'episode_images_url' (list[str]): 실제 웹툰 이미지드릐 url로 구성된 list입니다.
+                        tuple일 경우에는 thumbnail raw data와 file extension으로 추론하고 thumbnail_dir에 저장합니다.
+                    'episode_images_url' (list[list[str]]): 실제 웹툰 이미지들의 url로 구성된 list입니다.
+                        다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
                 이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
+                # 만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
+                # 구현하고 super()를 이용하는 것이 합리적입니다.
         """
