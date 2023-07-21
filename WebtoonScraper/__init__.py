@@ -1,6 +1,6 @@
 if __name__ == "__main__":
     from A_FolderManager import FolderManager
-    import B_Webtoon
+    import B_Webtoon as Webtoon
     from D_NaverWebtoonScraper import NaverWebtoonScraper
     from E_BestChallengeScraper import BestChallengeScraper
     from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
@@ -11,7 +11,7 @@ if __name__ == "__main__":
     from K_NaverGameScraper import NaverGameScraper
 else:
     from .A_FolderManager import FolderManager
-    from . import B_Webtoon
+    from . import B_Webtoon as Webtoon
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
     from .E_BestChallengeScraper import BestChallengeScraper
     from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper

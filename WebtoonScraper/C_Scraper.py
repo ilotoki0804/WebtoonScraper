@@ -6,6 +6,7 @@
 # TODO: download vs save : 용어 정리하기
 # TODO: 카카오 웹툰/카카오 페이지 웹툰, 레진 코믹스도 만들기
 # FIXME: episode_no와 episode_id를 구분해야 함!!!
+# TODO: short_connection 등 docs 추가하기
 import re
 import os
 import asyncio
@@ -26,6 +27,11 @@ from bs4 import BeautifulSoup as bs
 from bs4.element import Tag
 from tqdm import tqdm
 from async_lru import alru_cache
+
+if __name__ in ("__main__", "C_Scraper"):
+    from A_FolderManager import FolderManager
+else:
+    from .A_FolderManager import FolderManager
 
 TitleId = int | tuple[int, int]
 
@@ -294,11 +300,11 @@ class Scraper(metaclass=ABCMeta):
 
 ################################## MAIN ACTION ##################################
 
-    def download_one_webtoon(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None) -> None:
+    def download_one_webtoon(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
-        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range))
+        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range, merge))
 
-    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge=False) -> None:
+    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -334,7 +340,11 @@ class Scraper(metaclass=ABCMeta):
             await self.download_one_episode(episode_no, titleid, webtoon_dir)
         print(f'A webtoon {title} download ended.')
 
-        #TODO: Add merge feature (webtoon_dir)
+        if merge is not None:
+            print('Merging webtoon has started...')
+            fd = FolderManager()
+            fd.merge_webtoon_episodes(webtoon_dir, 5)
+            print('Merging webtoon ended.')
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.

@@ -10,7 +10,7 @@ long_description = re.sub(r'!\[(.+?)\]\((images\/.+?)\)', repl, long_description
 
 setup(
     name='WebtoonScraper',
-    version='1.0.2',
+    version='1.1.1',
     description='Scraping webtoons and some utils for it',
     author='ilotoki0804',
     author_email='ilotoki0804@gmail.com',
