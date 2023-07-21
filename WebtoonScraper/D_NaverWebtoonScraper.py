@@ -2,7 +2,7 @@
 from itertools import count
 from async_lru import alru_cache
 
-if __name__ in ("__main__", "NaverWebtoonScraper"):
+if __name__ in ("__main__", "D_NaverWebtoonScraper"):
     from C_Scraper import Scraper
 else:
     # from Scraper import Scraper
@@ -18,9 +18,10 @@ class NaverWebtoonScraper(Scraper):
         self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'  # for best challenge
 
     @alru_cache(maxsize=4)
-    async def _get_webtoon_data(self, titleid: int):
+    async def get_webtoon_data(self, titleid: int):
         prev_articleList = []
-        subtitles = {}
+        subtitles = []
+        episode_id = []
         for i in count(1):
             url = f"https://comic.naver.com/api/article/list?titleId={titleid}&page={i}&sort=ASC"
             res = await self.get_internet('requests', url)
@@ -30,11 +31,13 @@ class NaverWebtoonScraper(Scraper):
             if prev_articleList == curr_articleList:
                 break
             for article in curr_articleList:
-                subtitles[article["no"]] = article["subtitle"]
+                # subtitles[article["no"]] = article["subtitle"]
+                subtitles.append(article["subtitle"])
+                episode_id.append(article["no"])
 
             prev_articleList = curr_articleList
 
-        return subtitles
+        return {'subtitles': subtitles, 'episode_ids': episode_id}
 
     async def get_title(self, titleid):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
@@ -47,7 +50,7 @@ class NaverWebtoonScraper(Scraper):
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?titleId={titleid}'
         image_url_tag = await self.get_internet(get_type='soup_select_one', url=url,
-                                            selector='meta[property="og:image"]')
+                                                selector='meta[property="og:image"]')
         if not image_url_tag:
             raise ConnectionError('Naver Webtoon changed their api specification. Contect developer to update get_title.')
         image_url: str = image_url_tag['content']
@@ -58,19 +61,20 @@ class NaverWebtoonScraper(Scraper):
         image_path.write_bytes(image_raw)
 
     async def get_all_episode_no(self, titleid):
-        subtitles = await self._get_webtoon_data(titleid)
-        return list(subtitles)
+        return await super().get_all_episode_no(titleid)
 
     async def get_subtitle(self, titleid, episode_no):
-        subtitles = await self._get_webtoon_data(titleid)
-        return subtitles[episode_no]
+        return await super().get_subtitle(titleid, episode_no)
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan
         url = f'{self.BASE_URL}/detail?titleId={titleid}&no={episode_no}'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                                      selector=self.EPISODE_IMAGES_URL_SELECTOR)
-        return [element['src'] for element in episode_images_url if not ('agerate' in element['src'] or 'ctguide' in element['src'])]
+        return [
+            element['src'] for element in episode_images_url
+            if not ('agerate' in element['src'] or 'ctguide' in element['src'])
+        ]
 
 
 if __name__ == '__main__':

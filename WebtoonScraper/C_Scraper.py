@@ -1,16 +1,19 @@
 """Abstract Class of all scrapers."""
 # solved: file_acceptable built-in으로 만들기
 # solved: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# TODO: get_data 시 list로 정보 받아오기 (get_all_episode_no 제거하기)
+# TODO: get_data 시 list로 정보 받아오기
+# TODO: None 대신 NoReturn 사용하기
 # TODO: download vs save : 용어 정리하기
-# TODO: 카카오 웹툰도 만들기
+# TODO: 카카오 웹툰/카카오 페이지 웹툰, 레진 코믹스도 만들기
+# FIXME: episode_no와 episode_id를 구분해야 함!!!
 import re
 import os
 import asyncio
 import shutil
 import html
 from pathlib import Path
-from typing import Iterable, Literal
+# from typing import Iterable, Literal
+from typing import Literal
 from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
@@ -22,6 +25,7 @@ from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup as bs
 from bs4.element import Tag
 from tqdm import tqdm
+from async_lru import alru_cache
 
 TitleId = int | tuple[int, int]
 
@@ -315,17 +319,20 @@ class Scraper(metaclass=ABCMeta):
 
         await self.save_webtoon_thumbnail(titleid, title, webtoon_dir)
 
+        episode_no_list = await self.get_all_episode_no(titleid)
         if not episode_no_range:
-            titleids = await self.get_all_episode_no(titleid)
+            episode_nos_plus_1 = range(1, len(episode_no_list) + 1)
         elif isinstance(episode_no_range, int):
-            titleids = (episode_no_range,)
+            episode_nos_plus_1 = (episode_no_range,)
         else:
             start, end = episode_no_range
-            titleids = range(start, end + 1)
+            episode_nos_plus_1 = range(start, end + 1)
 
-        self.pbar = tqdm(list(titleids))
+        self.pbar = tqdm(list(episode_nos_plus_1))
         for episode_no in self.pbar:
-            await self.download_one_episode(episode_no, titleid, webtoon_dir)
+            # print(episode_no - 1)
+            # episode_nos_plus_1 starts with 1, but episode_no starts with 0, so it needs to be subtracted from 1
+            await self.download_one_episode(episode_no - 1, titleid, webtoon_dir)
         print(f'A webtoon {title} download ended.')
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
@@ -358,7 +365,7 @@ class Scraper(metaclass=ABCMeta):
 
         episode_images_url = await self.get_episode_images_url(titleid, episode_no)
 
-        episode_dir = webtoon_dir / f'{episode_no:04d}. {subtitle}'
+        episode_dir = webtoon_dir / f'{episode_no + 1:04d}. {subtitle}'
         if self._check_validate_of_files(episode_dir, episode_no, episode_images_url, subtitle):
             return
 
@@ -385,9 +392,9 @@ class Scraper(metaclass=ABCMeta):
         file_dir.write_bytes(image_raw)
 
     @abstractmethod
-    async def get_all_episode_no(self, titleid: TitleId) -> Iterable:
-        """웹툰에서 전체 에피소드를 가져온다."""  #! Needs to be removed!
-        return len((await self.get_webtoon_data(titleid))['subtitles'])
+    async def get_all_episode_no(self, titleid: TitleId) -> list:
+        """웹툰에서 전체 에피소드를 가져온다."""
+        return (await self.get_webtoon_data(titleid))['episode_ids']
 
     @abstractmethod
     async def get_title(self, titleid: TitleId) -> str:
@@ -419,8 +426,26 @@ class Scraper(metaclass=ABCMeta):
         """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
         return (await self.get_webtoon_data(titleid))['episode_images_url'][episode_no]
 
+    @overload
+    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['title'], str]: ... # noqa
+
+    @overload
+    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['subtitles'], list[str]]: ... # noqa
+
+    @overload
+    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['webtoon_thumbnail'], str | tuple[bytes | str]]: ... # noqa
+
+    @overload
+    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['episode_images_url'], list[list[str]]]: ... # noqa
+
+    @overload
+    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['episode_ids'], list[str]]: ... # noqa
+
     @abstractmethod
-    async def get_webtoon_data(self, titleid: TitleId) -> dict:
+    @alru_cache(maxsize=4)
+    async def get_webtoon_data(self, titleid: TitleId) \
+        -> dict[Literal['title', 'subtitles', 'webtoon_thumbnail', 'episode_images_url', 'episode_ids'],
+                list[str] | list[list[str]] | str | bytes | tuple[bytes | str]]:
         """웹툰에서 데이터를 불러옵니다. 많이 불리기 때문에 무조건 @lru_cache를 사용해야 합니다.
 
         Args:
@@ -434,6 +459,7 @@ class Scraper(metaclass=ABCMeta):
                     'webtoon_thumbnail' (str/tuple[bytes, str]): 웹툰의 썸네일 정보를 불러옵니다.
                         만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
                         tuple일 경우에는 thumbnail raw data와 file extension으로 추론하고 thumbnail_dir에 저장합니다.
+                    'episode_ids' (list(int)): episode id list를 불러옵니다.
                     'episode_images_url' (list[list[str]]): 실제 웹툰 이미지들의 url로 구성된 list입니다.
                         다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
                 이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.

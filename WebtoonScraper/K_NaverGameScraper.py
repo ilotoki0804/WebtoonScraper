@@ -1,7 +1,7 @@
 '''Download Webtoons from Naver Post.'''
 
 import contextlib
-from pathlib import Path
+# from pathlib import Path
 from itertools import count
 import json
 from async_lru import alru_cache
@@ -29,7 +29,7 @@ class NaverGameScraper(Scraper):
         return title, thumbnail
 
     @alru_cache(maxsize=4)
-    async def _get_episode_infomation(self, titleid, episode_max_limit=500):
+    async def get_webtoon_data(self, titleid, episode_max_limit=500):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):
@@ -42,7 +42,10 @@ class NaverGameScraper(Scraper):
             content_raw_data += res['content']['data']
 
         # 부제목, 이미지 데이터 불러옴
-        episodes_data = {}
+        # episodes_data = {}
+        subtitles = []
+        episode_images_url = []
+        episode_ids = []
         for i, episode in enumerate(content_raw_data, 1):
             subtitle = episode['feed']['title']
             content_json_data = json.loads(episode['feed']['contents'])
@@ -50,31 +53,29 @@ class NaverGameScraper(Scraper):
             for image_url in content_json_data['document']['components']:
                 with contextlib.suppress(KeyError):
                     image_urls.append(image_url['src'])
-            episodes_data[i] = {'subtitle': subtitle, 'image_urls': image_urls}
+            # episodes_data[i] = {'subtitle': subtitle, 'image_urls': image_urls}
+            episode_ids.append(i)
+            subtitles.append(subtitle)
+            episode_images_url.append(image_urls)
 
-        return episodes_data
+        title, thumbnail = await self._get_webtoon_infomation(titleid)
+
+        return {'subtitles': subtitles, 'episode_images_url': episode_images_url, 'episode_ids': episode_ids, 'title': title, 'webtoon_thumbnail': thumbnail}
 
     async def get_title(self, titleid):
-        return (await self._get_webtoon_infomation(titleid))[0]
+        return await super().get_title(titleid)
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        _, image_url = await self._get_webtoon_infomation(titleid)
-        image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
-        image_raw = image_raw.content
-        Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
+        return await super().save_webtoon_thumbnail(titleid, title, thumbnail_dir)
 
     async def get_all_episode_no(self, titleid):
-        episodes_data = await self._get_episode_infomation(titleid)
-        return list(episodes_data)
+        return await super().get_all_episode_no(titleid)
 
     async def get_subtitle(self, titleid, episode_no):
-        episodes_data = await self._get_episode_infomation(titleid)
-        return episodes_data[episode_no]['subtitle']
+        return await super().get_subtitle(titleid, episode_no)
 
     async def get_episode_images_url(self, titleid, episode_no):
-        episodes_data = await self._get_episode_infomation(titleid)
-        return episodes_data[episode_no]['image_urls']
+        return await super().get_episode_images_url(titleid, episode_no)
 
 
 if __name__ == '__main__':

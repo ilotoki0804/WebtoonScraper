@@ -3,7 +3,7 @@ import time
 
 from async_lru import alru_cache
 
-if __name__ in ("__main__", "TelescopeScraper"):
+if __name__ in ("__main__", "H_TelescopeScraper"):
     from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
@@ -19,11 +19,11 @@ class TelescopeScraper(Scraper):
         self.TIMEOUT = 3
 
     async def download_one_webtoon_async(self, titleid, episode_no_range: tuple | int | None = None):
-        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self._get_webtoon_infomation(titleid)
+        self.title, self.list_thumbnail_url, self.grid_thumbnail_url, self.episode_infomation = await self.get_webtoon_data(titleid)
         await super().download_one_webtoon_async(titleid, episode_no_range)
 
     @alru_cache(maxsize=4)
-    async def _get_webtoon_infomation(self, titleid):
+    async def get_webtoon_data(self, titleid):
         XHR_HEADER = {
             "authority": 'api.manhwakyung.com',
             "method": 'GET',
@@ -58,35 +58,35 @@ class TelescopeScraper(Scraper):
         grid_thumbnail_url = episodes[0]['title']['gridThumbnailImageUrl']
 
         # about episode
-        episode_infomation = {}
+        subtitles = []
+        episode_ids = []
         for episode in episodes:
             subtitle = episode['name']
             episode_no = episode['episodeNumber']
             episode_id = episode['id']
-            episode_infomation[episode_no] = {'subtitle': subtitle, 'episode_id': episode_id}
+            # episode_infomation[episode_no] = {'subtitle': subtitle, 'episode_id': episode_id}
+            subtitles.append(subtitle)
+            episode_ids.append(episode_id)
 
-        return title, list_thumbnail_url, grid_thumbnail_url, episode_infomation
+        # list_thumbnail_url
+        return {'title': title, 'webtoon_thumbnail': grid_thumbnail_url, 'subtitles': subtitles[::-1], 'episode_ids': episode_ids[::-1]}
 
     async def get_title(self, titleid):
-        return self.title
+        return await super().get_title(titleid)
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        image_url = self.grid_thumbnail_url
-        image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
-        image_raw = image_raw.content
-        thumbnail_file = thumbnail_dir / f'{title}.{image_extension}'
-        thumbnail_file.write_bytes(image_raw)
+        return await super().save_webtoon_thumbnail(titleid, title, thumbnail_dir)
 
     async def get_all_episode_no(self, titleid):
-        return reversed(self.episode_infomation)
+        return await super().get_all_episode_no(titleid)
 
     async def get_subtitle(self, titleid, episode_no):
-        time.sleep(1)
-        return self.episode_infomation[episode_no]['subtitle']
+        time.sleep(1)  # 없으면 작동 안 함.
+        return await super().get_subtitle(titleid, episode_no)
 
     async def get_episode_images_url(self, titleid, episode_no):
-        episode_id = self.episode_infomation[episode_no]['episode_id']
+        episode_id: int = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
+        # episode_id = self.episode_infomation[episode_no]['episode_id']
         elemetents = await self.get_internet('soup_select', f'https://www.manhwakyung.com/episode/{episode_id}',
                                              '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
         return [element.get('data-src') for element in elemetents]
