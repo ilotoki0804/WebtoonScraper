@@ -93,8 +93,8 @@ class BufftoonScraper(Scraper):
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.43',
         }
-        _, episode_ids = await self.get_webtoon_data(titleid)
-        url = f'{self.BASE_URL}/series/{titleid}/{episode_ids[episode_no]}'
+        episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
+        url = f'{self.BASE_URL}/series/{titleid}/{episode_id}'
         selector = '#content > div > div > div.viewer-wrapper > div > img'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                                      selector=selector, headers=HEADERS)

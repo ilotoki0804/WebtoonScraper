@@ -85,7 +85,8 @@ class TelescopeScraper(Scraper):
         return await super().get_subtitle(titleid, episode_no)
 
     async def get_episode_images_url(self, titleid, episode_no):
-        episode_id: int = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
+        # episode_id: int = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
+        episode_id: int = await self.episode_no_to_episode_id(titleid, episode_no)
         # episode_id = self.episode_infomation[episode_no]['episode_id']
         elemetents = await self.get_internet('soup_select', f'https://www.manhwakyung.com/episode/{episode_id}',
                                              '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')

@@ -68,7 +68,8 @@ class NaverWebtoonScraper(Scraper):
 
     async def get_episode_images_url(self, titleid, episode_no):
         # sourcery skip: de-morgan
-        url = f'{self.BASE_URL}/detail?titleId={titleid}&no={episode_no}'
+        episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
+        url = f'{self.BASE_URL}/detail?titleId={titleid}&no={episode_id}'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                                      selector=self.EPISODE_IMAGES_URL_SELECTOR)
         return [

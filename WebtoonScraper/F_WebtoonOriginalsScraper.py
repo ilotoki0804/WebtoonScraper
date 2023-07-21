@@ -86,7 +86,8 @@ class WebtoonOriginalsScraper(Scraper):
         return await super().get_subtitle(titleid, episode_no)
 
     async def get_episode_images_url(self, titleid, episode_no):
-        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_no}'
+        episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
+        url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_id}'
         episode_images_url = await self.get_internet(get_type='soup_select', url=url,
                                                      selector='#_imageList > img')
         return [element['data-url'] for element in episode_images_url]

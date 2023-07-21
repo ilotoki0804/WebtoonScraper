@@ -6,7 +6,7 @@ from itertools import count
 import json
 from async_lru import alru_cache
 
-if __name__ in ("__main__", "NaverGameScraper"):
+if __name__ in ("__main__", "K_NaverGameScraper"):
     from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
@@ -80,4 +80,4 @@ class NaverGameScraper(Scraper):
 
 if __name__ == '__main__':
     wt = NaverGameScraper()
-    wt.get_webtoon(5)  # 모배툰
+    wt.download_one_webtoon(5)  # 모배툰

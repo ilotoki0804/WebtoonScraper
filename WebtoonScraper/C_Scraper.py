@@ -298,7 +298,7 @@ class Scraper(metaclass=ABCMeta):
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range))
 
-    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None) -> None:
+    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge=False) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
         주의: 유료 회차는 다운로드받을 수 없다.
@@ -321,19 +321,20 @@ class Scraper(metaclass=ABCMeta):
 
         episode_no_list = await self.get_all_episode_no(titleid)
         if not episode_no_range:
-            episode_nos_plus_1 = range(1, len(episode_no_list) + 1)
+            episode_no_list_plus_1 = range(1, len(episode_no_list) + 1)
         elif isinstance(episode_no_range, int):
-            episode_nos_plus_1 = (episode_no_range,)
+            episode_no_list_plus_1 = (episode_no_range,)
         else:
             start, end = episode_no_range
-            episode_nos_plus_1 = range(start, end + 1)
+            episode_no_list_plus_1 = range(start, end + 1)
 
-        self.pbar = tqdm(list(episode_nos_plus_1))
+        # episode_nos_plus_1 starts with 1, but episode_no starts with 0, so it needs to be subtracted from 1
+        self.pbar = tqdm([i - 1 for i in episode_no_list_plus_1])
         for episode_no in self.pbar:
-            # print(episode_no - 1)
-            # episode_nos_plus_1 starts with 1, but episode_no starts with 0, so it needs to be subtracted from 1
-            await self.download_one_episode(episode_no - 1, titleid, webtoon_dir)
+            await self.download_one_episode(episode_no, titleid, webtoon_dir)
         print(f'A webtoon {title} download ended.')
+
+        #TODO: Add merge feature (webtoon_dir)
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
@@ -379,7 +380,7 @@ class Scraper(metaclass=ABCMeta):
 
         # for Bufftoon
         if image_extension is None:
-            if default_file_extension is not None:
+            if default_file_extension is None:
                 raise ValueError('File extension not detected.')
             image_extension = default_file_extension
 
@@ -395,6 +396,13 @@ class Scraper(metaclass=ABCMeta):
     async def get_all_episode_no(self, titleid: TitleId) -> list:
         """웹툰에서 전체 에피소드를 가져온다."""
         return (await self.get_webtoon_data(titleid))['episode_ids']
+
+    async def episode_no_to_episode_id(self, titleid: TitleId, episode_no: int, reverse: bool = False) -> int:
+        """reverse가 참일 경우 반대로 episode_id에서 episode_no를 불러옴."""
+        if not reverse:
+            return (await self.get_all_episode_no(titleid))[episode_no]
+        else:
+            return (await self.get_all_episode_no(titleid)).index(episode_no)
 
     @abstractmethod
     async def get_title(self, titleid: TitleId) -> str:
@@ -463,6 +471,6 @@ class Scraper(metaclass=ABCMeta):
                     'episode_images_url' (list[list[str]]): 실제 웹툰 이미지들의 url로 구성된 list입니다.
                         다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
                 이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
-                # 만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
-                # 구현하고 super()를 이용하는 것이 합리적입니다.
+                만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
+                구현하고 super()를 이용하는 것이 합리적입니다.
         """

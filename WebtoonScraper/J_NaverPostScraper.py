@@ -10,7 +10,7 @@ from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
 
-if __name__ in ("__main__", "NaverPostScraper"):
+if __name__ in ("__main__", "J_NaverPostScraper"):
     # logging.warning('Using ')
     from C_Scraper import Scraper
 else:
@@ -25,7 +25,7 @@ class NaverPostScraper(Scraper):
         self.BASE_URL = 'https://post.naver.com'
 
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid: tuple[int, int]) -> tuple[list[str], list[int]]:
+    async def get_webtoon_data(self, titleid: tuple[int, int]) -> dict[str, list]:
         # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
         series_no, member_no = titleid
         subtitle_list: list[str] = []
@@ -57,13 +57,13 @@ class NaverPostScraper(Scraper):
             prev_data = decoded_response_data
 
         # 1화부터로 변경
-        return {'subtitle': subtitle_list[::-1], 'episode_ids': episode_id_list[::-1]}
+        return {'subtitles': subtitle_list[::-1], 'episode_ids': episode_id_list[::-1]}
 
     async def get_title(self, titleid: tuple[int, int]):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
         title: str = (await self.get_internet(get_type='soup_select_one', url=url,
-                                        selector='h2.tit_series > span')).text
+                                              selector='h2.tit_series > span')).text
         return title.strip()
 
     async def save_webtoon_thumbnail(self, titleid: tuple[int, int], title, thumbnail_dir):
@@ -88,8 +88,7 @@ class NaverPostScraper(Scraper):
 
     async def get_episode_images_url(self, titleid, episode_no, attempt=3):
         series_no, member_no = titleid
-        _, episode_id_list = await self.get_webtoon_data(titleid)
-        episode_id = episode_id_list[episode_no]
+        episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
         url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}&navigationType=push'
         for _ in range(attempt):
             content = await self.get_internet(get_type='soup_select_one', url=url,
