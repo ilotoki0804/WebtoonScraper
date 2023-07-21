@@ -1,12 +1,13 @@
 """Abstract Class of all scrapers."""
 # solved: file_acceptable built-in으로 만들기
 # solved: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# TODO: get_data 시 list로 정보 받아오기
+# SOLVED: get_data 시 list로 정보 받아오기
 # TODO: None 대신 NoReturn 사용하기
 # TODO: download vs save : 용어 정리하기
-# TODO: 카카오 웹툰/카카오 페이지 웹툰, 레진 코믹스도 만들기
+# TODO: 카카오 웹툰/카카오 페이지 웹툰, 레진 코믹스도 만들기 (HURRY!)
 # FIXME: episode_no와 episode_id를 구분해야 함!!!
 # TODO: short_connection 등 docs 추가하기
+# TODO: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
 import re
 import os
 import asyncio
@@ -314,6 +315,7 @@ class Scraper(metaclass=ABCMeta):
                                     예) (1,10): 1회차부터 10회차를 다운로드함
                                 int일 경우: 한 회차만 다운로드 받는다.
                                 None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
+        :merge: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶는다.
         """
         self.loop = asyncio.get_running_loop()
 
@@ -343,6 +345,7 @@ class Scraper(metaclass=ABCMeta):
         if merge is not None:
             print('Merging webtoon has started...')
             fd = FolderManager()
+            print(webtoon_dir, fd)
             fd.merge_webtoon_episodes(webtoon_dir, 5)
             print('Merging webtoon ended.')
 
