@@ -1,5 +1,6 @@
 '''Download Webtoons from Naver Webtoon.'''
 from itertools import count
+
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "D_NaverWebtoonScraper"):
