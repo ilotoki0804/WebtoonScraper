@@ -13,6 +13,5 @@ build/
 /.scraper-beta
 **/webtoon
 token.txt
-_webtoon.ipynb
-webtoon.ipynb
-_webtoon2.ipynb
+*.ipynb
+WebtoonScraper/various_test
