@@ -1,13 +1,15 @@
 """Abstract Class of all scrapers."""
-# solved: file_acceptable built-in으로 만들기
-# solved: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# SOLVED: get_data 시 list로 정보 받아오기
+# [x]: file_acceptable built-in으로 만들기
+# [x]: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
+# [x]: get_data 시 list로 정보 받아오기
 # TODO: None 대신 NoReturn 사용하기
 # TODO: download vs save : 용어 정리하기
-# TODO: 카카오 웹툰/카카오 페이지 웹툰, 레진 코믹스도 만들기 (HURRY!)
-# FIXME: episode_no와 episode_id를 구분해야 함!!!
+# TODO: 카카오 웹툰/카카오 페이지 웹툰, 네이버 블로그 만들기
 # TODO: short_connection 등 docs 추가하기
 # TODO: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
+# TODO: annotations 추가하고 필요 version낮추기
+# TODO: print문 모두 제거하고 logging으로 변경하기
+# TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
 import re
 import os
 import asyncio
@@ -15,7 +17,7 @@ import shutil
 import html
 from pathlib import Path
 # from typing import Iterable, Literal
-from typing import Literal
+from typing import Literal, NoReturn
 from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
@@ -34,7 +36,7 @@ if __name__ in ("__main__", "C_Scraper"):
 else:
     from .A_FolderManager import FolderManager
 
-TitleId = int | tuple[int, int]
+TitleId = int | tuple[int, int] | str
 
 
 class Scraper(metaclass=ABCMeta):
@@ -64,7 +66,7 @@ class Scraper(metaclass=ABCMeta):
         self.short_connection = False
 
     @property
-    def short_connection(self):
+    def short_connection(self) -> bool:
         return self._short_connection
 
     @short_connection.setter
@@ -220,11 +222,11 @@ class Scraper(metaclass=ABCMeta):
                                       ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
 
         if get_type in ('soup', 'soup_select', 'soup_select_one'):
-            if selector is None:
-                raise ValueError('Selector can\'t be None.')
             soup = bs(response.text, "html.parser")
             if get_type == 'soup':
                 return soup
+            if selector is None:
+                raise ValueError('Selector can\'t be None.')
             if get_type == 'soup_select':
                 return soup.select(selector)
             if get_type == 'soup_select_one':
@@ -266,7 +268,7 @@ class Scraper(metaclass=ABCMeta):
         Returns:
             파일 확장자를 반환합니다.
         """
-        serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif)(?=[?].+$|$)', filename_or_url, re.I)
+        serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif|webp)(?=[?].+$|$)', filename_or_url, re.I)
 
         return None if serch_result is None else serch_result[0]
         # return filename_or_url.split('.')[-1].lower()
@@ -320,7 +322,8 @@ class Scraper(metaclass=ABCMeta):
         self.loop = asyncio.get_running_loop()
 
         title = self.get_safe_file_name(await self.get_title(titleid))
-        webtoon_dir = self.BASE_DIR / f'{title}({titleid})'
+        webtoon_dir_name = await self.get_webtoon_dir_name(titleid, title)
+        webtoon_dir = self.BASE_DIR / webtoon_dir_name
         self.webtoon_dir = webtoon_dir
 
         webtoon_dir.mkdir(parents=True, exist_ok=True)
@@ -342,12 +345,21 @@ class Scraper(metaclass=ABCMeta):
             await self.download_one_episode(episode_no, titleid, webtoon_dir)
         print(f'A webtoon {title} download ended.')
 
+        webtoon_dir = await self.lezhin_unshuffle_process(titleid, webtoon_dir)
+
         if merge is not None:
             print('Merging webtoon has started...')
             fd = FolderManager()
-            print(webtoon_dir, fd)
+            # print(webtoon_dir, fd)
             fd.merge_webtoon_episodes(webtoon_dir, 5)
             print('Merging webtoon ended.')
+
+    async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
+        return f'{title}({titleid})'
+
+    async def lezhin_unshuffle_process(self, titleid: TitleId, base_webtoon_dir: Path):
+        """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
+        return base_webtoon_dir
 
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
@@ -378,6 +390,11 @@ class Scraper(metaclass=ABCMeta):
             return
 
         episode_images_url = await self.get_episode_images_url(titleid, episode_no)
+
+        if episode_images_url is None:  # for lezhin
+            print(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
+            self._set_pbar('unknown episode')
+            return
 
         episode_dir = webtoon_dir / f'{episode_no + 1:04d}. {subtitle}'
         if self._check_validate_of_files(episode_dir, episode_no, episode_images_url, subtitle):
@@ -428,11 +445,15 @@ class Scraper(metaclass=ABCMeta):
         return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
 
     @abstractmethod
-    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path) -> None:
+    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다. 기본 구현을 사용할 시 super()를 이용하세요."""
         thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
             image_extension = self.get_file_extension(thumbnail_data)
+            if image_extension is None:
+                if default_file_extension is None:
+                    raise ValueError('File extension not detected.')
+                image_extension = default_file_extension
             image_raw = (await self.get_internet(get_type='requests', url=thumbnail_data)).content
         elif isinstance(thumbnail_data, tuple):  # It means thumnail_data is raw image data
             image_raw, image_extension = thumbnail_data
