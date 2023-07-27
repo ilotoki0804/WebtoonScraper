@@ -11,4 +11,4 @@ os.system(f'pip install --force-reinstall dist/{whl_file_name}')  # --user를 �
 if input('Submit changes? (y or not)') in ('y', 'Y', 'ㅛ'):
     token = Path('token.txt').read_text(encoding='utf-8')
     subprocess.run(["twine", "upload", "-u", '__token__', "-p", token, "dist/*"])
-os.system('pip show webtoonscraper')
+    os.system('pip show webtoonscraper')
