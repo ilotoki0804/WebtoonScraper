@@ -1,8 +1,10 @@
 # WebtoonScraper
+![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)
 
-웹툰을 다운로드하는 프로젝트입니다.
+국내 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
-네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 만화경, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스를 지원합니다.
+네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 만화경, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스를 지원하고,
+이외에도 더 많은 웹툰을 추후에 지원할 예정입니다.
 
 # 시작하기
 
@@ -163,9 +165,9 @@
 1. 웹툰을 상기한 대로 다운로드받습니다.
 2. 다음과 같이 코드를 짭니다.
    ```python
-   from WebtoonScraper import FolderManager
+   from WebtoonScraper import FolderMerger
 
-   fm = FolderManager()
+   fm = FolderMerger()
    fm.divide_all_webtoons(5)
    ```
 3. webtoons 폴더에 있는 **모든** 웹툰이 'webtoon_merge' 폴더에 5화씩 묶여져 다운로드됩니다.
@@ -181,9 +183,9 @@
 1. 윗글의 기능으로 묶인 회차를 준비합니다.
 2. 다음과 같이 코드를 짭니다.
    ```python
-   from WebtoonScraper import FolderManager
+   from WebtoonScraper import FolderMerger
 
-   fm= FolderManager()
+   fm= FolderMerger()
    fm.restore_webtoons_in_directory()
    ```
 3. 'webtoon' 폴더에 있던 모든 웹툰이 웹툰을 처음 다운로드했던 상태로 되돌아갑니다.
