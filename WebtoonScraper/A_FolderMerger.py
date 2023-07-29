@@ -1,4 +1,4 @@
-"""This module provides FolderManager class."""
+"""This module provides FolderMerger class."""
 
 # 회차 묶기
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 
 
-class FolderManager:
+class FolderMerger:
     def __init__(self):
 
         self.BASE_DIR = 'webtoon'
@@ -221,7 +221,7 @@ class FolderManager:
 
 
 if __name__ == "__main__":
-    fm = FolderManager()
+    fm = FolderMerger()
 
     # # test setters of BASE_DIR/ALT_DIR
     # fm.BASE_DIR = 'webtoon'

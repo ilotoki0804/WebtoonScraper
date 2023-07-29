@@ -6,7 +6,7 @@ from itertools import starmap
 import logging
 
 if __name__ in ("__main__", "B_Webtoon"):
-    from A_FolderManager import FolderManager
+    from A_FolderMerger import FolderMerger
     from D_NaverWebtoonScraper import NaverWebtoonScraper
     from E_BestChallengeScraper import BestChallengeScraper
     from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
@@ -17,7 +17,7 @@ if __name__ in ("__main__", "B_Webtoon"):
     from K_NaverGameScraper import NaverGameScraper
     from L_LezhinComicsScraper import LezhinComicsScraper
 else:
-    from .A_FolderManager import FolderManager
+    from .A_FolderMerger import FolderMerger
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
     from .E_BestChallengeScraper import BestChallengeScraper
     from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper

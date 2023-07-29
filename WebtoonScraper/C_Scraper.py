@@ -33,9 +33,9 @@ from tqdm import tqdm
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "C_Scraper"):
-    from A_FolderManager import FolderManager
+    from A_FolderMerger import FolderMerger
 else:
-    from .A_FolderManager import FolderManager
+    from .A_FolderMerger import FolderMerger
 
 TitleId = int | tuple[int, int] | str
 
@@ -350,7 +350,7 @@ class Scraper(metaclass=ABCMeta):
 
         if merge is not None:
             logging.warning('Merging webtoon has started...')
-            fd = FolderManager()
+            fd = FolderMerger()
             # logging.warning(webtoon_dir, fd)
             fd.merge_webtoon_episodes(webtoon_dir, 5)
             logging.warning('Merging webtoon ended.')
