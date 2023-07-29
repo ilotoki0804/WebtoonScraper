@@ -70,6 +70,7 @@ class LezhinComicsScraper(Scraper):
         logging.debug(f'length of body > 1 > 1: {parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]}')
         episodes_data = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][-1]["value"]["elements"]
         # is_shuffled: bool = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][19]["value"]["properties"][0]["value"]["value"]  # imageShuffle
+
         def determine_is_shuffled(parsed):
             for property_index in range(20):
                 for possibily_shuffled in parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]:

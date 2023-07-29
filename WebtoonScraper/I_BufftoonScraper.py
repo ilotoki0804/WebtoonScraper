@@ -20,7 +20,7 @@ class BufftoonScraper(Scraper):
         self.COOKIE: str = cookie
 
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid, get_payment: bool = False, get_login_requiered: bool | None = None,limit: int = 500):
+    async def get_webtoon_data(self, titleid, get_payment: bool = False, get_login_requiered: bool | None = None, limit: int = 500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = await self.get_internet('requests', url)
         raw_data = raw_data.json()
@@ -53,7 +53,7 @@ class BufftoonScraper(Scraper):
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
         image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
-                                            selector='#content > div > div > div.series-info > div.img')
+                                                     selector='#content > div > div > div.series-info > div.img')
         if not image_url_original:
             raise ConnectionError('Bufftoon changed their api specification. Contect developer to update save_webtoon_thumbnail.')
         image_url = image_url_original['style']

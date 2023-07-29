@@ -70,7 +70,7 @@ class NaverPostScraper(Scraper):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
         image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
-                                            selector='meta[property="og:image"]')
+                                                     selector='meta[property="og:image"]')
         if not image_url_original:
             raise ConnectionError('Naver Post changed their api specification. Contect developer to update save_webtoon_thumbnail.')
         image_url: str = image_url_original['content']
