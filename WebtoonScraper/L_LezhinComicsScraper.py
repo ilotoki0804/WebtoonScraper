@@ -6,6 +6,7 @@ import os
 import re
 import json
 import shutil
+import multiprocessing
 
 from tqdm import tqdm
 from async_lru import alru_cache
@@ -194,7 +195,7 @@ class LezhinComicsScraper(Scraper):
 
         return image_urls
 
-    async def unshuffle_webtoon(self, titleid, base_webtoon_dir, alt_webtoon_dir, force_unshuffle: bool = False):
+    async def unshuffle_webtoon(self, titleid, base_webtoon_dir, alt_webtoon_dir, force_unshuffle: bool = False, process_number: int = 8):
         def get_episode_dir_no(episode_dir_name: str):
             # print(episode_dir_name)
             try:
@@ -204,9 +205,11 @@ class LezhinComicsScraper(Scraper):
                     return
                 if re.search(r'^(\d+)~(\d+)', episode_dir_name):
                     raise ValueError(
-                        'Episode name is not valid. It\'s because you tried merging already merged webtoon folder.'
+                        'Episode name is not valid. It\'s because you tried merging already merged webtoon folder. '
+                        '`unshuffle_webtoon` does not support merged webtoon.'
                     )
-                raise ValueError('episode_dir_name is invalid. Maybe you tried to unshuffle merged webtoon directory.') from e
+                raise ValueError('`episode_dir_name` is invalid. Maybe you tried to unshuffle merged webtoon directory. '
+                                 '`unshuffle_webtoon` does not support merged webtoon.') from e
 
         # 웹툰을 다운로드 받을 때 유료 웹툰이거나 하는 이유로 일부 에피소드는 다운로드되지 않을 수 있음
         # 하지만 episode_id는 0부터 쭉 존재함.
@@ -224,32 +227,41 @@ class LezhinComicsScraper(Scraper):
                                      if get_episode_dir_no(episode_dir_name) is not None}
         episode_id_ints = (await self.get_webtoon_data(titleid))['episode_id_integers']
 
-        self.pbar = tqdm([(episode_dir_names_indexed.get(i + 1), episode_id) for i, episode_id in enumerate(episode_id_ints)])
-        for episode_dir_name, episode_id in self.pbar:
+        # self.pbar = tqdm([(episode_dir_names_indexed.get(i + 1), episode_id) for i, episode_id in enumerate(episode_id_ints)])
+        episodes_with_episode_id = [(episode_id, episode_dir_names_indexed.get(i + 1)) for i, episode_id in enumerate(episode_id_ints)]
+        unshuffle_parameters = []
+        for episode_id, episode_dir_name in episodes_with_episode_id:
             if episode_dir_name is None:
                 continue
             base_episode_dir = base_webtoon_dir / episode_dir_name
             alt_episode_dir = alt_webtoon_dir / episode_dir_name
             try:
                 alt_episode_dir.mkdir()
-                self._set_pbar(f'{episode_dir_name}')
             except FileExistsError:
                 if len(os.listdir(alt_episode_dir)) == len(os.listdir(base_episode_dir)):
-                    self._set_pbar(f'passing {episode_dir_name}')
+                    print(f'passing {episode_dir_name}')
                     continue
-                else:
-                    self._set_pbar(f'{episode_dir_name} is not valid. Delete items and continue.')
-                    shutil.rmtree(alt_episode_dir)
-                    alt_episode_dir.mkdir()
-            self.unshuffle_episode(base_episode_dir, alt_episode_dir, episode_id)
+                print(f'{episode_dir_name} is not valid. Delete items and continue.')
+                shutil.rmtree(alt_episode_dir)
+                alt_episode_dir.mkdir()
+            # self.unshuffle_episode(base_episode_dir, alt_episode_dir, episode_id)
+            unshuffle_parameters.append((base_episode_dir, alt_episode_dir, episode_id))
+
+        # self.pbar = tqdm(unshuffle_parameters)
+        logging.warning('Unshuffling is started. It takes a while and very CPU-intensive task. '
+                        'So keep patient and wait until process end.')
+        with multiprocessing.Pool(process_number) as p:
+            p.starmap(LezhinComicsScraper.unshuffle_episode, unshuffle_parameters)
+
         logging.info('Unshuffling ended.')
 
-    def unshuffle_episode(self, base_episode_dir: Path, alt_episode_dir: Path, episode_id_int: int):
+    @staticmethod
+    def unshuffle_episode(base_episode_dir: Path, alt_episode_dir: Path, episode_id_int: int):
         # print(f'{base_episode_dir = }, {alt_episode_dir = }, {episode_id_int = }')
         # return
 
         def get_random_numbers_of_certain_seed(seed):
-            """Mutating Lezhin's random number generator. `random_numbers` are always same if given seed is same."""  
+            """Mutating Lezhin's random number generator. `random_numbers` are always same if given seed is same."""
             results = []
             state = seed
             for _ in range(25):
@@ -296,6 +308,10 @@ class LezhinComicsScraper(Scraper):
                     assambled_image.paste(cropped_image, tuple(
                         j // 5 for j in position_in_assambled_image(i)))
                 assambled_image.save(alt_image_path)
+
+        # self._set_pbar(f'{base_episode_dir}')
+        print(base_episode_dir)
+        # alt_episode_dir.mkdir()
 
         random_numbers = get_random_numbers_of_certain_seed(episode_id_int)
         image_order = get_image_order_from_random_number(random_numbers)

@@ -10,6 +10,7 @@
 # TODO: annotations 추가하고 필요 version낮추기
 # TODO: print문 모두 제거하고 logging으로 변경하기
 # TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
+# TODO: 레진코믹스 pyjsparser 대신 정적 분석 시도하기
 import re
 import os
 import asyncio
