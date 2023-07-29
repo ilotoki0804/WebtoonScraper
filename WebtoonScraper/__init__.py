@@ -1,5 +1,5 @@
 if __name__ == "__main__":
-    from A_FolderManager import FolderManager
+    from A_FolderMerger import FolderMerger
     import B_Webtoon as Webtoon
     from D_NaverWebtoonScraper import NaverWebtoonScraper
     from E_BestChallengeScraper import BestChallengeScraper
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     from J_NaverPostScraper import NaverPostScraper
     from K_NaverGameScraper import NaverGameScraper
 else:
-    from .A_FolderManager import FolderManager
+    from .A_FolderMerger import FolderMerger
     from . import B_Webtoon as Webtoon
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
     from .E_BestChallengeScraper import BestChallengeScraper
@@ -20,6 +20,8 @@ else:
     from .I_BufftoonScraper import BufftoonScraper
     from .J_NaverPostScraper import NaverPostScraper
     from .K_NaverGameScraper import NaverGameScraper
+
+__version__ = (1, 2, 0)
 
 if __name__ == '__main__':
     print('Testing codes.')
