@@ -69,7 +69,7 @@ class FolderManager:
 
         # episode_bundle이 1인 경우 revert_to_original_download_state 수행
         if merge_amount == 1:
-            print('Value of episode_bundle is 1, so autometically revert directory state to original.')
+            logging.warning('Value of episode_bundle is 1, so autometically revert directory state to original.')
             self.restore_webtoon(base_webtoon_dir)
         episodes = os.listdir(base_webtoon_dir)
 
@@ -110,11 +110,11 @@ class FolderManager:
 
     def _make_dir_name(self, images):
         episode_id = self._find_episode_id(images)
-        # episode_id = set(int(image.split('.')[0]) for image in images)
         return f'{min(episode_id):04d}~{max(episode_id):04d}'
 
     @staticmethod
     def _find_episode_id(images):
+        # episode_id = set(int(image.split('.')[0]) for image in images)
         return {int(image.split('.')[0]) for image in images}
 
     def _transit_folder_insides(self, base_episode_dir: Path,

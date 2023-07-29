@@ -23,7 +23,7 @@ from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
 from typing import overload
-# import logging
+import logging
 
 import requests
 from requests.exceptions import ConnectionError
@@ -214,7 +214,7 @@ class Scraper(metaclass=ABCMeta):
                 try:
                     response = await send_get_request()
                 except ConnectionError:
-                    print('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
+                    logging.warning('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
                 else:
                     is_success = True
                     break
@@ -253,7 +253,7 @@ class Scraper(metaclass=ABCMeta):
                 오류를 피하려면 처음 시작할 때 pbar_independent를 True로 하거나 download_one_webtoon_async을/를 사용하는 것을 추천합니다.
         """
         if self.PBAR_INDEPENDENT:
-            print(description)
+            logging.warning(description)
         else:
             self.pbar.set_description(description)
 
@@ -344,16 +344,16 @@ class Scraper(metaclass=ABCMeta):
         self.pbar = tqdm([i - 1 for i in episode_no_list_plus_1])
         for episode_no in self.pbar:
             await self.download_one_episode(episode_no, titleid, webtoon_dir)
-        print(f'A webtoon {title} download ended.')
+        logging.warning(f'A webtoon {title} download ended.')
 
         webtoon_dir = await self.lezhin_unshuffle_process(titleid, webtoon_dir)
 
         if merge is not None:
-            print('Merging webtoon has started...')
+            logging.warning('Merging webtoon has started...')
             fd = FolderManager()
-            # print(webtoon_dir, fd)
+            # logging.warning(webtoon_dir, fd)
             fd.merge_webtoon_episodes(webtoon_dir, 5)
-            print('Merging webtoon ended.')
+            logging.warning('Merging webtoon ended.')
 
     async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
         return f'{title}({titleid})'
@@ -386,14 +386,14 @@ class Scraper(metaclass=ABCMeta):
         subtitle = self.get_safe_file_name(await self.get_subtitle(titleid, episode_no))
 
         if not subtitle:
-            print(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
+            logging.warning(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
             self._set_pbar('unknown episode')
             return
 
         episode_images_url = await self.get_episode_images_url(titleid, episode_no)
 
         if episode_images_url is None:  # for lezhin
-            print(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
+            logging.warning(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
             self._set_pbar('unknown episode')
             return
 

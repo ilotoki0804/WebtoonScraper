@@ -239,9 +239,9 @@ class LezhinComicsScraper(Scraper):
                 alt_episode_dir.mkdir()
             except FileExistsError:
                 if len(os.listdir(alt_episode_dir)) == len(os.listdir(base_episode_dir)):
-                    print(f'passing {episode_dir_name}')
+                    logging.warning(f'passing {episode_dir_name}')
                     continue
-                print(f'{episode_dir_name} is not valid. Delete items and continue.')
+                logging.warning(f'{episode_dir_name} is not valid. Delete items and continue.')
                 shutil.rmtree(alt_episode_dir)
                 alt_episode_dir.mkdir()
             # self.unshuffle_episode(base_episode_dir, alt_episode_dir, episode_id)
@@ -310,7 +310,7 @@ class LezhinComicsScraper(Scraper):
                 assambled_image.save(alt_image_path)
 
         # self._set_pbar(f'{base_episode_dir}')
-        print(base_episode_dir)
+        logging.warning(base_episode_dir)
         # alt_episode_dir.mkdir()
 
         random_numbers = get_random_numbers_of_certain_seed(episode_id_int)

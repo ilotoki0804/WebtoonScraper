@@ -50,8 +50,8 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
             await loop.run_in_executor(None, lambda: asyncio.run(func()))
             # print(f'Complete {platform_name}')
         except Exception as e:
-            print(f'An error occured. Skipping {platform_name}')
-            print(f'error: {e}')
+            logging.warning(f'An error occured. Skipping {platform_name}')
+            logging.warning(f'error: {e}')
 
     available_webtoon = []
     # 네이버 게임은 제목을 받는 데 특수한 함수가 필요하기 때문에 이 클래스를 이용
@@ -172,13 +172,13 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
         del available_webtoon[bc_order]
 
     if (webtoon_length := len(available_webtoon)) == 1:
-        print(f'Webtoon\'s platform is assumed to be {available_webtoon[0][0]}')
+        logging.warning(f'Webtoon\'s platform is assumed to be {available_webtoon[0][0]}')
         return available_webtoon[0][0]
     elif webtoon_length == 0:
-        print(f'There\'s no webtoon that webtoon ID is {webtoon_id}.')
+        logging.warning(f'There\'s no webtoon that webtoon ID is {webtoon_id}.')
     else:
         for i, (platform, name) in enumerate(available_webtoon, 1):
-            print(f'{i}. {platform}: {name}')
+            logging.warning(f'{i}. {platform}: {name}')
         try:
             if not is_auto_select:
                 platform_no = input('Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): ')
@@ -189,7 +189,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
                 selected_platform, selected_webtoon = available_webtoon[platform_no - 1]
             except IndexError:
                 raise ValueError('Exceeded the range of webtoons.')
-            print(f'Webtoon {selected_webtoon} is selected.')
+            logging.info(f'Webtoon {selected_webtoon} is selected.')
             return selected_platform
         except ValueError as e:
             raise ValueError('Webtoon ID should be integer.') from e

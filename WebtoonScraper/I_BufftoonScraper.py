@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 import time
 from async_lru import alru_cache
+import logging
 
 if __name__ in ("__main__", "I_BufftoonScraper"):
     from C_Scraper import Scraper
@@ -29,10 +30,10 @@ class BufftoonScraper(Scraper):
             get_login_requiered = bool(self.COOKIE)
         for raw_episode in raw_data['result']['episodes']:
             if not get_payment and raw_episode['isPaymentEpisode']:
-                print(f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded.")
+                logging.warning(f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded.")
                 continue
             if not get_login_requiered and not raw_episode['isOpenFreeEpisode']:
-                print(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
+                logging.warning(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
                 continue
             episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode['listImgPath']

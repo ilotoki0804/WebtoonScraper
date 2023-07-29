@@ -3,7 +3,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-# os.mkdir('dist')
 shutil.rmtree('dist')
 os.system('python setup.py sdist bdist_wheel')
 whl_file_name = os.listdir('dist')[0]
