@@ -155,9 +155,20 @@ class Scraper(metaclass=ABCMeta):
         headers: dict | None = None
     ) -> Tag | None: ...
 
+    @overload
     async def get_internet(  # noqa
         self,
-        get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one'],
+        get_type: Literal['noNone_select_one'],
+        url: str,
+        selector: str,
+        is_run_in_executor: bool = False,
+        attempt: int = 10,
+        headers: dict | None = None
+    ) -> Tag: ...
+
+    async def get_internet(  # noqa
+        self,
+        get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one', 'noNone_select_one'],
         url: str,
         selector: str | None = None,
         is_run_in_executor: bool = False,
@@ -174,6 +185,9 @@ class Scraper(metaclass=ABCMeta):
                 'soup': reqests.get한 값을 BeautifulSoup를 거친 다음 반환합니다.
                 'soup_select': BeautifulSoup를 거친 값을 .select()함수를 사용한 후 반환합니다.
                 'soup_select_one': BeautifulSoup를 거친 값을 .select_one()함수를 사용한 후 반환합니다.
+                'noNone_select_one':
+                    BeautifulSoup를 거친 값을 .select_one()함수를 사용한 후 반환하는 것까지는 `soup_select_one`과 동일하지만,
+                    만약 select_one의 결과값이 None일 경우 ValueError를 내보냅니다.
             url: 가져올 URL을 결정합니다.
             attempt:
                 self.IS_STABLE_CONNECTION이 False일 때 몇 번 시도한 뒤 포기할지를 결정합니다. 기본값은 10입니다.
@@ -189,6 +203,9 @@ class Scraper(metaclass=ABCMeta):
             ConnectionError:
                 만약 연결 오류 횟수가 시도 횟수를 넘어서면 이 에러를 발생합니다.
                 에러가 반복되면시도 횟수(attempt 인자)를 늘리거나 timeout을 길게 설정해 보세요.
+            ValueError:
+                1. get_type에서 알맞지 않은 값을 입력했을 때 발생할 수 있습니다.
+                2. noNone_select_one에서 select_one의 결과가 None이면 발생할 수 있습니다.
             이외에도 이 함수는 loop.run_in_executor나 request.get(), bs()(BeautifulSoup를 의미합니다.), soup.select(), soup.select_one()을 사용하기에 해당 함수에서 오류가 날 수 있습니다.
             self.loop.run_in_executor에서 오류가 발생한 경우:
                 이는 self.loop가 initiate되지 않아 생긴 오류일 가능성이 큽니다.
@@ -234,6 +251,13 @@ class Scraper(metaclass=ABCMeta):
                 return soup.select(selector)
             if get_type == 'soup_select_one':
                 return soup.select_one(selector)
+            if get_type == 'noNone_select_one':
+                if (select_one_result := soup.select_one(selector)) is None:
+                    raise ValueError('Result of select_one cannot be None. '
+                                     'This error occurs probably because of invalid selector with URL. '
+                                     'Check if selector is valid for certain URL.\n'
+                                     f'URL: {url}, selector: {selector}')
+                return select_one_result
         elif get_type == 'requests':
             return response
         else:
