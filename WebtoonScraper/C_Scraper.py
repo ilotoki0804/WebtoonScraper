@@ -29,7 +29,7 @@ import logging
 
 import requests
 from requests.exceptions import ConnectionError
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 from async_lru import alru_cache
@@ -131,7 +131,7 @@ class Scraper(metaclass=ABCMeta):
         is_run_in_executor: bool = False,
         attempt: int = 10,
         headers: dict | None = None
-    ) -> bs: ...
+    ) -> BeautifulSoup: ...
 
     @overload
     async def get_internet(  # noqa
@@ -163,7 +163,7 @@ class Scraper(metaclass=ABCMeta):
         is_run_in_executor: bool = False,
         attempt: int = 10,
         headers: dict | None = None
-    ) -> requests.Response | bs | list | Tag | None:
+    ) -> requests.Response | BeautifulSoup | list | Tag | None:
         """Get response/beautifulsoup/beautifulsoup tag list/beautifulsoup tag from internet.
 
         Args:
@@ -224,8 +224,8 @@ class Scraper(metaclass=ABCMeta):
                 raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason.'
                                       ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
 
-        if get_type in ('soup', 'soup_select', 'soup_select_one'):
-            soup = bs(response.text, "html.parser")
+        if get_type in ('soup', 'soup_select', 'soup_select_one', 'noNone_select_one'):
+            soup = BeautifulSoup(response.text, "html.parser")
             if get_type == 'soup':
                 return soup
             if selector is None:

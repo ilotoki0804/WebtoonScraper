@@ -1,6 +1,6 @@
 '''Download Webtoons from Webtoon Originals.'''
 
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "F_WebtoonOriginalsScraper"):
@@ -70,7 +70,7 @@ class WebtoonOriginalsScraper(Scraper):
         '''save another form of thumbnail.'''
         url = f'{self.BASE_URL}/rss?title_no={titleid}'
         response = await self.get_internet(get_type='requests', url=url)
-        soup = bs(response.text, 'xml')
+        soup = BeautifulSoup(response.text, 'xml')
         image_url = soup.select_one('channel > image > url').text
         image_extension = self.get_file_extension(image_url)
         image_raw = await self.get_internet(get_type='requests', url=image_url)
