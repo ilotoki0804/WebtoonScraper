@@ -1,5 +1,4 @@
-'''Download Webtoons from Webtoon Canvas.
-'''
+'''Download Webtoons from Webtoon Canvas.'''
 
 if __name__ in ("__main__", 'G_WebtoonCanvasScraper'):
     from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper

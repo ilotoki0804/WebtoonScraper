@@ -1,4 +1,5 @@
 '''Download Webtoons from Naver Webtoon Best Challenge.'''
+
 if __name__ in ("__main__", "E_BestChallengeScraper"):
     from D_NaverWebtoonScraper import NaverWebtoonScraper
 else:

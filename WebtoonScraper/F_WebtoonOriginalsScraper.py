@@ -1,6 +1,5 @@
+'''Download Webtoons from Webtoon Originals.'''
 
-'''Download Webtoons from Webtoon Originals.
-'''
 from bs4 import BeautifulSoup as bs
 from async_lru import alru_cache
 
