@@ -238,8 +238,8 @@ class Scraper(metaclass=ABCMeta):
                     is_success = True
                     break
             if not is_success:
-                raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason.'
-                                      ' Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
+                raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason. '
+                                      'Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
 
         if get_type in ('soup', 'soup_select', 'soup_select_one', 'noNone_select_one'):
             soup = BeautifulSoup(response.text, "html.parser")
