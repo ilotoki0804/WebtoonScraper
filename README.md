@@ -1,5 +1,5 @@
 # WebtoonScraper
-![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)](https://pypi.org/project/WebtoonScraper/)
 
 국내 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
