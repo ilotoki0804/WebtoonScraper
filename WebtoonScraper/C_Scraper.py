@@ -142,7 +142,7 @@ class Scraper(metaclass=ABCMeta):
         is_run_in_executor: bool = False,
         attempt: int = 10,
         headers: dict | None = None
-    ) -> list: ...
+    ) -> list[Tag]: ...
 
     @overload
     async def get_internet(  # noqa
