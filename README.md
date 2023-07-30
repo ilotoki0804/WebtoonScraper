@@ -29,13 +29,14 @@
 버프툰과 네이버 포스트는 아래로 가서 확인하세요.
 
 1. 원하는 웹툰으로 가서 titleid 또는 title_no를 복사하세요.
-   네이버 웹툰/베스트 도전(comic.naver.com):
+
+   [네이버 웹툰/베스트 도전](comic.naver.com):
    ![img](images/naver_webtoon.png)
-   웹툰 오리지널/캔버스(webtoons.com):
+   [웹툰 오리지널/캔버스](webtoons.com):
    ![img](images/webtoons_original.png)
-   만화경(manhwakyung.com)
+   [만화경](manhwakyung.com)
    ![img](images/manhwakyung.png)
-   네이버 게임 오리지널 시리즈(game.naver.com/original_series):
+   [네이버 게임 오리지널 시리즈](game.naver.com/original_series):
    ![img](images/naver_game.png)
    버프툰과 네이버 포스트는 아래의 '버프툰 다운로드하기'섹션과 '네이버 포스트 다운로드하기' 섹션을 참고해 주세요.
    레진코믹스는 따로 준비된 스크린샷은 없습니다만 방법은 네이버 게임 오리지널과 같습니다.
