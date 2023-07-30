@@ -299,10 +299,10 @@ class LezhinComicsScraper(Scraper):
                         cropped_images[image_order.index(image_index)] = cropped_image
 
                 def position_in_assambled_image(image_index) -> tuple[int, int]:
-                    index_x, index_y = divmod(image_index, 5)
+                    index_y, index_x = divmod(image_index, 5)
                     image_x, image_y = im.size
                     image_y -= MARGIN
-                    return index_y * image_x, index_x * image_y
+                    return index_x * image_x, index_y * image_y
 
                 assambled_image = Image.new("RGB", (image_x, image_y), (256, 0, 0))
                 for i, cropped_image in enumerate(cropped_images):
