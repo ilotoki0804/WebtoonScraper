@@ -86,7 +86,7 @@ class LezhinComicsScraper(Scraper):
 
         episode_id_strings = []
         subtitles = []
-        episode_id_integers = []
+        episode_id_ints = []
         infomation_chars = []
         for episode in episodes_data:
             episode_id_str: str = episode["properties"][1]["value"]["value"]
@@ -110,13 +110,13 @@ class LezhinComicsScraper(Scraper):
             # print(f'{episode_id_str = }, {subtitle = }, {expired = }, {not_for_sale = }, {episode_id_int = }, {infomation_char = }')
             episode_id_strings.append(episode_id_str)
             subtitles.append(subtitle)
-            episode_id_integers.append(episode_id_int)
+            episode_id_ints.append(episode_id_int)
             infomation_chars.append(infomation_char)
 
         # 현재 titleid_str(titleid와 동일)과 infomation_chars는 사용되는 곳이 없음
         return {'title': title, 'webtoon_thumbnail': thumbnail_url,
                 'episode_ids': episode_id_strings[::-1], 'subtitles': subtitles[::-1],
-                'episode_id_integers': episode_id_integers[::-1], 'infomation_chars': infomation_chars[::-1],
+                'episode_id_ints': episode_id_ints[::-1], 'infomation_chars': infomation_chars[::-1],
                 'titleid_str': titleid, 'titleid_int': titleid_int, 'is_shuffled': is_shuffled, }
 
     async def get_title(self, titleid):
@@ -156,7 +156,7 @@ class LezhinComicsScraper(Scraper):
             "X-Lz-Locale": "ko-KR",
         }
         episode_id_str = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
-        episode_id_int = (await self.get_webtoon_data(titleid))['episode_id_integers'][episode_no]
+        episode_id_int = (await self.get_webtoon_data(titleid))['episode_id_ints'][episode_no]
         titleid_int = (await self.get_webtoon_data(titleid))['titleid_int']
 
         keygen_url = (f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
@@ -226,7 +226,7 @@ class LezhinComicsScraper(Scraper):
         episode_dir_names_indexed = {get_episode_dir_no(episode_dir_name): episode_dir_name
                                      for episode_dir_name in os.listdir(base_webtoon_dir)
                                      if get_episode_dir_no(episode_dir_name) is not None}
-        episode_id_ints = (await self.get_webtoon_data(titleid))['episode_id_integers']
+        episode_id_ints = (await self.get_webtoon_data(titleid))['episode_id_ints']
 
         # self.pbar = tqdm([(episode_dir_names_indexed.get(i + 1), episode_id) for i, episode_id in enumerate(episode_id_ints)])
         episodes_with_episode_id = [(episode_id, episode_dir_names_indexed.get(i + 1)) for i, episode_id in enumerate(episode_id_ints)]
