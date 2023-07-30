@@ -24,6 +24,9 @@ class NaverPostScraper(Scraper):
         self.IS_STABLE_CONNECTION = True
         self.BASE_URL = 'https://post.naver.com'
 
+    async def get_webtoon_dir_name(self, titleid, title) -> str:
+        return f'{title}{titleid}'  # tuple already contains parentheses
+
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid: tuple[int, int]) -> dict[str, list]:
         # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
