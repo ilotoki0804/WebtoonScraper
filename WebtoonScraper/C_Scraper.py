@@ -60,7 +60,7 @@ class Scraper(metaclass=ABCMeta):
         # BASE_URL and IS_STABLE_CONNECTION have to be defined!
         self.HEADERS = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-            '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
+                          '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 120
