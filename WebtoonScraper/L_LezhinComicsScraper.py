@@ -124,7 +124,7 @@ class LezhinComicsScraper(Scraper):
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         soup = await self.get_internet('soup', f'{self.BASE_URL}/{titleid}', )
         # print(soup.select_one('meta[property="og:title"]').content, soup)
-        if soup.select_one('meta[property="og:title"]').content in {"404 - 레진코믹스", ""}:
+        if soup.select_one('meta[property="og:title"]').content == "404 - 레진코믹스":
             raise ValueError(f'Invalid {titleid = }')
 
         title = soup.select_one("h2.comicInfo__title").text
@@ -145,7 +145,7 @@ class LezhinComicsScraper(Scraper):
             # departure = json.loads(webtoon_raw_data.text[departure_start:departure_end])
         except (AttributeError, json.JSONDecodeError) as e:
             raise ValueError("JavaScript cannot be parsed by regex; because it's not regular language. "
-                             "But sometimes, people have to compromise with effeciency. "
+                             "But sometimes, people have to compromise with effeciency and hope it does not break. "
                              "That's why this failed. call developer to fix this problem "
                              "and Use `old_get_webtoon_data` instead while developer fix this.") from e
 
@@ -172,13 +172,14 @@ class LezhinComicsScraper(Scraper):
             is_episode_not_for_sale = episode["properties"]["notForSale"]
             is_episode_free = "freedAt" in episode
 
-            if is_episode_free == episode["coin"]:
-                # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
-                # 가설이 맞는지 확인하고, 어떤 추측이 더 알맞는 방법인지를 확인한다.
-                # 적당히 확인하고 나서는 없애도 무관하다.
-                logging.warning(
-                    '`"freedAt" in episode == (not episode["coin"])` turned out to be false.' "[Developing purpose message]")
-                logging.warning(f'{is_episode_free = }, {bool(episode["coin"]) = }')
+            # if is_episode_free == episode["coin"]:
+            #     # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
+            #     # 가설이 맞는지 확인하고, 어떤 추측이 더 알맞는 방법인지를 확인한다.
+            #     # 적당히 확인하고 나서는 없애도 무관하다.
+            #     logging.warning(
+            #         '`"freedAt" in episode == (not episode["coin"])` turned out to be false.'
+            #         "[Developing purpose message]")
+            #     logging.warning(f'{is_episode_free = }, {bool(episode["coin"]) = }')
 
             if (is_episode_expired or is_episode_not_for_sale) and not get_unusable_episode:
                 logging.warning(
@@ -191,16 +192,18 @@ class LezhinComicsScraper(Scraper):
             # logging.warning((is_episode_free, get_paid_episode))
             if not is_episode_free and not get_paid_episode:
                 logging.warning(
-                    f"episode {episode['display']['title']} is not free so it'll be skipped. " "If you want to get data about paid episode too, make parameter " "`get_unusable_episode` to True.")
+                    f"episode {episode['display']['title']} is not free so it'll be skipped. "
+                    "If you want to get data about paid episode too, make parameter "
+                    "`get_unusable_episode` to True.")
                 continue
 
             episode_id_ints.append(episode["id"])
             episode_id_strs.append(episode["name"])
             subtitles.append(episode["display"]["title"])
             episode_type_chars.append(episode["display"]["type"])
-            display_names.append(episode["display"]["displayName"])
             # episode_id_strs와 거의 같지만 특별편인 경우 'x1' 등으로 표시되는 episode_id_strs과는 달리
-            # '공지'와 같은 글자로 나타나며 에피소드 위 작은 글씨를 의미한다. 스크래핑과는 큰 관련이 없는 자료이다.\
+            # '공지'와 같은 글자로 나타나며 에피소드 위 작은 글씨를 의미한다. 스크래핑과는 큰 관련이 없는 자료이다.
+            display_names.append(episode["display"]["displayName"])
 
             # episode_ids[::-1], episode_id_strs[::-1], subtitles[::-1], episode_type_chars[::-1], display_names[::-1]
             # title, titleid_str, titleid_int, is_adult, is_shuffled
