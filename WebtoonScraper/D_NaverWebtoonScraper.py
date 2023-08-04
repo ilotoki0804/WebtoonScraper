@@ -46,7 +46,9 @@ class NaverWebtoonScraper(Scraper):
         title = await self.get_internet(get_type='soup_select_one', url=url,
                                         selector='meta[property="og:title"]')
         if not title:
-            raise ConnectionError('Naver Webtoon changed their api specification. Contect developer to update get_title.')
+            raise ConnectionError('Naver Webtoon changed their api specification. Contect developer to update get_title. '
+                                  'Webtoon you want to download is can be adult webtoon. '
+                                  'WebtoonScraper currently not support downloading adult webtoon.')
         return title['content']
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
