@@ -44,18 +44,14 @@ class BufftoonScraper(Scraper):
 
     async def get_title(self, titleid):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
-        title = await self.get_internet(get_type='soup_select_one', url=url,
+        title = await self.get_internet(get_type='noNone_select_one', url=url,
                                         selector='#content > div > div > div.series-info > div.cont > div.title')
-        if title is None:
-            raise ValueError('Bufftoon may change their API specification. Contect Developer to update program.')
         return title.text.strip()
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
-        image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
+        image_url_original = await self.get_internet(get_type='noNone_select_one', url=url,
                                                      selector='#content > div > div > div.series-info > div.img')
-        if not image_url_original:
-            raise ConnectionError('Bufftoon changed their api specification. Contect developer to update save_webtoon_thumbnail.')
         image_url = image_url_original['style']
         image_url = re.search(r'(?<=background-image:url\().+(?=\);)', image_url)[0]
         image_extension = self.get_file_extension(image_url)

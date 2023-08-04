@@ -65,17 +65,15 @@ class NaverPostScraper(Scraper):
     async def get_title(self, titleid: tuple[int, int]):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
-        title: str = (await self.get_internet(get_type='soup_select_one', url=url,
+        title: str = (await self.get_internet(get_type='noNone_select_one', url=url,
                                               selector='h2.tit_series > span')).text
         return title.strip()
 
     async def save_webtoon_thumbnail(self, titleid: tuple[int, int], title, thumbnail_dir):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
-        image_url_original = await self.get_internet(get_type='soup_select_one', url=url,
+        image_url_original = await self.get_internet(get_type='noNone_select_one', url=url,
                                                      selector='meta[property="og:image"]')
-        if not image_url_original:
-            raise ConnectionError('Naver Post changed their api specification. Contect developer to update save_webtoon_thumbnail.')
         image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
         image_raw: bytes = (await self.get_internet(get_type='requests', url=image_url)).content
