@@ -1,5 +1,6 @@
 '''Download Webtoons from Webtoon Canvas.'''
 
+from __future__ import annotations
 if __name__ in ("__main__", 'G_WebtoonCanvasScraper'):
     from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
 else:

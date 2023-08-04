@@ -1,4 +1,6 @@
 """Download Webtoons from Manhwakyung."""
+
+from __future__ import annotations
 import time
 
 from async_lru import alru_cache

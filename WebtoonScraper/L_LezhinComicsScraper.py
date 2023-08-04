@@ -1,5 +1,7 @@
 '''Download Webtoons from Lezhin Comics.'''
+
 # from itertools import count
+from __future__ import annotations
 import logging
 from pathlib import Path
 import os
@@ -8,7 +10,7 @@ import json
 import shutil
 import multiprocessing
 
-from tqdm import tqdm
+# from tqdm import tqdm
 from async_lru import alru_cache
 import pyjsparser
 from PIL import Image

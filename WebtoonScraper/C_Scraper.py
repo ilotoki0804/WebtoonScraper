@@ -15,6 +15,7 @@
 # TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
 # TODO: titleid를 __init__에 넣고 나머지 titleid, titleno? 제거하기
 
+from __future__ import annotations
 import re
 import os
 import asyncio

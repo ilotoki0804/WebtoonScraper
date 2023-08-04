@@ -1,5 +1,6 @@
 '''Download Webtoons from Naver Post.'''
 
+from __future__ import annotations
 import contextlib
 # from pathlib import Path
 from itertools import count

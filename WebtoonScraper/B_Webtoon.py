@@ -1,5 +1,6 @@
 """Download webtoons automatiallly or easily"""
 
+from __future__ import annotations
 import asyncio
 import contextlib
 from itertools import starmap

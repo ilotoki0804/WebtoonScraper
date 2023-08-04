@@ -1,5 +1,6 @@
 '''Download Webtoons from Naver Webtoon.'''
 
+from __future__ import annotations
 from itertools import count
 
 from async_lru import alru_cache

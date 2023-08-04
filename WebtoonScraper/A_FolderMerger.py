@@ -1,13 +1,12 @@
 """This module provides FolderMerger class."""
 
-# 회차 묶기
+from __future__ import annotations
 import os
 import shutil
 import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-
 
 class FolderMerger:
     def __init__(self):
