@@ -5,15 +5,21 @@
 # [x]: get_data 시 list로 정보 받아오기
 # [x]: 레진코믹스 pyjsparser 대신 정적 분석 시도하기
 # [x]: noNone_select_one 사용하기
-# TODO: None 대신 NoReturn 사용하기
-# TODO: download vs save : 용어 정리하기
+# [x]: annotations 추가하고 필요 version낮추기
+# [x]: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
+# [x]: print문 모두 제거하고 logging으로 변경하기
+# [ ]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
+# TODO: download vs save : 용어 정리하기 > download_webtoon_thumbnail로 바꾸고, download_webtoon이랑 download_episode로 변경
 # TODO: 카카오 웹툰/카카오 페이지 웹툰, 네이버 블로그 만들기
 # TODO: short_connection 등 docs 추가하기
-# TODO: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
-# TODO: annotations 추가하고 필요 version낮추기
-# TODO: print문 모두 제거하고 logging으로 변경하기
 # TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
 # TODO: titleid를 __init__에 넣고 나머지 titleid, titleno? 제거하기
+# TODO: callback 추가하기
+# TODO: 직접 error 만들기
+# TODO: 데이터 구조 따로 빼기
+# TODO: 클래스 여러 개로 나누기
+# TODO: is_available_link 추가하기
+# TODO: overload ... 위치 옮기기
 
 from __future__ import annotations
 import re
@@ -23,7 +29,7 @@ import shutil
 import html
 from pathlib import Path
 # from typing import Iterable, Literal
-from typing import Literal, NoReturn
+from typing import Literal, final
 from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
@@ -71,10 +77,12 @@ class Scraper(metaclass=ABCMeta):
         self.IS_STABLE_CONNECTION = None  # IS_STABLE_CONNECTION must be defined!
         self.short_connection = False
 
+    @final
     @property
     def short_connection(self) -> bool:
         return self._short_connection
 
+    @final
     @short_connection.setter
     def short_connection(self, short_connection: bool):
         """
@@ -169,6 +177,7 @@ class Scraper(metaclass=ABCMeta):
         headers: dict | None = None
     ) -> Tag: ...
 
+    @final
     async def get_internet(  # noqa
         self,
         get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one', 'noNone_select_one'],
@@ -266,6 +275,7 @@ class Scraper(metaclass=ABCMeta):
         else:
             raise ValueError('Unknown get_type.')
 
+    @final
     def _set_pbar(self, description: str) -> None:
         """로그를 남길 때 tqdm을 사용할지 print를 사용할지 self.PBAR_INDEPENDENT를 통해 결정합니다.
 
@@ -286,6 +296,7 @@ class Scraper(metaclass=ABCMeta):
         else:
             self.pbar.set_description(description)
 
+    @final
     @staticmethod
     def get_file_extension(filename_or_url: str) -> str | None:
         """Get file extionsion of filename_or_url.
@@ -303,6 +314,7 @@ class Scraper(metaclass=ABCMeta):
         return None if serch_result is None else serch_result[0]
         # return filename_or_url.split('.')[-1].lower()
 
+    @final
     @staticmethod
     def get_safe_file_name(file_or_diretory_name: str) -> str:
         """Translate file or diretory name to accaptable name.
@@ -323,20 +335,24 @@ class Scraper(metaclass=ABCMeta):
 
         return processed
 
+    @final
     @property
     def BASE_DIR(self):
         return self._BASE_DIR
 
+    @final
     @BASE_DIR.setter
     def BASE_DIR(self, BASE_DIR):
         self._BASE_DIR = Path(BASE_DIR)
 
 ################################## MAIN ACTION ##################################
 
+    @final
     def download_one_webtoon(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
         asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range, merge))
 
+    @final
     async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
@@ -391,6 +407,7 @@ class Scraper(metaclass=ABCMeta):
         """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
         return base_webtoon_dir
 
+    @final
     def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
 
@@ -410,6 +427,7 @@ class Scraper(metaclass=ABCMeta):
                 self._set_pbar(f'skipping {subtitle}')
                 return True
 
+    @final
     async def download_one_episode(self, episode_no: int, titleid: TitleId, webtoon_dir: Path) -> None:
         """한 회차를 다운로드받는다."""
         subtitle = self.get_safe_file_name(await self.get_subtitle(titleid, episode_no))
@@ -434,6 +452,7 @@ class Scraper(metaclass=ABCMeta):
         get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
         await asyncio.gather(*get_image_coroutines)
 
+    @final
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
         image_extension = self.get_file_extension(url)
@@ -452,11 +471,12 @@ class Scraper(metaclass=ABCMeta):
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
 
-    @abstractmethod
     async def get_all_episode_no(self, titleid: TitleId) -> list:
         """웹툰에서 전체 에피소드를 가져온다."""
         return (await self.get_webtoon_data(titleid))['episode_ids']
 
+    # ! This should be deleted after refactoring.
+    @final
     async def episode_no_to_episode_id(self, titleid: TitleId, episode_no: int, reverse: bool = False) -> int:
         """reverse가 참일 경우 반대로 episode_id에서 episode_no를 불러옴."""
         if not reverse:
@@ -464,17 +484,14 @@ class Scraper(metaclass=ABCMeta):
         else:
             return (await self.get_all_episode_no(titleid)).index(episode_no)
 
-    @abstractmethod
     async def get_title(self, titleid: TitleId) -> str:
         """웹툰의 title을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
         return (await self.get_webtoon_data(titleid))['title']
 
-    @abstractmethod
     async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
         """부제목, 즉 회차의 제목을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
         return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
 
-    @abstractmethod
     async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다. 기본 구현을 사용할 시 super()를 이용하세요."""
         thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
@@ -493,7 +510,6 @@ class Scraper(metaclass=ABCMeta):
         image_path = thumbnail_dir / f'{title}.{image_extension}'
         image_path.write_bytes(image_raw)
 
-    @abstractmethod
     async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
         """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
         return (await self.get_webtoon_data(titleid))['episode_images_url'][episode_no]
@@ -515,8 +531,8 @@ class Scraper(metaclass=ABCMeta):
 
     @abstractmethod
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid: TitleId) \
-        -> dict[Literal['title', 'subtitles', 'webtoon_thumbnail', 'episode_images_url', 'episode_ids'],
+    async def get_webtoon_data(self, titleid: TitleId
+        ) -> dict[Literal['title', 'subtitles', 'webtoon_thumbnail', 'episode_images_url', 'episode_ids'],
                 list[str] | list[list[str]] | str | bytes | tuple[bytes | str]]:
         """웹툰에서 데이터를 불러옵니다. 많이 불리기 때문에 무조건 @lru_cache를 사용해야 합니다.
 
