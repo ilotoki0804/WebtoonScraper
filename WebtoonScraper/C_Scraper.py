@@ -8,7 +8,7 @@
 # [x]: annotations 추가하고 필요 version낮추기
 # [x]: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
 # [x]: print문 모두 제거하고 logging으로 변경하기
-# [ ]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
+# [x]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
 # TODO: download vs save : 용어 정리하기 > download_webtoon_thumbnail로 바꾸고, download_webtoon이랑 download_episode로 변경
 # TODO: 카카오 웹툰/카카오 페이지 웹툰, 네이버 블로그 만들기
 # TODO: short_connection 등 docs 추가하기
@@ -20,6 +20,9 @@
 # TODO: 클래스 여러 개로 나누기
 # TODO: is_available_link 추가하기
 # TODO: overload ... 위치 옮기기
+# TODO: 모듈 이름 snakecase로 변경하기
+# TODO: requests_utils로 변경하기
+# TODO: merge를 merge_amout로 변경하기
 
 from __future__ import annotations
 import re
@@ -33,7 +36,7 @@ from typing import Literal, final
 from abc import abstractmethod, ABCMeta
 # from collections import namedtuple
 # from contextlib import suppress
-from typing import overload
+from typing import overload, TypedDict
 import logging
 
 import requests
@@ -49,6 +52,14 @@ else:
     from .A_FolderMerger import FolderMerger
 
 TitleId = int | tuple[int, int] | str
+
+
+class WebtoonDataResults(TypedDict):
+    title: str
+    subtitles: list[str]
+    webtoon_thumbnail: str | tuple[bytes, str]
+    episode_ids: list[int]
+    episode_images_url: list[list[str]]
 
 
 class Scraper(metaclass=ABCMeta):
@@ -72,10 +83,11 @@ class Scraper(metaclass=ABCMeta):
                           '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
         self.BASE_DIR = 'webtoon'
-        self.TIMEOUT = 120
+        self.TIMEOUT = 20
         self.PBAR_INDEPENDENT = pbar_independent
         self.IS_STABLE_CONNECTION = None  # IS_STABLE_CONNECTION must be defined!
         self.short_connection = False
+        self.loop = asyncio.get_running_loop()
 
     @final
     @property
@@ -233,7 +245,7 @@ class Scraper(metaclass=ABCMeta):
                 response = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             return response
 
-        if not headers:
+        if headers is None:
             headers = self.HEADERS
 
         if self.IS_STABLE_CONNECTION:
@@ -365,8 +377,6 @@ class Scraper(metaclass=ABCMeta):
                                 None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
         :merge: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶는다.
         """
-        self.loop = asyncio.get_running_loop()
-
         title = self.get_safe_file_name(await self.get_title(titleid))
         webtoon_dir_name = await self.get_webtoon_dir_name(titleid, title)
         webtoon_dir = self.BASE_DIR / webtoon_dir_name
@@ -452,7 +462,6 @@ class Scraper(metaclass=ABCMeta):
         get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
         await asyncio.gather(*get_image_coroutines)
 
-    @final
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
         """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
         image_extension = self.get_file_extension(url)
@@ -485,15 +494,15 @@ class Scraper(metaclass=ABCMeta):
             return (await self.get_all_episode_no(titleid)).index(episode_no)
 
     async def get_title(self, titleid: TitleId) -> str:
-        """웹툰의 title을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        """웹툰의 title을 불러옵니다."""
         return (await self.get_webtoon_data(titleid))['title']
 
     async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
-        """부제목, 즉 회차의 제목을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        """부제목, 즉 회차의 제목을 불러옵니다."""
         return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
 
     async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
-        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다."""
         thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
             image_extension = self.get_file_extension(thumbnail_data)
@@ -511,29 +520,12 @@ class Scraper(metaclass=ABCMeta):
         image_path.write_bytes(image_raw)
 
     async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
-        """해당 회차를 구성하는 이미지들을 불러온다. 기본 구현을 사용할 시 super()를 이용하세요."""
+        """해당 회차를 구성하는 이미지들을 불러온다."""
         return (await self.get_webtoon_data(titleid))['episode_images_url'][episode_no]
-
-    @overload
-    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['title'], str]: ... # noqa
-
-    @overload
-    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['subtitles'], list[str]]: ... # noqa
-
-    @overload
-    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['webtoon_thumbnail'], str | tuple[bytes | str]]: ... # noqa
-
-    @overload
-    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['episode_images_url'], list[list[str]]]: ... # noqa
-
-    @overload
-    async def get_webtoon_data(self, titleid: TitleId) -> dict[Literal['episode_ids'], list[str]]: ... # noqa
 
     @abstractmethod
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid: TitleId
-        ) -> dict[Literal['title', 'subtitles', 'webtoon_thumbnail', 'episode_images_url', 'episode_ids'],
-                list[str] | list[list[str]] | str | bytes | tuple[bytes | str]]:
+    async def get_webtoon_data(self, titleid: TitleId) -> WebtoonDataResults:
         """웹툰에서 데이터를 불러옵니다. 많이 불리기 때문에 무조건 @lru_cache를 사용해야 합니다.
 
         Args:
@@ -548,7 +540,7 @@ class Scraper(metaclass=ABCMeta):
                         만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
                         tuple일 경우에는 thumbnail raw data와 file extension으로 추론하고 thumbnail_dir에 저장합니다.
                     'episode_ids' (list(int)): episode id list를 불러옵니다.
-                    'episode_images_url' (list[list[str]]): 실제 웹툰 이미지들의 url로 구성된 list입니다.
+                    'episode_images_url' (list[list[str]]): 실제 웹툰 속 이미지들의 url로 구성된 list입니다.
                         다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
                 이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
                 만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
