@@ -546,3 +546,7 @@ class Scraper(metaclass=ABCMeta):
                 만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
                 구현하고 super()를 이용하는 것이 합리적입니다.
         """
+
+    @abstractmethod
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        """If titleid is legitimate, return title. Otherwise, return None"""

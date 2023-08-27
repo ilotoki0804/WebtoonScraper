@@ -82,6 +82,13 @@ class NaverWebtoonScraper(Scraper):
             if not ('agerate' in element['src'] or 'ctguide' in element['src'])
         ]
 
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        title = (await self.get_internet(
+            'soup_select_one',
+            f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}',
+            'span.text'))
+        return title.text if title else None
+
 
 if __name__ == '__main__':
     wt = NaverWebtoonScraper()

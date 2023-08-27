@@ -129,8 +129,6 @@ class KakaopageWebtoonScraper(Scraper):
                 for i in res["data"]["viewerInfo"]["viewerData"]["imageDownloadData"]["files"]]
 
     async def check_if_legitimate_titleid(self, titleid: int) -> str | None:
-        """If titleid is legitimate, return title. Otherwise, return None"""
-
         res = requests.get(f"https://page.kakao.com/content/{titleid}")
         if res.soup_select_one("title", no_empty_result=True).text == '콘텐츠홈 | 카카오페이지':
             return None
