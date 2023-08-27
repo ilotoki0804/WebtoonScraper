@@ -1,4 +1,4 @@
-'''Download Webtoons from Naver Post.'''
+'''Download Webtoons from Naver Game.'''
 
 from __future__ import annotations
 import contextlib
@@ -14,7 +14,7 @@ else:
 
 
 class NaverGameScraper(Scraper):
-    '''Scrape webtoons from Naver Post.'''
+    '''Scrape webtoons from Naver Game.'''
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://game.naver.com/original_series'
