@@ -1,5 +1,5 @@
 tqdm
-bs4
+beautifulsoup4
 requests
 async_lru
 demjson3
