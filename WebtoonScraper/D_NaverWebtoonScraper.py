@@ -1,14 +1,15 @@
-'''Download Webtoons from Naver Webtoon.'''
+'''Scrape Webtoons from Naver Webtoon.'''
 
 from __future__ import annotations
 from itertools import count
 
 from async_lru import alru_cache
 
+from WebtoonScraper.C_Scraper import TitleId
+
 if __name__ in ("__main__", "D_NaverWebtoonScraper"):
     from C_Scraper import Scraper
 else:
-    # from Scraper import Scraper
     from .C_Scraper import Scraper
 
 
