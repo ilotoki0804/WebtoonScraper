@@ -13,3 +13,4 @@ build/
 **/webtoon
 token.txt
 *.ipynb
+python_path.txt
