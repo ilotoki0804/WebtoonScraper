@@ -10,7 +10,7 @@ else:
 class BestChallengeScraper(NaverWebtoonScraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
-        self.BASE_URL = 'https://comic.naver.com/bestChallenge'
+        self.BASE_URL = 'https://comic.naver.com/bestChallenge'  # TODO: init 밖으로 옮기기
         self.EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
 
 

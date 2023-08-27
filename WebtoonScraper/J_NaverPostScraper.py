@@ -12,7 +12,6 @@ import demjson3
 from bs4 import BeautifulSoup
 
 if __name__ in ("__main__", "J_NaverPostScraper"):
-    # logging.warning('Using ')
     from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
@@ -41,7 +40,7 @@ class NaverPostScraper(Scraper):
                    f'?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49'
                    f'&prevVolumeNo=&fromNo={i}&totalCount=68')
             # print(url)
-            response_text: str = (await self.get_internet('requests', url)).text
+            response_text: str = self.requests.get(url).text
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
             decoded_response_data: str = demjson3.decode(response_text)['html']
@@ -52,7 +51,7 @@ class NaverPostScraper(Scraper):
                 # subtitle_list.append({'subtitle': tag.text.strip()})
                 subtitle_list.append(tag.text.strip())
             for tag in soup.select('ul > li > a > div > span.spot_post_like'):
-                episode_id, _ = map(int, tag['data-cid'].split('_'))
+                episode_id, _ = map(int, tag.get('data-cid').split('_'))
                 episode_id_list.append(episode_id)
 
             if prev_data == decoded_response_data:
@@ -66,18 +65,16 @@ class NaverPostScraper(Scraper):
     async def get_title(self, titleid: tuple[int, int]):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
-        title: str = (await self.get_internet(get_type='noNone_select_one', url=url,
-                                              selector='h2.tit_series > span')).text
+        title: str = self.requests.get(url).soup_select_one('h2.tit_series > span', no_empty_result=True).text
         return title.strip()
 
     async def save_webtoon_thumbnail(self, titleid: tuple[int, int], title, thumbnail_dir):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
-        image_url_original = await self.get_internet(get_type='noNone_select_one', url=url,
-                                                     selector='meta[property="og:image"]')
+        image_url_original = requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
         image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
-        image_raw: bytes = (await self.get_internet(get_type='requests', url=image_url)).content
+        image_raw: bytes = self.requests.get(image_url).content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
         (thumbnail_dir / f'{title}.{image_extension}').write_bytes(image_raw)
 
@@ -93,8 +90,7 @@ class NaverPostScraper(Scraper):
         episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
         url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}&navigationType=push'
         for _ in range(attempt):
-            content = await self.get_internet(get_type='soup_select_one', url=url,
-                                              selector='#__clipContent')
+            content = self.requests.get(url).soup_select_one('#__clipContent')
             if content is None:
                 # '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류
                 # 아마 episode_id에 titleid가 잘못 들어가면 생기는 오류로 추정하지만

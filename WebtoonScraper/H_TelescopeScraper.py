@@ -22,7 +22,7 @@ class TelescopeScraper(Scraper):
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid):
-        XHR_HEADER = {
+        XHR_HEADERS = {
             "authority": 'api.manhwakyung.com',
             "method": 'GET',
             "path": f'/episodes?titleId={titleid}',
@@ -44,8 +44,7 @@ class TelescopeScraper(Scraper):
             "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57',
             "version": '3'
         }
-        seasons = await self.get_internet('requests', f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADER)
-        seasons = seasons.json()
+        seasons = self.requests.get(f'https://api.manhwakyung.com/episodes?titleId={titleid}', headers=XHR_HEADERS).json()
         episodes = []
         for season in seasons['seasons']:
             episodes += season['episodes']
@@ -85,8 +84,8 @@ class TelescopeScraper(Scraper):
     async def get_episode_images_url(self, titleid, episode_no):
         # episode_id: int = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
         episode_id: int = await self.episode_no_to_episode_id(titleid, episode_no)
-        elemetents = await self.get_internet('soup_select', f'https://www.manhwakyung.com/episode/{episode_id}',
-                                             '#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
+        response = self.requests.get(f'https://www.manhwakyung.com/episode/{episode_id}')
+        elemetents = response.soup_select('#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
         return [element.get('data-src') for element in elemetents]
 
 

@@ -4,8 +4,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 import time
-from async_lru import alru_cache
 import logging
+
+from async_lru import alru_cache
 
 if __name__ in ("__main__", "I_BufftoonScraper"):
     from C_Scraper import Scraper

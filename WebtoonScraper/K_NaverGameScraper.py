@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import contextlib
-# from pathlib import Path
 from itertools import count
 import json
 from async_lru import alru_cache
@@ -23,10 +22,9 @@ class NaverGameScraper(Scraper):
     @alru_cache(maxsize=4)
     async def _get_webtoon_infomation(self, titleid):
         url = f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}'
-        webtoon_raw_data = await self.get_internet(get_type='requests', url=url)
-        webtoon_raw_data = webtoon_raw_data.json()
-        title = webtoon_raw_data['content']['seriesName']
-        thumbnail = webtoon_raw_data['content']['seriesImage']['verticalLogoImageUrl']
+        webtoon_data = self.requests.get(url).json()['content']
+        title = webtoon_data['seriesName']
+        thumbnail = webtoon_data['seriesImage']['verticalLogoImageUrl']
         return title, thumbnail
 
     @alru_cache(maxsize=4)
@@ -36,7 +34,7 @@ class NaverGameScraper(Scraper):
         for season in count(1):
             url = (f'https://apis.naver.com/nng_main/nng_main/original/series/{titleid}/seasons/{season}/contents'
                    f'?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}')
-            res = await self.get_internet(get_type='requests', url=url)
+            res = self.requests.get(url)
             res = res.json()
             if not res['content']:
                 break

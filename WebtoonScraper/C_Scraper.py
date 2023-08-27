@@ -38,13 +38,15 @@ from abc import abstractmethod, ABCMeta
 # from contextlib import suppress
 from typing import overload, TypedDict
 import logging
+import functools
 
-import requests
+# import requests
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 from async_lru import alru_cache
+from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "C_Scraper"):
     from A_FolderMerger import FolderMerger
@@ -77,17 +79,62 @@ class Scraper(metaclass=ABCMeta):
         Args:
             pbar_independent: 만약 True라면 tqdm을 이용해서 로그를 표시하고, False라면 print를 통해서 로그를 표시합니다.
         """
-        # BASE_URL and IS_STABLE_CONNECTION have to be defined!
         self.HEADERS = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                           '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
+        self.BASE_URL = ''
         self.BASE_DIR = 'webtoon'
         self.TIMEOUT = 20
         self.PBAR_INDEPENDENT = pbar_independent
-        self.IS_STABLE_CONNECTION = None  # IS_STABLE_CONNECTION must be defined!
+        self.IS_STABLE_CONNECTION = True
         self.short_connection = False
         self.loop = asyncio.get_running_loop()
+        self.update_requests()
+
+    # RELATED TO CustomDefaults
+
+    def update_requests(self):
+        kwargs = {}
+        if hasattr(self, '_TIMEOUT'):
+            kwargs.update(timeout=self._TIMEOUT)
+
+        if hasattr(self, '_IS_STABLE_CONNECTION'):
+            kwargs.update(attempt=4)
+
+        if hasattr(self, '_HEADERS'):
+            kwargs.update(headers=self._HEADERS)
+
+        self.requests = CustomDefaults(**kwargs)
+
+    @property
+    def TIMEOUT(self) -> int:
+        return self._TIMEOUT
+
+    @TIMEOUT.setter
+    def TIMEOUT(self, timeout: int):
+        self._TIMEOUT = timeout
+        self.update_requests()
+
+    @property
+    def IS_STABLE_CONNECTION(self) -> bool:
+        return self._IS_STABLE_CONNECTION
+
+    @IS_STABLE_CONNECTION.setter
+    def IS_STABLE_CONNECTION(self, IS_STABLE_CONNECTION: bool):
+        self._IS_STABLE_CONNECTION = IS_STABLE_CONNECTION
+        self.update_requests()
+
+    @property
+    def HEADERS(self):
+        return self._HEADERS
+
+    @HEADERS.setter
+    def HEADERS(self, headers):
+        self._HEADERS = headers
+        self.update_requests()
+
+    # MISCS
 
     @final
     @property
@@ -98,194 +145,21 @@ class Scraper(metaclass=ABCMeta):
     @short_connection.setter
     def short_connection(self, short_connection: bool):
         """
+        If short_connection is False, then the previous settings are NOT restored.
         이 함수는 short_connection을 설정합니다.
         short_connection에는 특징이 있는데, True로 바꾸는 순간 그 전에 설정한 IS_STABLE_CONNECTION과
-        TIMEOUT이 날아가고 각각 False와 3으로 변합니다. 이 함수는 short_connection을 False로 바꿀 때
-        기존의 설정으로 돌아갈 수 있도록 돕습니다.
+        TIMEOUT이 날아가고 각각 False와 3으로 변합니다.
 
         Args:
             short_connection(bool):
                 만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
                 False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
-
-        Exceptions:
-            AttributeError: short_connection 값을 선언하기 이전에 반드시 self.IS_STABLE_CONNECTION과
-                self.TIMEOUT을 선언해야 합니다. 만약 그렇지 않으면 AttributeError가 raise됩니다.
         """
-        def save_prev_settings():
-            # is_stable_connection and timeout must be defined prior to short_connection.
-            self._prev_IS_STABLE_CONNECTION = self.IS_STABLE_CONNECTION
-            self._prev_TIMEOUT = self.TIMEOUT
+        if short_connection:
             self.TIMEOUT = 3
+            self.IS_STABLE_CONNECTION = False
 
-        def load_prev_settings():
-            self.IS_STABLE_CONNECTION = self._prev_IS_STABLE_CONNECTION
-            self.TIMEOUT = self._prev_TIMEOUT
-
-        if not hasattr(self, '_short_connection'):
-            if short_connection:
-                self._prev_IS_STABLE_CONNECTION = None  # to suppress error
-                self._prev_TIMEOUT = None  # to suppress error
-                save_prev_settings()
-        else:
-            if short_connection and not self._short_connection:
-                save_prev_settings()
-            else:
-                load_prev_settings()
         self._short_connection = short_connection
-
-    @overload
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['requests'],
-        url: str,
-        selector: None = None,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> requests.Response: ...
-
-    @overload
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['soup'],
-        url: str,
-        selector: None = None,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> BeautifulSoup: ...
-
-    @overload
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['soup_select'],
-        url: str,
-        selector: str,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> list[Tag]: ...
-
-    @overload
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['soup_select_one'],
-        url: str,
-        selector: str,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> Tag | None: ...
-
-    @overload
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['noNone_select_one'],
-        url: str,
-        selector: str,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> Tag: ...
-
-    @final
-    async def get_internet(  # noqa
-        self,
-        get_type: Literal['requests', 'soup', 'soup_select', 'soup_select_one', 'noNone_select_one'],
-        url: str,
-        selector: str | None = None,
-        is_run_in_executor: bool = False,
-        attempt: int = 10,
-        headers: dict | None = None
-    ) -> requests.Response | BeautifulSoup | list | Tag | None:
-        """Get response/beautifulsoup/beautifulsoup tag list/beautifulsoup tag from internet.
-
-        Args:
-            get_type:
-                인터넷에서 url로부터 받은 것으로부터 할 것이 무엇인지를 결정합니다.
-
-                'requests': reqests.get한 값을 그대로(.content나 .test, .json()이 붙지 않은 원본 그대로) 반환합니다.
-                'soup': reqests.get한 값을 BeautifulSoup를 거친 다음 반환합니다.
-                'soup_select': BeautifulSoup를 거친 값을 .select()함수를 사용한 후 반환합니다.
-                'soup_select_one': BeautifulSoup를 거친 값을 .select_one()함수를 사용한 후 반환합니다.
-                'noNone_select_one':
-                    BeautifulSoup를 거친 값을 .select_one()함수를 사용한 후 반환하는 것까지는 `soup_select_one`과 동일하지만,
-                    만약 select_one의 결과값이 None일 경우 ValueError를 내보냅니다.
-            url: 가져올 URL을 결정합니다.
-            attempt:
-                self.IS_STABLE_CONNECTION이 False일 때 몇 번 시도한 뒤 포기할지를 결정합니다. 기본값은 10입니다.
-                예를 들어 attempt가 10이라면 만약 해당 사이트에 연결을 10번 시도한 뒤에도 실패한다면 포기하고 ConnectionError를 raise합니다.'
-            headers: requests.get을 보낼 때 사용할 header를 받습니다. 만약 없을 경우 self.HEADERS를 대신 사용합니다.
-        Returns:
-            반환값은 어떤 get_type을 사용했는가에 따라 다르다.
-            'requests': requests.Response
-            'soup': BeautifulSoup
-            'soup_select': list[bs4.element.Tag]
-            'soup_select_one': bs4.element.Tag
-        Raises:
-            ConnectionError:
-                만약 연결 오류 횟수가 시도 횟수를 넘어서면 이 에러를 발생합니다.
-                에러가 반복되면시도 횟수(attempt 인자)를 늘리거나 timeout을 길게 설정해 보세요.
-            ValueError:
-                1. get_type에서 알맞지 않은 값을 입력했을 때 발생할 수 있습니다.
-                2. noNone_select_one에서 select_one의 결과가 None이면 발생할 수 있습니다.
-            이외에도 이 함수는 loop.run_in_executor나 request.get(), bs()(BeautifulSoup를 의미합니다.), soup.select(), soup.select_one()을 사용하기에 해당 함수에서 오류가 날 수 있습니다.
-            self.loop.run_in_executor에서 오류가 발생한 경우:
-                이는 self.loop가 initiate되지 않아 생긴 오류일 가능성이 큽니다.
-                self.IS_STABLE_CONNECTION를 False로 하거나 이 함수가 download_one_webtoon_async가 호출된 뒤에 사용하세요.
-            requests.get()에서 오류가 발생한 경우: 해당 URL을 통해 request를 보내는 과정에서 오류가 발생한 것입니다. url, header, timeout을 종합적으로 살펴보세요.
-            bs()에서 오류가 발생한 경우: 잘못된 BeautifulSoup 호출로 대부분 response가 올바르지 않을 가능성이 큽니다. response(requests.get의 결과)를 확인하세요.
-            soup.select()/soup.select_one()에서 오류가 발생한 경우: soup나 selector가 올바르지 않을 가능성이 큽니다. soup나 selector를 확인하세요.
-        """
-        async def send_get_request():
-            if is_run_in_executor:
-                response = await self.loop.run_in_executor(None, lambda: requests.get(url, headers=headers, timeout=self.TIMEOUT))
-            else:
-                response = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-            return response
-
-        if headers is None:
-            headers = self.HEADERS
-
-        if self.IS_STABLE_CONNECTION:
-            response = await send_get_request()
-        else:
-            response = requests.Response()
-            is_success = False
-            for _ in range(attempt):
-                try:
-                    response = await send_get_request()
-                except ConnectionError:
-                    logging.warning('A connection error occured. But don\'t worry. It should be normal process. Retrying...')
-                else:
-                    is_success = True
-                    break
-            if not is_success:
-                raise ConnectionError('Trying hard but failed. Maybe low attempt or timeout settizng is reason. '
-                                      'Trying increasing attempt time or timeout. Or sometimes it is caused by invaild titleid.')
-
-        if get_type in ('soup', 'soup_select', 'soup_select_one', 'noNone_select_one'):
-            soup = BeautifulSoup(response.text, "html.parser")
-            if get_type == 'soup':
-                return soup
-            if selector is None:
-                raise ValueError('Selector can\'t be None.')
-            if get_type == 'soup_select':
-                return soup.select(selector)
-            if get_type == 'soup_select_one':
-                return soup.select_one(selector)
-            if get_type == 'noNone_select_one':
-                if (select_one_result := soup.select_one(selector)) is None:
-                    raise ValueError('Result of select_one cannot be None. '
-                                     'This error occurs probably because of invalid selector with URL. '
-                                     'Check if selector is valid for certain URL.\n'
-                                     f'URL: {url}, selector: {selector}')
-                return select_one_result
-        elif get_type == 'requests':
-            return response
-        else:
-            raise ValueError('Unknown get_type.')
 
     @final
     def _set_pbar(self, description: str) -> None:
@@ -475,7 +349,7 @@ class Scraper(metaclass=ABCMeta):
         file_name = f'{image_no:03d}.{image_extension}'
 
         # self._set_pbar(f'{episode_dir}|{file_name}')
-        image_raw: bytes = (await self.get_internet(get_type='requests', url=url, is_run_in_executor=True)).content
+        image_raw: bytes = (await self.requests.aget(url)).content
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
@@ -510,7 +384,7 @@ class Scraper(metaclass=ABCMeta):
                 if default_file_extension is None:
                     raise ValueError('File extension not detected.')
                 image_extension = default_file_extension
-            image_raw = (await self.get_internet(get_type='requests', url=thumbnail_data)).content
+            image_raw = self.requests.get(thumbnail_data).content
         elif isinstance(thumbnail_data, tuple):  # It means thumnail_data is raw image data
             image_raw, image_extension = thumbnail_data
         else:

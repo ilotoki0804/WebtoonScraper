@@ -23,22 +23,19 @@ class WebtoonOriginalsScraper(Scraper):
 
     async def get_title(self, titleid):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        title = await self.get_internet(get_type='noNone_select_one', url=url,
-                                        selector='meta[property="og:title"]')
-        return title['content']
+        return self.requests.get(url).soup_select_one('meta[property="og:title"]', no_empty_result=True).get('content')
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid):
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        title_no_tag = await self.get_internet('noNone_select_one', url, '#_listUl > li')
+        title_no_tag = self.requests.get(url).soup_select_one('#_listUl > li', no_empty_result=True)
         title_no = int(title_no_tag['data-episode-no'])
 
         # getting list of titles
         selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={title_no}'
-        selected = await self.get_internet(get_type='soup_select', url=url,
-                                           selector=selector)
+        selected = self.requests.get(url).soup_select(selector)
 
         subtitles = []
         episode_ids = []
@@ -52,24 +49,19 @@ class WebtoonOriginalsScraper(Scraper):
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        image_url_original = await self.get_internet(get_type='noNone_select_one', url=url,
-                                                     selector='meta[property="og:image"]')
+        image_url_original = self.requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
         image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
-        image_raw = image_raw.content
+        image_raw = self.requests.get(image_url).content
         thumbnail_file = thumbnail_dir / f'{title}.{image_extension}'
         thumbnail_file.write_bytes(image_raw)
 
     async def save_real_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         '''save another form of thumbnail.'''
         url = f'{self.BASE_URL}/rss?title_no={titleid}'
-        response = await self.get_internet(get_type='requests', url=url)
-        soup = BeautifulSoup(response.text, 'xml')
-        image_url = soup.select_one('channel > image > url').text
+        image_url = self.requests.get(url).soup_select_one('channel > image > url', no_empty_result=True).text
         image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
-        image_raw = image_raw.content
+        image_raw = self.requests.get(image_url).content
         thumbnail_path = thumbnail_dir / f'{title}.{image_extension}'
         thumbnail_path.write_bytes(image_raw)
 
@@ -82,8 +74,7 @@ class WebtoonOriginalsScraper(Scraper):
     async def get_episode_images_url(self, titleid, episode_no):
         episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
         url = f'{self.BASE_URL}/prologue/viewer?title_no={titleid}&episode_no={episode_id}'
-        episode_images_url = await self.get_internet(get_type='soup_select', url=url,
-                                                     selector='#_imageList > img')
+        episode_images_url = self.requests.get(url).soup_select('#_imageList > img')
         return [element['data-url'] for element in episode_images_url]
 
 

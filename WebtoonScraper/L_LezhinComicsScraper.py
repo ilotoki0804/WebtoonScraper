@@ -1,6 +1,5 @@
 '''Download Webtoons from Lezhin Comics.'''
 
-# from itertools import count
 from __future__ import annotations
 import logging
 from pathlib import Path
@@ -10,7 +9,6 @@ import json
 import shutil
 import multiprocessing
 
-# from tqdm import tqdm
 from async_lru import alru_cache
 import pyjsparser
 from PIL import Image
@@ -18,7 +16,6 @@ from PIL import Image
 if __name__ in ("__main__", "L_LezhinComicsScraper"):
     from C_Scraper import Scraper
 else:
-    # from Scraper import Scraper
     from .C_Scraper import Scraper
 
 
@@ -58,8 +55,8 @@ class LezhinComicsScraper(Scraper):
     @alru_cache(maxsize=4)
     async def old_get_webtoon_data(self, titleid: str):
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-        soup = await self.get_internet('soup', f'{self.BASE_URL}/{titleid}', )
-        if soup.select_one('meta[property="og:title"]') == "404 - 레진코믹스":
+        title_ = self.requests.get(f'{self.BASE_URL}/{titleid}').soup_select_one('meta[property="og:title"]')
+        if title_ == "404 - 레진코믹스":
             raise ValueError(f'Invalid {titleid = }')
 
         title = soup.select_one("h2.comicInfo__title").text
@@ -124,15 +121,14 @@ class LezhinComicsScraper(Scraper):
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid: str, get_paid_episode: bool = False, get_unusable_episode: bool = False):
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-        soup = await self.get_internet('soup', f'{self.BASE_URL}/{titleid}', )
-        # print(soup.select_one('meta[property="og:title"]').content, soup)
-        if soup.select_one('meta[property="og:title"]').content == "404 - 레진코믹스":
+        res = self.requests.get(f'{self.BASE_URL}/{titleid}')
+        if res('meta[property="og:title"]', no_empty_result=True).content == "404 - 레진코믹스":
             raise ValueError(f'Invalid {titleid = }')
 
-        title = soup.select_one("h2.comicInfo__title").text
-        thumbnail_url = soup.select_one('meta[property="og:image"]')["content"]
+        title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
+        thumbnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
 
-        webtoon_raw_data = soup.select('script')[5]
+        webtoon_raw_data = res.soup_select('script')[5]
 
         if "src" in webtoon_raw_data.attrs:
             raise ValueError(f'Invalid {titleid = }.')
@@ -258,7 +254,7 @@ class LezhinComicsScraper(Scraper):
         keygen_url = (f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
                       f"contentId={titleid_int}&episodeId={episode_id_int}&purchased={'false'}&q={30}&firstCheckType={'P'}")
 
-        keys_res = await self.get_internet('requests', keygen_url, headers=HEADERS)
+        keys_res = self.requests.get(keygen_url, headers=HEADERS)
         if keys_res.status_code == 403:
             logging.warning(f"can't retrieve data from {episode_id_int = }. "
                             "It's probably because Episode is not available or not for free episode.")
@@ -273,7 +269,7 @@ class LezhinComicsScraper(Scraper):
                                f"platform=web&store=web&alias={titleid}&name={episode_id_str}&preload=false"
                                "&type=comic_episode")
         try:
-            images_data = (await self.get_internet('requests', images_retrieve_url, headers=HEADERS)).json()
+            images_data = self.requests.get(images_retrieve_url, headers=HEADERS).json()
             # return images_data # for debugg purpose
         except json.JSONDecodeError:
             if _attempt >= 3:

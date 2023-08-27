@@ -100,7 +100,7 @@ class KakaopageWebtoonScraper(Scraper):
 
         # self._set_pbar(f'{episode_dir}|{file_name}')
         # 'headers' is changed.
-        image_raw: bytes = (await self.get_internet(get_type='requests', url=url, is_run_in_executor=True, headers={})).content
+        image_raw: bytes = (await self.requests.aget(url, headers={})).content
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
