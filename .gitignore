@@ -10,8 +10,6 @@ build/
 *.pyo
 *.egg
 *.egg-info
-/.scraper-beta
 **/webtoon
 token.txt
 *.ipynb
-WebtoonScraper/various_test
