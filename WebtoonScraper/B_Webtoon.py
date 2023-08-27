@@ -7,7 +7,7 @@ from itertools import starmap
 import logging
 
 if __name__ in ("__main__", "B_Webtoon"):
-    from A_FolderMerger import FolderMerger
+    # from A_FolderMerger import FolderMerger
     from D_NaverWebtoonScraper import NaverWebtoonScraper
     from E_BestChallengeScraper import BestChallengeScraper
     from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
@@ -17,8 +17,9 @@ if __name__ in ("__main__", "B_Webtoon"):
     from J_NaverPostScraper import NaverPostScraper
     from K_NaverGameScraper import NaverGameScraper
     from L_LezhinComicsScraper import LezhinComicsScraper
+    from M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 else:
-    from .A_FolderMerger import FolderMerger
+    # from .A_FolderMerger import FolderMerger
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
     from .E_BestChallengeScraper import BestChallengeScraper
     from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
@@ -28,6 +29,7 @@ else:
     from .J_NaverPostScraper import NaverPostScraper
     from .K_NaverGameScraper import NaverGameScraper
     from .L_LezhinComicsScraper import LezhinComicsScraper
+    from .M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
@@ -38,6 +40,7 @@ BF = BUFFTOON = 'bufftoon'
 P = POST = NAVER_POST = 'naver_post'
 G = NAVER_GAME = 'naver_game'
 L = LEZHIN = 'lezhin'
+K = KAKAOPAGE = 'kakaopage'
 
 
 # sourcery skip: low-code-quality
@@ -125,6 +128,10 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
             'h2.comicInfo__title'))
         return title.text if title else None
 
+    async def kakaopage_fetch():
+        scraper = KakaopageWebtoonScraper()
+        return await scraper.check_if_legitimate_titleid(webtoon_id)
+
     # 전체 동시 실행
     if isinstance(webtoon_id, int):
         webtoon_getters = starmap(
@@ -137,10 +144,11 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
                 (naver_game_fetch, NAVER_GAME),
                 (originals_fetch, ORIGINALS),
                 (canvas_fetch, CANVAS),
+                (kakaopage_fetch, KAKAOPAGE),
             )
         )
     else:
-        logging.info('webtoon_id is string, so it checks if it is lezhin or not.')
+        logging.warning('webtoon_id is string, so it checks if it is lezhin or not.')
         webtoon_getters = starmap(
             skip_when_errored,
             (
@@ -207,8 +215,11 @@ async def get_scraper_instance(webtoon_type: str):
         webtoonscraper = NaverGameScraper()
     elif webtoon_type.lower() == LEZHIN:
         webtoonscraper = LezhinComicsScraper()
+    elif webtoon_type.lower() == KAKAOPAGE:
+        webtoonscraper = KakaopageWebtoonScraper()
     else:
-        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, canvas, bufftoon, telescope, naver_post, naver_game, and lezhin.')
+        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, '
+                         'canvas, bufftoon, telescope, naver_post, naver_game, lezhin, and kakaopage.')
     return webtoonscraper
 
 
