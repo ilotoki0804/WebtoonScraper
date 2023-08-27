@@ -31,6 +31,8 @@ else:
     from .L_LezhinComicsScraper import LezhinComicsScraper
     from .M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 
+TitleId = int | tuple[int, int] | str
+
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
 O = ORIGINALS = 'originals'  # noqa
@@ -44,7 +46,9 @@ K = KAKAOPAGE = 'kakaopage'
 
 
 # sourcery skip: low-code-quality
-async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> str | None:  # noqa
+async def get_webtoon_platform(titleid: TitleId, is_auto_select=False) -> str | None:  # noqa
+    """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다."""
+    # TODO: 네이버 포스트 추가하기
     """If webtoon is best challenge, this returns True. Otherwise, False."""
     loop = asyncio.get_running_loop()
 
@@ -64,7 +68,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def naver_webtoon_fetch():
         title = (await webtoonscraper.get_internet(
             'soup_select_one',
-            f'https://comic.naver.com/webtoon/detail?titleId={webtoon_id}',
+            f'https://comic.naver.com/webtoon/detail?titleId={titleid}',
             'span.text'))
         return title.text if title else None
 
@@ -72,7 +76,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def best_challenge_fetch():
         title = (await webtoonscraper.get_internet(
             'soup_select_one',
-            f'https://comic.naver.com/bestChallenge/list?titleId={webtoon_id}',
+            f'https://comic.naver.com/bestChallenge/list?titleId={titleid}',
             'meta[property="og:title"]'))
         return title.get('content') if title else None
 
@@ -80,7 +84,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def telescope_fetch():
         title = (await webtoonscraper.get_internet(
             'noNone_select_one',
-            f'https://www.manhwakyung.com/title/{webtoon_id}',
+            f'https://www.manhwakyung.com/title/{titleid}',
             'meta[property="og:title"]')).get('content')
         return None if title == "에러 페이지 | 만화경" else title.removesuffix(' | 만화경')
 
@@ -88,14 +92,14 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def bufftoon_fetch():
         title = (await webtoonscraper.get_internet(
             'noNone_select_one',
-            f'https://bufftoon.plaync.com/series/{webtoon_id}',
+            f'https://bufftoon.plaync.com/series/{titleid}',
             'meta[property="og:title"]')).get('content')
         return None if title == "이야기 던전에 입장하라, 버프툰" else title
 
     # 네이버 게임
     async def naver_game_fetch():
         with contextlib.suppress(Exception):
-            title, _ = await webtoonscraper._get_webtoon_infomation(webtoon_id)
+            title, _ = await webtoonscraper._get_webtoon_infomation(titleid)
             return title
 
     # webtoonscraper.IS_STABLE_CONNECTION = False
@@ -104,7 +108,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def originals_fetch():
         title = (await webtoonscraper.get_internet(
             'soup_select_one',
-            f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={webtoon_id}',
+            f'https://www.webtoons.com/en/fantasy/watermelon/list?title_no={titleid}',
             'meta[property="og:title"]'))
         return title.get('content') if title else None
 
@@ -112,28 +116,28 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
     async def canvas_fetch():
         title = (await webtoonscraper.get_internet(
             'soup_select_one',
-            f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={webtoon_id}',
+            f'https://www.webtoons.com/en/challenge/meme-girls/list?title_no={titleid}',
             'meta[property="og:title"]'))
         return title.get('content') if title else None
 
     # lezhin
     async def lezhin_fetch():
         # 불필요한 페칭 방지: int라면 어차피 lezhin일 수 없음. 이미 앞에서 걸리지긴 하지만 만약을 대비함.
-        if isinstance(webtoon_id, int):
+        if isinstance(titleid, int):
             return
 
         title = (await webtoonscraper.get_internet(
             'soup_select_one',
-            f'https://www.lezhin.com/ko/comic/{webtoon_id}',
+            f'https://www.lezhin.com/ko/comic/{titleid}',
             'h2.comicInfo__title'))
         return title.text if title else None
 
     async def kakaopage_fetch():
         scraper = KakaopageWebtoonScraper()
-        return await scraper.check_if_legitimate_titleid(webtoon_id)
+        return await scraper.check_if_legitimate_titleid(titleid)
 
     # 전체 동시 실행
-    if isinstance(webtoon_id, int):
+    if isinstance(titleid, int):
         webtoon_getters = starmap(
             skip_when_errored,
             (
@@ -174,7 +178,7 @@ async def get_webtoon_platform(webtoon_id: int | str, is_auto_select=False) -> s
         logging.warning(f'Webtoon\'s platform is assumed to be {results[0][0]}')
         return results[0][0]
     elif webtoon_length == 0:
-        logging.warning(f'There\'s no webtoon that webtoon ID is {webtoon_id}.')
+        logging.warning(f'There\'s no webtoon that webtoon ID is {titleid}.')
     else:
         for i, (platform, name) in enumerate(results, 1):
             logging.warning(f'{i}. {platform}: {name}')
@@ -224,7 +228,7 @@ async def get_scraper_instance(webtoon_type: str):
 
 
 async def get_webtoon_async(
-        webtoon_id: int | tuple[int, int] | str,
+        titleid: int | tuple[int, int] | str,
         webtoon_type: None | str = None,
         *,
         merge: None | int = None,
@@ -238,14 +242,14 @@ async def get_webtoon_async(
         if cookie:
             webtoonscraper.COOKIE = cookie
         else:
-            webtoonscraper.COOKIE = input(f'Enter cookie of {webtoon_id} (Enter nothing to proceed without cookie): ')
+            webtoonscraper.COOKIE = input(f'Enter cookie of {titleid} (Enter nothing to proceed without cookie): ')
         return webtoonscraper
 
     if cookie is None and authorization is None:
-        if isinstance(webtoon_id, tuple):
+        if isinstance(titleid, tuple):
             webtoon_type = NAVER_POST
         elif webtoon_type is None:
-            webtoon_type = await get_webtoon_platform(webtoon_id, is_auto_select)
+            webtoon_type = await get_webtoon_platform(titleid, is_auto_select)
             if webtoon_type is None:
                 raise ValueError('You must select item.')
 
@@ -261,11 +265,11 @@ async def get_webtoon_async(
     else:
         raise ValueError('Placeholder for later new ones.')
 
-    await webtoonscraper.download_one_webtoon_async(webtoon_id, episode_no_range, merge=merge)
+    await webtoonscraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge)
 
 
 def get_webtoon(
-        webtoon_id: int | tuple[int, int] | str,
+        webtoon_id: TitleId,
         webtoon_type: None | str = None,
         *,
         merge: None | int = None,
