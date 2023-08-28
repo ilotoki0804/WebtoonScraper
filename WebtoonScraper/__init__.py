@@ -9,6 +9,7 @@ if __name__ == "__main__":
     from I_BufftoonScraper import BufftoonScraper
     from J_NaverPostScraper import NaverPostScraper
     from K_NaverGameScraper import NaverGameScraper
+    from L_LezhinComicsScraper import LezhinComicsScraper
     from M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 else:
     from .A_FolderMerger import FolderMerger
@@ -21,6 +22,7 @@ else:
     from .I_BufftoonScraper import BufftoonScraper
     from .J_NaverPostScraper import NaverPostScraper
     from .K_NaverGameScraper import NaverGameScraper
+    from .L_LezhinComicsScraper import LezhinComicsScraper
     from .M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 
 __version__ = (1, 3, 0)
