@@ -7,6 +7,9 @@ import time
 import logging
 
 from async_lru import alru_cache
+from requests_utils.exceptions import EmptyResultError
+
+from WebtoonScraper.C_Scraper import TitleId
 
 if __name__ in ("__main__", "I_BufftoonScraper"):
     from C_Scraper import Scraper
@@ -25,8 +28,7 @@ class BufftoonScraper(Scraper):
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid, get_payment: bool = False, get_login_requiered: bool | None = None, limit: int = 500):
         url = f'https://api-bufftoon.plaync.com/v2/series/{titleid}/episodes?sortType=2&offset=0&limit={limit}'
-        raw_data = await self.get_internet('requests', url)
-        raw_data = raw_data.json()
+        raw_data = self.requests.get(url).json()
         subtitles = []
         episode_ids = []
         if get_login_requiered is None:
@@ -38,7 +40,7 @@ class BufftoonScraper(Scraper):
             if not get_login_requiered and not raw_episode['isOpenFreeEpisode']:
                 logging.warning(f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded.")
                 continue
-            episode_no = raw_episode['episodeOrder']
+            # episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode['listImgPath']
             episode_id = int(re.search(rf'(?<=contents\/.\/{titleid}\/)(\d+)(?=\/)', raw_episode_id)[0])
             episode_ids.append(episode_id)
@@ -47,18 +49,19 @@ class BufftoonScraper(Scraper):
 
     async def get_title(self, titleid):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
-        title = await self.get_internet(get_type='noNone_select_one', url=url,
-                                        selector='#content > div > div > div.series-info > div.cont > div.title')
-        return title.text.strip()
+        selector = '#content > div > div > div.series-info > div.cont > div.title'
+        return self.requests.get(url).soup_select_one(selector, no_empty_result=True).text.strip()
 
     async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
-        image_url_original = await self.get_internet(get_type='noNone_select_one', url=url,
-                                                     selector='#content > div > div > div.series-info > div.img')
+        image_url_original = self.requests.get(url).soup_select_one('#content > div > div > div.series-info > div.img',
+                                                                    no_empty_result=True)
         image_url = image_url_original['style']
+        if not isinstance(image_url, str):
+            raise ValueError(f'image_url is not a str. {image_url = }')
         image_url = re.search(r'(?<=background-image:url\().+(?=\);)', image_url)[0]
         image_extension = self.get_file_extension(image_url)
-        image_raw = await self.get_internet(get_type='requests', url=image_url)
+        image_raw = self.requests.get(image_url)
         image_raw = image_raw.content
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
 
@@ -96,14 +99,18 @@ class BufftoonScraper(Scraper):
         episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
         url = f'{self.BASE_URL}/series/{titleid}/{episode_id}'
         selector = '#content > div > div > div.viewer-wrapper > div > img'
-        episode_images_url = await self.get_internet(get_type='soup_select', url=url,
-                                                     selector=selector, headers=HEADERS)
+        episode_images_url = self.requests.get(url, headers=HEADERS).soup_select(selector)
 
         return [element['src'] for element in episode_images_url]
 
     async def download_single_image(self, episode_dir: Path, url: str, image_no: int) -> None:
         await super().download_single_image(episode_dir, url, image_no, 'png')
 
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        try:
+            return await self.get_title(titleid)
+        except EmptyResultError:
+            return None
 
 if __name__ == '__main__':
     wt = BufftoonScraper()

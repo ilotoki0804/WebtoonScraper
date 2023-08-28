@@ -13,6 +13,8 @@ from async_lru import alru_cache
 import pyjsparser
 from PIL import Image
 
+from WebtoonScraper.C_Scraper import TitleId
+
 if __name__ in ("__main__", "L_LezhinComicsScraper"):
     from C_Scraper import Scraper
 else:
@@ -122,7 +124,7 @@ class LezhinComicsScraper(Scraper):
     async def get_webtoon_data(self, titleid: str, get_paid_episode: bool = False, get_unusable_episode: bool = False):
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         res = self.requests.get(f'{self.BASE_URL}/{titleid}')
-        if res('meta[property="og:title"]', no_empty_result=True).content == "404 - 레진코믹스":
+        if res.soup_select_one('meta[property="og:title"]', no_empty_result=True).content == "404 - 레진코믹스":
             raise ValueError(f'Invalid {titleid = }')
 
         title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
@@ -413,6 +415,9 @@ class LezhinComicsScraper(Scraper):
             alt_image_path = alt_episode_dir / image_name
             unshuffle_image_and_save(base_image_path, alt_image_path, image_order)
 
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        title = self.requests.get(f'https://www.lezhin.com/ko/comic/{titleid}').soup_select_one('h2.comicInfo__title')
+        return title.text if title else None
 
 if __name__ == '__main__':
     wt = LezhinComicsScraper()

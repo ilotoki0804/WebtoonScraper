@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 from itertools import count
 import json
+from json.decoder import JSONDecodeError
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "K_NaverGameScraper"):
@@ -76,6 +77,12 @@ class NaverGameScraper(Scraper):
     async def get_episode_images_url(self, titleid, episode_no):
         return await super().get_episode_images_url(titleid, episode_no)
 
+    async def check_if_legitimate_titleid(self, titleid) -> str | None:
+        try:
+            title, _ = await self._get_webtoon_infomation(titleid)
+        except (TypeError, JSONDecodeError):
+            return None
+        return title
 
 if __name__ == '__main__':
     wt = NaverGameScraper()

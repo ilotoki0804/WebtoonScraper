@@ -10,12 +10,14 @@ import logging
 from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
+from requests_utils.exceptions import EmptyResultError
 
 if __name__ in ("__main__", "J_NaverPostScraper"):
     from C_Scraper import Scraper
 else:
     from .C_Scraper import Scraper
 
+TitleId = tuple[int, int]
 
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
@@ -24,11 +26,11 @@ class NaverPostScraper(Scraper):
         self.IS_STABLE_CONNECTION = True
         self.BASE_URL = 'https://post.naver.com'
 
-    async def get_webtoon_dir_name(self, titleid, title) -> str:
+    async def get_webtoon_dir_name(self, titleid: TitleId, title) -> str:
         return f'{title}{titleid}'  # tuple already contains parentheses
 
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid: tuple[int, int]) -> dict[str, list]:
+    async def get_webtoon_data(self, titleid: TitleId):
         # sourcery skip: for-append-to-extend, list-comprehension, move-assign-in-block
         series_no, member_no = titleid
         subtitle_list: list[str] = []
@@ -62,13 +64,13 @@ class NaverPostScraper(Scraper):
         # 1화부터로 변경
         return {'subtitles': subtitle_list[::-1], 'episode_ids': episode_id_list[::-1]}
 
-    async def get_title(self, titleid: tuple[int, int]):
+    async def get_title(self, titleid: TitleId):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
         title: str = self.requests.get(url).soup_select_one('h2.tit_series > span', no_empty_result=True).text
         return title.strip()
 
-    async def save_webtoon_thumbnail(self, titleid: tuple[int, int], title, thumbnail_dir):
+    async def save_webtoon_thumbnail(self, titleid: TitleId, title, thumbnail_dir):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
         image_url_original = requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
@@ -78,14 +80,14 @@ class NaverPostScraper(Scraper):
         Path(f'{thumbnail_dir}/{title}.{image_extension}').write_bytes(image_raw)
         (thumbnail_dir / f'{title}.{image_extension}').write_bytes(image_raw)
 
-    async def get_all_episode_no(self, titleid):
+    async def get_all_episode_no(self, titleid: TitleId):
         """1부터 시작하니 주의!!"""
         return await super().get_all_episode_no(titleid)
 
-    async def get_subtitle(self, titleid, episode_no):
+    async def get_subtitle(self, titleid: TitleId, episode_no):
         return await super().get_subtitle(titleid, episode_no)
 
-    async def get_episode_images_url(self, titleid, episode_no, attempt=3):
+    async def get_episode_images_url(self, titleid: TitleId, episode_no, attempt=3):
         series_no, member_no = titleid
         episode_id = await self.episode_no_to_episode_id(titleid, episode_no)
         url = f'https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}&navigationType=push'
@@ -109,6 +111,12 @@ class NaverPostScraper(Scraper):
 
         return [url for url in episode_images_url
                 if not url.startswith('https://mail.naver.com/read/image/')]
+
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        try:
+            return await self.get_title(titleid)
+        except EmptyResultError:
+            return None
 
 
 if __name__ == '__main__':

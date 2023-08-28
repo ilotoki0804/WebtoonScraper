@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from async_lru import alru_cache
-from requests_utils import requests
+from requests_utils.exceptions import EmptyResultError
 
 if __name__ in ("__main__", "M_KakaopageWebtoonScraper"):
     from C_Scraper import Scraper
@@ -20,7 +20,8 @@ class KakaopageWebtoonScraper(Scraper):
         self.BASE_URL = 'https://page.kakao.com'
         self.IS_STABLE_CONNECTION = False
         self.COOKIE = cookie
-        self.HEADERS = {
+        self.HEADERS = {}
+        self.GRAPHQL_HEADERS = {
             "Accept": "application/graphql+json, application/json",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
@@ -44,7 +45,7 @@ class KakaopageWebtoonScraper(Scraper):
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid: int):
-        res = requests.get("https://page.kakao.com/content/53397318")
+        res = self.requests.get(f"https://page.kakao.com/content/{titleid}")
         title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
         thumnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
 
@@ -61,10 +62,10 @@ class KakaopageWebtoonScraper(Scraper):
                 "variables": {"seriesId": titleid, "after": str(curser), "boughtOnly": False, "sortType": "asc"},
             }
 
-            res = requests.post(
+            res = self.requests.post(
                 "https://page.kakao.com/graphql",
                 json=post_data,
-                headers=self.HEADERS,
+                headers=self.GRAPHQL_HEADERS,
             )
 
             webtoon_raw_data = res.json()["data"]["contentHomeProductList"]
@@ -119,25 +120,23 @@ class KakaopageWebtoonScraper(Scraper):
             "variables": {"seriesId": titleid, "productId": episode_id},
         }
 
-        res = requests.post(
+        res = self.requests.post(
             "https://page.kakao.com/graphql",
             json=post_data,
-            headers=self.HEADERS,
+            headers=self.GRAPHQL_HEADERS,
         ).json()
 
         return [i['secureUrl']
                 for i in res["data"]["viewerInfo"]["viewerData"]["imageDownloadData"]["files"]]
 
     async def check_if_legitimate_titleid(self, titleid: int) -> str | None:
-        res = requests.get(f"https://page.kakao.com/content/{titleid}")
-        if res.soup_select_one("title", no_empty_result=True).text == '콘텐츠홈 | 카카오페이지':
+        res = self.requests.get(f"https://page.kakao.com/content/{titleid}")
+        try:
+            title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
+        except EmptyResultError:
             return None
-
-        title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
-        # sourcery skip
-        if not isinstance(title, str):  # for typing purpose. Works fine even if remove this statement.
-            return None
-        return title.removesuffix(' | 카카오페이지')
+        if isinstance(title, str):
+            return None if title == '카카오페이지' else title
 
 
 if __name__ == '__main__':

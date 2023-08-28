@@ -5,6 +5,8 @@ import time
 
 from async_lru import alru_cache
 
+from WebtoonScraper.C_Scraper import TitleId
+
 if __name__ in ("__main__", "H_TelescopeScraper"):
     from C_Scraper import Scraper
 else:
@@ -88,6 +90,12 @@ class TelescopeScraper(Scraper):
         elemetents = response.soup_select('#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
         return [element.get('data-src') for element in elemetents]
 
+    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        url = f'https://www.manhwakyung.com/title/{titleid}'
+        title = self.requests.get(url).soup_select_one('meta[property="og:title"]',
+                                                       no_empty_result=True).get('content')
+        assert isinstance(title, str)
+        return None if title == "에러 페이지 | 만화경" else title.removesuffix(' | 만화경')
 
 if __name__ == '__main__':
     wt = TelescopeScraper()
