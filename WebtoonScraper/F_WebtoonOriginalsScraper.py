@@ -53,7 +53,7 @@ class WebtoonOriginalsScraper(Scraper):
 
         return {'subtitles': subtitles, 'episode_ids': episode_ids}
 
-    async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
+    async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'{self.BASE_URL}/list?title_no={titleid}'
         image_url_original = self.requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
         image_url: str = image_url_original['content']

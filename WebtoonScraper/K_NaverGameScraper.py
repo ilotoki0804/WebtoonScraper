@@ -65,8 +65,8 @@ class NaverGameScraper(Scraper):
     async def get_title(self, titleid):
         return await super().get_title(titleid)
 
-    async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        return await super().save_webtoon_thumbnail(titleid, title, thumbnail_dir)
+    async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
+        return await super().download_webtoon_thumbnail(titleid, title, thumbnail_dir)
 
     async def get_all_episode_no(self, titleid):
         return await super().get_all_episode_no(titleid)

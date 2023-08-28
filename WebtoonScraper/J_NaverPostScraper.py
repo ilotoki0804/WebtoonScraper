@@ -70,7 +70,7 @@ class NaverPostScraper(Scraper):
         title: str = self.requests.get(url).soup_select_one('h2.tit_series > span', no_empty_result=True).text
         return title.strip()
 
-    async def save_webtoon_thumbnail(self, titleid: TitleId, title, thumbnail_dir):
+    async def download_webtoon_thumbnail(self, titleid: TitleId, title, thumbnail_dir):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
         image_url_original = requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)

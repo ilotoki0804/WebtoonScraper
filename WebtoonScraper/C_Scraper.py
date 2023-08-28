@@ -261,7 +261,7 @@ class Scraper(metaclass=ABCMeta):
 
         webtoon_dir.mkdir(parents=True, exist_ok=True)
 
-        await self.save_webtoon_thumbnail(titleid, title, webtoon_dir)
+        await self.download_webtoon_thumbnail(titleid, title, webtoon_dir)
 
         episode_no_list = await self.get_all_episode_no(titleid)
         if not episode_no_range:
@@ -378,7 +378,7 @@ class Scraper(metaclass=ABCMeta):
         """부제목, 즉 회차의 제목을 불러옵니다."""
         return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
 
-    async def save_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
+    async def download_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
         """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다."""
         thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL

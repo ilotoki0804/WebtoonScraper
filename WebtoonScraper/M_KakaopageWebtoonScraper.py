@@ -106,8 +106,8 @@ class KakaopageWebtoonScraper(Scraper):
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
 
-    async def save_webtoon_thumbnail(self, titleid, title: str, thumbnail_dir, default_file_extension: str | None = 'jpg') -> None:
-        return await super().save_webtoon_thumbnail(titleid, title, thumbnail_dir, default_file_extension)
+    async def download_webtoon_thumbnail(self, titleid, title: str, thumbnail_dir, default_file_extension: str | None = 'jpg') -> None:
+        return await super().download_webtoon_thumbnail(titleid, title, thumbnail_dir, default_file_extension)
 
     async def get_episode_images_url(self, titleid, episode_no):
         episode_id = await self.episode_no_to_episode_id(titleid, episode_no)

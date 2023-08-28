@@ -52,7 +52,7 @@ class BufftoonScraper(Scraper):
         selector = '#content > div > div > div.series-info > div.cont > div.title'
         return self.requests.get(url).soup_select_one(selector, no_empty_result=True).text.strip()
 
-    async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
+    async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
         url = f'https://bufftoon.plaync.com/series/{titleid}'
         image_url_original = self.requests.get(url).soup_select_one('#content > div > div > div.series-info > div.img',
                                                                     no_empty_result=True)

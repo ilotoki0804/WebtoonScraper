@@ -70,7 +70,7 @@ class NaverWebtoonScraper(Scraper):
     #         raise ValueError(f'title is not str. title: {title}')
     #     return title
 
-    # async def save_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
+    # async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
     #     url = f'{self.BASE_URL}/list?titleId={titleid}'
     #     res = self.requests.get(url)
     #     image_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get('content')
