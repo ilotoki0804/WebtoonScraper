@@ -9,8 +9,9 @@
 # [x]: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
 # [x]: print문 모두 제거하고 logging으로 변경하기
 # [x]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
+# [x]: 카카오 웹툰/카카오 페이지 웹툰
+# PENDING: 네이버 블로그 만들기
 # TODO: download vs save : 용어 정리하기 > download_webtoon_thumbnail로 바꾸고, download_webtoon이랑 download_episode로 변경
-# TODO: 카카오 웹툰/카카오 페이지 웹툰, 네이버 블로그 만들기
 # TODO: short_connection 등 docs 추가하기
 # TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
 # TODO: titleid를 __init__에 넣고 나머지 titleid, titleno? 제거하기
@@ -23,6 +24,8 @@
 # TODO: 모듈 이름 snakecase로 변경하기
 # TODO: requests_utils로 변경하기
 # TODO: merge를 merge_amout로 변경하기
+# TODO: 웹툰 메인 페이지에서 받는 정보는 따로 빼기
+# TODO: cache 대신 객체 형식으로 변경
 
 from __future__ import annotations
 import re
@@ -97,13 +100,13 @@ class Scraper(metaclass=ABCMeta):
     def update_requests(self):
         kwargs = {}
         if hasattr(self, '_TIMEOUT'):
-            kwargs.update(timeout=self._TIMEOUT)
+            kwargs.update(timeout=self.TIMEOUT)
 
         if hasattr(self, '_IS_STABLE_CONNECTION'):
-            kwargs.update(attempt=4)
+            kwargs.update(attempt=self.IS_STABLE_CONNECTION)
 
         if hasattr(self, '_HEADERS'):
-            kwargs.update(headers=self._HEADERS)
+            kwargs.update(headers=self.HEADERS)
 
         self.requests = CustomDefaults(**kwargs)
 
