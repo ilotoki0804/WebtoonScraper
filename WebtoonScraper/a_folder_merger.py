@@ -58,7 +58,9 @@ class FolderMerger:
             except AttributeError:  # for under Python 3.11
                 raise IndexError('Invalid index.') from e
 
+        print(f'You selected {selected_webtoon_dir_name}. Merging webtoon has started.')
         self.merge_webtoon_episodes(self.base_dir / selected_webtoon_dir_name, merge_amount)
+        print('Merging webtoon has ended.')
 
     def merge_webtoons_in_directory(self, merge_amount):
         webtoons = os.listdir(self.base_dir)
@@ -246,22 +248,3 @@ class FolderMerger:
 
         self._move_thumbnail(temp_thumbnail_path, directory)
         temp_thumbnail_path.rmdir()
-
-
-if __name__ == "__main__":
-    fm = FolderMerger()
-
-    # # test setters of BASE_DIR/ALT_DIR
-    # fm.BASE_DIR = 'webtoon'
-    # fm.ALT_DIR = 'webtoon'
-
-    # # test getters of BASE_DIR/ALT_DIR
-    # print(fm.BASE_DIR, fm.ALT_DIR)
-
-    # # test main functions
-    fm.merge_webtoons_in_directory(5)
-    # fm.merge_webtoon_episodes(Path('webtoon/somewebtoon(webtoonid)'), 5)
-
-    # # test restore functions
-    # fm.restore_webtoons_in_directory()
-    # fm.restore_webtoon(Path('webtoon/somewebtoon(webtoonid)'))
