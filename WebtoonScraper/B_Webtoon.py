@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 import asyncio
-import contextlib
-from itertools import starmap
 import logging
-from typing import Coroutine, Literal
+from typing import Literal, TYPE_CHECKING
 
 if __name__ in ("__main__", "B_Webtoon"):
     # from A_FolderMerger import FolderMerger
@@ -73,11 +71,9 @@ WebtoonPlatforms = Literal[
     'kakaopage',
 ]
 
-# sourcery skip: low-code-quality
-async def get_webtoon_platform(titleid: TitleId, is_auto_select=False) -> WebtoonPlatforms | None:    # noqa
+
+async def get_webtoon_platform(titleid: TitleId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
     """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다."""
-    # TODO: 네이버 포스트 추가하기
-    """If webtoon is best challenge, this returns True. Otherwise, False."""
     async def get_platform(platform_name: WebtoonPlatforms):
         try:
             scraper = await get_scraper_instance(platform_name)
@@ -110,28 +106,31 @@ async def get_webtoon_platform(titleid: TitleId, is_auto_select=False) -> Webtoo
     else:
         raise TypeError(f'Unknown type of titleid({type(titleid)})')
 
-    platforms = [get_platform(platform) for platform in test_queue]
-    results_raw: list[tuple[WebtoonPlatforms, str | None]] = await asyncio.gather(*platforms)
-    results: list[tuple[WebtoonPlatforms, str]] = []
-    for result in results_raw:  # 리스트 컴프리헨션을 이용하면 타입 힌트가 제대로 작동하지 않음
-        name_or_none = result[1]
-        if name_or_none is not None:
-            results.append((result[0], name_or_none))
-    # results: list[tuple[str, str]] = [result for result in results_raw if result[1] is not None]
-    assert all(isinstance(result[1], str) for result in results)  # type ensure
+    results_raw: list[tuple[WebtoonPlatforms, str | None]] = await asyncio.gather(*map(get_platform, test_queue))
+
+    if TYPE_CHECKING:
+        results: list[tuple[WebtoonPlatforms, str]] = []
+        for result in results_raw:  # 리스트 컴프리헨션을 이용하면 타입 힌트가 제대로 작동하지 않음
+            name_or_none = result[1]
+            if name_or_none is not None:
+                results.append((result[0], name_or_none))
+    else:
+        # 타입 힌트가 없을 경우 더 효율적인 동일한 코드
+        # results: list[tuple[WebtoonPlatforms, str]] = list(filter(lambda x: x[1] is not None, results_raw))
+        results: list[tuple[WebtoonPlatforms, str]] = [result for result in results_raw if result[1] is not None]
 
     if (webtoon_length := len(results)) == 1:
-        logging.warning(f'Webtoon\'s platform is assumed to be {results[0][0]}')
+        logging.warning(f"Webtoon's platform is assumed to be {results[0][0]}")
         return results[0][0]
     elif webtoon_length == 0:
-        logging.warning(f'There\'s no webtoon that webtoon ID is {titleid}.')
+        logging.warning(f"There's no webtoon that webtoon ID is {titleid}.")
     else:
         for i, (platform, name) in enumerate(results, 1):
             logging.warning(f'{i}. {platform}: {name}')
-        if not is_auto_select:
-            platform_no = input('Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): ')
-        else:
-            platform_no = ''
+
+        platform_no = '' if is_auto_select else input(
+            'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): '
+        )
 
         try:
             platform_no = 1 if platform_no == '' else int(platform_no)
@@ -183,39 +182,28 @@ async def get_webtoon_async(
         episode_no_range: tuple[int, int] | int | None = None,
         authorization: str | None = None
 ) -> None:
-    def set_cookie(cookie):
+    if cookie is not None:
         webtoonscraper = BufftoonScraper()
-        if cookie:
-            webtoonscraper.COOKIE = cookie
-        else:
-            webtoonscraper.COOKIE = input(f'Enter cookie of {titleid} (Enter nothing to proceed without cookie): ')
-        return webtoonscraper
-
-    if cookie is None and authorization is None:
+        webtoonscraper.COOKIE = cookie
+    elif authorization is not None:
+        webtoonscraper = LezhinComicsScraper()
+        webtoonscraper.AUTHORIZATION = authorization
+    else:
         webtoon_type = await get_webtoon_platform(titleid, is_auto_select)
 
         if webtoon_type is None:
             raise ValueError('You must select item.')
 
-        if webtoon_type.lower() == BUFFTOON:
-            webtoonscraper = set_cookie(cookie)
-        else:
-            webtoonscraper = await get_scraper_instance(webtoon_type)
-
-    elif cookie is not None:
-        webtoonscraper = set_cookie(cookie)
-    elif authorization is not None:
-        webtoonscraper = LezhinComicsScraper()
-        webtoonscraper.AUTHORIZATION = authorization
-    else:
-        raise ValueError('Placeholder for later new ones.')
+        webtoonscraper = await get_scraper_instance(webtoon_type)
+        if isinstance(webtoonscraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
+            logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
     await webtoonscraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge)
 
 
 def get_webtoon(
         titleid: TitleId,
-        webtoon_type: WebtoonPlatforms | None= None,
+        webtoon_type: WebtoonPlatforms | None = None,
         *,
         merge: int | None = None,
         cookie: str | None = None,
