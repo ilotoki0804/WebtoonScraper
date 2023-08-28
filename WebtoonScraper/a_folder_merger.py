@@ -9,46 +9,75 @@ from pathlib import Path
 import logging
 
 class FolderMerger:
+    """웹툰 뷰어 앱에서 정주행하기 좋도록 회차들을 단위에 따라 묶습니다."""
     def __init__(self):
-
-        self.BASE_DIR = 'webtoon'
-        self.ALT_DIR = 'webtoon'
-
-    @property
-    def BASE_DIR(self):
-        return self._BASE_DIR
-
-    @BASE_DIR.setter
-    def BASE_DIR(self, BASE_DIR):
-        self._BASE_DIR = Path(BASE_DIR)
+        self.base_dir = 'webtoon'
+        self.target_dir = 'webtoon'
 
     @property
-    def ALT_DIR(self):
-        return self._ALT_DIR
+    def base_dir(self):
+        """웹툰이 저장되어 있는, 바꿀 웹툰이 있는 디렉토리입니다."""
+        return self._base_dir
 
-    @ALT_DIR.setter
-    def ALT_DIR(self, ALT_DIR):
-        self._ALT_DIR = Path(ALT_DIR)
+    @base_dir.setter
+    def base_dir(self, base_dir):
+        self._base_dir = Path(base_dir)
+
+    @property
+    def target_dir(self):
+        """다 마친 웹툰을 저장할 디렉토리입니다. `self.base_dir`와 같아도 상관 없습니다."""
+        return self._targe_dir
+
+    @target_dir.setter
+    def target_dir(self, targe_dir):
+        self._targe_dir = Path(targe_dir)
 
     ############### MAIN FUNCTIONALITY ###############
 
+    def select_webtoon_wanted_to_merge(self, merge_amount: int):
+        webtoons = os.listdir(self.base_dir)
+        print('Select webtoon to merge.')
+        for i, webtoon in enumerate(webtoons, 1):
+            print(f'{i:02d}. {webtoon}')
+
+        try:
+            user_answer = int(input('Enter the number of webtoon you want to merge: '))
+        except ValueError as e:
+            try:
+                e.add_note('Invalid input.')
+                raise
+            except AttributeError:  # for under Python 3.11
+                raise ValueError('Invalid input.') from e
+
+        try:
+            selected_webtoon_dir_name = webtoons[user_answer - 1]
+        except IndexError as e:
+            try:
+                e.add_note('Invalid index.')
+                raise
+            except AttributeError:  # for under Python 3.11
+                raise IndexError('Invalid index.') from e
+
+        self.merge_webtoon_episodes(self.base_dir / selected_webtoon_dir_name, merge_amount)
+
     def merge_webtoons_in_directory(self, merge_amount):
-        webtoons = os.listdir(self.BASE_DIR)
+        webtoons = os.listdir(self.base_dir)
         for webtoon in webtoons:
-            webtoon_dir = self.ALT_DIR / webtoon
+            webtoon_dir = self.target_dir / webtoon
             self.merge_webtoon_episodes(webtoon_dir, merge_amount)
 
     def merge_webtoon_episodes(self,
                                webtoon_dir: Path,
                                merge_amount,
-                               merge_last_bundle=True):
+                               # merge_last_bundle=True
+                               ):
         """
         _merge_webtoon_episodes는 base_dir/alt_dir 두 가지 input을 받고 두 값이 같아서는 안 되지만,
         merge_webtoon_episodes는 한 가지 input만 받고 한 폴더 내의 상태를 바꿔준다.
         """
         # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
         temp_alt_webtoon_dir = Path(f'{webtoon_dir}(merged)')
-        self._merge_webtoon_episodes(webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount, merge_last_bundle=merge_last_bundle)
+        self._merge_webtoon_episodes(webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount, merge_last_bundle=True)
         os.rmdir(webtoon_dir)
         temp_alt_webtoon_dir.rename(webtoon_dir)
 
@@ -173,9 +202,9 @@ class FolderMerger:
     ############### RESTORE FUNCTIONALITY ###############
 
     def restore_webtoons_in_directory(self):
-        webtoons = os.listdir(self.BASE_DIR)
+        webtoons = os.listdir(self.base_dir)
         for webtoon in webtoons:
-            webtoon_dir = self.BASE_DIR / webtoon
+            webtoon_dir = self.base_dir / webtoon
             self.restore_webtoon(webtoon_dir)
 
     def restore_webtoon(self, directory: Path):

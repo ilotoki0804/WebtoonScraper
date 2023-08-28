@@ -6,7 +6,7 @@ import logging
 from typing import Literal, TYPE_CHECKING
 
 if __name__ in ("__main__", "B_Webtoon"):
-    # from a_folder_manager import FolderMerger
+    # from a_folder_merger import FolderMerger
     from C_Scraper import Scraper
     from D_NaverWebtoonScraper import NaverWebtoonScraper
     from E_BestChallengeScraper import BestChallengeScraper
@@ -19,7 +19,7 @@ if __name__ in ("__main__", "B_Webtoon"):
     from L_LezhinComicsScraper import LezhinComicsScraper
     from M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
 else:
-    # from .a_folder_manager import FolderMerger
+    # from .a_folder_merger import FolderMerger
     from .C_Scraper import Scraper
     from .D_NaverWebtoonScraper import NaverWebtoonScraper
     from .E_BestChallengeScraper import BestChallengeScraper

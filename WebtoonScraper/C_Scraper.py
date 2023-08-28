@@ -52,9 +52,9 @@ from async_lru import alru_cache
 from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "C_Scraper"):
-    from a_folder_manager import FolderMerger
+    from a_folder_merger import FolderMerger
 else:
-    from .a_folder_manager import FolderMerger
+    from .a_folder_merger import FolderMerger
 
 TitleId = int | tuple[int, int] | str
 
