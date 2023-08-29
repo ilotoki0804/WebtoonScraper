@@ -2,7 +2,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)](https://pypi.org/project/WebtoonScraper/)
 <!-- [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) -->
 
-세계 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
+최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
 네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 만화경, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스, 카카오페이지를 지원하고,
 이외에도 더 많은 웹툰을 추후에 지원할 예정입니다.
