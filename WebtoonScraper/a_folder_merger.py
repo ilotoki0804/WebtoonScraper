@@ -23,6 +23,7 @@ DIRECTORY_STATES = Literal['default_state', 'merged', 'unified', 'not_matched']
 
 PathOrStr = str | Path
 
+
 class FolderMerger:
     """웹툰 뷰어 앱에서 정주행하기 좋도록 회차들을 단위에 따라 묶습니다."""
 
@@ -141,7 +142,7 @@ class FolderMerger:
         self._move_thumbnail(base_webtoon_dir, alt_webtoon_dir)
 
         # 에피소드를 분해해 base_webtoon_dir에 형식에 맞추어 넣음
-        if not self.is_unified(base_webtoon_dir):
+        if self.detailed_check_directory_state(base_webtoon_dir) == UNIFIED:
             self._unify_webtoon(base_webtoon_dir)
 
         # episode_bundle이 1인 경우 revert_to_original_download_state 수행
@@ -173,7 +174,7 @@ class FolderMerger:
                 shutil.move(image_dir, images_dir)
 
     def _move_thumbnail(self, base_webtoon_dir, alt_webtoon_dir):
-        if self.is_unified(base_webtoon_dir):
+        if self.fast_check_directory_state(base_webtoon_dir) == UNIFIED:
             logging.debug('Webtoon look unified already, so _move_thumbnail is skipped.')
             return
         for episode_or_thumbnail in os.listdir(base_webtoon_dir):
@@ -282,7 +283,7 @@ class FolderMerger:
 
         return NOT_MATCHED
 
-    def detailed_check_directory_state(self, directory) -> DIRECTORY_STATES:
+    def detailed_check_directory_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
         """
         디렉토리가 merge된 상태인지 기본 상태(default_state)인지, unified된 상태인지, 아니면 일치하는 게 없는지 확인합니다.
         사용자용으로, 상세한 경고 메시지와 정확한 체크를 제공합니다. 단, 중요한 프로그램을 처음 가동할 때는 사용할 수 있습니다.
@@ -380,7 +381,7 @@ class FolderMerger:
         temp_thumbnail_path.mkdir(parents=True)
         self._move_thumbnail(directory, temp_thumbnail_path)
 
-        if not self.is_unified(directory):
+        if self.detailed_check_directory_state(directory) == UNIFIED:
             # self._unify_webtoon(directory)
             directories = os.listdir(directory)
             directories = (
