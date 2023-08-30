@@ -6,6 +6,8 @@ import asyncio
 import logging
 from typing import Literal, TYPE_CHECKING
 
+from requests_utils import requests, souptools
+
 if __name__ in ("__main__", "B_Webtoon"):
     # from a_folder_merger import FolderMerger
     from C_Scraper import Scraper
@@ -190,7 +192,7 @@ async def get_webtoon_async(
         webtoonscraper = LezhinComicsScraper()
         webtoonscraper.AUTHORIZATION = authorization
     else:
-        webtoon_type = await get_webtoon_platform(titleid, is_auto_select)
+        webtoon_type = webtoon_type or await get_webtoon_platform(titleid, is_auto_select)
 
         if webtoon_type is None:
             raise ValueError('You must select item.')
@@ -215,6 +217,20 @@ def get_webtoon(
     asyncio.run(get_webtoon_async(titleid, webtoon_type, merge=merge, cookie=cookie, is_auto_select=is_auto_select,
                                   episode_no_range=episode_no_range, authorization=authorization))
 
+
+async def get_webtoons_getting_paid_async(
+        noticeid: int,
+        merge: int | None = None,
+) -> None:
+    res = requests.get(
+        f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})
+    raw_soup = res.json().get('notice').get('content')
+
+    titleids = map(int, souptools.soup_select(raw_soup, 'p span a').get(
+        'href').removeprefix('https://comic.naver.com/webtoon/list?titleId='))
+
+    for titleid in titleids:
+        await get_webtoon_async(titleid, NAVER_WEBTOON, merge=merge)
 
 if __name__ == '__main__':
     ...
