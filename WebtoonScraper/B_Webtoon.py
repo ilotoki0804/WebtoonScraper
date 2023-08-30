@@ -1,4 +1,5 @@
 """Download webtoons automatiallly or easily"""
+# pylint: disable=logging-fstring-interpolation
 
 from __future__ import annotations
 import asyncio
@@ -78,7 +79,7 @@ async def get_webtoon_platform(titleid: TitleId, is_auto_select: bool = False) -
         try:
             scraper = await get_scraper_instance(platform_name)
             return platform_name, await scraper.check_if_legitimate_titleid(titleid)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logging.warning(f'An error occured. Skipping {platform_name}')
             logging.warning(f'error: {e}')
             return platform_name, None
@@ -118,31 +119,31 @@ async def get_webtoon_platform(titleid: TitleId, is_auto_select: bool = False) -
         # 타입 힌트가 없을 경우 더 효율적인 동일한 코드
         # results: list[tuple[WebtoonPlatforms, str]] = list(filter(lambda x: x[1] is not None, results_raw))
         results: list[tuple[WebtoonPlatforms, str]] = [result for result in results_raw if result[1] is not None]
-
     if (webtoon_length := len(results)) == 1:
         logging.warning(f"Webtoon's platform is assumed to be {results[0][0]}")
         return results[0][0]
-    elif webtoon_length == 0:
+    if webtoon_length == 0:
         logging.warning(f"There's no webtoon that webtoon ID is {titleid}.")
-    else:
-        for i, (platform, name) in enumerate(results, 1):
-            logging.warning(f'{i}. {platform}: {name}')
+        return None
 
-        platform_no = '' if is_auto_select else input(
-            'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): '
-        )
+    for i, (platform, name) in enumerate(results, 1):
+        logging.warning(f'{i}. {platform}: {name}')
 
-        try:
-            platform_no = 1 if platform_no == '' else int(platform_no)
-        except ValueError as e:
-            raise ValueError('Webtoon ID should be integer.') from e
+    platform_no = '' if is_auto_select else input(
+        'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): '
+    )
 
-        try:
-            selected_platform, selected_webtoon = results[platform_no - 1]
-        except IndexError:
-            raise ValueError('Exceeded the range of webtoons.')
-        logging.info(f'Webtoon {selected_webtoon} is selected.')
-        return selected_platform
+    try:
+        platform_no = 1 if platform_no == '' else int(platform_no)
+    except ValueError as e:
+        raise ValueError('Webtoon ID should be integer.') from e
+
+    try:
+        selected_platform, selected_webtoon = results[platform_no - 1]
+    except IndexError as e:
+        raise ValueError('Exceeded the range of webtoons.') from e
+    logging.info(f'Webtoon {selected_webtoon} is selected.')
+    return selected_platform
 
 
 async def get_scraper_instance(webtoon_type: WebtoonPlatforms) -> Scraper:
@@ -174,7 +175,7 @@ async def get_scraper_instance(webtoon_type: WebtoonPlatforms) -> Scraper:
 
 async def get_webtoon_async(
         titleid: TitleId,
-        webtoon_type: WebtoonPlatforms | None= None,
+        webtoon_type: WebtoonPlatforms | None = None,
         *,
         merge: int | None = None,
         cookie: str | None = None,
