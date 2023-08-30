@@ -18,8 +18,9 @@ DEFAULT_STATE: Final = 'default_state'
 MERGED: Final = 'merged'
 UNIFIED: Final = 'unified'
 NOT_MATCHED: Final = 'not_matched'
+WEBTOONS_DIRECTORY: Final = 'webtoons_directory'
 
-DIRECTORY_STATES = Literal['default_state', 'merged', 'unified', 'not_matched']
+DIRECTORY_STATES = Literal['default_state', 'merged', 'unified', 'not_matched', 'webtoons_directory']
 
 PathOrStr = str | Path
 
@@ -235,49 +236,49 @@ class FolderMerger:
         if not episode_split:
             if re.search(r'^(\d+)~(\d+)', episode_name):
                 raise ValueError(
-                    'Episode name is not valid. It\'s because you tried merging already merged webtoon folder.'
+                    'Episode name is not valid. It\'s because you tried merging already merged webtoon directory.'
                 )
             raise ValueError('Episode name is not valid.')
         image_no, image_extension = image_name.split('.')[0], image_name.split('.')[-1]
         return f'{episode_split[1]}.{image_no}. {episode_split[2]}.{image_extension}'
 
-    def is_unified(self, directory: PathOrStr) -> bool:
-        episodes_or_images: list[str] = os.listdir(directory)
-        webtoon_is_merged = re.compile(r'.+[.](jpg|jpeg|png|webp|gif)$', re.I)
-        # webtoon_is_merged = re.compile(r'^.+\..{3,4}$', re.I)
-        number_of_images = sum(
-            1 if webtoon_is_merged.match(episode_or_image) else 0
-            for episode_or_image in episodes_or_images
-        )
-        return number_of_images not in {1, 0}
-
     def fast_check_directory_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
         """
         detailed_check_directory_state는 사용자용으로, 정확한 오류 메시지와 체크를 목적으로 하지만,
         이 함수는 프로그램 내에서 assertion을 목적으로, 빠른 체크를 목적으로 합니다.
+        따라서 episodes_or_images의 길이가 0이나 1일 때를 제외하고는 warning을 제공하지 않습니다.
         주의: detailed_check_directory_state를 수정할 때는 fast_check_directory_state도 수정해야 합니다.
         """
         episodes_or_images: list[str] = os.listdir(directory)
 
-        if len(episodes_or_images) <= 1:
-            logging.warning(f"It looks like the directory is {'almost' if len(episodes_or_images) else ''} empty. "
-                            "Check your directory again.")
+        # not episodes_or_images는 일관성을 떨어뜨리기 때문에 사용하지 않는다.
+        if len(episodes_or_images) == 0:  # sourcery skip
+            logging.warning("It looks like the directory is empty. It cannot be something")
+            return NOT_MATCHED
 
-        # 확장자를 직접 이용하지 않기 때문에 re.I가 필요 없다.
+        if len(episodes_or_images) == 1:
+            logging.warning("It looks like the directory is almost empty. "
+                            "Check your directory again. Note that return value can be incorrect.")
+
         webtoon_is_unified = re.compile(r'\d{4}[.]\d{3}[.].+[.][a-zA-Z]{3,4}$')
         webtoon_is_merged = re.compile(r'\d{4}~\d{4}')
         webtoon_is_default_state = re.compile(r'^\d{4}\. .+$')
-        it_is_not_webtoon_rather_webtoons_folder = re.compile(r'^.+[(].+[)]([(]merged[)])?$')
+        it_is_not_webtoon_rather_webtoons_directory = re.compile(r'^.+[(].+[)]([(]merged[)])?$')
 
-        directory_states: list[DIRECTORY_STATES] = [UNIFIED, MERGED, DEFAULT_STATE]
-        regexes_to_use = [webtoon_is_unified, webtoon_is_merged, webtoon_is_default_state, it_is_not_webtoon_rather_webtoons_folder]
-        for state_name, regex in zip(directory_states, regexes_to_use):
+        state_and_regexes: dict[DIRECTORY_STATES, re.Pattern[str]] = {
+            UNIFIED: webtoon_is_unified,
+            MERGED: webtoon_is_merged,
+            DEFAULT_STATE: webtoon_is_default_state,
+            WEBTOONS_DIRECTORY: it_is_not_webtoon_rather_webtoons_directory
+        }
+        for state_name, regex in state_and_regexes.items():
             # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
             number_of_images_NOT_matched = sum(
                 0 if regex.match(episode_or_image) else 1
                 for episode_or_image in episodes_or_images
             )
 
+            logging.debug(number_of_images_NOT_matched)
             if number_of_images_NOT_matched <= 1:
                 return state_name
 
@@ -286,84 +287,80 @@ class FolderMerger:
     def detailed_check_directory_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
         """
         디렉토리가 merge된 상태인지 기본 상태(default_state)인지, unified된 상태인지, 아니면 일치하는 게 없는지 확인합니다.
-        사용자용으로, 상세한 경고 메시지와 정확한 체크를 제공합니다. 단, 중요한 프로그램을 처음 가동할 때는 사용할 수 있습니다.
+        사용자용으로, 상세한 경고 메시지와 정확한 체크를 제공합니다.
+        일반적으로는 fast_check_directory_state만으로도 충분하며, 따라서 프로그램 내에서는 fast만 사용합니다.
         주의: fast_check_directory_state를 수정할 때는 detailed_check_directory_state도 수정해야 합니다.
         """
         episodes_or_images: list[str] = os.listdir(directory)
+
+        if len(episodes_or_images) == 0:  # sourcery skip
+            logging.warning("It looks like the directory is empty. It cannot be something")
+            return NOT_MATCHED
 
         # 확장자를 직접 이용하지 않기 때문에 re.I가 필요 없다.
         webtoon_is_unified = re.compile(r'\d{4}[.]\d{3}[.].+[.][a-zA-Z]{3,4}$')
         webtoon_is_merged = re.compile(r'\d{4}~\d{4}')
         webtoon_is_default_state = re.compile(r'^\d{4}\. .+$')
-        it_is_not_webtoon_rather_webtoons_folder = re.compile(r'^.+[(].+[)]([(]merged[)])?$')
+        it_is_not_webtoon_rather_webtoons_directory = re.compile(r'^.+[(].+[)]([(]merged[)])?$')
 
         # # less error-prone but lossely checking regexes
         # webtoon_is_unified = re.compile(r'\d+[.]\d+[.].+[.].{3,4}$')
         # webtoon_is_merged = re.compile(r'\d+~\d+')
         # webtoon_is_default_state = re.compile(r'^\d{4}\. .+$')  # unified와 구별하려면 space가 필수이다.
+        # it_is_not_webtoon_rather_webtoons_directory = re.compile(r'^.+[(].+[)]([(]merged[)])?$')
 
         # webtoon_is_unified와 webtoon_is_default_state가 동시에 True라면 unified로 결과를 출력하는 것이 맞다.
         # webtoon_is_unified가 더 엄격한 규칙을 가지고 있기 때문이다.
         # webtoon_is_merged는 워낙 특이해서 false positive의 확률이 거의 없다.
 
-        directory_number_of_not_matched: list[int] = []
-        directory_bool_states: list[bool] = []
-        directory_state_names: list[DIRECTORY_STATES | Literal['webtoons_folder']] = []
+        directory_states_dict: dict[DIRECTORY_STATES, tuple[bool, int]] = {}
 
-        directory_states: list[DIRECTORY_STATES | Literal['webtoons_folder']] = [UNIFIED, MERGED, DEFAULT_STATE, 'webtoons_folder']
-        regexes_to_use = [webtoon_is_unified, webtoon_is_merged, webtoon_is_default_state, it_is_not_webtoon_rather_webtoons_folder]
-        for state_name, regex in zip(directory_states, regexes_to_use):
+        state_and_regexes: dict[DIRECTORY_STATES, re.Pattern[str]] = {
+            UNIFIED: webtoon_is_unified,
+            MERGED: webtoon_is_merged,
+            DEFAULT_STATE: webtoon_is_default_state,
+            WEBTOONS_DIRECTORY: it_is_not_webtoon_rather_webtoons_directory
+        }
+        for state_name, regex in state_and_regexes.items():
             # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
             number_of_images_NOT_matched = sum(
                 0 if regex.match(episode_or_image) else 1
                 for episode_or_image in episodes_or_images
             )
 
-            directory_number_of_not_matched.append(number_of_images_NOT_matched)
-            directory_bool_states.append(number_of_images_NOT_matched <= 1)
-            directory_state_names.append(state_name)
+            # tuple의 0번째 값은 해당 state가 맞다는 의미이다.
+            directory_states_dict[state_name] = (number_of_images_NOT_matched <= 1, number_of_images_NOT_matched)
 
-        if directory_bool_states[directory_states.index('webtoons_folder')]:
-            logging.warning('This directory is looks like a webtoons_folder. Check your folder again.')
-            if sum(directory_bool_states) == 1:
-                return NOT_MATCHED
-        webtons_folder_index = directory_states.index('webtoons_folder')
-        del (directory_number_of_not_matched[webtons_folder_index],
-             directory_bool_states[webtons_folder_index],
-             directory_state_names[webtons_folder_index])
+        not_matched_state = sum(value[0] for value in directory_states_dict.values())
 
-        match sum(directory_bool_states):  # 3.10 이상만 실행 가능.
-            case 0:
-                logging.warning('This directory is nether unified, merged nor default_state. '
-                                "Probably the directory is not a webtoon folder.")
-                return NOT_MATCHED
+        if not_matched_state == 0:
+            logging.warning('This directory is not any specific state. '
+                            "Probably the directory is not a webtoon directory. "
+                            "Or something went wrong when being processed.")
 
-            case 1:
-                state_name = directory_state_names[directory_bool_states.index(True)]
-                assert state_name != 'webtoons_folder'
-                return state_name
+        if not_matched_state == 1:
+            for state_name, (bool_state, int_state) in directory_states_dict.items():
+                if bool_state:
+                    return state_name
 
-            case 2:
-                unmatched_directory_state_index = directory_bool_states.index(False)
-                del (directory_number_of_not_matched[unmatched_directory_state_index],
-                     directory_bool_states[unmatched_directory_state_index],
-                     directory_state_names[unmatched_directory_state_index])
-                logging.warning(f'This directory is either {directory_state_names[0]} and {directory_state_names[1]}. '
-                                "Probably there's a conflict or ")
+        elif not_matched_state == 2:
+            detected_states = [state_name for state_name, (bool_state, int_state)
+                               in directory_states_dict.items() if bool_state]
 
-            case _:
-                match len(episodes_or_images):
-                    case 0:
-                        logging.warning('This directory is either unified, merged, and default_state. '
-                                        "It's because directory is empty.")
-                    case 1:
-                        logging.warning('This directory is either unified, merged, and default_state. '
-                                        "It's because directory only contains a single file, like thumbnail or a webtoon folder.")
-                    case _:
-                        logging.warning('This directory is either unified, merged, and default_state. '
-                                        "Maybe it's because directory is not a webtoon folder.")
+            logging.warning(f'This directory is either {detected_states[0]} and {detected_states[1]}. '
+                            "Probably there's a conflict. Please check your directory again.")
 
-                return NOT_MATCHED
+        else:
+            # 참고: episodes_or_images의 길이가 0인 경우는 이미 앞에서 다룸.
+            number_of_0s_in_int_state = sum(value[1] == 0 for value in directory_states_dict.values())
+            if len(episodes_or_images) <= 1 and number_of_0s_in_int_state == 1:
+                for state_name, (bool_state, int_state) in directory_states_dict.items():
+                    if int_state == 0:
+                        return state_name
+
+            directory_states_concatenated = ", ".join(state_name for state_name, (bool_state, int_state)
+                                                      in directory_states_dict.items() if bool_state)
+            logging.warning(f'This directory is {directory_states_concatenated}. Please check your directory again.')
 
         return NOT_MATCHED
 
