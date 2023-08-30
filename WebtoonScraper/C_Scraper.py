@@ -211,7 +211,7 @@ class Scraper(metaclass=ABCMeta):
         Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
         # sourcery skip: remove-zero-from-range
-        table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')
+        table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')  # pylint: disable=invalid-character-backspace
         table.update(
             {i: 32 for i in range(0, 31)}
         )
