@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from async_lru import alru_cache
 from requests_utils.exceptions import EmptyResultError
 
@@ -35,8 +36,9 @@ class WebtoonOriginalsScraper(Scraper):
     async def get_webtoon_data(self, titleid):
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={titleid}'
-        title_no_tag = self.requests.get(url).soup_select_one('#_listUl > li', no_empty_result=True)
-        title_no = int(title_no_tag['data-episode-no'])
+        title_no_str = self.requests.get(url).soup_select_one('#_listUl > li', no_empty_result=True).get('data-episode-no')
+        assert isinstance(title_no_str, str)
+        title_no = int(title_no_str)
 
         # getting list of titles
         selector = '#_bottomEpisodeList > div.episode_cont > ul > li'
@@ -46,7 +48,9 @@ class WebtoonOriginalsScraper(Scraper):
         subtitles = []
         episode_ids = []
         for element in selected:
-            episode_no = int(element["data-episode-no"])
+            episode_no_str = element.get('data-episode-no')
+            assert isinstance(episode_no_str, str)
+            episode_no = int(episode_no_str)
             # subtitles[episode_no] = element.select_one("span.subj").text
             subtitles.append(element.select_one("span.subj").text)
             episode_ids.append(episode_no)

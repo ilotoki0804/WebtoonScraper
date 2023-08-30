@@ -26,6 +26,7 @@
 # TODO: merge를 merge_amout로 변경하기
 # TODO: 웹툰 메인 페이지에서 받는 정보는 따로 빼기
 # TODO: cache 대신 객체 형식으로 변경
+# TODO: 웹툰 다운 받기 전에 is_merged 체크 한 번 하기
 
 from __future__ import annotations
 import re
@@ -98,7 +99,7 @@ class Scraper(metaclass=ABCMeta):
     # RELATED TO CustomDefaults
 
     def update_requests(self):
-        kwargs = {}
+        kwargs: dict = {}
         if hasattr(self, '_TIMEOUT'):
             kwargs.update(timeout=self.TIMEOUT)
 
