@@ -22,11 +22,11 @@ if __name__ == '__main__':
         long_description_content_type='text/markdown',
         license='MIT',
         url='https://github.com/ilotoki0804/WebtoonScraper',
-        install_requires=Path('requirements.txt').read_text().split(),
+        install_requires=Path('requirements.txt').read_text(encoding='utf-8').split(),
         packages=find_packages(exclude=[]),
         keywords=['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
         python_requires='>=3.10',
-        package_data={},
+        package_data={"WebtoonScraper": ["py.typed"]},
         zip_safe=False,
         classifiers=[
             "License :: OSI Approved :: MIT License",
