@@ -8,33 +8,48 @@ from collections import defaultdict
 from pathlib import Path
 import logging
 
+
 class FolderMerger:
     """웹툰 뷰어 앱에서 정주행하기 좋도록 회차들을 단위에 따라 묶습니다."""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.base_dir = 'webtoon'
         self.target_dir = 'webtoon'
 
     @property
-    def base_dir(self):
+    def base_dir(self) -> Path:
         """웹툰이 저장되어 있는, 바꿀 웹툰이 있는 디렉토리입니다."""
         return self._base_dir
 
     @base_dir.setter
-    def base_dir(self, base_dir):
+    def base_dir(self, base_dir) -> None:
         self._base_dir = Path(base_dir)
 
     @property
-    def target_dir(self):
+    def target_dir(self) -> Path:
         """다 마친 웹툰을 저장할 디렉토리입니다. `self.base_dir`와 같아도 상관 없습니다."""
-        return self._targe_dir
+        return self._target_dir
 
     @target_dir.setter
-    def target_dir(self, targe_dir):
-        self._targe_dir = Path(targe_dir)
+    def target_dir(self, target_dir) -> None:
+        self._target_dir = Path(target_dir)
 
     ############### MAIN FUNCTIONALITY ###############
 
-    def select_webtoon_wanted_to_merge(self, merge_amount: int):
+    def select_webtoon_and_merge(self, merge_amount: int) -> None:
+        """
+        Selects a webtoon from the base directory to merge.
+
+        Args:
+            merge_amount (int): The number of episodes to merge.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If an invalid input is provided.
+            IndexError: If an invalid index is provided.
+        """
         webtoons = os.listdir(self.base_dir)
         print('Select webtoon to merge.')
         for i, webtoon in enumerate(webtoons, 1):
@@ -62,28 +77,47 @@ class FolderMerger:
         self.merge_webtoon_episodes(self.base_dir / selected_webtoon_dir_name, merge_amount)
         print('Merging webtoon has ended.')
 
-    def merge_webtoons_in_directory(self, merge_amount):
+    def merge_webtoons_in_directory(self, merge_amount) -> None:
+        """해당 디렉토리에 있는 모든 웹툰 디렉토리들을 합칩니다."""
         webtoons = os.listdir(self.base_dir)
         for webtoon in webtoons:
             webtoon_dir = self.target_dir / webtoon
             self.merge_webtoon_episodes(webtoon_dir, merge_amount)
 
+    # def merge_webtoon_episodes_in_directory(
+    #     self,
+    #     merge_amount
+    # ):
+    #     ...
+
     def merge_webtoon_episodes(self,
                                webtoon_dir: Path,
                                merge_amount,
                                # merge_last_bundle=True
-                               ):
-        """
-        _merge_webtoon_episodes는 base_dir/alt_dir 두 가지 input을 받고 두 값이 같아서는 안 되지만,
-        merge_webtoon_episodes는 한 가지 input만 받고 한 폴더 내의 상태를 바꿔준다.
-        """
+                               ) -> None:
+        """웹툰을 합칩니다. 이때 같은 디렉토리를 변환합니다."""
         # base_dir와 alt_dir가 같은 경우를 대비해 이름을 달리함.
         temp_alt_webtoon_dir = Path(f'{webtoon_dir}(merged)')
         self._merge_webtoon_episodes(webtoon_dir, temp_alt_webtoon_dir, merge_amount=merge_amount, merge_last_bundle=True)
         os.rmdir(webtoon_dir)
         temp_alt_webtoon_dir.rename(webtoon_dir)
 
-    def _merge_webtoon_episodes(self, base_webtoon_dir: Path, alt_webtoon_dir: Path, merge_amount, merge_last_bundle=True):
+    def _merge_webtoon_episodes(self, base_webtoon_dir: Path, alt_webtoon_dir: Path, merge_amount: int, merge_last_bundle=True):
+        """
+        _merge_webtoon_episodes는 base_dir/alt_dir 두 가지 input을 받고 두 값이 같아서는 안 되지만,
+        merge_webtoon_episodes는 한 웹툰의 merge 상태를 바꿔줍니다.
+        만약 웹툰을 합친 결과를 기존 디렉토리에 그대로 반영하고 싶다면 merge_webtoon_episodes를 사용하고,
+        다른 디렉토리로 분리하고 싶다면 _merge_webtoon_episodes를 사용하세요.
+
+        Args:
+            base_webtoon_dir (Path): _description_
+            alt_webtoon_dir (Path): _description_
+            merge_amount (int): _description_
+            merge_last_bundle (bool, optional): _description_. Defaults to True.
+
+        Raises:
+            NotImplementedError: 만약 base_webtoon_dir와 alt_webtoon_dir가 같은 경우에 생깁니다. merge_webtoons_in_directory를 대신 이용하세요.
+        """
         # base_webtoon_dir와 alt_webtoon_dir가 같으면 안됨!
         if base_webtoon_dir == alt_webtoon_dir:
             raise NotImplementedError('base_webtoon_dir and alt_webtoon_dir cannot be same. Use merge_webtoon_episodes instead.')
@@ -138,12 +172,12 @@ class FolderMerger:
 
     ############### SUB FUNCTIONALITY ###############
 
-    def _make_dir_name(self, images):
+    def _make_dir_name(self, images) -> str:
         episode_id = self._find_episode_id(images)
         return f'{min(episode_id):04d}~{max(episode_id):04d}'
 
     @staticmethod
-    def _find_episode_id(images):
+    def _find_episode_id(images) -> set[int]:
         # episode_id = set(int(image.split('.')[0]) for image in images)
         return {int(image.split('.')[0]) for image in images}
 
@@ -152,7 +186,7 @@ class FolderMerger:
                                 episode_name: str | None = None,
                                 ignore_folders: bool = False,
                                 rename: bool = False
-                                ):
+                                ) -> None:
         """base와 alt 두 종류의 폴더를 받아 base 안의 내용물을 alt로 보내는 함수
 
         Args:
@@ -175,14 +209,14 @@ class FolderMerger:
                 alt_image_name = alt_webtoon_dir / image
             shutil.move(base_image_name, alt_image_name)
 
-    def _unify_webtoon(self, directory):
+    def _unify_webtoon(self, directory) -> None:
         episodes = os.listdir(directory)
         for episode in episodes:
             base_episode_dir = directory / episode
             self._transit_folder_insides(base_episode_dir, directory, episode, rename=True)
             os.rmdir(base_episode_dir)
 
-    def _rename_image(self, image_name, episode_name):
+    def _rename_image(self, image_name, episode_name) -> str:
         episode_split = re.search(r'^(\d+)[.] (.+)', episode_name)
         if not episode_split:
             if re.search(r'^(\d+)~(\d+)', episode_name):
@@ -193,7 +227,7 @@ class FolderMerger:
         image_no, image_extension = image_name.split('.')[0], image_name.split('.')[-1]
         return f'{episode_split[1]}.{image_no}. {episode_split[2]}.{image_extension}'
 
-    def _is_unified(self, directory):
+    def _is_unified(self, directory) -> bool:
         episodes_or_images = os.listdir(directory)
         number_of_images = sum(
             1 if re.match(r'.+[.](jpg|jpeg|png)$', episode_or_image, re.I) else 0
@@ -203,13 +237,13 @@ class FolderMerger:
 
     ############### RESTORE FUNCTIONALITY ###############
 
-    def restore_webtoons_in_directory(self):
+    def restore_webtoons_in_directory(self) -> None:
         webtoons = os.listdir(self.base_dir)
         for webtoon in webtoons:
             webtoon_dir = self.base_dir / webtoon
             self.restore_webtoon(webtoon_dir)
 
-    def restore_webtoon(self, directory: Path):
+    def restore_webtoon(self, directory: Path) -> None:
         # Thumbnail 옮기기
         temp_thumbnail_path = directory / 'thumbnail-TEMP'
         temp_thumbnail_path.mkdir(parents=True)
