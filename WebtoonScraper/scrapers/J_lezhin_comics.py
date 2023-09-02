@@ -38,22 +38,6 @@ class LezhinComicsScraper(Scraper):
         is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
         return f'{title}({titleid}, shuffled)' if is_shuffled else f'{title}({titleid})'
 
-    async def lezhin_unshuffle_process(self, titleid, base_webtoon_dir: Path):
-        """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
-        is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
-        if not is_shuffled:
-            return base_webtoon_dir
-        alt_webtoon_dir = Path(str(base_webtoon_dir).removesuffix(', shuffled)') + ')')
-        alt_webtoon_dir.mkdir(exist_ok=True)
-        if is_shuffled and self.UNSHUFFLE:
-            await self.unshuffle_webtoon(titleid, base_webtoon_dir, alt_webtoon_dir)
-
-        if self.DELETE_SHUFFLED_FILE:
-            shutil.rmtree(base_webtoon_dir)
-            logging.info('Shuffle file is deleted.')
-
-        return alt_webtoon_dir
-
     # # 작동은 하지만 코드가 더러워서 사용하지 않음. 하지만 현재 방법보다 더 잘 작동할 가능성이 있어서 남겨둠.
     # # 사용하려면 pyjsparser를 설치해야 함. 현재는 의존성 목록에서 제거됨.
     # @alru_cache(maxsize=4)
@@ -292,6 +276,22 @@ class LezhinComicsScraper(Scraper):
             image_urls.append(image_url)
 
         return image_urls
+
+    async def lezhin_unshuffle_process(self, titleid, base_webtoon_dir: Path):
+        """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
+        is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
+        if not is_shuffled:
+            return base_webtoon_dir
+        alt_webtoon_dir = Path(str(base_webtoon_dir).removesuffix(', shuffled)') + ')')
+        alt_webtoon_dir.mkdir(exist_ok=True)
+        if is_shuffled and self.UNSHUFFLE:
+            await self.unshuffle_webtoon(titleid, base_webtoon_dir, alt_webtoon_dir)
+
+        if self.DELETE_SHUFFLED_FILE:
+            shutil.rmtree(base_webtoon_dir)
+            logging.info('Shuffle file is deleted.')
+
+        return alt_webtoon_dir
 
     async def unshuffle_webtoon(self, titleid, base_webtoon_dir, alt_webtoon_dir, force_unshuffle: bool = False, process_number: int = 8):
         def get_episode_dir_no(episode_dir_name: str):
