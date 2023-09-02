@@ -3,6 +3,5 @@ beautifulsoup4
 requests
 async_lru
 demjson3
-pyjsparser
 Pillow
 requests_utils

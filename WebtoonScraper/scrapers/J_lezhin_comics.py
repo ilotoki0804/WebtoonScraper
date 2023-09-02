@@ -54,71 +54,74 @@ class LezhinComicsScraper(Scraper):
 
         return alt_webtoon_dir
 
-    @alru_cache(maxsize=4)
-    async def old_get_webtoon_data(self, titleid: str):
-        """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-        title_ = self.requests.get(f'{self.BASE_URL}/{titleid}').soup_select_one('meta[property="og:title"]')
-        if title_ == "404 - 레진코믹스":
-            raise ValueError(f'Invalid {titleid = }')
+    # # 작동은 하지만 코드가 더러워서 사용하지 않음. 하지만 현재 방법보다 더 잘 작동할 가능성이 있어서 남겨둠.
+    # # 사용하려면 pyjsparser를 설치해야 함. 현재는 의존성 목록에서 제거됨.
+    # @alru_cache(maxsize=4)
+    # async def old_get_webtoon_data(self, titleid: str):
+    #     """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
+    #     response = self.requests.get(f'{self.BASE_URL}/{titleid}')
+    #     title_ = response.soup_select_one('meta[property="og:title"]')
+    #     if title_ == "404 - 레진코믹스":
+    #         raise ValueError(f'Invalid {titleid = }')
 
-        title = soup.select_one("h2.comicInfo__title").text
-        thumbnail_url = soup.select_one('meta[property="og:image"]')["content"]
+    #     title = response.soup_select_one("h2.comicInfo__title").text
+    #     thumbnail_url = response.soup_select_one('meta[property="og:image"]')["content"]
 
-        parsed = pyjsparser.parse(soup.select("script")[5].text.removeprefix("<script>").removesuffix("</script>"))
+    #     parsed = pyjsparser.parse(response.soup_select("script")[5].text.removeprefix("<script>").removesuffix("</script>"))
 
-        # title = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][1]["value"]["properties"][0]["value"]["value"]
-        titleid_int = int(parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][0]["value"]["raw"])  # ~ contentId
-        logging.debug(f'length of body > 1 > 1: {parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]}')
-        episodes_data = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][-1]["value"]["elements"]
-        # is_shuffled: bool = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][19]["value"]["properties"][0]["value"]["value"]  # imageShuffle
+    #     # title = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][1]["value"]["properties"][0]["value"]["value"]
+    #     titleid_int = int(parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][0]["value"]["raw"])  # ~ contentId
+    #     logging.debug(f'length of body > 1 > 1: {parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]}')
+    #     episodes_data = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][-1]["value"]["elements"]
+    #     # is_shuffled: bool = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][19]["value"]["properties"][0]["value"]["value"]  # imageShuffle
 
-        def determine_is_shuffled(parsed):
-            for property_index in range(20):
-                for possibily_shuffled in parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]:
-                    try:
-                        attribute = possibily_shuffled["value"]["properties"][property_index]["key"]["value"]
-                    except (KeyError, IndexError):
-                        continue
-                    else:
-                        if attribute == "imageShuffle":
-                            return possibily_shuffled["value"]["properties"][property_index]["value"]["value"]
-            return False
-        is_shuffled = determine_is_shuffled(parsed)
+    #     def determine_is_shuffled(parsed):
+    #         for property_index in range(20):
+    #             for possibily_shuffled in parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]:
+    #                 try:
+    #                     attribute = possibily_shuffled["value"]["properties"][property_index]["key"]["value"]
+    #                 except (KeyError, IndexError):
+    #                     continue
+    #                 else:
+    #                     if attribute == "imageShuffle":
+    #                         return possibily_shuffled["value"]["properties"][property_index]["value"]["value"]
+    #         return False
+    #     is_shuffled = determine_is_shuffled(parsed)
 
-        episode_id_strings = []
-        subtitles = []
-        episode_id_ints = []
-        infomation_chars = []
-        for episode in episodes_data:
-            episode_id_str: str = episode["properties"][1]["value"]["value"]
-            subtitle = episode["properties"][2]["value"]["properties"][0]["value"]["value"]
-            episode_id_int: int = int(episode["properties"][0]["value"]["raw"])  # in other words, 'episodeId'
+    #     episode_id_strings = []
+    #     subtitles = []
+    #     episode_id_ints = []
+    #     infomation_chars = []
+    #     for episode in episodes_data:
+    #         episode_id_str: str = episode["properties"][1]["value"]["value"]
+    #         subtitle = episode["properties"][2]["value"]["properties"][0]["value"]["value"]
+    #         episode_id_int: int = int(episode["properties"][0]["value"]["raw"])  # in other words, 'episodeId'
 
-            # n, e, g 등. episode_id_str의 x(특별편)은 e로 바뀌는 듯함.
-            infomation_char = episode["properties"][2]["value"]["properties"][1]["value"]['value']
-            expired = episode["properties"][3]["value"]["properties"][0]["value"]['value']
-            not_for_sale = episode["properties"][3]["value"]["properties"][1]["value"]['value']
+    #         # n, e, g 등. episode_id_str의 x(특별편)은 e로 바뀌는 듯함.
+    #         infomation_char = episode["properties"][2]["value"]["properties"][1]["value"]['value']
+    #         expired = episode["properties"][3]["value"]["properties"][0]["value"]['value']
+    #         not_for_sale = episode["properties"][3]["value"]["properties"][1]["value"]['value']
 
-            if infomation_char != 'g':
-                logging.debug(f'Unique {infomation_char = } of {subtitle}')
-            if not_for_sale:
-                logging.warning(f'This episode is not for sale: {subtitle}')
-            if expired:
-                logging.warning(f'This episode is expired: {subtitle}')
-            if infomation_char != 'g' and not episode_id_str.startswith(infomation_char):
-                logging.warning(f'{infomation_char = } is not matched with {episode_id_str = }')
+    #         if infomation_char != 'g':
+    #             logging.debug(f'Unique {infomation_char = } of {subtitle}')
+    #         if not_for_sale:
+    #             logging.warning(f'This episode is not for sale: {subtitle}')
+    #         if expired:
+    #             logging.warning(f'This episode is expired: {subtitle}')
+    #         if infomation_char != 'g' and not episode_id_str.startswith(infomation_char):
+    #             logging.warning(f'{infomation_char = } is not matched with {episode_id_str = }')
 
-            # print(f'{episode_id_str = }, {subtitle = }, {expired = }, {not_for_sale = }, {episode_id_int = }, {infomation_char = }')
-            episode_id_strings.append(episode_id_str)
-            subtitles.append(subtitle)
-            episode_id_ints.append(episode_id_int)
-            infomation_chars.append(infomation_char)
+    #         # print(f'{episode_id_str = }, {subtitle = }, {expired = }, {not_for_sale = }, {episode_id_int = }, {infomation_char = }')
+    #         episode_id_strings.append(episode_id_str)
+    #         subtitles.append(subtitle)
+    #         episode_id_ints.append(episode_id_int)
+    #         infomation_chars.append(infomation_char)
 
-        # 현재 titleid_str(titleid와 동일)과 infomation_chars는 사용되는 곳이 없음
-        return {'title': title, 'webtoon_thumbnail': thumbnail_url,
-                'episode_ids': episode_id_strings[::-1], 'subtitles': subtitles[::-1],
-                'episode_id_ints': episode_id_ints[::-1], 'infomation_chars': infomation_chars[::-1],
-                'titleid_str': titleid, 'titleid_int': titleid_int, 'is_shuffled': is_shuffled, }
+    #     # 현재 titleid_str(titleid와 동일)과 infomation_chars는 사용되는 곳이 없음
+    #     return {'title': title, 'webtoon_thumbnail': thumbnail_url,
+    #             'episode_ids': episode_id_strings[::-1], 'subtitles': subtitles[::-1],
+    #             'episode_id_ints': episode_id_ints[::-1], 'infomation_chars': infomation_chars[::-1],
+    #             'titleid_str': titleid, 'titleid_int': titleid_int, 'is_shuffled': is_shuffled, }
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid: str, get_paid_episode: bool = False, get_unusable_episode: bool = False):
