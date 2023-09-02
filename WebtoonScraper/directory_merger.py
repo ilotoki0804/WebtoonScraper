@@ -13,7 +13,7 @@ from typing_extensions import Literal, Final, NamedTuple
 
 from matplotlib.widgets import EllipseSelector
 
-if __name__ in {'__main__', 'a_folder_merger'}:
+if __name__ in {'__main__', 'directory_merger'}:
     from exceptions import DirectoryStateUnmatched
 else:
     from .exceptions import DirectoryStateUnmatched

@@ -10,7 +10,7 @@ Scrape webtoons with ease.
 """
 
 
-if __name__ == "__main__":
+if __name__ in {"__main__", "__init__"}:
     from directory_merger import FolderMerger
     # import webtoon
     from scrapers.B_naver_webtoon import NaverWebtoonScraper
