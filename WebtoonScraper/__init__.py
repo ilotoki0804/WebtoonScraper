@@ -11,7 +11,7 @@ Scrape webtoons with ease.
 
 
 if __name__ in {"__main__", "__init__"}:
-    from directory_merger import FolderMerger
+    from directory_merger import DirectoryMerger
     # import webtoon
     from scrapers.B_naver_webtoon import NaverWebtoonScraper
     from scrapers.C_best_challenge import BestChallengeScraper
@@ -24,7 +24,7 @@ if __name__ in {"__main__", "__init__"}:
     from scrapers.J_lezhin_comics import LezhinComicsScraper
     from scrapers.K_kakaopage import KakaopageScraper
 else:
-    from .directory_merger import FolderMerger
+    from .directory_merger import DirectoryMerger
     # from . import webtoon
     from .scrapers.B_naver_webtoon import NaverWebtoonScraper
     from .scrapers.C_best_challenge import BestChallengeScraper

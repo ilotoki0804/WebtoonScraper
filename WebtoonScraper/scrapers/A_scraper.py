@@ -54,9 +54,9 @@ from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import FolderMerger
+    from WebtoonScraper.directory_merger import DirectoryMerger
 else:
-    from ..directory_merger import FolderMerger
+    from ..directory_merger import DirectoryMerger
 
 TitleId = int | tuple[int, int] | str
 
@@ -284,7 +284,7 @@ class Scraper(metaclass=ABCMeta):
 
         if merge is not None:
             logging.warning('Merging webtoon has started...')
-            fd = FolderMerger()
+            fd = DirectoryMerger()
             # logging.warning(webtoon_dir, fd)
             fd.merge_webtoon(webtoon_dir, 5)
             logging.warning('Merging webtoon ended.')
