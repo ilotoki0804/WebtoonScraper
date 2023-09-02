@@ -1,5 +1,9 @@
 """This module provides FolderMerger class."""
 # re.match로 변경하기
+# dir > directory
+# select_.. 변경
+# 클래스에서 함수로 변경
+# 디렉토리 복구 함수 제작
 from __future__ import annotations
 import os
 import shutil
@@ -10,8 +14,6 @@ import logging
 from typing import Sequence
 
 from typing_extensions import Literal, Final, NamedTuple
-
-from matplotlib.widgets import EllipseSelector
 
 if __name__ in {'__main__', 'directory_merger'}:
     from exceptions import DirectoryStateUnmatched
@@ -96,11 +98,11 @@ class FolderMerger:
 
     ############### MAIN FUNCTIONALITY ###############
 
-    def select_webtoon_and_merge(self, merge_amount: int) -> None:
+    def select_webtoon_and_merge_or_restore(self, merge_amount: int) -> None:
         """소스 디렉토리에 있는 웹툰 디렉토리 중 사용자가 선택한 웹툰을 합칩니다."""
         webtoons = os.listdir(self.source_dir)
 
-        print('Select webtoon to merge.')
+        print('Select webtoon to merge or restore.')
         if len(webtoons) < 10:
             for i, webtoon in enumerate(webtoons, 1):
                 print(f'{i}. {webtoon}')
@@ -126,9 +128,24 @@ class FolderMerger:
             except AttributeError:  # for under Python 3.11
                 raise IndexError('Invalid index.') from e
 
-        print(f'You selected {selected_webtoon_dir_name}. Merging webtoon has started.')
-        self.merge_webtoon(self.source_dir / selected_webtoon_dir_name, merge_amount)
-        print('Merging webtoon has ended.')
+        directory_state = self.fast_check_dir_state(selected_webtoon_dir_name)
+        if directory_state == DEFAULT_STATE:
+            user_answer = input('Directory seems default state. Merge it? (merge, restore, anything else: merge)').lower()
+            if user_answer not in {'merge', 'restore'}:
+                user_answer = 'merge'
+        elif directory_state == MERGED:
+            user_answer = input('Directory seems default state. Merge it? (merge, restore, anything else: merge)').lower()
+            if user_answer not in {'merge', 'restore'}:
+                user_answer = 'restore'
+        else:
+            raise DirectoryStateUnmatched('Directort state is nether default state nor merged. Cannot merge or restore.')
+
+        print(f'You selected {selected_webtoon_dir_name}. {"Merging" if user_answer == "merge" else "Restoring"} webtoon has started.')
+        if user_answer == 'merge':
+            self.merge_webtoon(self.source_dir / selected_webtoon_dir_name, merge_amount)
+        else:
+            self.restore_webtoon(self.source_dir / selected_webtoon_dir_name)
+        print(f'{"Merging" if user_answer == "merge" else "Restoring"} webtoon has ended.')
 
     def merge_webtoons_from_source_dir(self, merge_amount: int) -> None:
         """소스 디렉토리에 있는 모든 웹툰 디렉토리들을 합칩니다."""
@@ -167,7 +184,7 @@ class FolderMerger:
         if source_webtoon_dir == target_webtoon_dir:
             raise NotImplementedError('base_webtoon_dir and alt_webtoon_dir cannot be same. Use merge_webtoon_episodes instead.')
 
-        dir_state = self.fast_check_directory_state(source_webtoon_dir)
+        dir_state = self.fast_check_dir_state(source_webtoon_dir)
         if dir_state == MERGED and merge_amount == 1:
             logging.warning('Value of episode_bundle is 1, so autometically revert directory state to original.')
             self.restore_webtoon(source_webtoon_dir)
@@ -203,7 +220,7 @@ class FolderMerger:
 
         # 폴더에 넣는 과정
         for _, images in merged_images_list:
-            alt_dir_name = self.make_merged_directory_name(images)
+            alt_dir_name = self.make_merged_dir_name(images)
             images_dir = target_webtoon_dir / alt_dir_name
             images_dir.mkdir(parents=True, exist_ok=True)
             for image in images:
@@ -284,7 +301,7 @@ class FolderMerger:
             unique_ids.add(int(result.group('episode_no')))
         return unique_ids
 
-    def make_merged_directory_name(self, image_names: list[ImageFileName]) -> str:
+    def make_merged_dir_name(self, image_names: list[ImageFileName]) -> str:
         episode_id = self.find_episode_ids_of_unified_images(image_names)
         return f'{min(episode_id):04d}~{max(episode_id):04d}'
 
@@ -297,7 +314,7 @@ class FolderMerger:
                 return state_name
         return NOT_MATCHED
 
-    def fast_check_directory_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
+    def fast_check_dir_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
         """
         detailed_check_directory_state는 사용자용으로, 정확한 오류 메시지와 체크를 목적으로 하지만,
         이 함수는 프로그램 내에서 assertion을 목적으로, 빠른 체크를 목적으로 합니다.
@@ -335,7 +352,7 @@ class FolderMerger:
 
         return NOT_MATCHED
 
-    def detailed_check_directory_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
+    def detailed_check_dir_state(self, directory: PathOrStr) -> DIRECTORY_STATES:
         """
         디렉토리가 merge된 상태인지 기본 상태(default_state)인지, unified된 상태인지, 아니면 일치하는 게 없는지 확인합니다.
         사용자용으로, 상세한 경고 메시지와 정확한 체크를 제공합니다.
@@ -411,7 +428,7 @@ class FolderMerger:
         temp_thumbnail_path.mkdir(parents=True)
         self.move_thumbnail_only(directory, temp_thumbnail_path)
 
-        dir_state = self.detailed_check_directory_state(directory)
+        dir_state = self.detailed_check_dir_state(directory)
         if dir_state == MERGED:  # 가장 기본적인 상태
             self.all_images_to_one_source_dir_with_rename(directory, rename=False)
         elif dir_state == UNIFIED:
