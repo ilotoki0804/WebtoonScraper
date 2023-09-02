@@ -5,15 +5,15 @@ from __future__ import annotations
 from async_lru import alru_cache
 from requests_utils.exceptions import EmptyResultError
 
-if __name__ in ("__main__", "M_KakaopageWebtoonScraper"):
-    from C_Scraper import Scraper
-    from M_Kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
+if __name__ in ("__main__", "K_kakaopage"):
+    from A_scraper import Scraper
+    from K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 else:
-    from .C_Scraper import Scraper
-    from .M_Kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
+    from .A_scraper import Scraper
+    from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 
 
-class KakaopageWebtoonScraper(Scraper):
+class KakaopageScraper(Scraper):
     '''Scrape webtoons from Kakaopage.'''
     def __init__(self, pbar_independent=False, cookie: str = ''):
         super().__init__(pbar_independent)
@@ -140,5 +140,5 @@ class KakaopageWebtoonScraper(Scraper):
 
 
 if __name__ == '__main__':
-    wt = KakaopageWebtoonScraper()
+    wt = KakaopageScraper()
     wt.download_one_webtoon(53397318)  # 부기

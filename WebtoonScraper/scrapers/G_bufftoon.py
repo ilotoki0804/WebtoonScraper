@@ -9,12 +9,12 @@ import logging
 from async_lru import alru_cache
 from requests_utils.exceptions import EmptyResultError
 
-from WebtoonScraper.C_Scraper import TitleId
-
-if __name__ in ("__main__", "I_BufftoonScraper"):
-    from C_Scraper import Scraper
+if __name__ in ("__main__", "G_bufftoon"):
+    from A_scraper import Scraper
 else:
-    from .C_Scraper import Scraper
+    from .A_scraper import Scraper
+
+TitleId = int
 
 
 class BufftoonScraper(Scraper):

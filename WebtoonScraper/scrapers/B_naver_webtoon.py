@@ -7,10 +7,10 @@ from async_lru import alru_cache
 from requests_utils.exceptions import EmptyResultError
 from json.decoder import JSONDecodeError
 
-if __name__ in ("__main__", "D_NaverWebtoonScraper"):
-    from C_Scraper import Scraper
+if __name__ in ("__main__", "B_naver_webtoon"):
+    from A_scraper import Scraper
 else:
-    from .C_Scraper import Scraper
+    from .A_scraper import Scraper
 
 
 class NaverWebtoonScraper(Scraper):

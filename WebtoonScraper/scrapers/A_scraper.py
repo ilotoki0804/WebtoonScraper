@@ -52,10 +52,11 @@ from tqdm import tqdm
 from async_lru import alru_cache
 from requests_utils import CustomDefaults
 
-if __name__ in ("__main__", "C_Scraper"):
-    from a_folder_merger import FolderMerger
+if __name__ in ("__main__", "A_scraper"):
+    logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
+    from WebtoonScraper.directory_merger import FolderMerger
 else:
-    from .a_folder_merger import FolderMerger
+    from ..directory_merger import FolderMerger
 
 TitleId = int | tuple[int, int] | str
 
@@ -285,7 +286,7 @@ class Scraper(metaclass=ABCMeta):
             logging.warning('Merging webtoon has started...')
             fd = FolderMerger()
             # logging.warning(webtoon_dir, fd)
-            fd.merge_webtoon_episodes(webtoon_dir, 5)
+            fd.merge_webtoon(webtoon_dir, 5)
             logging.warning('Merging webtoon ended.')
 
     async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:

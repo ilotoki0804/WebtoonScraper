@@ -13,12 +13,12 @@ from async_lru import alru_cache
 import pyjsparser
 from PIL import Image
 
-from WebtoonScraper.C_Scraper import TitleId
-
-if __name__ in ("__main__", "L_LezhinComicsScraper"):
-    from C_Scraper import Scraper
+if __name__ in ("__main__", "J_lezhin_comics"):
+    from A_scraper import Scraper
 else:
-    from .C_Scraper import Scraper
+    from .A_scraper import Scraper
+
+TitleId = str
 
 
 class LezhinComicsScraper(Scraper):
@@ -418,6 +418,7 @@ class LezhinComicsScraper(Scraper):
     async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
         title = self.requests.get(f'https://www.lezhin.com/ko/comic/{titleid}').soup_select_one('h2.comicInfo__title')
         return title.text if title else None
+
 
 if __name__ == '__main__':
     wt = LezhinComicsScraper()

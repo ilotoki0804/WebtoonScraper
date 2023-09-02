@@ -12,10 +12,10 @@ import demjson3
 from bs4 import BeautifulSoup
 from requests_utils.exceptions import EmptyResultError
 
-if __name__ in ("__main__", "J_NaverPostScraper"):
-    from C_Scraper import Scraper
+if __name__ in ("__main__", "H_naver_post"):
+    from A_scraper import Scraper
 else:
-    from .C_Scraper import Scraper
+    from .A_scraper import Scraper
 
 TitleId = tuple[int, int]
 

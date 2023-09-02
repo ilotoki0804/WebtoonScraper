@@ -11,30 +11,30 @@ Scrape webtoons with ease.
 
 
 if __name__ == "__main__":
-    from a_folder_merger import FolderMerger
-    import B_Webtoon as Webtoon
-    from D_NaverWebtoonScraper import NaverWebtoonScraper
-    from E_BestChallengeScraper import BestChallengeScraper
-    from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
-    from G_WebtoonCanvasScraper import WebtoonCanvasScraper
-    from H_TelescopeScraper import TelescopeScraper
-    from I_BufftoonScraper import BufftoonScraper
-    from J_NaverPostScraper import NaverPostScraper
-    from K_NaverGameScraper import NaverGameScraper
-    from L_LezhinComicsScraper import LezhinComicsScraper
-    from M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
+    from directory_merger import FolderMerger
+    # import webtoon
+    from scrapers.B_naver_webtoon import NaverWebtoonScraper
+    from scrapers.C_best_challenge import BestChallengeScraper
+    from scrapers.D_webtoon_originals import WebtoonOriginalsScraper
+    from scrapers.E_webtoon_canvas import WebtoonCanvasScraper
+    from scrapers.F_telescope import TelescopeScraper
+    from scrapers.G_bufftoon import BufftoonScraper
+    from scrapers.H_naver_post import NaverPostScraper
+    from scrapers.I_naver_game import NaverGameScraper
+    from scrapers.J_lezhin_comics import LezhinComicsScraper
+    from scrapers.K_kakaopage import KakaopageScraper
 else:
-    from .a_folder_merger import FolderMerger
-    from . import B_Webtoon as Webtoon
-    from .D_NaverWebtoonScraper import NaverWebtoonScraper
-    from .E_BestChallengeScraper import BestChallengeScraper
-    from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
-    from .G_WebtoonCanvasScraper import WebtoonCanvasScraper
-    from .H_TelescopeScraper import TelescopeScraper
-    from .I_BufftoonScraper import BufftoonScraper
-    from .J_NaverPostScraper import NaverPostScraper
-    from .K_NaverGameScraper import NaverGameScraper
-    from .L_LezhinComicsScraper import LezhinComicsScraper
-    from .M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
+    from .directory_merger import FolderMerger
+    # from . import webtoon
+    from .scrapers.B_naver_webtoon import NaverWebtoonScraper
+    from .scrapers.C_best_challenge import BestChallengeScraper
+    from .scrapers.D_webtoon_originals import WebtoonOriginalsScraper
+    from .scrapers.E_webtoon_canvas import WebtoonCanvasScraper
+    from .scrapers.F_telescope import TelescopeScraper
+    from .scrapers.G_bufftoon import BufftoonScraper
+    from .scrapers.H_naver_post import NaverPostScraper
+    from .scrapers.I_naver_game import NaverGameScraper
+    from .scrapers.J_lezhin_comics import LezhinComicsScraper
+    from .scrapers.K_kakaopage import KakaopageScraper
 
-__version__ = (1, 3, 0)
+__version__ = (1, 4, 0)

@@ -7,10 +7,10 @@ import json
 from json.decoder import JSONDecodeError
 from async_lru import alru_cache
 
-if __name__ in ("__main__", "K_NaverGameScraper"):
-    from C_Scraper import Scraper
+if __name__ in ("__main__", "I_naver_game"):
+    from A_scraper import Scraper
 else:
-    from .C_Scraper import Scraper
+    from .A_scraper import Scraper
 
 
 class NaverGameScraper(Scraper):
