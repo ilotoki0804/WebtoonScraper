@@ -64,8 +64,6 @@ state_and_regexes: dict[DIRECTORY_STATES, re.Pattern[str]] = {
 #     normal_image=re.compile(r'^.+[.](jpg|jpeg|png|webp|gif|bmp)$', re.I),
 # )
 
-ImageFileName = str
-
 
 class DirectoryMerger:
     """웹툰 뷰어 앱에서 정주행하기 좋도록 회차들을 단위에 따라 묶습니다."""
@@ -218,14 +216,14 @@ def merge_webtoon_directory_to_directory(
         merged_images[(episode_no - 1) // merge_amount].append(episode)
 
     # merge_last_bundle을 적용함
-    merged_images_list: list[tuple[int, list[ImageFileName]]] = sorted(merged_images.items())
-    _, last_images = merged_images_list[-1]
+    merged_images_name_list: list[tuple[int, list[str]]] = sorted(merged_images.items())
+    _, last_images = merged_images_name_list[-1]
     if merge_last_bundle and len(find_episode_ids_of_unified_images(last_images)) > merge_amount:
-        merged_second_last_list = merged_images_list[-2][1]
-        merged_second_last_list += merged_images_list.pop()[1]
+        merged_second_last_list = merged_images_name_list[-2][1]
+        merged_second_last_list += merged_images_name_list.pop()[1]
 
     # 폴더에 넣는 과정
-    for _, images in merged_images_list:
+    for _, images in merged_images_name_list:
         alt_directory_name = make_merged_directory_name(images)
         images_directory = target_webtoon_directory / alt_directory_name
         images_directory.mkdir(parents=True, exist_ok=True)
@@ -297,7 +295,7 @@ def get_merged_image_name(image_name, episode_name) -> str:
     return f'{episode_no}.{image_no}. {episode_name}.{image_extension}'
 
 
-def find_episode_ids_of_unified_images(image_names: list[ImageFileName]) -> set[int]:
+def find_episode_ids_of_unified_images(image_names: list[str]) -> set[int]:
     # episode_id = set(int(image.split('.')[0]) for image in images)
     # return {int(image.split('.')[0]) for image in images}
     # return {int(webtoon_regexes.unified_image.match(image).group('episode_no')) for image in image_names}
@@ -312,7 +310,7 @@ def find_episode_ids_of_unified_images(image_names: list[ImageFileName]) -> set[
     return unique_ids
 
 
-def make_merged_directory_name(image_names: list[ImageFileName]) -> str:
+def make_merged_directory_name(image_names: list[str]) -> str:
     episode_id = find_episode_ids_of_unified_images(image_names)
     return f'{min(episode_id):04d}~{max(episode_id):04d}'
 
