@@ -190,7 +190,7 @@ def merge_webtoon_directory_to_directory(
 
     directory_state = fast_check_directory_state(source_webtoon_directory)
     if directory_state == MERGED and merge_amount == 1:
-        logging.warning('Value of episode_bundle is 1, so autometically revert directory state to original.')
+        print('Value of episode_bundle is 1, so autometically revert directory state to original.')
         restore_webtoon(source_webtoon_directory)
         return
     if directory_state in {MERGED, NOT_MATCHED, WEBTOONS_DIRECTORY}:
