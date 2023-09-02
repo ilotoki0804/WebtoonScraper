@@ -8,32 +8,34 @@ from typing import Literal, TYPE_CHECKING
 
 from requests_utils import requests, souptools
 
-if __name__ in ("__main__", "B_Webtoon"):
-    # from a_folder_merger import FolderMerger
-    from C_Scraper import Scraper
-    from D_NaverWebtoonScraper import NaverWebtoonScraper
-    from E_BestChallengeScraper import BestChallengeScraper
-    from F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
-    from G_WebtoonCanvasScraper import WebtoonCanvasScraper
-    from H_TelescopeScraper import TelescopeScraper
-    from I_BufftoonScraper import BufftoonScraper
-    from J_NaverPostScraper import NaverPostScraper
-    from K_NaverGameScraper import NaverGameScraper
-    from L_LezhinComicsScraper import LezhinComicsScraper
-    from M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
+if __name__ in {"__main__", "webtoon"}:
+    # from directory_merger import FolderMerger
+    # import webtoon
+    from scrapers.A_scraper import Scraper
+    from scrapers.B_naver_webtoon import NaverWebtoonScraper
+    from scrapers.C_best_challenge import BestChallengeScraper
+    from scrapers.D_webtoon_originals import WebtoonOriginalsScraper
+    from scrapers.E_webtoon_canvas import WebtoonCanvasScraper
+    from scrapers.F_telescope import TelescopeScraper
+    from scrapers.G_bufftoon import BufftoonScraper
+    from scrapers.H_naver_post import NaverPostScraper
+    from scrapers.I_naver_game import NaverGameScraper
+    from scrapers.J_lezhin_comics import LezhinComicsScraper
+    from scrapers.K_kakaopage import KakaopageScraper
 else:
-    # from .a_folder_merger import FolderMerger
-    from .C_Scraper import Scraper
-    from .D_NaverWebtoonScraper import NaverWebtoonScraper
-    from .E_BestChallengeScraper import BestChallengeScraper
-    from .F_WebtoonOriginalsScraper import WebtoonOriginalsScraper
-    from .G_WebtoonCanvasScraper import WebtoonCanvasScraper
-    from .H_TelescopeScraper import TelescopeScraper
-    from .I_BufftoonScraper import BufftoonScraper
-    from .J_NaverPostScraper import NaverPostScraper
-    from .K_NaverGameScraper import NaverGameScraper
-    from .L_LezhinComicsScraper import LezhinComicsScraper
-    from .M_KakaopageWebtoonScraper import KakaopageWebtoonScraper
+    # from .directory_merger import FolderMerger
+    # from . import webtoon
+    from .scrapers.A_scraper import Scraper
+    from .scrapers.B_naver_webtoon import NaverWebtoonScraper
+    from .scrapers.C_best_challenge import BestChallengeScraper
+    from .scrapers.D_webtoon_originals import WebtoonOriginalsScraper
+    from .scrapers.E_webtoon_canvas import WebtoonCanvasScraper
+    from .scrapers.F_telescope import TelescopeScraper
+    from .scrapers.G_bufftoon import BufftoonScraper
+    from .scrapers.H_naver_post import NaverPostScraper
+    from .scrapers.I_naver_game import NaverGameScraper
+    from .scrapers.J_lezhin_comics import LezhinComicsScraper
+    from .scrapers.K_kakaopage import KakaopageScraper
 
 TitleId = int | tuple[int, int] | str
 
@@ -79,8 +81,8 @@ async def get_webtoon_platform(titleid: TitleId, is_auto_select: bool = False) -
     """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다."""
     async def get_platform(platform_name: WebtoonPlatforms):
         try:
-            scraper = await get_scraper_instance(platform_name)
-            return platform_name, await scraper.check_if_legitimate_titleid(titleid)
+            WebtoonScraperClass = await get_scraper_class(platform_name)
+            return platform_name, await WebtoonScraperClass().check_if_legitimate_titleid(titleid)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logging.warning(f'An error occured. Skipping {platform_name}')
             logging.warning(f'error: {e}')
@@ -148,27 +150,27 @@ async def get_webtoon_platform(titleid: TitleId, is_auto_select: bool = False) -
     return selected_platform
 
 
-async def get_scraper_instance(webtoon_type: WebtoonPlatforms) -> Scraper:
+async def get_scraper_class(webtoon_type: WebtoonPlatforms) -> type[Scraper]:
     if webtoon_type.lower() == NAVER_WEBTOON:
-        webtoonscraper = NaverWebtoonScraper()
+        webtoonscraper = NaverWebtoonScraper
     elif webtoon_type.lower() == BEST_CHALLENGE:
-        webtoonscraper = BestChallengeScraper()
+        webtoonscraper = BestChallengeScraper
     elif webtoon_type.lower() == ORIGINALS:
-        webtoonscraper = WebtoonOriginalsScraper()
+        webtoonscraper = WebtoonOriginalsScraper
     elif webtoon_type.lower() == CANVAS:
-        webtoonscraper = WebtoonCanvasScraper()
+        webtoonscraper = WebtoonCanvasScraper
     elif webtoon_type.lower() == TELESCOPE:
-        webtoonscraper = TelescopeScraper()
+        webtoonscraper = TelescopeScraper
     elif webtoon_type.lower() == BUFFTOON:
-        webtoonscraper = BufftoonScraper()
+        webtoonscraper = BufftoonScraper
     elif webtoon_type.lower() == NAVER_POST:
-        webtoonscraper = NaverPostScraper()
+        webtoonscraper = NaverPostScraper
     elif webtoon_type.lower() == NAVER_GAME:
-        webtoonscraper = NaverGameScraper()
+        webtoonscraper = NaverGameScraper
     elif webtoon_type.lower() == LEZHIN:
-        webtoonscraper = LezhinComicsScraper()
+        webtoonscraper = LezhinComicsScraper
     elif webtoon_type.lower() == KAKAOPAGE:
-        webtoonscraper = KakaopageWebtoonScraper()
+        webtoonscraper = KakaopageScraper
     else:
         raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, '
                          'canvas, bufftoon, telescope, naver_post, naver_game, lezhin, and kakaopage.')
@@ -186,22 +188,22 @@ async def get_webtoon_async(
         authorization: str | None = None
 ) -> None:
     if cookie is not None:
-        webtoonscraper = BufftoonScraper()
-        webtoonscraper.COOKIE = cookie
+        webtoon_scraper = BufftoonScraper()
+        webtoon_scraper.COOKIE = cookie
     elif authorization is not None:
-        webtoonscraper = LezhinComicsScraper()
-        webtoonscraper.AUTHORIZATION = authorization
+        webtoon_scraper = LezhinComicsScraper()
+        webtoon_scraper.AUTHORIZATION = authorization
     else:
         webtoon_type = webtoon_type or await get_webtoon_platform(titleid, is_auto_select)
 
         if webtoon_type is None:
             raise ValueError('You must select item.')
 
-        webtoonscraper = await get_scraper_instance(webtoon_type)
-        if isinstance(webtoonscraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
+        webtoon_scraper = (await get_scraper_class(webtoon_type))()
+        if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
-    await webtoonscraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge)
+    await webtoon_scraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge)
 
 
 def get_webtoon(
