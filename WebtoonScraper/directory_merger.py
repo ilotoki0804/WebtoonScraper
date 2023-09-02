@@ -399,7 +399,7 @@ class FolderMerger:
 
     ############### RESTORE FUNCTIONALITY ###############
 
-    def restore_webtoons_in_directory(self) -> None:
+    def restore_webtoons_from_source_dir(self) -> None:
         webtoons = os.listdir(self.source_dir)
         for webtoon in webtoons:
             webtoon_dir = self.source_dir / webtoon
@@ -421,7 +421,6 @@ class FolderMerger:
                                           f'Directory name: {directory}')
 
         images = os.listdir(directory)
-        # images = (image for image in images if image != 'thumbnail-TEMP')
 
         for image in images:
             image_info = webtoon_regexes.unified_image.search(image)
@@ -435,9 +434,9 @@ class FolderMerger:
             episode_dir = directory / f'{episode_no}. {episode_name}'
             alt_image_name = f'{image_no}.{image_extension}'
             episode_dir.mkdir(parents=True, exist_ok=True)
-            base_image_path = directory / image
-            alt_image_path = episode_dir / alt_image_name
-            shutil.move(base_image_path, alt_image_path)
+            source_image_path = directory / image
+            target_image_path = episode_dir / alt_image_name
+            shutil.move(source_image_path, target_image_path)
 
         self.move_thumbnail_only(temp_thumbnail_path, directory)
         temp_thumbnail_path.rmdir()
