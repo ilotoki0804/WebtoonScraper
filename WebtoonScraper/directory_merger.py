@@ -230,13 +230,33 @@ def merge_webtoon_directory_to_directory(
     os.rmdir(source_webtoon_directory)
 
 
-def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory: Path) -> None:
-    for episode_or_thumbnail in os.listdir(source_webtoon_directory):
-        if check_filename_state(episode_or_thumbnail) is NOT_MATCHED:
-            base_thumbnail_directory = source_webtoon_directory / episode_or_thumbnail
-            alt_thumbnail_directory = target_webtoon_directory / episode_or_thumbnail
-            shutil.move(base_thumbnail_directory, alt_thumbnail_directory)
-            return
+def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory: Path, is_real_webtoon_directory=False) -> None:
+    """
+    is_real_webtoon_directory가 참이면 source_webtoon_directory의 이름에 기반해 썸네일을 찾습니다.
+    하지만 기존 방식이 딱히 인식률이 좋지 않거나 단점이 있는 것이 아니라서 일반적인 환경에서는 굳이 이용할 이유가 없습니다.
+    """
+    if is_real_webtoon_directory:
+        processed_directory_name = webtoon_regexes.webtoon_directory.match(source_webtoon_directory.name)
+        if processed_directory_name is not None:
+            webtoon_name = processed_directory_name.group('webtoon_name')
+        else:
+            logging.warning('Directory seems not following general rule. Use normal way to move thumbnail instead.')
+            return move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, False)
+
+        for episode_or_thumbnail in os.listdir(source_webtoon_directory):
+            if re.match(r'^(.+)[.][a-zA-Z0-9]{3,4}$', episode_or_thumbnail).group(1) == webtoon_name:
+                # 아래의 is_real_webtoon_directory가 False일 때의 코드와 동일함. 필요한 경우 있을 경우 따로 함수로 분리할 것.
+                base_thumbnail_directory = source_webtoon_directory / episode_or_thumbnail
+                alt_thumbnail_directory = target_webtoon_directory / episode_or_thumbnail
+                shutil.move(base_thumbnail_directory, alt_thumbnail_directory)
+                return
+    else:
+        for episode_or_thumbnail in os.listdir(source_webtoon_directory):
+            if check_filename_state(episode_or_thumbnail) is NOT_MATCHED:
+                base_thumbnail_directory = source_webtoon_directory / episode_or_thumbnail
+                alt_thumbnail_directory = target_webtoon_directory / episode_or_thumbnail
+                shutil.move(base_thumbnail_directory, alt_thumbnail_directory)
+                return
 
 
 def all_images_to_one_source_directory_with_rename(source_directory: Path, rename=True) -> None:
