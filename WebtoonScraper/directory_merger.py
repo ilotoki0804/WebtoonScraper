@@ -27,26 +27,26 @@ PathOrStr = str | Path
 
 
 class WebtoonRegexes(NamedTuple):
-    unified_image: re.Pattern
-    merged_directory: re.Pattern
-    default_episode_name_directory: re.Pattern
     webtoon_directory: re.Pattern
+    default_episode_name_directory: re.Pattern
+    merged_directory: re.Pattern
     normal_image: re.Pattern
+    unified_image: re.Pattern
 
 
 webtoon_regexes = WebtoonRegexes(
-    unified_image=re.compile(r'(?P<episode_no>^\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$'),  # 0001.001. 에피소드 이름.jpg
-    merged_directory=re.compile(r'^(?P<from>\d{4})~(?P<to>\d{4})$'),  # 0001~0005
-    default_episode_name_directory=re.compile(r'^(?P<no>\d{4})\. (?P<episode_name>.+)$'),  # 0001. 에피소드 이름
     webtoon_directory=re.compile(r'^(?P<webtoon_name>.+)[(](?P<id>.+?)[)][(]merged[)]$'),  # 웹툰 이름(id)[(merged)]
+    default_episode_name_directory=re.compile(r'^(?P<no>\d{4})\. (?P<episode_name>.+)$'),  # 0001. 에피소드 이름
+    merged_directory=re.compile(r'^(?P<from>\d{4})~(?P<to>\d{4})$'),  # 0001~0005
     normal_image=re.compile(r'^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$'),  # 023.jpg
+    unified_image=re.compile(r'(?P<episode_no>^\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$'),  # 0001.001. 에피소드 이름.jpg
 )
 
 state_and_regexes: dict[DIRECTORY_STATES, re.Pattern[str]] = {
-    UNIFIED: webtoon_regexes.unified_image,
-    MERGED: webtoon_regexes.merged_directory,
-    DEFAULT_STATE: webtoon_regexes.default_episode_name_directory,
     WEBTOONS_DIRECTORY: webtoon_regexes.webtoon_directory,
+    DEFAULT_STATE: webtoon_regexes.default_episode_name_directory,
+    MERGED: webtoon_regexes.merged_directory,
+    UNIFIED: webtoon_regexes.unified_image,
 }
 
 # webtoon_is_unified와 webtoon_is_default_state가 동시에 True라면 unified로 결과를 출력하는 것이 맞다.
