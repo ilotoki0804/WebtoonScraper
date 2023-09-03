@@ -55,9 +55,9 @@ from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import merge_webtoon
+    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes
 else:
-    from ..directory_merger import merge_webtoon
+    from ..directory_merger import merge_webtoon, webtoon_regexes
 
 TitleId = int | tuple[int, int] | str
 
@@ -285,7 +285,6 @@ class Scraper(metaclass=ABCMeta):
 
         if merge is not None:
             logging.warning('Merging webtoon has started...')
-            # logging.warning(webtoon_dir, fd)
             merge_webtoon(webtoon_dir, 5)
             logging.warning('Merging webtoon ended.')
 
@@ -293,7 +292,10 @@ class Scraper(metaclass=ABCMeta):
         return f'{title}({titleid})'
 
     async def lezhin_unshuffle_process(self, titleid: TitleId, base_webtoon_dir: Path):
-        """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
+        """
+        For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory.
+        레진을 제외하면 unshuffler가 필요한 경우가 없기 때문에 레진 외의 웹툰들은 그대로 놔두시면 됩니다.
+        """
         return base_webtoon_dir
 
     @final
@@ -307,7 +309,7 @@ class Scraper(metaclass=ABCMeta):
             episode_dir.mkdir()
         except FileExistsError:
             self._set_pbar(f'checking integrity of {subtitle}')
-            is_filename_appropriate = all(re.match(r"\d{3}[.](png|jpg|jpeg|bmp|gif)", file) for file in os.listdir(episode_dir))
+            is_filename_appropriate = all(webtoon_regexes.normal_image.match(file) for file in os.listdir(episode_dir))
             if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
                 self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
                 shutil.rmtree(episode_dir)
