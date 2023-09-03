@@ -281,7 +281,7 @@ class Scraper(metaclass=ABCMeta):
             await self.download_one_episode(episode_no, titleid, webtoon_dir)
         logging.warning(f'A webtoon {title} download ended.')
 
-        webtoon_dir = await self.lezhin_unshuffle_process(titleid, webtoon_dir)
+        webtoon_dir = await self.unshuffle_lezhin_webtoon(titleid, webtoon_dir)
 
         if merge is not None:
             logging.warning('Merging webtoon has started...')
@@ -291,7 +291,7 @@ class Scraper(metaclass=ABCMeta):
     async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
         return f'{title}({titleid})'
 
-    async def lezhin_unshuffle_process(self, titleid: TitleId, base_webtoon_dir: Path):
+    async def unshuffle_lezhin_webtoon(self, titleid: TitleId, base_webtoon_dir: Path):
         """
         For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory.
         레진을 제외하면 unshuffler가 필요한 경우가 없기 때문에 레진 외의 웹툰들은 그대로 놔두시면 됩니다.

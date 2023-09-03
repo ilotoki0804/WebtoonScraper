@@ -15,8 +15,10 @@ from PIL import Image
 
 if __name__ in ("__main__", "J_lezhin_comics"):
     from A_scraper import Scraper
+    from J_lezhin_unshuffler import unshuffle_typical_webtoon_directory
 else:
     from .A_scraper import Scraper
+    from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory
 
 TitleId = str
 
@@ -31,81 +33,12 @@ class LezhinComicsScraper(Scraper):
         self.COOKIE: str = ''
         self.AUTHORIZATION: str = ''
 
-        self.UNSHUFFLE = True
+        self.DO_NOT_UNSHUFFLE = False
         self.DELETE_SHUFFLED_FILE = False
 
     async def get_webtoon_dir_name(self, titleid, title: str) -> str:
         is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
         return f'{title}({titleid}, shuffled)' if is_shuffled else f'{title}({titleid})'
-
-    # # 작동은 하지만 코드가 더러워서 사용하지 않음. 하지만 현재 방법보다 더 잘 작동할 가능성이 있어서 남겨둠.
-    # # 사용하려면 pyjsparser를 설치해야 함. 현재는 의존성 목록에서 제거됨.
-    # @alru_cache(maxsize=4)
-    # async def old_get_webtoon_data(self, titleid: str):
-    #     """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-    #     response = self.requests.get(f'{self.BASE_URL}/{titleid}')
-    #     title_ = response.soup_select_one('meta[property="og:title"]')
-    #     if title_ == "404 - 레진코믹스":
-    #         raise ValueError(f'Invalid {titleid = }')
-
-    #     title = response.soup_select_one("h2.comicInfo__title").text
-    #     thumbnail_url = response.soup_select_one('meta[property="og:image"]')["content"]
-
-    #     parsed = pyjsparser.parse(response.soup_select("script")[5].text.removeprefix("<script>").removesuffix("</script>"))
-
-    #     # title = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][1]["value"]["properties"][0]["value"]["value"]
-    #     titleid_int = int(parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][0]["value"]["raw"])  # ~ contentId
-    #     logging.debug(f'length of body > 1 > 1: {parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]}')
-    #     episodes_data = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][-1]["value"]["elements"]
-    #     # is_shuffled: bool = parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"][19]["value"]["properties"][0]["value"]["value"]  # imageShuffle
-
-    #     def determine_is_shuffled(parsed):
-    #         for property_index in range(20):
-    #             for possibily_shuffled in parsed["body"][1]["expression"]["right"]["properties"][1]["value"]["properties"]:
-    #                 try:
-    #                     attribute = possibily_shuffled["value"]["properties"][property_index]["key"]["value"]
-    #                 except (KeyError, IndexError):
-    #                     continue
-    #                 else:
-    #                     if attribute == "imageShuffle":
-    #                         return possibily_shuffled["value"]["properties"][property_index]["value"]["value"]
-    #         return False
-    #     is_shuffled = determine_is_shuffled(parsed)
-
-    #     episode_id_strings = []
-    #     subtitles = []
-    #     episode_id_ints = []
-    #     infomation_chars = []
-    #     for episode in episodes_data:
-    #         episode_id_str: str = episode["properties"][1]["value"]["value"]
-    #         subtitle = episode["properties"][2]["value"]["properties"][0]["value"]["value"]
-    #         episode_id_int: int = int(episode["properties"][0]["value"]["raw"])  # in other words, 'episodeId'
-
-    #         # n, e, g 등. episode_id_str의 x(특별편)은 e로 바뀌는 듯함.
-    #         infomation_char = episode["properties"][2]["value"]["properties"][1]["value"]['value']
-    #         expired = episode["properties"][3]["value"]["properties"][0]["value"]['value']
-    #         not_for_sale = episode["properties"][3]["value"]["properties"][1]["value"]['value']
-
-    #         if infomation_char != 'g':
-    #             logging.debug(f'Unique {infomation_char = } of {subtitle}')
-    #         if not_for_sale:
-    #             logging.warning(f'This episode is not for sale: {subtitle}')
-    #         if expired:
-    #             logging.warning(f'This episode is expired: {subtitle}')
-    #         if infomation_char != 'g' and not episode_id_str.startswith(infomation_char):
-    #             logging.warning(f'{infomation_char = } is not matched with {episode_id_str = }')
-
-    #         # print(f'{episode_id_str = }, {subtitle = }, {expired = }, {not_for_sale = }, {episode_id_int = }, {infomation_char = }')
-    #         episode_id_strings.append(episode_id_str)
-    #         subtitles.append(subtitle)
-    #         episode_id_ints.append(episode_id_int)
-    #         infomation_chars.append(infomation_char)
-
-    #     # 현재 titleid_str(titleid와 동일)과 infomation_chars는 사용되는 곳이 없음
-    #     return {'title': title, 'webtoon_thumbnail': thumbnail_url,
-    #             'episode_ids': episode_id_strings[::-1], 'subtitles': subtitles[::-1],
-    #             'episode_id_ints': episode_id_ints[::-1], 'infomation_chars': infomation_chars[::-1],
-    #             'titleid_str': titleid, 'titleid_int': titleid_int, 'is_shuffled': is_shuffled, }
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid: str, get_paid_episode: bool = False, get_unusable_episode: bool = False):
@@ -259,7 +192,7 @@ class LezhinComicsScraper(Scraper):
                                "&type=comic_episode")
         try:
             images_data = self.requests.get(images_retrieve_url, headers=HEADERS).json()
-            # return images_data # for debugg purpose
+            # return images_data # for debug purpose
         except json.JSONDecodeError:
             if _attempt >= 3:
                 raise
@@ -277,146 +210,22 @@ class LezhinComicsScraper(Scraper):
 
         return image_urls
 
-    async def lezhin_unshuffle_process(self, titleid, base_webtoon_dir: Path):
+    async def unshuffle_lezhin_webtoon(self, titleid, base_webtoon_dir: Path):
         """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
-        is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
-        if not is_shuffled:
-            return base_webtoon_dir
-        alt_webtoon_dir = Path(str(base_webtoon_dir).removesuffix(', shuffled)') + ')')
-        alt_webtoon_dir.mkdir(exist_ok=True)
-        if is_shuffled and self.UNSHUFFLE:
-            await self.unshuffle_webtoon(titleid, base_webtoon_dir, alt_webtoon_dir)
+        webtoon_data = await self.get_webtoon_data(titleid)
+        is_shuffled = webtoon_data['is_shuffled']
 
+        if not is_shuffled or self.DO_NOT_UNSHUFFLE:
+            if is_shuffled:
+                logging.warning("This webtoon is shuffled, but because self.DO_NOT_UNSHUFFLE is set to True, webtoon won't be shuffled.")
+            return base_webtoon_dir
+
+        episode_id_ints = webtoon_data['episode_id_ints']
+        target_webtoon_directory = unshuffle_typical_webtoon_directory(base_webtoon_dir, episode_id_ints)
         if self.DELETE_SHUFFLED_FILE:
             shutil.rmtree(base_webtoon_dir)
-            logging.info('Shuffle file is deleted.')
-
-        return alt_webtoon_dir
-
-    async def unshuffle_webtoon(self, titleid, base_webtoon_dir, alt_webtoon_dir, force_unshuffle: bool = False, process_number: int = 8):
-        def get_episode_dir_no(episode_dir_name: str):
-            # print(episode_dir_name)
-            try:
-                return int(episode_dir_name.split('.')[0])
-            except ValueError as e:
-                if episode_dir_name.endswith(('jpg', 'png', 'webp', 'gif', 'bmp')):
-                    return
-                if re.search(r'^(\d+)~(\d+)', episode_dir_name):
-                    raise ValueError(
-                        'Episode name is not valid. It\'s because you tried merging already merged webtoon folder. '
-                        '`unshuffle_webtoon` does not support merged webtoon.'
-                    )
-                raise ValueError('`episode_dir_name` is invalid. Maybe you tried to unshuffle merged webtoon directory. '
-                                 '`unshuffle_webtoon` does not support merged webtoon.') from e
-
-        # 웹툰을 다운로드 받을 때 유료 웹툰이거나 하는 이유로 일부 에피소드는 다운로드되지 않을 수 있음
-        # 하지만 episode_id는 0부터 쭉 존재함.
-        # 따라서 다운로드되지 않은 웹툰을 걸러 작업을 하지 않도록 거르는 작업이 필요함.
-        # `unshuffle_episode`에서 직접 episode_id를 고르면 복잡한 로직이 필요없지만 그때마다 get_webtoon_data를 불러야 하기에
-        # 성능 하락의 우려가 아주 살짝 있음. 하지만 크진 않기에 unshuffle_episode에서 직접 episode_id를 가지는 것도 고려해볼만 함.
-
-        is_shuffled = (await self.get_webtoon_data(titleid))['is_shuffled']
-        if not is_shuffled and force_unshuffle:
-            if input('trying to unshuffle webtoon that seems to be not shuffled. Proceed anyway? (y to proceed)') != 'y':
-                raise ValueError('Trying to unshuffle webtoon that is not shuffled at first place.')
-
-        episode_dir_names_indexed = {get_episode_dir_no(episode_dir_name): episode_dir_name
-                                     for episode_dir_name in os.listdir(base_webtoon_dir)
-                                     if get_episode_dir_no(episode_dir_name) is not None}
-        episode_id_ints = (await self.get_webtoon_data(titleid))['episode_id_ints']
-
-        # self.pbar = tqdm([(episode_dir_names_indexed.get(i + 1), episode_id) for i, episode_id in enumerate(episode_id_ints)])
-        episodes_with_episode_id = [(episode_id, episode_dir_names_indexed.get(i + 1)) for i, episode_id in enumerate(episode_id_ints)]
-        unshuffle_parameters = []
-        for episode_id, episode_dir_name in episodes_with_episode_id:
-            if episode_dir_name is None:
-                continue
-            base_episode_dir = base_webtoon_dir / episode_dir_name
-            alt_episode_dir = alt_webtoon_dir / episode_dir_name
-            try:
-                alt_episode_dir.mkdir()
-            except FileExistsError:
-                if len(os.listdir(alt_episode_dir)) == len(os.listdir(base_episode_dir)):
-                    logging.warning(f'passing {episode_dir_name}')
-                    continue
-                logging.warning(f'{episode_dir_name} is not valid. Delete items and continue.')
-                shutil.rmtree(alt_episode_dir)
-                alt_episode_dir.mkdir()
-            # self.unshuffle_episode(base_episode_dir, alt_episode_dir, episode_id)
-            unshuffle_parameters.append((base_episode_dir, alt_episode_dir, episode_id))
-
-        # self.pbar = tqdm(unshuffle_parameters)
-        logging.warning('Unshuffling is started. It takes a while and very CPU-intensive task. '
-                        'So keep patient and wait until process end.')
-        with multiprocessing.Pool(process_number) as p:
-            p.starmap(LezhinComicsScraper.unshuffle_episode, unshuffle_parameters)
-
-        logging.info('Unshuffling ended.')
-
-    @staticmethod
-    def unshuffle_episode(base_episode_dir: Path, alt_episode_dir: Path, episode_id_int: int):
-        # print(f'{base_episode_dir = }, {alt_episode_dir = }, {episode_id_int = }')
-        # return
-
-        def get_random_numbers_of_certain_seed(seed):
-            """Mutating Lezhin's random number generator. `random_numbers` are always same if given seed is same."""
-            results = []
-            state = seed
-            for _ in range(25):
-                state ^= state >> 12
-                state ^= (state << 25) & 18446744073709551615
-                state ^= state >> 27
-                result = (state >> 32) % 25
-                results.append(result)
-            return results
-
-        def get_image_order_from_random_number(random_numbers):
-            image_order = list(range(25))
-            for i in range(25):
-                shuffle_index = random_numbers[i]
-                image_order[i], image_order[shuffle_index] = image_order[shuffle_index], image_order[i]
-            return image_order
-
-        def unshuffle_image_and_save(base_image_path, alt_image_path, image_order, margin: int | None = None):
-            with Image.open(base_image_path) as im:
-                image_x, image_y = im.size
-                # MARGIN = image_y % 5 * 5
-                MARGIN = image_y % 5 if margin is None else margin
-                # im = im.resize((image_x * 5, image_y * 5), Image.Resampling.NEAREST)
-                image_x, image_y = im.size
-                image_y -= MARGIN  # margin
-                # print((image_x, image_y))
-                cropped_images: list[Image.Image] = [None] * 25
-                for index_x, left, right in ((i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)):
-                    for index_y, upper, lower in ((i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)):
-                        cropped_image: Image.Image = im.crop(
-                            (left, upper, right, lower))
-                        # draw = ImageDraw.Draw(cropped_image)
-                        image_index = index_x + index_y * 5
-                        cropped_images[image_order.index(image_index)] = cropped_image
-
-                def position_in_assambled_image(image_index) -> tuple[int, int]:
-                    index_y, index_x = divmod(image_index, 5)
-                    image_x, image_y = im.size
-                    image_y -= MARGIN
-                    return index_x * image_x, index_y * image_y
-
-                assambled_image = Image.new("RGB", (image_x, image_y), (256, 0, 0))
-                for i, cropped_image in enumerate(cropped_images):
-                    assambled_image.paste(cropped_image, tuple(
-                        j // 5 for j in position_in_assambled_image(i)))
-                assambled_image.save(alt_image_path)
-
-        # self._set_pbar(f'{base_episode_dir}')
-        logging.warning(base_episode_dir)
-        # alt_episode_dir.mkdir()
-
-        random_numbers = get_random_numbers_of_certain_seed(episode_id_int)
-        image_order = get_image_order_from_random_number(random_numbers)
-        for image_name in os.listdir(base_episode_dir):
-            base_image_path = base_episode_dir / image_name
-            alt_image_path = alt_episode_dir / image_name
-            unshuffle_image_and_save(base_image_path, alt_image_path, image_order)
+            print('Shuffled webtoon directory is deleted.')
+        return target_webtoon_directory
 
     async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
         title = self.requests.get(f'https://www.lezhin.com/ko/comic/{titleid}').soup_select_one('h2.comicInfo__title')
