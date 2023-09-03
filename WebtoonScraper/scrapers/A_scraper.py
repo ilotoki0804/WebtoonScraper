@@ -10,6 +10,7 @@
 # [x]: print문 모두 제거하고 logging으로 변경하기
 # [x]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
 # [x]: 카카오 웹툰/카카오 페이지 웹툰
+# [x]: requests_utils로 변경하기
 # PENDING: 네이버 블로그 만들기
 # TODO: download vs save : 용어 정리하기 > download_webtoon_thumbnail로 바꾸고, download_webtoon이랑 download_episode로 변경
 # TODO: short_connection 등 docs 추가하기
@@ -22,11 +23,11 @@
 # TODO: is_available_link 추가하기
 # TODO: overload ... 위치 옮기기
 # TODO: 모듈 이름 snakecase로 변경하기
-# TODO: requests_utils로 변경하기
 # TODO: merge를 merge_amout로 변경하기
 # TODO: 웹툰 메인 페이지에서 받는 정보는 따로 빼기
 # TODO: cache 대신 객체 형식으로 변경
 # TODO: 웹툰 다운 받기 전에 is_merged 체크 한 번 하기
+# TODO: webtoon_metadate webtoon_episodes_infomation
 
 from __future__ import annotations
 import re
@@ -54,9 +55,9 @@ from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import DirectoryMerger
+    from WebtoonScraper.directory_merger import merge_webtoon
 else:
-    from ..directory_merger import DirectoryMerger
+    from ..directory_merger import merge_webtoon
 
 TitleId = int | tuple[int, int] | str
 
@@ -284,9 +285,8 @@ class Scraper(metaclass=ABCMeta):
 
         if merge is not None:
             logging.warning('Merging webtoon has started...')
-            fd = DirectoryMerger()
             # logging.warning(webtoon_dir, fd)
-            fd.merge_webtoon(webtoon_dir, 5)
+            merge_webtoon(webtoon_dir, 5)
             logging.warning('Merging webtoon ended.')
 
     async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
