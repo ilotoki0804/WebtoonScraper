@@ -12,10 +12,10 @@ from PIL import Image
 
 if __name__ in {"__main__", "J_lezhin_unshuffler"}:
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import fast_check_directory_state, check_filename_state, DEFAULT_STATE, webtoon_regexes, move_thumbnail_only
+    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes_, move_thumbnail_only
     from WebtoonScraper.exceptions import DirectoryStateUnmatched
 else:
-    from ..directory_merger import fast_check_directory_state, check_filename_state, DEFAULT_STATE, webtoon_regexes, move_thumbnail_only
+    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes_, move_thumbnail_only
     from ..exceptions import DirectoryStateUnmatched
 
 
@@ -42,8 +42,8 @@ def unshuffle_webtoon_directory_to_directory(
     move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
 
     if not proceed_without_checking_directory_state:
-        directory_state = fast_check_directory_state(source_webtoon_directory)
-        if directory_state != DEFAULT_STATE:
+        directory_state = fast_check_container_state(source_webtoon_directory)
+        if directory_state != NORMAL_EPISODE_DIRECTORY:
             raise DirectoryStateUnmatched(f'Directory state is {directory_state}, which is not supported.')
 
     unshuffle_parameters = []
@@ -51,12 +51,12 @@ def unshuffle_webtoon_directory_to_directory(
         source_episode_directory = source_webtoon_directory / episode_directory_name
         target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        processed_directory_name = webtoon_regexes.default_episode_name_directory.match(episode_directory_name)
+        processed_directory_name = webtoon_regexes_[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
         if processed_directory_name is None:
             logging.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
             continue
 
-        episode_no = int(processed_directory_name.group('no'))
+        episode_no = int(processed_directory_name.group('episode_no'))
         episode_id = episode_id_ints[episode_no - 1]
 
         unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
@@ -73,7 +73,7 @@ def unshuffle_episode(source_episode_directory: Path, target_episode_directory: 
     try:
         target_episode_directory.mkdir()
     except FileExistsError:
-        if check_filename_state(target_episode_directory.name) != DEFAULT_STATE:
+        if check_filename_state(target_episode_directory.name) != NORMAL_EPISODE_DIRECTORY:
             logging.warning(f'Damaged file or directory detected. Skip and continue. Name: {target_episode_directory.name}')
             return
         if len(os.listdir(target_episode_directory)) == len(os.listdir(source_episode_directory)):
