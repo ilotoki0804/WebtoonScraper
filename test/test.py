@@ -28,16 +28,16 @@ async def async_skip_by_KeyboadInterrupt(corutine):
 
 
 def test_download_ability():
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(809590, wt.N))  # 네이버 웹툰
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(767676, wt.B))  # 베스트 도전만화
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(1435, wt.O))  # 웹툰 오리지널
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(263735, wt.C))  # 캔버스
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(146, wt.M))  # 만화경
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(1007888, wt.BF, cookie=''))  # 버프툰
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon((597061, 19803452), wt.P))  # 네이버 포스트
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(59, wt.G))  # 네이버 게임
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon('noway', wt.P))  # 레진
-    skip_by_KeyboadInterrupt(lambda: wt.get_webtoon(53397318, wt.K))  # 카카오페이지
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(809590, wt.N))  # 네이버 웹툰
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(767676, wt.B))  # 베스트 도전만화
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(1435, wt.O))  # 웹툰 오리지널
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(263735, wt.C))  # 캔버스
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(146, wt.M))  # 만화경
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(1007888, wt.BF, cookie=''))  # 버프툰
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon((597061, 19803452), wt.P))  # 네이버 포스트
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(59, wt.G))  # 네이버 게임
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon('noway', wt.P))  # 레진
+    skip_by_KeyboadInterrupt(lambda: wt.download_webtoon(53397318, wt.K))  # 카카오페이지
 
 
 async def test_platform_select_ability():

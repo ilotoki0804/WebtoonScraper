@@ -9,8 +9,7 @@ from typing import Literal, TYPE_CHECKING
 from requests_utils import requests, souptools
 
 if __name__ in {"__main__", "webtoon"}:
-    # from directory_merger import FolderMerger
-    # import webtoon
+    # from directory_merger import DirectoryMerger
     from scrapers.A_scraper import Scraper
     from scrapers.B_naver_webtoon import NaverWebtoonScraper
     from scrapers.C_best_challenge import BestChallengeScraper
@@ -23,8 +22,7 @@ if __name__ in {"__main__", "webtoon"}:
     from scrapers.J_lezhin_comics import LezhinComicsScraper
     from scrapers.K_kakaopage import KakaopageScraper
 else:
-    # from .directory_merger import FolderMerger
-    # from . import webtoon
+    # from .directory_merger import DirectoryMerger
     from .scrapers.A_scraper import Scraper
     from .scrapers.B_naver_webtoon import NaverWebtoonScraper
     from .scrapers.C_best_challenge import BestChallengeScraper
@@ -48,7 +46,7 @@ BF = BUFFTOON = 'bufftoon'
 P = POST = NAVER_POST = 'naver_post'
 G = NAVER_GAME = 'naver_game'
 L = LEZHIN = 'lezhin'
-K = KAKAOPAGE = 'kakaopage'
+KP = KAKAOPAGE = 'kakaopage'
 
 PLATFORMS = (
     'naver_webtoon',
@@ -177,11 +175,11 @@ async def get_scraper_class(webtoon_type: WebtoonPlatforms) -> type[Scraper]:
     return webtoonscraper
 
 
-async def get_webtoon_async(
+async def download_webtoon_async(
         titleid: TitleId,
         webtoon_type: WebtoonPlatforms | None = None,
         *,
-        merge: int | None = None,
+        merge_amount: int | None = None,
         cookie: str | None = None,
         is_auto_select: bool = False,
         episode_no_range: tuple[int, int] | int | None = None,
@@ -203,10 +201,10 @@ async def get_webtoon_async(
         if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
-    await webtoon_scraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge)
+    await webtoon_scraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge_amount)
 
 
-def get_webtoon(
+def download_webtoon(
         titleid: TitleId,
         webtoon_type: WebtoonPlatforms | None = None,
         *,
@@ -216,13 +214,13 @@ def get_webtoon(
         episode_no_range: tuple[int, int] | int | None = None,
         authorization: str | None = None
 ) -> None:
-    asyncio.run(get_webtoon_async(titleid, webtoon_type, merge=merge, cookie=cookie, is_auto_select=is_auto_select,
-                                  episode_no_range=episode_no_range, authorization=authorization))
+    asyncio.run(download_webtoon_async(titleid, webtoon_type, merge_amount=merge, cookie=cookie, is_auto_select=is_auto_select,
+                                       episode_no_range=episode_no_range, authorization=authorization))
 
 
-async def get_webtoons_getting_paid_async(
+async def download_webtoons_getting_paid_async(
         noticeid: int,
-        merge: int | None = None,
+        merge_amount: int | None = None,
 ) -> None:
     res = requests.get(
         f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})
@@ -232,7 +230,7 @@ async def get_webtoons_getting_paid_async(
         'href').removeprefix('https://comic.naver.com/webtoon/list?titleId='))
 
     for titleid in titleids:
-        await get_webtoon_async(titleid, NAVER_WEBTOON, merge=merge)
+        await download_webtoon_async(titleid, NAVER_WEBTOON, merge_amount=merge_amount)
 
 if __name__ == '__main__':
     ...
