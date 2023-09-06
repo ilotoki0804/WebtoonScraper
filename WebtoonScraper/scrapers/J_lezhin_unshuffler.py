@@ -12,10 +12,10 @@ from PIL import Image
 
 if __name__ in {"__main__", "J_lezhin_unshuffler"}:
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes_, move_thumbnail_only
+    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes, move_thumbnail_only
     from WebtoonScraper.exceptions import DirectoryStateUnmatched
 else:
-    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes_, move_thumbnail_only
+    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes, move_thumbnail_only
     from ..exceptions import DirectoryStateUnmatched
 
 
@@ -51,7 +51,7 @@ def unshuffle_webtoon_directory_to_directory(
         source_episode_directory = source_webtoon_directory / episode_directory_name
         target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        processed_directory_name = webtoon_regexes_[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
+        processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
         if processed_directory_name is None:
             logging.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
             continue

@@ -29,9 +29,9 @@ from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes_, NORMAL_IMAGE
+    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 else:
-    from ..directory_merger import merge_webtoon, webtoon_regexes_, NORMAL_IMAGE
+    from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 
 TitleId = int | tuple[int, int] | str
 

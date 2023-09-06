@@ -40,7 +40,7 @@ FileStates = Literal['normal_episode_directory', 'normal_image', 'merged_episode
 PathOrStr = str | Path
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
-FILE_TO_CONTAINER: dict[FileStates, ContainerStates] = {
+FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
     NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
     NORMAL_IMAGE: NORMAL_EPISODE_DIRECTORY,
 
@@ -53,18 +53,8 @@ FILE_TO_CONTAINER: dict[FileStates, ContainerStates] = {
 CONTAINER_TO_FILE: Final[dict[str, str]] = dict(map(reversed, FILE_TO_CONTAINER.items()))  # type: ignore
 
 
-class WebtoonRegexes(NamedTuple):
-    normal_image: re.Pattern
-    normal_episode_directory: re.Pattern
-    merged_directory: re.Pattern
-    unified_image: re.Pattern
-    webtoon_directory: re.Pattern
-
-
-# webtoon_regexes = None
-
 # 각 라인 끝 주석 처리된 부분: 덜 예민한 버전(거의 대부분 매치 개수 관련임)의 regex; 만약 현재 regex가 잘 작동하지 않을 경우 사용할 것. 없을 수도 있음.
-webtoon_regexes_: dict[FileStates, re.Pattern[str]] = {
+webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
     NORMAL_EPISODE_DIRECTORY: re.compile(r'^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$'),  # 0001. episode_name
     NORMAL_IMAGE: re.compile(r'^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$'),  # 023.jpg
     # ^(?P<image_no>\d+)[.](?P<extension>[a-zA-Z0-9]+)$
@@ -261,7 +251,7 @@ def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory
     하지만 기존 방식이 딱히 인식률이 좋지 않거나 단점이 있는 것이 아니라서 일반적인 환경에서는 굳이 이용할 이유가 없습니다.
     """
     if is_real_webtoon_directory:
-        processed_webtoon_directory_name = webtoon_regexes_[WEBTOON_DIRECTORY].match(source_webtoon_directory.name)
+        processed_webtoon_directory_name = webtoon_regexes[WEBTOON_DIRECTORY].match(source_webtoon_directory.name)
         if processed_webtoon_directory_name is not None:
             webtoon_name = processed_webtoon_directory_name.group('webtoon_name')
         else:
@@ -270,7 +260,7 @@ def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory
             return
 
         for episode_or_thumbnail in os.listdir(source_webtoon_directory):
-            processed_episode_or_thumbnail_directory_name = webtoon_regexes_[WEBTOON_DIRECTORY].match(episode_or_thumbnail.removeprefix('TEMP-thumbnail-'))
+            processed_episode_or_thumbnail_directory_name = webtoon_regexes[WEBTOON_DIRECTORY].match(episode_or_thumbnail.removeprefix('TEMP-thumbnail-'))
             if processed_episode_or_thumbnail_directory_name is None or not processed_episode_or_thumbnail_directory_name.group('webtoon_name'):
                 continue
             if processed_episode_or_thumbnail_directory_name.group(1) == webtoon_name:
@@ -321,10 +311,10 @@ def move_folder_contents(
 
 def get_merged_image_name(image_name, episode_name) -> str:
     """merged 상태의 image가 가져야 할 이름을 내놓습니다."""
-    image_name_processed: re.Match[str] | None = webtoon_regexes_[NORMAL_IMAGE].match(image_name)
-    episode_name_processed: re.Match[str] | None = webtoon_regexes_[NORMAL_EPISODE_DIRECTORY].match(episode_name)
+    image_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_IMAGE].match(image_name)
+    episode_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_name)
     if not episode_name_processed:
-        if webtoon_regexes_[MERGED_EPISODE_DIRECTORY].match(episode_name):
+        if webtoon_regexes[MERGED_EPISODE_DIRECTORY].match(episode_name):
             raise ValueError(
                 "Episode name is not valid. It's because you tried to merge already merged webtoon directory.")
         raise ValueError(f'Episode name is not valid. Episode name: {episode_name}')
@@ -343,7 +333,7 @@ def find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
     """Unified된 이미지들의 이름을 받아 거기 있는 episode_no를 뽑아냅니다."""
     unique_ids: set[int] = set()
     for image in image_names:
-        result = webtoon_regexes_[MERGED_IMAGE].match(image)
+        result = webtoon_regexes[MERGED_IMAGE].match(image)
         if result is None:
             directory_state = check_filename_state(image)
             raise DirectoryStateUnmatched(
@@ -364,7 +354,7 @@ def make_merged_directory_name(image_names: list[str]) -> str:
 def check_filename_state(file_or_directory_name: str) -> FileStates:
     """한 파일(혹은 디렉토리) 이름의 상태를 확인합니다."""
     # sourcery skip: use-next; for simplicity and extensibility, decide not to apply 'use-next'
-    for state_name, regex in webtoon_regexes_.items():
+    for state_name, regex in webtoon_regexes.items():
         if regex.match(file_or_directory_name):
             return state_name
     return NOT_MATCHED
@@ -388,7 +378,7 @@ def fast_check_container_state(directory: PathOrStr) -> ContainerStates:
         # 이때 check_filename_state를 사용하면 정확한 결과를 얻을 수 있다.
         return FILE_TO_CONTAINER[check_filename_state(episodes_or_images[0])]
 
-    for state_name, regex in webtoon_regexes_.items():
+    for state_name, regex in webtoon_regexes.items():
         # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
         number_of_images_NOT_matched = sum(
             0 if regex.match(episode_or_image) else 1
@@ -423,7 +413,7 @@ def detailed_check_directory_state(directory: PathOrStr) -> ContainerStates:
 
     directory_states_dict: dict[FileStates, tuple[bool, int]] = {}
 
-    for state_name, regex in webtoon_regexes_.items():
+    for state_name, regex in webtoon_regexes.items():
         # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
         number_of_images_NOT_matched = sum(
             0 if regex.match(episode_or_image) else 1
@@ -487,7 +477,7 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
     images = os.listdir(directory)
 
     for image in images:
-        image_info = webtoon_regexes_[MERGED_IMAGE].match(image)
+        image_info = webtoon_regexes[MERGED_IMAGE].match(image)
         if not image_info:
             raise ValueError('image name is not valid. Possibly trying not merged webtoon folder.')
         episode_no = image_info.group('episode_no')
