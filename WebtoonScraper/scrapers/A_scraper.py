@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 from async_lru import alru_cache
-from requests_utils import CustomDefaults
+from requests_utils.custom_defaults import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
@@ -103,7 +103,7 @@ class Scraper(metaclass=ABCMeta):
         # kwargs: dict = {}
         # 해당 값을 이 값으로 수정하는 코드 제작하기!!!!
 
-        if hasattr(self, '_TIMEOUT'):
+        if hasattr(self, '_timeout'):
             kwargs.update(timeout=self.timeout)
 
         if hasattr(self, '_attempt'):
@@ -119,11 +119,11 @@ class Scraper(metaclass=ABCMeta):
 
     @property
     def timeout(self) -> int:
-        return self._TIMEOUT
+        return self._timeout
 
     @timeout.setter
     def timeout(self, timeout: int):
-        self._TIMEOUT = timeout
+        self._timeout = timeout
         self.update_requests()
 
     @property
@@ -245,9 +245,16 @@ class Scraper(metaclass=ABCMeta):
 ################################## MAIN ACTION ##################################
 
     @final
-    def download_one_webtoon(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
+    def download_one_webtoon(
+        self,
+        titleid: TitleId,
+        episode_no_range: tuple[int, int] | int | None = None,
+        concurrent_download_episode_amount: int = 1,
+        merge_amount: int | None = None
+    ) -> None:
         """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
-        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range, merge))
+        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range,
+                                                    concurrent_download_episode_amount, merge_amount))
 
     @final
     async def download_one_webtoon_async(
@@ -255,7 +262,7 @@ class Scraper(metaclass=ABCMeta):
         titleid: TitleId,
         episode_no_range: tuple[int | None, int | None] | int | None = None,
         concurrent_download_episode_amount: int = 1,
-        merge: int | None = None
+        merge_amount: int | None = None
     ) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
@@ -317,7 +324,7 @@ class Scraper(metaclass=ABCMeta):
 
         webtoon_dir = await self.unshuffle_lezhin_webtoon(titleid, webtoon_dir)
 
-        if merge is not None:
+        if merge_amount is not None:
             print('Merging webtoon has started...')
             merge_webtoon(webtoon_dir, 5)
             print('Merging webtoon ended.')
@@ -347,7 +354,7 @@ class Scraper(metaclass=ABCMeta):
             if not self.loosely_check_existing_episode:
                 return len(os.listdir(episode_dir)) == len(image_urls)
 
-            is_filename_appropriate = all(webtoon_regexes_[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
+            is_filename_appropriate = all(webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
             if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
                 self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
                 shutil.rmtree(episode_dir)

@@ -201,7 +201,7 @@ async def download_webtoon_async(
         if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
-    await webtoon_scraper.download_one_webtoon_async(titleid, episode_no_range, merge=merge_amount)
+    await webtoon_scraper.download_one_webtoon_async(titleid, episode_no_range, merge_amount=merge_amount)
 
 
 def download_webtoon(
