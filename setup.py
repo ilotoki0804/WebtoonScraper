@@ -6,8 +6,8 @@ import WebtoonScraper
 long_description = '이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [여기](https://github.com/ilotoki0804/WebtoonScraper)를 참고하세요.\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
 # 사진 대체
-repl = r'![\g<1>](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/\g<2>)'
-long_description = re.sub(r'!\[(.+?)\]\((images\/.+?)\)', repl, long_description)
+repl = r'[\g<1>](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/\g<2>)'
+long_description = re.sub(r'[[](.*?)[]][(]((?:images|docs).*?)[)]', repl, long_description)
 
 version = WebtoonScraper.__version__
 
