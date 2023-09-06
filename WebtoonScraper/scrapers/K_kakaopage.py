@@ -18,9 +18,9 @@ class KakaopageScraper(Scraper):
     def __init__(self, pbar_independent=False, cookie: str = ''):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://page.kakao.com'
-        self.IS_STABLE_CONNECTION = False
+        self.is_stable_connection = False
         self.COOKIE = cookie
-        self.HEADERS = {}
+        self.headers = {}
         self.GRAPHQL_HEADERS = {
             "Accept": "application/graphql+json, application/json",
             "Accept-Encoding": "gzip, deflate, br",

@@ -19,8 +19,8 @@ class TelescopeScraper(Scraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.manhwakyung.com'
-        self.IS_STABLE_CONNECTION = False
-        self.TIMEOUT = 3
+        self.is_stable_connection = False
+        self.timeout = 3
 
     @alru_cache(maxsize=4)
     async def get_webtoon_data(self, titleid):

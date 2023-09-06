@@ -23,7 +23,7 @@ class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
-        self.IS_STABLE_CONNECTION = True
+        self.is_stable_connection = True
         self.BASE_URL = 'https://post.naver.com'
 
     async def get_webtoon_dir_name(self, titleid: TitleId, title) -> str:

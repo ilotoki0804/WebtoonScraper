@@ -18,7 +18,7 @@ class NaverWebtoonScraper(Scraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://comic.naver.com/webtoon'
-        self.IS_STABLE_CONNECTION = True
+        self.is_stable_connection = True
         self.IS_BEST_CHALLENGE = False
         self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'  # for best challenge
 

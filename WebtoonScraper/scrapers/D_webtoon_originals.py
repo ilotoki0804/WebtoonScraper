@@ -20,8 +20,8 @@ class WebtoonOriginalsScraper(Scraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.webtoons.com/en/fantasy/watermelon'
-        self.IS_STABLE_CONNECTION = False
-        self.HEADERS = {
+        self.is_stable_connection = False
+        self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
             "Referer": "http://www.webtoons.com"
         }

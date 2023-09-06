@@ -22,7 +22,7 @@ class BufftoonScraper(Scraper):
     def __init__(self, pbar_independent: bool = False, cookie: str = ''):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://bufftoon.plaync.com'
-        self.IS_STABLE_CONNECTION = True
+        self.is_stable_connection = True
         self.COOKIE: str = cookie
 
     @alru_cache(maxsize=4)

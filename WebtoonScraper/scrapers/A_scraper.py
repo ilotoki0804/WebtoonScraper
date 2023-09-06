@@ -1,35 +1,9 @@
 """Abstract Class of all scrapers."""
 
-# [x]: file_acceptable built-in으로 만들기
-# [x]: titleid tuple도 허용해서 NPScraper에서 이용할 수 있도록 하기
-# [x]: get_data 시 list로 정보 받아오기
-# [x]: 레진코믹스 pyjsparser 대신 정적 분석 시도하기
-# [x]: noNone_select_one 사용하기
-# [x]: annotations 추가하고 필요 version낮추기
-# [x]: Webtoon get_webtoon_platform 조금 더 잘 만들 방법 강구하기
-# [x]: print문 모두 제거하고 logging으로 변경하기
-# [x]: None 대신 NoReturn 사용하기 > NoReturn 관련 버그가 없어지기 전까지 유예
-# [x]: 카카오 웹툰/카카오 페이지 웹툰
-# [x]: requests_utils로 변경하기
-# PENDING: 네이버 블로그 만들기
-# TODO: download vs save : 용어 정리하기 > download_webtoon_thumbnail로 바꾸고, download_webtoon이랑 download_episode로 변경
-# TODO: short_connection 등 docs 추가하기
-# TODO: get_webtoon_data에서 dataclass같은 걸 이용해서 self.webtoon_data.titleid같을 걸로 이용할 수 있도록 함.
-# TODO: titleid를 __init__에 넣고 나머지 titleid, titleno? 제거하기
-# TODO: callback 추가하기
-# TODO: 직접 error 만들기
-# TODO: 데이터 구조 따로 빼기
-# TODO: 클래스 여러 개로 나누기
-# TODO: is_available_link 추가하기
-# TODO: overload ... 위치 옮기기
-# TODO: 모듈 이름 snakecase로 변경하기
-# TODO: merge를 merge_amout로 변경하기
-# TODO: 웹툰 메인 페이지에서 받는 정보는 따로 빼기
-# TODO: cache 대신 객체 형식으로 변경
-# TODO: 웹툰 다운 받기 전에 is_merged 체크 한 번 하기
-# TODO: webtoon_metadate webtoon_episodes_infomation
+
 
 from __future__ import annotations
+import itertools
 import re
 import os
 import asyncio
@@ -55,9 +29,9 @@ from requests_utils import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes
+    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes_, NORMAL_IMAGE
 else:
-    from ..directory_merger import merge_webtoon, webtoon_regexes
+    from ..directory_merger import merge_webtoon, webtoon_regexes_, NORMAL_IMAGE
 
 TitleId = int | tuple[int, int] | str
 
@@ -85,58 +59,88 @@ class Scraper(metaclass=ABCMeta):
         Args:
             pbar_independent: 만약 True라면 tqdm을 이용해서 로그를 표시하고, False라면 print를 통해서 로그를 표시합니다.
         """
-        self.HEADERS = {
+        self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                           '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
         self.BASE_URL = ''
-        self.BASE_DIR = 'webtoon'
-        self.TIMEOUT = 20
+        self.base_directory = 'webtoon'
+        # self.TIMEOUT = 20
+        # self.attempt = 2
         self.PBAR_INDEPENDENT = pbar_independent
-        self.IS_STABLE_CONNECTION = True
-        self.short_connection = False
+        # self.IS_STABLE_CONNECTION = True
         self.loop = asyncio.get_running_loop()
-        self.update_requests()
+        self.loosely_check_existing_episode = False  # todo: 관련 요소 추가하기
+        self.update_requests(
+            timeout=20,
+            attempt=2,
+            # short_connection=False,
+        )
+        self.short_connection = False
 
     # RELATED TO CustomDefaults
 
-    def update_requests(self):
-        kwargs: dict = {}
-        if hasattr(self, '_TIMEOUT'):
-            kwargs.update(timeout=self.TIMEOUT)
+    @property
+    def cookie(self) -> str:
+        return self._cookie
 
-        if hasattr(self, '_IS_STABLE_CONNECTION'):
-            kwargs.update(attempt=self.IS_STABLE_CONNECTION)
+    @cookie.setter
+    def cookie(self, cookie: str):
+        """Property can be inherited."""
+        self._cookie = cookie
+        self.headers |= {"Cookie": cookie}
+
+    @property
+    def attempt(self) -> int:
+        return self._attempt
+
+    @attempt.setter
+    def attempt(self, attempt: int):
+        self._attempt = attempt
+        self.update_requests()
+
+    def update_requests(self, **kwargs):
+        # kwargs: dict = {}
+        # 해당 값을 이 값으로 수정하는 코드 제작하기!!!!
+
+        if hasattr(self, '_TIMEOUT'):
+            kwargs.update(timeout=self.timeout)
+
+        if hasattr(self, '_attempt'):
+            kwargs.update(attempt=self.attempt)
 
         if hasattr(self, '_HEADERS'):
-            kwargs.update(headers=self.HEADERS)
+            kwargs.update(headers=self.headers)
+
+        if hasattr(self, '_IS_STABLE_CONNECTION'):
+            kwargs.update(attempt=4)
 
         self.requests = CustomDefaults(**kwargs)
 
     @property
-    def TIMEOUT(self) -> int:
+    def timeout(self) -> int:
         return self._TIMEOUT
 
-    @TIMEOUT.setter
-    def TIMEOUT(self, timeout: int):
+    @timeout.setter
+    def timeout(self, timeout: int):
         self._TIMEOUT = timeout
         self.update_requests()
 
     @property
-    def IS_STABLE_CONNECTION(self) -> bool:
+    def is_stable_connection(self) -> bool:
         return self._IS_STABLE_CONNECTION
 
-    @IS_STABLE_CONNECTION.setter
-    def IS_STABLE_CONNECTION(self, IS_STABLE_CONNECTION: bool):
+    @is_stable_connection.setter
+    def is_stable_connection(self, IS_STABLE_CONNECTION: bool):
         self._IS_STABLE_CONNECTION = IS_STABLE_CONNECTION
         self.update_requests()
 
     @property
-    def HEADERS(self):
+    def headers(self):
         return self._HEADERS
 
-    @HEADERS.setter
-    def HEADERS(self, headers):
+    @headers.setter
+    def headers(self, headers):
         self._HEADERS = headers
         self.update_requests()
 
@@ -162,10 +166,11 @@ class Scraper(metaclass=ABCMeta):
                 False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
         """
         if short_connection:
-            self.TIMEOUT = 3
-            self.IS_STABLE_CONNECTION = False
+            self.timeout = 3
+            self.is_stable_connection = False
 
         self._short_connection = short_connection
+        self.update_requests()
 
     @final
     def _set_pbar(self, description: str) -> None:
@@ -184,7 +189,7 @@ class Scraper(metaclass=ABCMeta):
                 오류를 피하려면 처음 시작할 때 pbar_independent를 True로 하거나 download_one_webtoon_async을/를 사용하는 것을 추천합니다.
         """
         if self.PBAR_INDEPENDENT:
-            logging.warning(description)
+            print(description)
         else:
             self.pbar.set_description(description)
 
@@ -229,12 +234,12 @@ class Scraper(metaclass=ABCMeta):
 
     @final
     @property
-    def BASE_DIR(self):
+    def base_directory(self):
         return self._BASE_DIR
 
     @final
-    @BASE_DIR.setter
-    def BASE_DIR(self, BASE_DIR):
+    @base_directory.setter
+    def base_directory(self, BASE_DIR):
         self._BASE_DIR = Path(BASE_DIR)
 
 ################################## MAIN ACTION ##################################
@@ -245,21 +250,34 @@ class Scraper(metaclass=ABCMeta):
         asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range, merge))
 
     @final
-    async def download_one_webtoon_async(self, titleid: TitleId, episode_no_range: tuple[int, int] | int | None = None, merge: int | None = None) -> None:
+    async def download_one_webtoon_async(
+        self,
+        titleid: TitleId,
+        episode_no_range: tuple[int | None, int | None] | int | None = None,
+        concurrent_download_episode_amount: int = 1,
+        merge: int | None = None
+    ) -> None:
         """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
 
-        주의: 유료 회차는 다운로드받을 수 없다.
-        :titleid: 다운로드할 웹툰의 titleid 혹은 title_no를 입력한다.
-        :episode_no_range: 다운로드할 회차를 정한다.
-                                tuple일 경우: (처음, 끝) 순서로 값을 받는다. 이때 끝을 포함한다.
-                                    예) (1,10): 1회차부터 10회차를 다운로드함
-                                int일 경우: 한 회차만 다운로드 받는다.
-                                None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
-        :merge: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶는다.
+        주의: 유료 회차는 다운로드받을 수 없습니다.
+        Args:
+            titleid: 다운로드할 웹툰의 titleid 혹은 title_no를 입력한다.
+            episode_no_range
+                다운로드할 회차의 범위를
+                tuple일 경우: (처음, 끝)의 튜플로 값을 받습니다. 이때 끝을 포함합니다.
+                    예) (1,10): 1회차부터 10회차를 다운로드함
+                int일 경우: 한 회차만 다운로드 받는다.
+                None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
+            merge: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶는다.
+            concurrent_download_episode_amount (int | None)
+                에피소드를 얼마나 동시에 다운로드 받을지 설정합니다.
+                만약 None(기본값)이라면 에피소드를 1개씩 다운로드 받습니다.
+                
+            
         """
         title = self.get_safe_file_name(await self.get_title(titleid))
         webtoon_dir_name = await self.get_webtoon_dir_name(titleid, title)
-        webtoon_dir = self.BASE_DIR / webtoon_dir_name
+        webtoon_dir = self.base_directory / webtoon_dir_name
         self.webtoon_dir = webtoon_dir
 
         webtoon_dir.mkdir(parents=True, exist_ok=True)
@@ -268,25 +286,41 @@ class Scraper(metaclass=ABCMeta):
 
         episode_no_list = await self.get_all_episode_no(titleid)
         if not episode_no_range:
-            episode_no_list_plus_1 = range(1, len(episode_no_list) + 1)
+            episode_no_list = range(len(episode_no_list))
         elif isinstance(episode_no_range, int):
-            episode_no_list_plus_1 = (episode_no_range,)
+            # 사용자용 넘버는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            episode_no_list = (episode_no_range - 1,)
         else:
             start, end = episode_no_range
-            episode_no_list_plus_1 = range(start, end + 1)
 
-        # episode_nos_plus_1 starts with 1, but episode_no starts with 0, so it needs to be subtracted from 1
-        self.pbar = tqdm([i - 1 for i in episode_no_list_plus_1])
-        for episode_no in self.pbar:
-            await self.download_one_episode(episode_no, titleid, webtoon_dir)
-        logging.warning(f'A webtoon {title} download ended.')
+            if start is None:
+                start = 1
+            if end is None:
+                end = len(episode_no_list)
+
+            # 사용자용 넘버는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            episode_no_list = range(start - 1, end)
+
+        self.pbar = tqdm(episode_no_list)
+        if concurrent_download_episode_amount != 1:
+            for _, group in itertools.groupby(enumerate(self.pbar), key=lambda x: x[0] // 2):
+                # for i, episode_no in group:
+                #     print(i, episode_no)
+                # print([episode_no for i, episode_no in group])
+                # print(i)
+                # time.sleep(0.1)
+                print('"concurrent_download_episode_amount" is not supported yet.')
+        else:
+            for episode_no in self.pbar:
+                await self.download_one_episode(episode_no, titleid, webtoon_dir)
+            print(f'A webtoon {title} download ended.')
 
         webtoon_dir = await self.unshuffle_lezhin_webtoon(titleid, webtoon_dir)
 
         if merge is not None:
-            logging.warning('Merging webtoon has started...')
+            print('Merging webtoon has started...')
             merge_webtoon(webtoon_dir, 5)
-            logging.warning('Merging webtoon ended.')
+            print('Merging webtoon ended.')
 
     async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
         return f'{title}({titleid})'
@@ -309,7 +343,11 @@ class Scraper(metaclass=ABCMeta):
             episode_dir.mkdir()
         except FileExistsError:
             self._set_pbar(f'checking integrity of {subtitle}')
-            is_filename_appropriate = all(webtoon_regexes.normal_image.match(file) for file in os.listdir(episode_dir))
+
+            if not self.loosely_check_existing_episode:
+                return len(os.listdir(episode_dir)) == len(image_urls)
+
+            is_filename_appropriate = all(webtoon_regexes_[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
             if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
                 self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
                 shutil.rmtree(episode_dir)

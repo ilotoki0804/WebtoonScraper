@@ -28,7 +28,7 @@ class LezhinComicsScraper(Scraper):
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
         self.BASE_URL = 'https://www.lezhin.com/ko/comic'
-        self.IS_STABLE_CONNECTION = True
+        self.is_stable_connection = True
         self.EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'  # for best challenge
         self.COOKIE: str = ''
         self.AUTHORIZATION: str = ''
