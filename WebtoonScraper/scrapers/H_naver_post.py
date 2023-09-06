@@ -19,6 +19,7 @@ else:
 
 TitleId = tuple[int, int]
 
+
 class NaverPostScraper(Scraper):
     '''Scrape webtoons from Naver Post.'''
     def __init__(self, pbar_independent=False):
@@ -73,7 +74,7 @@ class NaverPostScraper(Scraper):
     async def download_webtoon_thumbnail(self, titleid: TitleId, title, thumbnail_dir):
         series_no, member_no = titleid
         url = f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}'
-        image_url_original = requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
+        image_url_original = self.requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
         image_url: str = image_url_original['content']
         image_extension = self.get_file_extension(image_url)
         image_raw: bytes = self.requests.get(image_url).content
@@ -107,7 +108,7 @@ class NaverPostScraper(Scraper):
 
         # 문서 내에 있는 모든 이미지 링크를 불러옴
         selector = 'div.se_component_wrap.sect_dsc.__se_component_area > div > div > div > div > a > img'
-        episode_images_url: list[str] = [tag['data-src'] for tag in soup_content.select(selector)]
+        episode_images_url: list[str] = [tag['data-src'] for tag in soup_content.select(selector)]  # FIXME: 작동하는지 여부 확인
 
         return [url for url in episode_images_url
                 if not url.startswith('https://mail.naver.com/read/image/')]
