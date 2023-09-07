@@ -65,12 +65,27 @@ def unshuffle_webtoon_directory_to_directory(
     print("Unshuffling is started. It takes a while and it's very CPU-intensive task. "
           'So keep patient and wait until the process end.')
     with multiprocessing.Pool(process_number) as p:
-        unshuffled_episode_ids = p.imap(lambda x: unshuffle_episode(*x), unshuffle_parameters)
-        tqdm_instance = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
-        for i, episode_id_int in enumerate(tqdm_instance, 1):
-            tqdm_instance.set_description(f'Episode {episode_id_int}(#{i} episode) unshuffle ended')
+        # # Unfortunately, this isn't work. But I don't know why.
+        # unshuffled_episode_ids = p.imap(lambda x: unshuffle_episode(*x), unshuffle_parameters)
+
+        # # this one cannot utilize tqdm, so deprecated.
+        # p.starmap(unshuffle_episode, unshuffle_parameters)
+
+        unshuffled_episode_ids = p.imap(unshuffle_episode_unpacking, unshuffle_parameters)
+        progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
+        for episode_name in progress_bar:
+            progress_bar.set_description(f'Episode {episode_name} unshuffle ended')
 
     logging.info('Unshuffling ended.')
+
+
+def unshuffle_episode_unpacking(args):
+    """
+    Equevalent to `lambda x: unshuffle_episode(*x)`,
+    but it doesn't work well with multiprocessing.Pool,
+    so this is defined separately.
+    """
+    return unshuffle_episode(*args)
 
 
 def unshuffle_episode(source_episode_directory: Path, target_episode_directory: Path, episode_id_int: int):
@@ -95,7 +110,7 @@ def unshuffle_episode(source_episode_directory: Path, target_episode_directory: 
         target_image_path = target_episode_directory / image_name
         unshuffle_image_and_save(source_image_path, target_image_path, image_order)
 
-    return episode_id_int
+    return source_episode_directory.name
 
 
 def get_random_numbers_of_certain_seed(seed):
