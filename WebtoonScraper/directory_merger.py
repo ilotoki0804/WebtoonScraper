@@ -175,7 +175,12 @@ def merge_webtoon(
     """
     temp_target_webtoon_directory = Path(f'{webtoon_directory}(merged)')
     merge_webtoon_directory_to_directory(webtoon_directory, temp_target_webtoon_directory, merge_amount)
-    temp_target_webtoon_directory.rename(webtoon_directory)
+    try:
+        temp_target_webtoon_directory.rename(webtoon_directory)
+    except PermissionError:
+        logging.error(f'Failed to rename {temp_target_webtoon_directory.name} to {webtoon_directory.name}. '
+                      "It's quite often situation so nothing to concern about. "
+                      "But you have to change its name by hand.")
 
 
 def merge_webtoon_directory_to_directory(
