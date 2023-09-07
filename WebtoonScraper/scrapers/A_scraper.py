@@ -70,7 +70,10 @@ class Scraper(metaclass=ABCMeta):
         self.PBAR_INDEPENDENT = pbar_independent
         # self.IS_STABLE_CONNECTION = True
         self.loop = asyncio.get_running_loop()
-        self.loosely_check_existing_episode = False  # todo: 관련 요소 추가하기
+        # self.existing_episode_checking_mode: Literal[
+        #     'interrupt_during_download', 'assume_legimate',
+        #     'hard_check', 'dont_envolve_requests'
+        # ] = 'interrupt_during_download'
         self.update_requests(
             timeout=20,
             attempt=2,
@@ -128,7 +131,7 @@ class Scraper(metaclass=ABCMeta):
 
     @property
     def is_stable_connection(self) -> bool:
-        return self._IS_STABLE_CONNECTION
+        return self._IS_STABLE_CONNECTION  # TODO: 이름 변경하기!
 
     @is_stable_connection.setter
     def is_stable_connection(self, IS_STABLE_CONNECTION: bool):
@@ -340,28 +343,42 @@ class Scraper(metaclass=ABCMeta):
         return base_webtoon_dir
 
     @final
-    def _check_validate_of_files(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
+    def make_directory_or_check_if_directory_is_valid(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
         """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
 
         None를 return한다면 회차를 다운로드해야 한다는 의미이다.
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미한다.
         """
-        try:
+
+        if episode_dir.is_file():
+            # sourcery skip
+            shutil.move(episode_dir, episode_dir.parent
+                        / ('(replaced)' + episode_dir.name))
             episode_dir.mkdir()
-        except FileExistsError:
-            self._set_pbar(f'checking integrity of {subtitle}')
 
-            if not self.loosely_check_existing_episode:
-                return len(os.listdir(episode_dir)) == len(image_urls)
+        if not episode_dir.is_dir():
+            episode_dir.mkdir()
 
-            is_filename_appropriate = all(webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
-            if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
-                self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
-                shutil.rmtree(episode_dir)
-                episode_dir.mkdir()
-            else:
-                self._set_pbar(f'skipping {subtitle}')
-                return True
+        self._set_pbar(f'checking integrity of {subtitle}')
+
+        # WIP
+        # modes: 'interrupt_during_download', 'assume_legimate', 'hard_check', 'dont_envolve_requests'
+        # 'dont_envolve_requests' is processed in higher function.
+
+        # if self.existing_episode_checking_mode == 'assume_legimate':
+        #     return True
+
+        # if self.existing_episode_checking_mode == 'dont_envolve_requests':
+        #     return len(os.listdir(episode_dir)) == len(image_urls)
+
+        is_filename_appropriate = all(webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
+        if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
+            self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
+            shutil.rmtree(episode_dir)
+            episode_dir.mkdir()
+        else:
+            self._set_pbar(f'skipping {subtitle}')
+            return True
 
     @final
     async def download_one_episode(self, episode_no: int, titleid: TitleId, webtoon_dir: Path) -> None:
@@ -381,7 +398,7 @@ class Scraper(metaclass=ABCMeta):
             return
 
         episode_dir = webtoon_dir / f'{episode_no + 1:04d}. {subtitle}'
-        if self._check_validate_of_files(episode_dir, episode_no, episode_images_url, subtitle):
+        if self.make_directory_or_check_if_directory_is_valid(episode_dir, episode_no, episode_images_url, subtitle):
             return
 
         self._set_pbar(f'downloading {subtitle}')
