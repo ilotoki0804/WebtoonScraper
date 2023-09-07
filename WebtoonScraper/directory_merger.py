@@ -25,6 +25,9 @@ NORMAL_IMAGE: Final = 'normal_image'
 
 MERGED_WEBTOON_DIRECTORY: Final = 'merged_webtoon_directory'
 MERGED_EPISODE_DIRECTORY: Final = 'merged_episode_directory'
+# merged episode directory와 unified webtoon directory는 본질적으로 같으며,
+# 의미를 확실하게 하기 위해 동일한 값의 다른 변수를 만듦.
+UNIFIED_WEBTOON_DIRECTORY: Final = MERGED_EPISODE_DIRECTORY
 MERGED_IMAGE: Final = 'merged_image'
 
 # 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 굳이 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용합니다.
@@ -34,9 +37,9 @@ WEBTOON_DIRECTORY: Final = 'webtoon_directory'
 NOT_MATCHED: Final = 'not_matched'
 
 ContainerStates = Literal['normal_webtoon_directory', 'normal_episode_directory', 'merged_webtoon_directory',
-                          'merged_episode_directory', 'webtoon_directory_container', 'not_matched', 'webtoon_directory']
+                          'merged_episode_directory', 'webtoon_directory_container', 'not_matched']
 FileStates = Literal['normal_episode_directory', 'normal_image', 'merged_episode_directory', 'merged_image',
-                     'webtoon_directory', 'not_matched', 'webtoon_directory_container']
+                     'webtoon_directory', 'not_matched']
 PathOrStr = str | Path
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
@@ -120,11 +123,11 @@ class DirectoryMerger:
 
         if manual_container_state is None:
             directory_state = fast_check_container_state(selected_directory)
-            if directory_state == NORMAL_EPISODE_DIRECTORY:
+            if directory_state == NORMAL_WEBTOON_DIRECTORY:
                 user_answer = input('Directory seems default state. Merge it? (merge, restore, anything else: merge) ').lower()
                 if user_answer not in {'merge', 'restore'}:
                     user_answer = 'merge'
-            elif directory_state == MERGED_EPISODE_DIRECTORY:
+            elif directory_state == MERGED_WEBTOON_DIRECTORY:
                 user_answer = input('Directory seems merged state. Restore it? (merge, restore, anything else: merge) ').lower()
                 if user_answer not in {'merge', 'restore'}:
                     user_answer = 'restore'
@@ -204,11 +207,11 @@ def merge_webtoon_directory_to_directory(
     else:
         directory_state = manual_directory_state
 
-    if directory_state == MERGED_EPISODE_DIRECTORY and merge_amount == 1:
+    if directory_state == MERGED_WEBTOON_DIRECTORY and merge_amount == 1:
         print('Value of episode_bundle is 1, so automatically revert directory state to original.')
         restore_webtoon(source_webtoon_directory)
         return
-    if directory_state in {MERGED_EPISODE_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY}:
+    if directory_state in {MERGED_WEBTOON_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY_CONTAINER}:
         raise DirectoryStateUnmatched(f'State of directory is {directory_state}, which cannot be merged.\n'
                                       f'sorce webtoon directory: {source_webtoon_directory}')
 
@@ -217,9 +220,9 @@ def merge_webtoon_directory_to_directory(
 
     move_thumbnail_only(source_webtoon_directory, target_webtoon_directory)
 
-    if directory_state == NORMAL_EPISODE_DIRECTORY:
+    if directory_state == NORMAL_WEBTOON_DIRECTORY:
         all_images_in_subdirectories_to_the_source_directory(source_webtoon_directory)
-    elif directory_state == MERGED_EPISODE_DIRECTORY:
+    elif directory_state == MERGED_WEBTOON_DIRECTORY:
         logging.info('Directory seems already unified, so skipping unifing.')
 
     episodes = os.listdir(source_webtoon_directory)
@@ -342,7 +345,7 @@ def find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
         if result is None:
             directory_state = check_filename_state(image)
             raise DirectoryStateUnmatched(
-                f'State of directory is {directory_state}, which cannot be merged.\nProblematic image name: {image}')
+                f'State of directory is {FILE_TO_CONTAINER[directory_state]}, which cannot be merged.\nProblematic image name: {image}')
         unique_ids.add(int(result.group('episode_no')))
     return unique_ids
 
@@ -469,9 +472,9 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
 
     if manual_directory_state is None:
         directory_state = fast_check_container_state(directory)
-        if directory_state == MERGED_EPISODE_DIRECTORY:
+        if directory_state == MERGED_WEBTOON_DIRECTORY:
             all_images_in_subdirectories_to_the_source_directory(directory, rename=False)
-        elif directory_state == MERGED_IMAGE:
+        elif directory_state == UNIFIED_WEBTOON_DIRECTORY:
             ...  # 나중의 코드 처리를 위한 빈칸
         else:
             raise DirectoryStateUnmatched(f'State of directory is {directory_state}, which cannot be restored.\n'
@@ -483,8 +486,7 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
 
     for image in images:
         image_info = webtoon_regexes[MERGED_IMAGE].match(image)
-        if not image_info:
-            raise ValueError('image name is not valid. Possibly trying not merged webtoon folder.')
+        assert image_info
         episode_no = image_info.group('episode_no')
         image_no = image_info.group('image_no')
         episode_name = image_info.group('episode_name')
