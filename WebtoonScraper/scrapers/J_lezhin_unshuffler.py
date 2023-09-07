@@ -8,14 +8,15 @@ import re
 import shutil
 import multiprocessing
 
+from tqdm import tqdm
 from PIL import Image
 
 if __name__ in {"__main__", "J_lezhin_unshuffler"}:
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes, move_thumbnail_only
+    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
     from WebtoonScraper.exceptions import DirectoryStateUnmatched
 else:
-    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_EPISODE_DIRECTORY, webtoon_regexes, move_thumbnail_only
+    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
     from ..exceptions import DirectoryStateUnmatched
 
 
@@ -29,7 +30,7 @@ def unshuffle_webtoon_directory_to_directory(
     source_webtoon_directory,
     target_webtoon_directory,
     episode_id_ints: list[int],
-    process_number: int = 8,
+    process_number: int | None = None,
     proceed_without_checking_directory_state: bool = False,
 ):
     # 웹툰을 다운로드 받을 때 유료 웹툰이거나 하는 이유로 일부 에피소드는 다운로드되지 않을 수 있음
@@ -43,7 +44,7 @@ def unshuffle_webtoon_directory_to_directory(
 
     if not proceed_without_checking_directory_state:
         directory_state = fast_check_container_state(source_webtoon_directory)
-        if directory_state != NORMAL_EPISODE_DIRECTORY:
+        if directory_state != NORMAL_WEBTOON_DIRECTORY:
             raise DirectoryStateUnmatched(f'Directory state is {directory_state}, which is not supported.')
 
     unshuffle_parameters = []
@@ -64,7 +65,10 @@ def unshuffle_webtoon_directory_to_directory(
     print("Unshuffling is started. It takes a while and it's very CPU-intensive task. "
           'So keep patient and wait until the process end.')
     with multiprocessing.Pool(process_number) as p:
-        p.starmap(unshuffle_episode, unshuffle_parameters)
+        unshuffled_episode_ids = p.imap(lambda x: unshuffle_episode(*x), unshuffle_parameters)
+        tqdm_instance = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
+        for i, episode_id_int in enumerate(tqdm_instance, 1):
+            tqdm_instance.set_description(f'Episode {episode_id_int}(#{i} episode) unshuffle ended')
 
     logging.info('Unshuffling ended.')
 
@@ -73,7 +77,7 @@ def unshuffle_episode(source_episode_directory: Path, target_episode_directory: 
     try:
         target_episode_directory.mkdir()
     except FileExistsError:
-        if check_filename_state(target_episode_directory.name) != NORMAL_EPISODE_DIRECTORY:
+        if check_filename_state(target_episode_directory.name) != NORMAL_WEBTOON_DIRECTORY:
             logging.warning(f'Damaged file or directory detected. Skip and continue. Name: {target_episode_directory.name}')
             return
         if len(os.listdir(target_episode_directory)) == len(os.listdir(source_episode_directory)):
@@ -90,6 +94,8 @@ def unshuffle_episode(source_episode_directory: Path, target_episode_directory: 
         source_image_path = source_episode_directory / image_name
         target_image_path = target_episode_directory / image_name
         unshuffle_image_and_save(source_image_path, target_image_path, image_order)
+
+    return episode_id_int
 
 
 def get_random_numbers_of_certain_seed(seed):
