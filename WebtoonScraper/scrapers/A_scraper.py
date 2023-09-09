@@ -12,14 +12,13 @@ from urllib import parse
 from abc import abstractmethod, ABC
 # from collections import namedtuple
 # from contextlib import suppress
-from typing import overload, TypedDict, ClassVar
+from typing import overload, ClassVar
 import logging
 import threading
-from requests.exceptions import ConnectionError
-from bs4 import BeautifulSoup
-from bs4.element import Tag
+# from requests.exceptions import ConnectionError
+# from bs4 import BeautifulSoup
+# from bs4.element import Tag
 from tqdm import tqdm
-from async_lru import alru_cache
 from requests_utils.custom_defaults import CustomDefaults
 
 if __name__ in ("__main__", "A_scraper"):

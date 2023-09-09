@@ -2,19 +2,14 @@
 # TODO: subtitle_list에서 subtitles로 변경하기
 
 from __future__ import annotations
-from enum import member
 from pathlib import Path
 from itertools import count
-import asyncio
 import logging
 import time
 from typing import NamedTuple, TYPE_CHECKING
 
-from async_lru import alru_cache
 import demjson3
 from bs4 import BeautifulSoup
-from requests_utils.exceptions import EmptyResultError
-from fake_useragent import UserAgent
 from typing_extensions import override
 
 if __name__ in ("__main__", "H_naver_post"):

@@ -7,7 +7,6 @@ from json.decoder import JSONDecodeError
 from typing_extensions import override
 from typing import TYPE_CHECKING, ClassVar
 
-from requests_utils.exceptions import EmptyResultError
 from async_lru import alru_cache
 
 if __name__ in ("__main__", "B_naver_webtoon"):

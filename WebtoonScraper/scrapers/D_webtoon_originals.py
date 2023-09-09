@@ -3,10 +3,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing_extensions import override
-from bs4 import BeautifulSoup
-from bs4.element import Tag
-from async_lru import alru_cache
-from requests_utils.exceptions import EmptyResultError
 
 if __name__ in ("__main__", "D_webtoon_originals"):
     from A_scraper import Scraper
