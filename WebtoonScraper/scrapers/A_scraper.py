@@ -7,7 +7,7 @@ import shutil
 import html
 from pathlib import Path
 import time
-from typing import Iterable
+from typing import Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
 # from collections import namedtuple
@@ -15,7 +15,6 @@ from abc import abstractmethod, ABC
 from typing import overload, TypedDict, ClassVar
 import logging
 import threading
-\
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -29,11 +28,11 @@ if __name__ in ("__main__", "A_scraper"):
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 
-TitleId = int | tuple[int, int] | str
 EpisodeNoRange = tuple[int | None, int | None] | int | None
+WebtoonId = TypeVar('WebtoonId', int, tuple[int, int], str)
 
 
-class Scraper(ABC):
+class Scraper(ABC, Generic[WebtoonId]):
     """Abstract class of all scrapers.
 
     init, get_internet, 전반적인 로직 등은 모두 이 페이지에서 관리하고, 구체적인 다운로드 방법은 각각의 scraper들에게 맡깁니다.
@@ -42,10 +41,10 @@ class Scraper(ABC):
     # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
     BASE_URL: ClassVar[str]
     IS_CONNECTION_STABLE: ClassVar[bool]
-    TEST_WEBTOON_ID: ClassVar[TitleId]
+    TEST_WEBTOON_ID: ClassVar
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int] = 0
 
-    def __init__(self, webtoon_id: TitleId) -> None:
+    def __init__(self, webtoon_id: WebtoonId) -> None:
         """시작에 필요한 여러가지를 관여합니다.
         주의: 이 함수는 반드시 subclass에서 재정의되어야 합니다.
         이 함수를 override할 때는 super().__init__(...)을 구현 "앞에" 위치하세요.
@@ -399,7 +398,7 @@ class Scraper(ABC):
         웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다.
         Args:
             webtoon_dir (Path): 썸네일을 저장할 디렉토리입니다.
-            file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자도
+            file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
         thumbnail_data: str | tuple[bytes, str] = self.webtoon_thumbnail
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
@@ -416,7 +415,7 @@ class Scraper(ABC):
         else:
             raise TypeError('Type of thumbnail_data(or self.webtoon_thumbnail) is invalid; It must be string or bytes.')
 
-        image_path = webtoon_dir / f'{self.title}.{image_extension}'
+        image_path = webtoon_dir / f'{self.get_safe_file_name(self.title)}.{image_extension}'
         image_path.write_bytes(image_raw)
 
     def get_episode_image_urls(self, episode_no: int) -> list[str]:
