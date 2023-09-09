@@ -130,5 +130,5 @@ class BufftoonScraper(Scraper[int]):
 
         return episode_images_url
 
-    def download_image(self, episode_dir: Path, url: str, image_no: int) -> None:
-        super().download_image(episode_dir, url, image_no, 'png')
+    def download_image(self, episode_dir: Path, url: str, image_no: int, file_extension: str | None = 'png') -> None:
+        super().download_image(episode_dir, url, image_no, file_extension)

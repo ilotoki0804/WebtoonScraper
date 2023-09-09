@@ -420,9 +420,9 @@ class Scraper(ABC, Generic[WebtoonId]):
         image_path = webtoon_dir / f'{self.get_safe_file_name(self.title)}.{image_extension}'
         image_path.write_bytes(image_raw)
 
+    # @abstractmethod
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
-        """해당 회차를 구성하는 이미지들을 불러옵니다. 만약 self.episode_image_urls가 없다면 반드시 직접 구현해야 합니다."""
-        return self.episode_image_urls[episode_no]  # type: ignore
+        """해당 회차를 구성하는 이미지들을 불러옵니다."""
 
     def setup(self, reload: bool = False) -> None:
         if reload or not self.is_webtoon_information_loaded:

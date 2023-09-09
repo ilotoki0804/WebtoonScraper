@@ -137,7 +137,7 @@ class LezhinComicsScraper(Scraper[str]):
             is_shuffled = False
 
         # departure는 product['episodes']와 동일하기에 departure를 사용해도 무관하다.
-        self.get_episode_infomations_from_json_data(product["episodes"])
+        self.get_episode_informations_from_json_data(product["episodes"])
 
         # webtoon infomation
         self.webtoon_thumbnail = thumbnail_url
@@ -151,9 +151,9 @@ class LezhinComicsScraper(Scraper[str]):
         self.is_webtoon_information_loaded = True
         self.is_episode_informations_loaded = True
 
-    def get_episode_infomations_from_json_data(
+    def get_episode_informations_from_json_data(
         self,
-        episode_infomations_raw: list[dict],
+        episode_informations_raw: list[dict],
         get_paid_episode: bool = False,
         get_unusable_episode: bool = False,
     ) -> None:
@@ -163,7 +163,7 @@ class LezhinComicsScraper(Scraper[str]):
         episode_type_chars: list[str] = []
         display_names: list[str] = []
         # for episode in departure:
-        for episode in reversed(episode_infomations_raw):
+        for episode in reversed(episode_informations_raw):
             # print(episode)
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
@@ -208,7 +208,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_id_ints = episode_id_ints
 
         # 기타 레진 한정 정보들
-        self.infomation_chars = episode_type_chars
+        self.information_chars = episode_type_chars
 
     # async def get_title(self, titleid):
     #     return await super().get_title(titleid)
