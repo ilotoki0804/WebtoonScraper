@@ -209,6 +209,14 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         return processed
 
+    def check_if_legitimate_webtoon_id(self) -> str | None:
+        """If webtoon_id is legitimate, return title. Otherwise, return None"""
+        try:
+            self.fetch_webtoon_information()
+            return self.title
+        except Exception:
+            return None
+
     @property
     def base_directory(self) -> Path:
         return self._base_directory
@@ -420,7 +428,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         image_path = webtoon_dir / f'{self.get_safe_file_name(self.title)}.{image_extension}'
         image_path.write_bytes(image_raw)
 
-    # @abstractmethod
+    @abstractmethod
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         """해당 회차를 구성하는 이미지들을 불러옵니다."""
 
@@ -431,7 +439,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         if reload or not self.is_episode_informations_loaded:
             self.fetch_episode_informations()
 
-    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
+    @abstractmethod
     def fetch_webtoon_information(self) -> None:
         """
         웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
@@ -445,7 +453,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         if self.is_webtoon_information_loaded:
             logging.warning('Refreshing webtoon_information')
 
-    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
+    @abstractmethod
     def fetch_episode_informations(self) -> None:
         """
         웹툰의 에피소드 정보를 불러옵니다. 웹툰에 대한 정보는 포함하지 않습니다.
@@ -458,12 +466,3 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         if self.is_episode_informations_loaded:
             logging.warning('Refreshing episode_informations')
-
-    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        """If webtoon_id is legitimate, return title. Otherwise, return None"""
-        try:
-            self.fetch_webtoon_information()
-            return self.title
-        except Exception:
-            return None
