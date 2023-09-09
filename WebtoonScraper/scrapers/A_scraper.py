@@ -179,7 +179,7 @@ class Scraper(ABC):
             파일 확장자를 반환합니다.
         """
         url_path = parse.urlparse(filename_or_url).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
-        extension_name = re.search(r'[.]\w+?$', url_path)
+        extension_name = re.search(r'(?<=[.])\w+?$', url_path)
         return None if extension_name is None else extension_name.group(0)
 
         # 이전 방식: 후에 제거할 것.
@@ -407,7 +407,7 @@ class Scraper(ABC):
                 image_extension = file_extension
             else:
                 image_extension = self.get_file_extension(thumbnail_data)
-                if file_extension is None:
+                if image_extension is None:
                     raise ValueError(f'File extension not detected. thumbnail_data: {thumbnail_data}')
 
             image_raw = self.requests.get(thumbnail_data).content
