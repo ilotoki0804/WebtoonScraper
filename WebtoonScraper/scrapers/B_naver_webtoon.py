@@ -16,11 +16,11 @@ else:
     from .A_scraper import Scraper
 
 
-class NaverWebtoonScraper(Scraper):
+class NaverWebtoonScraper(Scraper[int]):
     '''Scrape webtoons from Naver Webtoon.'''
     BASE_URL = 'https://comic.naver.com/webtoon'
     IS_CONNECTION_STABLE = True
-    TEST_WEBTOON_ID = 809590
+    TEST_WEBTOON_ID = 809590  # 이번 생
     IS_BEST_CHALLENGE: ClassVar[bool] = False
     # 네이버 웹툰과 베스트 도전은 selector가 다르기 때문에 필요함.
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
