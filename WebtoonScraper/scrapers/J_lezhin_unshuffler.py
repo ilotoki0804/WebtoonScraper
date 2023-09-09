@@ -134,7 +134,7 @@ def get_image_order_from_random_number(random_numbers):
     return image_order
 
 
-def get_episode_dir_no(episode_directory_name: str):
+def get_episode_directory_no(episode_directory_name: str):
     try:
         return int(episode_directory_name.split('.')[0])
     except ValueError as e:
@@ -145,7 +145,7 @@ def get_episode_dir_no(episode_directory_name: str):
                 'Episode name is not valid. It\'s because you tried merging already merged webtoon folder. '
                 '`unshuffle_webtoon` does not support merged webtoon.'
             )
-        raise ValueError('`episode_dir_name` is invalid. Maybe you tried to unshuffle merged webtoon directory. '
+        raise ValueError('`episode_directory_name` is invalid. Maybe you tried to unshuffle merged webtoon directory. '
                          '`unshuffle_webtoon` does not support merged webtoon.') from e
 
 

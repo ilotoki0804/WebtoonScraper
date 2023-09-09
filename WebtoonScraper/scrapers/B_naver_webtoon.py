@@ -4,10 +4,9 @@ from __future__ import annotations
 from itertools import count
 import logging
 from json.decoder import JSONDecodeError
-from typing_extensions import override
 from typing import TYPE_CHECKING, ClassVar
 
-from async_lru import alru_cache
+from typing_extensions import override
 
 if __name__ in ("__main__", "B_naver_webtoon"):
     from A_scraper import Scraper

@@ -6,10 +6,8 @@ from pathlib import Path
 import time
 import logging
 from typing import TYPE_CHECKING
-from typing_extensions import override
 
-from async_lru import alru_cache
-from requests_utils.exceptions import EmptyResultError
+from typing_extensions import override
 
 if __name__ in ("__main__", "G_bufftoon"):
     from A_scraper import Scraper
@@ -54,9 +52,10 @@ class BufftoonScraper(Scraper[int]):
         if cookie is not None:
             self.cookie: str = cookie
         else:
-            logging.warning('Without setting cookie extremely limiting the range of downloadable episodes. '
-                            'Please set cookie to valid download. '
-                            'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#네이버-포스트-다운로드하기')
+            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가심
+            # logging.warning('Without setting cookie extremely limiting the range of downloadable episodes. '
+            #                 'Please set cookie to valid download. '
+            #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
             self.cookie = ''
         self.update_requests()
 
@@ -134,5 +133,5 @@ class BufftoonScraper(Scraper[int]):
         return episode_images_url
 
     @override
-    def download_image(self, episode_dir: Path, url: str, image_no: int, file_extension: str | None = 'png') -> None:
-        super().download_image(episode_dir, url, image_no, file_extension)
+    def download_image(self, episode_directory: Path, url: str, image_no: int, file_extension: str | None = 'png') -> None:
+        super().download_image(episode_directory, url, image_no, file_extension)

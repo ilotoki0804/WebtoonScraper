@@ -1,5 +1,4 @@
 '''Download Webtoons from Naver Post.'''
-# TODO: subtitle_list에서 subtitles로 변경하기
 
 from __future__ import annotations
 from pathlib import Path

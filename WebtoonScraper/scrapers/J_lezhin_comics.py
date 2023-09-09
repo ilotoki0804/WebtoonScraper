@@ -3,18 +3,13 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
-import os
 import re
 import json
 from json import JSONDecodeError
 import shutil
-import multiprocessing
 from typing import ClassVar
-from typing_extensions import override
 
-from async_lru import alru_cache
-import pyjsparser
-from PIL import Image
+from typing_extensions import override
 
 if __name__ in ("__main__", "J_lezhin_comics"):
     from A_scraper import Scraper
@@ -63,9 +58,10 @@ class LezhinComicsScraper(Scraper[str]):
             self.authkey = authkey  # 구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 함.
         else:
             self.authkey = ''  # 구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 함.
-            logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
-                            'Please set authkey to valid download. '
-                            'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
+            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가심
+            # logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
+            #                 'Please set authkey to valid download. '
+            #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
 
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
@@ -218,8 +214,8 @@ class LezhinComicsScraper(Scraper[str]):
     #     return await super().get_title(titleid)
 
     @override
-    def download_webtoon_thumbnail(self, webtoon_dir, default_file_extension=None) -> None:
-        return super().download_webtoon_thumbnail(webtoon_dir, file_extension='jpg')
+    def download_webtoon_thumbnail(self, webtoon_directory, file_extension: str | None = 'jpg') -> None:
+        return super().download_webtoon_thumbnail(webtoon_directory, file_extension=file_extension)
 
     # async def get_all_episode_no(self, titleid):
     #     return await super().get_all_episode_no(titleid)
@@ -276,16 +272,16 @@ class LezhinComicsScraper(Scraper[str]):
         return image_urls
 
     @override
-    def unshuffle_lezhin_webtoon(self, base_webtoon_dir: Path) -> Path:
-        """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
+    def unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path) -> Path:
+        """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
             if self.is_shuffled:
                 logging.warning("This webtoon is shuffled, but because self.do_not_unshuffle is set to True, webtoon won't be shuffled.")
-            return base_webtoon_dir
+            return base_webtoon_directory
 
-        target_webtoon_directory = unshuffle_typical_webtoon_directory(base_webtoon_dir, self.episode_id_ints)
+        target_webtoon_directory = unshuffle_typical_webtoon_directory(base_webtoon_directory, self.episode_id_ints)
         if self.delete_shuffled_file:
-            shutil.rmtree(base_webtoon_dir)
+            shutil.rmtree(base_webtoon_directory)
             print('Shuffled webtoon directory is deleted.')
         return target_webtoon_directory
 
