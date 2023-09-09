@@ -60,6 +60,7 @@ class BufftoonScraper(Scraper[int]):
             self.cookie = ''
         self.update_requests()
 
+    @override
     def fetch_episode_informations(
         self,
         get_payment_required_episode: bool = False,
@@ -90,6 +91,7 @@ class BufftoonScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
+    @override
     def fetch_webtoon_information(self):
         response = self.requests.get(f'{self.BASE_URL}/series/{self.webtoon_id}')
         selector = '#content > div > div > div.series-info > div.cont > div.title'
@@ -114,6 +116,7 @@ class BufftoonScraper(Scraper[int]):
     #         time.sleep(1)
     #     return await super().get_subtitle(titleid, episode_no)
 
+    @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
         url = f'{self.BASE_URL}/series/{self.webtoon_id}/{episode_id}'
@@ -130,5 +133,6 @@ class BufftoonScraper(Scraper[int]):
 
         return episode_images_url
 
+    @override
     def download_image(self, episode_dir: Path, url: str, image_no: int, file_extension: str | None = 'png') -> None:
         super().download_image(episode_dir, url, image_no, file_extension)

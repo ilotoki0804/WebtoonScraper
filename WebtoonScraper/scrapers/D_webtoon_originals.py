@@ -29,6 +29,7 @@ class WebtoonOriginalsScraper(Scraper[int]):
         }
         self.update_requests()
 
+    @override
     def fetch_webtoon_information(self) -> None:
         super().fetch_webtoon_information()
 
@@ -50,6 +51,7 @@ class WebtoonOriginalsScraper(Scraper[int]):
 
         self.is_webtoon_information_loaded = True
 
+    @override
     def fetch_episode_informations(self) -> None:
         super().fetch_episode_informations()
 

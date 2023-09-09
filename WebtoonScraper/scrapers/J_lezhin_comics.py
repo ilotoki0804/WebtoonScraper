@@ -33,6 +33,7 @@ class LezhinComicsScraper(Scraper[str]):
     TEST_WEBTOON_ID_SHUFFLED: ClassVar[str] = 'brianoslab'
     IS_CONNECTION_STABLE = True
 
+    @override
     def __init__(self, webtoon_id: str, authkey: str | None = None):
         super().__init__(webtoon_id)
         self.headers = {
@@ -83,10 +84,12 @@ class LezhinComicsScraper(Scraper[str]):
         self.headers['Authorization'] = value
         self.update_requests()
 
+    @override
     def get_webtoon_directory_name(self) -> str:
         return (f'{self.get_safe_file_name(self.title)}({self.webtoon_id}, shuffled)'
                 if self.is_shuffled else f'{self.get_safe_file_name(self.title)}({self.webtoon_id})')
 
+    @override
     def fetch_webtoon_information(self, reload: bool = False) -> None:
         super().fetch_webtoon_information()
 
@@ -96,6 +99,7 @@ class LezhinComicsScraper(Scraper[str]):
         # fetch_episode_informations에서 해주기 때문에 굳이 필요는 없음.
         self.is_webtoon_information_loaded = True
 
+    @override
     def fetch_episode_informations(
         self,
     ) -> None:
@@ -213,6 +217,7 @@ class LezhinComicsScraper(Scraper[str]):
     # async def get_title(self, titleid):
     #     return await super().get_title(titleid)
 
+    @override
     def download_webtoon_thumbnail(self, webtoon_dir, default_file_extension=None) -> None:
         return super().download_webtoon_thumbnail(webtoon_dir, file_extension='jpg')
 
@@ -270,6 +275,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         return image_urls
 
+    @override
     def unshuffle_lezhin_webtoon(self, base_webtoon_dir: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
@@ -283,7 +289,11 @@ class LezhinComicsScraper(Scraper[str]):
             print('Shuffled webtoon directory is deleted.')
         return target_webtoon_directory
 
+    @override
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        title = self.requests.get(f'https://www.lezhin.com/ko/comic/{self.webtoon_id}').soup_select_one(
-            'h2.comicInfo__title')
+        try:
+            title = self.requests.get(f'https://www.lezhin.com/ko/comic/{self.webtoon_id}').soup_select_one(
+                'h2.comicInfo__title')
+        except Exception:
+            return None
         return title.text if title else None

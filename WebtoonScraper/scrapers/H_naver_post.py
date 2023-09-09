@@ -15,6 +15,7 @@ import demjson3
 from bs4 import BeautifulSoup
 from requests_utils.exceptions import EmptyResultError
 from fake_useragent import UserAgent
+from typing_extensions import override
 
 if __name__ in ("__main__", "H_naver_post"):
     from A_scraper import Scraper
@@ -33,6 +34,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     IS_CONNECTION_STABLE = True
     BASE_URL = 'https://post.naver.com'
 
+    @override
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
         self.headers = {
@@ -53,10 +55,12 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69',
         }
 
+    @override
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return f'{self.title}{tuple(self.webtoon_id)}'
 
+    @override
     def fetch_episode_informations(self):
         series_no, member_no = self.webtoon_id
         subtitle_list: list[str] = []
@@ -88,6 +92,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.episode_titles = subtitle_list[::-1]
         self.episode_ids = episode_id_list[::-1]
 
+    @override
     def fetch_webtoon_information(self):
         series_no, member_no = self.webtoon_id
         response = self.requests.get(
@@ -107,6 +112,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     # async def get_subtitle(self, titleid: TitleId, episode_no):
     #     return await super().get_subtitle(titleid, episode_no)
 
+    @override
     def get_episode_image_urls(self, episode_no, attempts: int = 3):
         series_no, member_no = self.webtoon_id
         episode_id = self.episode_ids[episode_no]
