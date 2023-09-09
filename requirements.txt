@@ -4,4 +4,4 @@ requests
 async_lru
 demjson3
 Pillow
-requests_utils
+requests_utils==0.2.2
