@@ -14,16 +14,17 @@ TitleId = int
 
 
 class TelescopeScraper(Scraper):
-    """Scrape webtoons from Manhwakyung."""
+    """작동하지 않음; 만약 나중에 만화경이 웹 서비스를 재게하면 다시 제작할 것."""
+    BASE_URL = 'https://www.manhwakyung.com'
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
+    TEST_WEBTOON_ID = 137
 
     def __init__(self, pbar_independent=False):
         super().__init__(pbar_independent)
-        self.BASE_URL = 'https://www.manhwakyung.com'
-        self.is_stable_connection = False
-        self.timeout = 3
+        self.set_to_instant_connection()
 
     @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid):
+    async def fetch_episode_informations(self, titleid):
         XHR_HEADERS = {
             "authority": 'api.manhwakyung.com',
             "method": 'GET',
@@ -59,7 +60,7 @@ class TelescopeScraper(Scraper):
         # about episode
         subtitles = []
         episode_ids = []
-        for episode in episodes:
+        for episode in reversed(episodes):
             subtitle = episode['name']
             episode_no = episode['episodeNumber']
             episode_id = episode['id']
@@ -67,36 +68,34 @@ class TelescopeScraper(Scraper):
             subtitles.append(subtitle)
             episode_ids.append(episode_id)
 
-        # list_thumbnail_url
-        return {'title': title, 'webtoon_thumbnail': grid_thumbnail_url, 'subtitles': subtitles[::-1], 'episode_ids': episode_ids[::-1]}
+        self.title = title
+        self.webtoon_thumbnail = grid_thumbnail_url
+        self.episode_titles = subtitles
+        self.episode_ids = episode_ids
 
-    async def get_title(self, titleid):
-        return await super().get_title(titleid)
+    # async def get_title(self, titleid):
+    #     return await super().get_title(titleid)
 
-    async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-        return await super().download_webtoon_thumbnail(titleid, title, thumbnail_dir)
+    # async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
+    #     return await super().download_webtoon_thumbnail(titleid, title, thumbnail_dir)
 
-    async def get_all_episode_no(self, titleid):
-        return await super().get_all_episode_no(titleid)
+    # async def get_all_episode_no(self, titleid):
+    #     return await super().get_all_episode_no(titleid)
 
-    async def get_subtitle(self, titleid, episode_no):
-        time.sleep(1)  # 없으면 작동 안 함.
-        return await super().get_subtitle(titleid, episode_no)
+    # async def get_subtitle(self, titleid, episode_no):
+    #     time.sleep(1)  # 없으면 작동 안 함.
+    #     return await super().get_subtitle(titleid, episode_no)
 
-    async def get_episode_images_url(self, titleid, episode_no):
+    async def get_episode_image_urls(self, titleid, episode_no):
         # episode_id: int = (await self.get_webtoon_data(titleid))['episode_ids'][episode_no]
-        episode_id: int = await self.episode_no_to_episode_id(titleid, episode_no)
+        episode_id: int = self.episode_ids[episode_no]
         response = self.requests.get(f'https://www.manhwakyung.com/episode/{episode_id}')
         elemetents = response.soup_select('#__next > div.css-0.euvlwci0 > div.css-0.ebi66ty0 > div > div > img')
         return [element.get('data-src') for element in elemetents]
 
-    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+    async def check_if_legitimate_webtoon_id(self, titleid: TitleId) -> str | None:
         url = f'https://www.manhwakyung.com/title/{titleid}'
         title = self.requests.get(url).soup_select_one('meta[property="og:title"]',
                                                        no_empty_result=True).get('content')
         assert isinstance(title, str)
         return None if title == "에러 페이지 | 만화경" else title.removesuffix(' | 만화경')
-
-if __name__ == '__main__':
-    wt = TelescopeScraper()
-    wt.download_one_webtoon(137)  # 물망초

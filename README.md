@@ -4,7 +4,7 @@
 
 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
-네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 만화경, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스, 카카오페이지를 지원하고,
+네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스, 카카오페이지를 지원하고,
 이외에도 더 많은 웹툰을 추후에 지원할 예정입니다.
 
 저작권과 책임에 대한 내용을 더욱 자세히 알고 싶다면 [이 문서](docs/copyright.md)를 참고해 주세요.
@@ -46,7 +46,7 @@
    pip install -U WebtoonScraper
    ```
 
-# 네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 만화경, 네이버 게임, 카카오페이지 다운로드하기
+# 네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 네이버 게임, 카카오페이지 다운로드하기
 버프툰과 네이버 포스트는 아래로 가서 확인하세요.
 
 ## titleid 복사
@@ -56,8 +56,6 @@
 ![위아더좀비(네이버 웹툰) by 이명재](images/naver_webtoon.png)
 [**웹툰 오리지널/캔버스** <small>예시: Wetermelon(Rorita)</small>](https://webtoons.com):
 ![Wetermelon(WEBTOON) by Rorita](images/webtoons_original.png)
-[**만화경** <small>예시: 나의 여름방학(지수, 곰방)</small>](https://manhwakyung.com)
-![출처: 나의 여름방학(만화경) by 지수, 곰방](images/manhwakyung.png)
 [**네이버 게임 오리지널 시리즈** <small>예시: 도리도리의 게임추억(도리도리)</small>](https://game.naver.com/original_series):
 ![출처: 도리도리의 게임추억(네이버 게임 오리지널 시리즈) by 도리도리](images/naver_game.png)
 
@@ -83,8 +81,6 @@ wt.download_webtoon(763952, wt.B)  # titleid를 여기에다 붙여넣으세요.
 wt.download_webtoon(1435, wt.O)  # title_no를 여기에다 붙여넣으세요.
 # 웹툰 캔버스
 wt.download_webtoon(304446, wt.C)  # title_no를 여기에다 붙여넣으세요.
-# 만화경
-wt.download_webtoon(146, wt.M)  # titleid를 여기에다 붙여넣으세요. Webtoon.T 태그도 사용 가능합니다.
 # 네이버 게임 오리지널 시리즈
 wt.download_webtoon(5, wt.G)  # titleid를 여기에다 붙여넣으세요.
 # 버프툰
