@@ -1,23 +1,21 @@
 """Abstract Class of all scrapers."""
 
-
-
 from __future__ import annotations
-import itertools
 import re
 import os
-import asyncio
 import shutil
 import html
 from pathlib import Path
+import time
 # from typing import Iterable, Literal
-from typing import Literal, final
-from abc import abstractmethod, ABCMeta
+from typing import Iterable
+from urllib import parse
+from abc import abstractmethod, ABC
 # from collections import namedtuple
 # from contextlib import suppress
-from typing import overload, TypedDict
+from typing import overload, TypedDict, ClassVar
 import logging
-import functools
+import threading
 
 # import requests
 from requests.exceptions import ConnectionError
@@ -33,175 +31,202 @@ if __name__ in ("__main__", "A_scraper"):
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 
-TitleId = int | tuple[int, int] | str
+# TitleId = int | tuple[int, int] | str
+EpisodeNoRange = tuple[int | None, int | None] | int | None
 
 
-class WebtoonDataResults(TypedDict):
-    title: str
-    subtitles: list[str]
-    webtoon_thumbnail: str | tuple[bytes, str]
-    episode_ids: list[int]
-    episode_images_url: list[list[str]]
+# class DO_NOT_USE_WebtoonDataResults(TypedDict):
+#     """This will be depreceted soon."""
+#     title: str
+#     subtitles: list[str]
+#     webtoon_thumbnail: str | tuple[bytes, str]
+#     episode_ids: list[int]
+#     episode_images_url: list[list[str]]
+#     #             keys:
+#     #                 'title' (str): 웹툰의 제목 정보를 불러옵니다.
+#     #                 'subtitles' (list[str]): 웹툰의 부제목(에피소드 제목) 정보를 불러옵니다.
+#     #                 'webtoon_thumbnail' (str/tuple[bytes, str]): 웹툰의 썸네일 정보를 불러옵니다.
+#     #                     만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
+#     #                     tuple일 경우에는 thumbnail raw data와 file extension으로 추론하고 thumbnail_dir에 저장합니다.
+#     #                 'episode_ids' (list(int)): episode id list를 불러옵니다.
+#     #                 'episode_images_url' (list[list[str]]): 실제 웹툰 속 이미지들의 url로 구성된 list입니다.
+#     #                     다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
+#     #             이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
+#     #             만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
+#     #             구현하고 super()를 이용하는 것이 합리적입니다.
+
+# class WebtoonInfomation(NamedTuple, total=False):
+#     """웹툰 자체에 관한 정보를 담습니다.
+
+#     Attributes:
+#         title (str): 웹툰의 제목입니다.
+#     """
+#     title: str
+#     webtoon_thumbnail: str | tuple[bytes, str]
 
 
-class Scraper(metaclass=ABCMeta):
+# class EpisodesInfomation(NamedTuple, total=False):
+#     """
+#     에피소드에 관련한 정보를 담습니다.
+#     모든 정보를 여기를 통해 구현해야 하는 것을 아닙니다.
+#     특히 episode_images_url같은 경우는 api를 한 번 호출하는 것만으로도
+#     이미지 URL들을 알아낼 수 있을 경우에만 사용하세요.
+
+#     Attributes:
+#         subtitles: 에피소드의 이름을 담습니다.
+#         episode_ids: 에피소드의 id를 담습니다.
+#             여러 웹툰 플랫폼에서 episode_id를 숫자로 구현하고 있기에 기본값은 list[int]이지만
+#             만약 문자로 구현하는 플랫폼이 있다면 list[str]도 상관없습니다.
+#         episode_images_url: 에피소드 이미지들의 다운로드 url을 담습니다.
+#             기본적으로는 사용하기 어렵지만 네이버 게임 오리지널 시리즈같은 경우 api만으로도
+#             이 정보를 얻을 수 있습니다.
+#     """
+#     subtitles: list[str]
+#     episode_ids: list[int]
+#     episode_images_url: list[list[str]]
+
+
+class Scraper(ABC):
     """Abstract class of all scrapers.
 
     init, get_internet, 전반적인 로직 등은 모두 이 페이지에서 관리하고, 구체적인 다운로드 방법은 각각의 scraper들에게 맡깁니다.
     따라서 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 역할은 각자 scraper들에 구현되어 있습니다.
     """
+    # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
+    BASE_URL: ClassVar[str]
+    IS_CONNECTION_STABLE: ClassVar[bool]
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int] = 0
 
-    def __init__(self, pbar_independent: bool = False) -> None:
+    def __init__(self, webtoon_id: int | str | tuple[int, int]) -> None:
         """시작에 필요한 여러가지를 관여합니다.
-
-        header, timeout을 구성하고 set_folders()를 호출합니다.
+        주의: 이 함수는 반드시 subclass에서 재정의되어야 합니다.
+        이 함수를 override할 때는 super().__init__(...)을 구현 "앞에" 위치하세요.
+        하지만 timeout, attempts, cookie, headers중에 하나라도 정의한다면 self.update_requests()를 끝에 꼭 붙여야 합니다.
 
         Args:
+            webtoon_id: 일반적으로 URL에 나타나는 웹툰의 ID입니다.
             pbar_independent: 만약 True라면 tqdm을 이용해서 로그를 표시하고, False라면 print를 통해서 로그를 표시합니다.
         """
-        self.headers = {
+        # 연결 관련 설정
+        self.attempts: int = 2 if self.IS_CONNECTION_STABLE else 4
+        self.timeout: int = 10
+        self.headers: dict[str, str] = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                           '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
-        self.BASE_URL = ''
+        self.cookie: str
+
+        self.webtoon_id = webtoon_id
+        self.is_webtoon_information_loaded = False
+        self.is_episode_informations_loaded = False
+
         self.base_directory = 'webtoon'
+        self.not_using_tqdm = False
+        self.update_requests()
+
         # self.TIMEOUT = 20
-        # self.attempt = 2
-        self.PBAR_INDEPENDENT = pbar_independent
         # self.IS_STABLE_CONNECTION = True
-        self.loop = asyncio.get_running_loop()
+        # self.loop = asyncio.get_running_loop()
         # self.existing_episode_checking_mode: Literal[
         #     'interrupt_during_download', 'assume_legimate',
         #     'hard_check', 'dont_envolve_requests'
         # ] = 'interrupt_during_download'
-        self.update_requests(
-            timeout=20,
-            attempt=2,
-            # short_connection=False,
-        )
-        self.short_connection = False
-
-    # RELATED TO CustomDefaults
-
-    @property
-    def cookie(self) -> str:
-        return self._cookie
-
-    @cookie.setter
-    def cookie(self, cookie: str):
-        """Property can be inherited."""
-        self._cookie = cookie
-        self.headers |= {"Cookie": cookie}
-
-    @property
-    def attempt(self) -> int:
-        return self._attempt
-
-    @attempt.setter
-    def attempt(self, attempt: int):
-        self._attempt = attempt
-        self.update_requests()
-
-    def update_requests(self, **kwargs):
-        # kwargs: dict = {}
-        # 해당 값을 이 값으로 수정하는 코드 제작하기!!!!
-
-        if hasattr(self, '_timeout'):
-            kwargs.update(timeout=self.timeout)
-
-        if hasattr(self, '_attempt'):
-            kwargs.update(attempt=self.attempt)
-
-        if hasattr(self, '_HEADERS'):
-            kwargs.update(headers=self.headers)
-
-        if hasattr(self, '_IS_STABLE_CONNECTION'):
-            kwargs.update(attempt=4)
-
-        self.requests = CustomDefaults(**kwargs)
-
-    @property
-    def timeout(self) -> int:
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, timeout: int):
-        self._timeout = timeout
-        self.update_requests()
-
-    @property
-    def is_stable_connection(self) -> bool:
-        return self._IS_STABLE_CONNECTION  # TODO: 이름 변경하기!
-
-    @is_stable_connection.setter
-    def is_stable_connection(self, IS_STABLE_CONNECTION: bool):
-        self._IS_STABLE_CONNECTION = IS_STABLE_CONNECTION
-        self.update_requests()
-
-    @property
-    def headers(self):
-        return self._HEADERS
-
-    @headers.setter
-    def headers(self, headers):
-        self._HEADERS = headers
-        self.update_requests()
+        # self.short_connection = False
 
     # MISCS
 
-    @final
-    @property
-    def short_connection(self) -> bool:
-        return self._short_connection
-
-    @final
-    @short_connection.setter
-    def short_connection(self, short_connection: bool):
+    def update_requests(self, **kwargs) -> None:
         """
-        If short_connection is False, then the previous settings are NOT restored.
-        이 함수는 short_connection을 설정합니다.
-        short_connection에는 특징이 있는데, True로 바꾸는 순간 그 전에 설정한 IS_STABLE_CONNECTION과
-        TIMEOUT이 날아가고 각각 False와 3으로 변합니다.
+        timeout, attempts, cookie, headers 중 하나라도 수정했을 때 self.reqeusts에 반영하기 위해서는
+        이 함수를 이용해야 합니다.
+        참고: 이 함수는 자동으로 self.headers에 self.cookie를 반영시킵니다. 따라서 self.cookie를 제작한 뒤
+        이 함수를 호출하면 자동으로 self.headers에 self.cookie가 반영됩니다.
+        """
+        if 'timeout' in kwargs:
+            self.timeout = kwargs['timeout']
+        elif hasattr(self, 'timeout'):
+            kwargs.update(timeout=self.timeout)
+
+        if 'attempts' in kwargs:
+            self.attempts = kwargs['attempts']
+        elif hasattr(self, 'attempts'):
+            kwargs.update(attempts=self.attempts)
+
+        if 'cookie' in kwargs:
+            self.cookie = kwargs['cookie']
+        elif hasattr(self, 'cookie'):
+            kwargs.update(cookie=self.cookie)
+
+        if 'headers' in kwargs:
+            if 'cookie' in kwargs:
+                self.headers = kwargs['headers'] | {'Cookie': self.cookie}
+            else:
+                self.headers = kwargs['headers']
+        elif hasattr(self, 'headers'):
+            if 'cookie' in kwargs:
+                self.headers |= {'Cookie': self.cookie}
+
+            kwargs.update(headers=self.headers)
+
+        self.requests = CustomDefaults(**kwargs)
+
+    def set_to_instant_connection(self, revert_changes: bool = False) -> None:
+        """
+        이 함수를 실행하면 self.timeout이 3이 되고, self.attempts가 5가 됩니다.
+        이렇게 되면 연결이 자주 실패하고 재시도하는데, 이렇게 하면 경우에 따라서는 더욱 빠르게 다운로드받을 수 있습니다.
+        만약 revert_changes를 True로 하고 실행하면 기존에 있던 값을 다시 불러옵니다.
+        예를 들어 기존에 self.timeout이 20이고 self.attempts가 2였다면,
+        .set_to_instant_connection()을 실행하는 self.timeout과 self.attempts가 각각 3과 5가 되고,
+        .set_to_instant_connection(True)를 실행하면 다시 각각 20과 2가 됩니다.
 
         Args:
             short_connection(bool):
                 만약 True라면 timeout를 3초로 짧게 잡고 IS_STABLE_CONNECTION(거짓일 경우, 연결에 실패하면 재시도를 함.)을 False로 합니다.
                 False라면 기본 설정을 유지하고 timeout도 길게(120초) 유지합니다.
         """
-        if short_connection:
-            self.timeout = 3
-            self.is_stable_connection = False
+        if revert_changes:
+            if not self._short_connection_previous_values:
+                raise ValueError('Nothing to revert.')
 
-        self._short_connection = short_connection
+            self.timeout = self._short_connection_previous_values['timeout']
+            self.attempts = self._short_connection_previous_values['attempts']
+            return
+
+        if self.timeout != 3 or self.attempts != 5:
+            self._short_connection_previous_values = {
+                'timeout': self.timeout,
+                'attempts': self.attempts
+            }
+
+        self.timeout = 3
+        self.attempts = 5
+
         self.update_requests()
 
-    @final
-    def _set_pbar(self, description: str) -> None:
-        """로그를 남길 때 tqdm을 사용할지 print를 사용할지 self.PBAR_INDEPENDENT를 통해 결정합니다.
+    def set_progress_indication(self, description: str) -> None:
+        """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
 
-        self.pbar_independent가 True라면 print를 사용하고, False라면 pbar를 이용합니다. 이는 __init__ 함수에서 결정합니다.
-        만약 사용자에게 꼭 알려야 하는 중요한 것이 있다면 이 함수가 아닌 직접 print를 사용하는 것을 권합니다.
+        self.not_using_tqdm가 True라면 print를 사용하고, False라면 pbar를 이용합니다.
+        이는 self.not_using_tqdm 설정을 변경해 사용할 수 있습니다. 기본값은 False입니다.
+        만약 사용자에게 꼭 알려야 하는 중요한 것이 있다면 이 함수가 아닌 직접 print나 logging을 사용하는 것을 권장합니다.
 
         Args:
-            description: print하거나 pbar에 표시해야 하는 것.
+            description: 표시할 진행사항.
 
         Raises:
             AttributeError:
                 download_one_webtoon_async(으)로 시작하지 않은 함수에서 이 함수를 호출한다면 생가는 오류입니다.
                 예를 들어, 만약 download_one_episode 함수를 단독으로 실행했다면, self.pbar가 선언되지 않았기 때문에 오류가 발생합니다.
-                오류를 피하려면 처음 시작할 때 pbar_independent를 True로 하거나 download_one_webtoon_async을/를 사용하는 것을 추천합니다.
+                오류를 해결하려면 self.not_using_tqdm를 True로 하거나 download_webtoon을 사용하세요.
         """
-        if self.PBAR_INDEPENDENT:
+        if self.not_using_tqdm:
             print(description)
         else:
             self.pbar.set_description(description)
 
-    @final
     @staticmethod
     def get_file_extension(filename_or_url: str) -> str | None:
         """Get file extionsion of filename_or_url.
-
-        only supports jpg/png/jpeg/gif file format. If URL has queries, this ignores it.
 
         Args:
             filename_or_url: 파일 확장자가 궁금한 파일명이나 URL. 이때 URL 쿼리는 무시됩니다.
@@ -209,17 +234,20 @@ class Scraper(metaclass=ABCMeta):
         Returns:
             파일 확장자를 반환합니다.
         """
-        serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif|webp)(?=[?].+$|$)', filename_or_url, re.I)
+        url_path = parse.urlparse(filename_or_url).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
+        extension_name = re.search(r'[.]\w+?$', url_path)
+        return None if extension_name is None else extension_name.group(0)
 
-        return None if serch_result is None else serch_result[0]
-        # return filename_or_url.split('.')[-1].lower()
+        # 이전 방식: 후에 제거할 것.
+        # serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif|webp)(?=[?].+$|$)', filename_or_url, re.I)
+        # return None if serch_result is None else serch_result[0]
+        # # return filename_or_url.split('.')[-1].lower()
 
-    @final
     @staticmethod
     def get_safe_file_name(file_or_diretory_name: str) -> str:
         """Translate file or diretory name to accaptable name.
 
-        Caution: Don't put here diretory path beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
+        Caution: Do NOT put here diretory path(e.g. webtoon/ep1/001.jpg) beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
         # sourcery skip: remove-zero-from-range
         table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')  # pylint: disable=invalid-character-backspace
@@ -235,119 +263,121 @@ class Scraper(metaclass=ABCMeta):
 
         return processed
 
-    @final
     @property
-    def base_directory(self):
-        return self._BASE_DIR
+    def base_directory(self) -> Path:
+        return self._base_directory
 
-    @final
     @base_directory.setter
-    def base_directory(self, BASE_DIR):
-        self._BASE_DIR = Path(BASE_DIR)
+    def base_directory(self, base_directory: str | Path) -> None:
+        """
+        웹툰을 다운로드할 디렉토리입니다. str이나 Path로 값을 받습니다.
+
+        많은 이 변수의 사용처에서는 pathlib.Path를 필요로 합니다.
+        이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
+        이것을 이용하기 전에 안전한 파일명으로 바꾸는 것을 잊지 마세요!
+        """
+        self._base_directory = Path(base_directory)
 
 ################################## MAIN ACTION ##################################
 
-    @final
-    def download_one_webtoon(
+    # def download_one_webtoon(
+    #     self,
+    #     episode_no_range: tuple[int, int] | int | None = None,
+    #     merge_amount: int | None = None
+    # ) -> None:
+    #     """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
+    #     asyncio.run(self.download_one_webtoon_async(episode_no_range, merge_amount))
+
+    def episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
+        # 주의 episode_no_list는 0부터 시작합니다.
+        episode_length = len(self.episode_ids)
+
+        if not episode_no_range:
+            return range(episode_length)
+
+        if isinstance(episode_no_range, int):
+            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            return (episode_no_range - 1,)
+
+        if not isinstance(episode_no_range, tuple):
+            raise TypeError(f'Unknown type for episode_no_range({type(episode_no_range)}), check it again.')
+
+        start, end = episode_no_range
+
+        if start is None:
+            start = 1
+        if end is None:
+            end = episode_length
+
+        # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+        return range(start - 1, end)
+
+    def download_webtoon(
         self,
-        titleid: TitleId,
-        episode_no_range: tuple[int, int] | int | None = None,
-        concurrent_download_episode_amount: int = 1,
+        episode_no_range: EpisodeNoRange = None,
         merge_amount: int | None = None
     ) -> None:
-        """async를 사용하지 않는 일반 상태일 경우 사용하는 함수이다. 사용법은 download_one_webtoon_async와 동일하다."""
-        asyncio.run(self.download_one_webtoon_async(titleid, episode_no_range,
-                                                    concurrent_download_episode_amount, merge_amount))
+        """웹툰 다운로드의 주축이 되는 함수. 이 함수를 통해 웹툰을 다운로드합니다.
 
-    @final
-    async def download_one_webtoon_async(
-        self,
-        titleid: TitleId,
-        episode_no_range: tuple[int | None, int | None] | int | None = None,
-        concurrent_download_episode_amount: int = 1,
-        merge_amount: int | None = None
-    ) -> None:
-        """웹툰 다운로드의 주죽이 되는 함수. 이 함수를 통해 웹툰을 다운로드한다.
-
-        주의: 유료 회차는 다운로드받을 수 없습니다.
+        주의: 유료 회차나 성인 웹툰은 기본적으로는 다운로드받을 수 없습니다.
         Args:
-            titleid: 다운로드할 웹툰의 titleid 혹은 title_no를 입력한다.
-            episode_no_range
-                다운로드할 회차의 범위를
-                tuple일 경우: (처음, 끝)의 튜플로 값을 받습니다. 이때 끝을 포함합니다.
-                    예) (1,10): 1회차부터 10회차를 다운로드함
-                int일 경우: 한 회차만 다운로드 받는다.
-                None일 경우: 웹툰의 모든 회차를 다운로드 받는다.
-            merge: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶는다.
-            concurrent_download_episode_amount (int | None)
-                에피소드를 얼마나 동시에 다운로드 받을지 설정합니다.
-                만약 None(기본값)이라면 에피소드를 1개씩 다운로드 받습니다.
-                
-            
+            episode_no_range: 다운로드할 회차의 범위를 정합니다.
+                None일 경우(기본값): 웹툰의 모든 회차를 다운로드 받습니다.
+                tuple일 경우: (처음, 끝)의 튜플로 값을 받습니다. 이때 1부터 시작하고 끝 숫자를 포함합니다.
+                        두 값 중 None인 것이 있다면 처음이나 끝으로 평가됩니다.
+                    예1) (1, 10): 1회차부터 10회차까지를 다운로드함
+                    예2) (None, 20): 1회차부터 20회차까지를 다운로드함
+                    예2) (3, None): 3회차부터 끝까지 다운로드함
+                int일 경우: 한 회차만 다운로드 받습니다.
+            merge_amount: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶습니다. None(기본값)이라면 웹툰을 묶지 않습니다.
         """
-        title = self.get_safe_file_name(await self.get_title(titleid))
-        webtoon_dir_name = await self.get_webtoon_dir_name(titleid, title)
+        self.setup()
+
+        webtoon_dir_name = self.get_webtoon_directory_name()
         webtoon_dir = self.base_directory / webtoon_dir_name
-        self.webtoon_dir = webtoon_dir
+        # self.webtoon_dir = webtoon_dir  # !용도를 알 수 없음. 분석 후에도 없으면 제거할 것.
 
         webtoon_dir.mkdir(parents=True, exist_ok=True)
 
-        await self.download_webtoon_thumbnail(titleid, title, webtoon_dir)
+        self.download_webtoon_thumbnail(webtoon_dir)
 
-        episode_no_list = await self.get_all_episode_no(titleid)
-        if not episode_no_range:
-            episode_no_list = range(len(episode_no_list))
-        elif isinstance(episode_no_range, int):
-            # 사용자용 넘버는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            episode_no_list = (episode_no_range - 1,)
-        else:
-            start, end = episode_no_range
-
-            if start is None:
-                start = 1
-            if end is None:
-                end = len(episode_no_list)
-
-            # 사용자용 넘버는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            episode_no_list = range(start - 1, end)
+        episode_no_list = self.episode_no_range_to_real_range(episode_no_range)
 
         self.pbar = tqdm(episode_no_list)
-        if concurrent_download_episode_amount != 1:
-            for _, group in itertools.groupby(enumerate(self.pbar), key=lambda x: x[0] // 2):
-                # for i, episode_no in group:
-                #     print(i, episode_no)
-                # print([episode_no for i, episode_no in group])
-                # print(i)
-                # time.sleep(0.1)
-                print('"concurrent_download_episode_amount" is not supported yet.')
-        else:
-            for episode_no in self.pbar:
-                await self.download_one_episode(episode_no, titleid, webtoon_dir)
-            print(f'A webtoon {title} download ended.')
+        for episode_no in self.pbar:
+            if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
+                time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
+            self.download_episode(episode_no, webtoon_dir)
+        print(f'A webtoon {self.title} download ended.')
 
-        webtoon_dir = await self.unshuffle_lezhin_webtoon(titleid, webtoon_dir)
+        webtoon_dir = self.unshuffle_lezhin_webtoon(webtoon_dir)
 
         if merge_amount is not None:
             print('Merging webtoon has started...')
             merge_webtoon(webtoon_dir, 5)
             print('Merging webtoon ended.')
 
-    async def get_webtoon_dir_name(self, titleid: TitleId, title: str) -> str:
-        return f'{title}({titleid})'
-
-    async def unshuffle_lezhin_webtoon(self, titleid: TitleId, base_webtoon_dir: Path):
+    def get_webtoon_directory_name(self) -> str:
         """
-        For lezhin's shuffle process. This function changes webtoon_dir to unshuffled webtoon's directory.
+        웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다.
+        네이버 포스트나 레진같이 일반적이지 않은 방식으로 웹툰을 다운로드하는 경우에 사용됩니다.
+        """
+        return f'{self.get_safe_file_name(self.title)}({self.webtoon_id})'
+
+    def unshuffle_lezhin_webtoon(self, base_webtoon_dir: Path):
+        """
+        For lezhin's shuffle process.
+        This function changes webtoon_dir to unshuffled webtoon's directory (if exist).
         레진을 제외하면 unshuffler가 필요한 경우가 없기 때문에 레진 외의 웹툰들은 그대로 놔두시면 됩니다.
         """
         return base_webtoon_dir
 
-    @final
     def make_directory_or_check_if_directory_is_valid(self, episode_dir: Path, episode_no: int, image_urls: list, subtitle: str) -> None | bool:
-        """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사한다.
+        """episode_dir를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사합니다.
+        episode_no는 사용되지 않지만 혹시 모를 경우를 위해 남겨져 있습니다. 필요한 경우 제거하셔도 됩니다.
 
-        None를 return한다면 회차를 다운로드해야 한다는 의미이다.
-        True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미한다.
+        None를 return한다면 회차를 다운로드해야 한다는 의미입니다.
+        True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
         """
 
         if episode_dir.is_file():
@@ -359,7 +389,7 @@ class Scraper(metaclass=ABCMeta):
         if not episode_dir.is_dir():
             episode_dir.mkdir()
 
-        self._set_pbar(f'checking integrity of {subtitle}')
+        self.set_progress_indication(f'checking integrity of {subtitle}')
 
         # WIP
         # modes: 'interrupt_during_download', 'assume_legimate', 'hard_check', 'dont_envolve_requests'
@@ -373,123 +403,151 @@ class Scraper(metaclass=ABCMeta):
 
         is_filename_appropriate = all(webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_dir))
         if not is_filename_appropriate or len(image_urls) != len(os.listdir(episode_dir)):
-            self._set_pbar(f'{subtitle} is not vaild. Automatically restore files.')
+            self.set_progress_indication(f'{subtitle} is not vaild. Automatically restore files.')
             shutil.rmtree(episode_dir)
             episode_dir.mkdir()
         else:
-            self._set_pbar(f'skipping {subtitle}')
+            self.set_progress_indication(f'skipping {subtitle}')
             return True
 
-    @final
-    async def download_one_episode(self, episode_no: int, titleid: TitleId, webtoon_dir: Path) -> None:
-        """한 회차를 다운로드받는다."""
-        subtitle = self.get_safe_file_name(await self.get_subtitle(titleid, episode_no))
+    def download_episode(self, episode_no: int, webtoon_dir: Path) -> None:
+        """한 회차를 다운로드받는다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
+        safe_episode_title = self.get_safe_file_name(self.episode_titles[episode_no])
 
-        if not subtitle:
+        if not safe_episode_title:
             logging.warning(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
-            self._set_pbar('unknown episode')
+            self.set_progress_indication('unknown episode')
             return
 
-        episode_images_url = await self.get_episode_images_url(titleid, episode_no)
+        episode_images_url = self.get_episode_image_urls(episode_no)
 
         if episode_images_url is None:  # for lezhin
             logging.warning(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
-            self._set_pbar('unknown episode')
+            self.set_progress_indication('unknown episode')
             return
 
-        episode_dir = webtoon_dir / f'{episode_no + 1:04d}. {subtitle}'
-        if self.make_directory_or_check_if_directory_is_valid(episode_dir, episode_no, episode_images_url, subtitle):
+        episode_dir = webtoon_dir / f'{episode_no + 1:04d}. {safe_episode_title}'
+        if self.make_directory_or_check_if_directory_is_valid(episode_dir, episode_no, episode_images_url, safe_episode_title):
             return
 
-        self._set_pbar(f'downloading {subtitle}')
-        get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
-        await asyncio.gather(*get_image_coroutines)
+        self.set_progress_indication(f'downloading {safe_episode_title}')
+        # get_image_coroutines = (self.download_single_image(episode_dir, element, i) for i, element in enumerate(episode_images_url))
+        # await asyncio.gather(*get_image_coroutines)
 
-    async def download_single_image(self, episode_dir: Path, url: str, image_no: int, default_file_extension: str | None = None) -> None:
-        """Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}."""
-        image_extension = self.get_file_extension(url)
+        threads = [threading.Thread(target=self.download_image, args=(episode_dir, element, i))
+                   for i, element in enumerate(episode_images_url)]
+        [thread.start() for thread in threads]
+        [thread.join() for thread in threads]
 
-        # for Bufftoon
-        if image_extension is None:
-            if default_file_extension is None:
-                raise ValueError('File extension not detected.')
-            image_extension = default_file_extension
+    def download_image(self, episode_dir: Path, url: str, image_no: int, file_extension: str | None = None) -> None:
+        """
+        Download image from url and returns to {episode_dir}/{file_name(translated to accactable name)}.
+
+        Args:
+            file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
+        """
+        if file_extension is None:
+            image_extension = self.get_file_extension(url)
+            if image_extension is None:
+                raise ValueError('File extension not detected. Use default_file_extension or check your code.')
+        else:
+            image_extension = file_extension
 
         file_name = f'{image_no:03d}.{image_extension}'
 
-        # self._set_pbar(f'{episode_dir}|{file_name}')
-        image_raw: bytes = (await self.requests.aget(url)).content
+        image_raw: bytes = self.requests.get(url).content
 
         file_dir = episode_dir / file_name
         file_dir.write_bytes(image_raw)
 
-    async def get_all_episode_no(self, titleid: TitleId) -> list:
-        """웹툰에서 전체 에피소드를 가져온다."""
-        return (await self.get_webtoon_data(titleid))['episode_ids']
+    # def get_all_episode_no(self) -> list:
+    #     """DO NOT USE: 웹툰에서 전체 에피소드를 가져온다."""
+    #     # return (await self.fetch_episodes_infomation(titleid))['episode_ids']
+    #     return self.episode_ids
 
-    # ! This should be deleted after refactoring.
-    @final
-    async def episode_no_to_episode_id(self, titleid: TitleId, episode_no: int, reverse: bool = False) -> int:
-        """reverse가 참일 경우 반대로 episode_id에서 episode_no를 불러옴."""
-        if not reverse:
-            return (await self.get_all_episode_no(titleid))[episode_no]
-        else:
-            return (await self.get_all_episode_no(titleid)).index(episode_no)
+    # def episode_no_to_episode_id(self, episode_no: int, reverse: bool = False) -> int:
+    #     """DO NOT USE THIS"""
+    #     """reverse가 참일 경우 반대로 episode_id에서 episode_no를 불러옴."""
+    #     if not reverse:
+    #         return self.episode_ids[episode_no]
+    #     else:
+    #         return self.episode_ids.index(episode_no)
 
-    async def get_title(self, titleid: TitleId) -> str:
-        """웹툰의 title을 불러옵니다."""
-        return (await self.get_webtoon_data(titleid))['title']
+    # def get_title(self) -> str:
+    #     """웹툰의 title을 불러옵니다."""
+    #     # return (await self.fetch_episodes_infomation(titleid))['title']
+    #     return self.webtoon_infomation['title']
 
-    async def get_subtitle(self, titleid: TitleId, episode_no: int) -> str:
-        """부제목, 즉 회차의 제목을 불러옵니다."""
-        return (await self.get_webtoon_data(titleid))['subtitles'][episode_no]
+    # def get_subtitle(self, episode_no: int) -> str:
+    #     """부제목, 즉 회차의 제목을 불러옵니다."""
+    #     # return (await self.fetch_episodes_infomation(titleid))['subtitles'][episode_no]
+    #     return self.episodes_infomation['subtitles'][episode_no]
 
-    async def download_webtoon_thumbnail(self, titleid: TitleId, title: str, thumbnail_dir: Path, default_file_extension: str | None = None) -> None:
-        """웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다."""
-        thumbnail_data: str | tuple[bytes, str] = (await self.get_webtoon_data(titleid))['webtoon_thumbnail']
+    def download_webtoon_thumbnail(self, webtoon_dir: Path, file_extension: str | None = None) -> None:
+        """
+        웹툰의 썸네일을 불러오고 thumbnail_dir에 저장합니다.
+        Args:
+            webtoon_dir (Path): 썸네일을 저장할 디렉토리입니다.
+            file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자도
+        """
+        thumbnail_data: str | tuple[bytes, str] = self.webtoon_thumbnail
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
-            image_extension = self.get_file_extension(thumbnail_data)
-            if image_extension is None:
-                if default_file_extension is None:
-                    raise ValueError('File extension not detected.')
-                image_extension = default_file_extension
+            if file_extension:
+                image_extension = file_extension
+            else:
+                image_extension = self.get_file_extension(thumbnail_data)
+                if file_extension is None:
+                    raise ValueError(f'File extension not detected. thumbnail_data: {thumbnail_data}')
+
             image_raw = self.requests.get(thumbnail_data).content
         elif isinstance(thumbnail_data, tuple):  # It means thumnail_data is raw image data
             image_raw, image_extension = thumbnail_data
         else:
-            raise ValueError('Thumbnail_data is invalid; It must be string or bytes.')
+            raise TypeError('Type of thumbnail_data(or self.webtoon_thumbnail) is invalid; It must be string or bytes.')
 
-        image_path = thumbnail_dir / f'{title}.{image_extension}'
+        image_path = webtoon_dir / f'{self.title}.{image_extension}'
         image_path.write_bytes(image_raw)
 
-    async def get_episode_images_url(self, titleid: TitleId, episode_no: int) -> list:
-        """해당 회차를 구성하는 이미지들을 불러온다."""
-        return (await self.get_webtoon_data(titleid))['episode_images_url'][episode_no]
+    def get_episode_image_urls(self, episode_no: int) -> list[str]:
+        """해당 회차를 구성하는 이미지들을 불러옵니다. 만약 self.episode_image_urls가 없다면 반드시 직접 구현해야 합니다."""
+        # return (await self.fetch_episodes_infomation(titleid))['episode_images_url'][episode_no]
+        return self.episode_image_urls[episode_no]  # type: ignore
 
-    @abstractmethod
-    @alru_cache(maxsize=4)
-    async def get_webtoon_data(self, titleid: TitleId) -> WebtoonDataResults:
-        """웹툰에서 데이터를 불러옵니다. 많이 불리기 때문에 무조건 @lru_cache를 사용해야 합니다.
+    def setup(self, reload: bool = False) -> None:
+        if reload or not hasattr(self, 'webtoon_information'):
+            self.fetch_webtoon_information()
 
-        Args:
-            titleid (TitleId): titleid를 받습니다.
+        if reload or not hasattr(self, 'episode_informations'):
+            self.fetch_episode_informations()
 
-        Returns:
-            dict: key에 따라 각각 자동으로 불러올 정보를 정의합니다.
-                keys:
-                    'title' (str): 웹툰의 제목 정보를 불러옵니다.
-                    'subtitles' (list[str]): 웹툰의 부제목(에피소드 제목) 정보를 불러옵니다.
-                    'webtoon_thumbnail' (str/tuple[bytes, str]): 웹툰의 썸네일 정보를 불러옵니다.
-                        만약 값이 string일 경우는 URL로 추론하고 URL에서 정보를 불러오지만,
-                        tuple일 경우에는 thumbnail raw data와 file extension으로 추론하고 thumbnail_dir에 저장합니다.
-                    'episode_ids' (list(int)): episode id list를 불러옵니다.
-                    'episode_images_url' (list[list[str]]): 실제 웹툰 속 이미지들의 url로 구성된 list입니다.
-                        다만 이렇게 많은 양을 메모리에 올려놓는 것은 부담이 될 수 있습니다.
-                이 key 중에서 없는 것이 있어도 상관 없습니다. 다만 그럴 경우 직접 구현하여야 합니다.
-                만약 함수들이 독립적이고 각자 구현될 수 있다면 한 데에 모아 구현하는 것보다 각각에 해당하는 함수들에
-                구현하고 super()를 이용하는 것이 합리적입니다.
+    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
+    def fetch_webtoon_information(self) -> None:
         """
+        웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
 
-    @abstractmethod
-    async def check_if_legitimate_titleid(self, titleid: TitleId) -> str | None:
+        주의: subclass에서의 구현은 super().fetch_webtoon_information()를 프로그램 맨 앞에 포함하세요.
+        또한 프로그램이 끝나고 self.is_webtoon_information_loaded = True를 실행해야 한다는 것을 잊지 마세요.
+        """
+        self.webtoon_thumbnail: str | tuple[bytes, str]
+        self.title: str
+
+        if self.is_webtoon_information_loaded:
+            logging.warning('Refreshing webtoon_information')
+
+    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
+    def fetch_episode_informations(self) -> None:
+        """
+        웹툰의 에피소드 정보를 불러옵니다. 웹툰에 대한 정보는 포함하지 않습니다.
+
+        주의: subclass에서의 구현은 super().fetch_episode_informations()를 프로그램 맨 앞에 포함하세요.
+        또한 프로그램이 끝나고 self.is_episode_informations_loaded = True를 실행해야 한다는 것을 잊지 마세요.
+        """
+        self.episode_titles: list[str]
+        self.episode_ids: list[int]
+
+        if self.is_episode_informations_loaded:
+            logging.warning('Refreshing episode_informations')
+
+    # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
+    def check_if_legitimate_webtoon_id(self) -> str | None:
         """If titleid is legitimate, return title. Otherwise, return None"""
