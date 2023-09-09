@@ -103,11 +103,13 @@ class Scraper(ABC, Generic[WebtoonId]):
         if 'headers' in kwargs:
             if 'cookie' in kwargs:
                 self.headers = kwargs['headers'] | {'Cookie': self.cookie}
+                del kwargs['cookie']
             else:
                 self.headers = kwargs['headers']
         elif hasattr(self, 'headers'):
             if 'cookie' in kwargs:
                 self.headers |= {'Cookie': self.cookie}
+                del kwargs['cookie']
 
             kwargs.update(headers=self.headers)
 
@@ -423,10 +425,10 @@ class Scraper(ABC, Generic[WebtoonId]):
         return self.episode_image_urls[episode_no]  # type: ignore
 
     def setup(self, reload: bool = False) -> None:
-        if reload or not hasattr(self, 'webtoon_information'):
+        if reload or not self.is_webtoon_information_loaded:
             self.fetch_webtoon_information()
 
-        if reload or not hasattr(self, 'episode_informations'):
+        if reload or not self.is_episode_informations_loaded:
             self.fetch_episode_informations()
 
     # @abstractmethod  # !테스트를 위해 잠시 보류됨. 끝나고 난 뒤 복구할 것.
