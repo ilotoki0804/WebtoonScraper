@@ -71,7 +71,7 @@ class WebtoonOriginalsScraper(Scraper[int]):
             assert isinstance(episode_no_str, str)
             episode_no = int(episode_no_str)
             # subtitles[episode_no] = element.select_one("span.subj").text
-            subtitles.append(element.select_one("span.subj").text)
+            subtitles.append(element.select_one("span.subj").text)  # type: ignore
             episode_ids.append(episode_no)
 
         # return {'subtitles': subtitles, 'episode_ids': episode_ids}
@@ -114,11 +114,3 @@ class WebtoonOriginalsScraper(Scraper[int]):
             episode_image_urls = [episode_image_url for episode_image_url in episode_image_urls
                                   if isinstance(episode_image_url, str)]
         return episode_image_urls
-
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        try:
-            self.fetch_webtoon_information()
-        except EmptyResultError:
-            return None
-
-        return self.title
