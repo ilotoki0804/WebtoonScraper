@@ -96,6 +96,6 @@ class NaverWebtoonScraper(Scraper[int]):
     def check_if_legitimate_webtoon_id(self) -> str | None:
         try:
             self.fetch_webtoon_information()
-        except ValueError:
+        except Exception:
             return None
         return self.title if self.is_best_challenge is self.IS_BEST_CHALLENGE else None
