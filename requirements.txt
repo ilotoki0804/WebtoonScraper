@@ -1,7 +1,8 @@
+# 일반적으로 필요한 requirements
 tqdm
 beautifulsoup4
-requests
-async_lru
-demjson3
-Pillow
 requests_utils==0.2.2
+# 네이버 포스트에서만 사용되는 requirement
+demjson3
+# 레진코믹스에서만 사용되는 requierment
+Pillow
