@@ -20,6 +20,7 @@ class NaverWebtoonScraper(Scraper):
     '''Scrape webtoons from Naver Webtoon.'''
     BASE_URL = 'https://comic.naver.com/webtoon'
     IS_CONNECTION_STABLE = True
+    TEST_WEBTOON_ID = 809590
     IS_BEST_CHALLENGE: ClassVar[bool] = False
     # 네이버 웹툰과 베스트 도전은 selector가 다르기 때문에 필요함.
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
@@ -71,19 +72,6 @@ class NaverWebtoonScraper(Scraper):
 
         self.is_episode_informations_loaded = True
 
-    # # 이전 방식의 웹툰 썸네일 다운로더. 사용성은 다르지 않지만 API에 통합하는 방법이 더 깔끔하기에 사용하지 않는다.
-    # # 이 주석은 일정한 기간 뒤에도 사용되지 않으면 삭제할 것.
-    # async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-    #     url = f'{self.BASE_URL}/list?titleId={titleid}'
-    #     res = self.requests.get(url)
-    #     image_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get('content')
-    #     if not isinstance(image_url, str):
-    #         raise ValueError(f'image_url is not str. image_url: {image_url}')
-    #     image_extension = self.get_file_extension(image_url)
-    #     image_raw = self.requests.get(image_url).content
-    #     image_path = thumbnail_dir / f'{title}.{image_extension}'
-    #     image_path.write_bytes(image_raw)
-
     @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         # sourcery skip: de-morgan
@@ -111,8 +99,3 @@ class NaverWebtoonScraper(Scraper):
         except ValueError:
             return None
         return self.title if self.is_best_challenge is self.IS_BEST_CHALLENGE else None
-
-
-if __name__ == '__main__':
-    wt = NaverWebtoonScraper(809590)  # 이번 생
-    wt.download_webtoon()
