@@ -2,6 +2,7 @@
 tqdm
 beautifulsoup4
 requests_utils==0.2.2
+typing_extensions
 # 네이버 포스트에서만 사용되는 requirement
 demjson3
 # 레진코믹스에서만 사용되는 requierment
