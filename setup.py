@@ -3,14 +3,25 @@ import re
 from pathlib import Path
 import WebtoonScraper
 
+version = WebtoonScraper.__version__
+
+
 long_description = '이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [여기](https://github.com/ilotoki0804/WebtoonScraper)를 참고하세요.\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
 # 사진 대체
-repl = r'[\g<description>](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/\g<path>)'
-long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?:images|docs).*?)[)]',
-                          repl, long_description)
 
-version = WebtoonScraper.__version__
+
+# repl = r'[\g<description>](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/\g<path>)'
+def repl_script(match: re.Match) -> str:
+    if match.group('directory_type') == 'images':
+        return rf'[{match.group("description")}](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master/{match.group("path")})'
+
+    return rf'[{match.group("description")}](https://github.com/ilotoki0804/WebtoonScraper/blob/master/{match.group("path")})'
+
+
+long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<directory_type>images|docs).*?)[)]',
+                          repl_script, long_description)
+
 
 general_requirements = [line for line in Path('requirements.txt').read_text(encoding='utf-8').split()
                         if line[0] == '#']
