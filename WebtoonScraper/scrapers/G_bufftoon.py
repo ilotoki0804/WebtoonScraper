@@ -52,10 +52,6 @@ class BufftoonScraper(Scraper[int]):
         if cookie is not None:
             self.cookie: str = cookie
         else:
-            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가심
-            # logging.warning('Without setting cookie extremely limiting the range of downloadable episodes. '
-            #                 'Please set cookie to valid download. '
-            #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
             self.cookie = ''
         self.update_requests()
 
@@ -66,6 +62,12 @@ class BufftoonScraper(Scraper[int]):
         get_login_requiered_episode: bool | None = None,
         limit: int = 500
     ) -> None:
+        if not self.cookie:
+            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수도 있음.
+            logging.warning('Without setting cookie extremely limiting the range of downloadable episodes. '
+                            'Please set cookie to valid download. '
+                            'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
+
         url = f'https://api-bufftoon.plaync.com/v2/series/{self.webtoon_id}/episodes?sortType=2&offset=0&limit={limit}'
         raw_data = self.requests.get(url).json()
         subtitles = []
@@ -86,7 +88,7 @@ class BufftoonScraper(Scraper[int]):
             episode_id = int(raw_episode_id_processed[1])
             episode_ids.append(episode_id)
             subtitles.append(raw_episode['title'])
-        # return {'subtitles': subtitles, 'episode_ids': episode_ids}
+
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 

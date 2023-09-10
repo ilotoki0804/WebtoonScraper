@@ -43,7 +43,6 @@ class NaverGameScraper(Scraper[int]):
             content_raw_data += res['content']['data']
 
         # 부제목, 이미지 데이터 불러옴
-        # episodes_data = {}
         subtitles = []
         episode_image_urls = []
         episode_ids = []
@@ -54,7 +53,7 @@ class NaverGameScraper(Scraper[int]):
             for image_url in content_json_data['document']['components']:
                 with contextlib.suppress(KeyError):
                     image_urls.append(image_url['src'])
-            # episodes_data[i] = {'subtitle': subtitle, 'image_urls': image_urls}
+
             episode_ids.append(i)
             subtitles.append(subtitle)
             episode_image_urls.append(image_urls)
@@ -62,18 +61,6 @@ class NaverGameScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_image_urls = episode_image_urls
         self.episode_ids = episode_ids
-
-    # async def get_title(self, titleid):
-    #     return await super().get_title(titleid)
-
-    # async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-    #     return await super().download_webtoon_thumbnail(titleid, title, thumbnail_dir)
-
-    # async def get_all_episode_no(self, titleid):
-    #     return await super().get_all_episode_no(titleid)
-
-    # async def get_subtitle(self, titleid, episode_no):
-    #     return await super().get_subtitle(titleid, episode_no)
 
     @override
     def get_episode_image_urls(self, episode_no):

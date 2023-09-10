@@ -1,6 +1,7 @@
 '''Download Webtoons from Kakaopage.'''
 
 from __future__ import annotations
+
 from typing_extensions import override
 
 if __name__ in ("__main__", "K_kakaopage"):
@@ -111,7 +112,7 @@ class KakaopageScraper(Scraper[int]):
         return super().download_webtoon_thumbnail(thumbnail_directory, file_extension)
 
     @override
-    def get_episode_image_urls(self, episode_no):
+    def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
 
         query = EPISODE_IMAGES_QUERY

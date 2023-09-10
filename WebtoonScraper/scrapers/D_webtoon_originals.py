@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 from typing_extensions import override
 
 if __name__ in ("__main__", "D_webtoon_originals"):
@@ -68,39 +69,13 @@ class WebtoonOriginalsScraper(Scraper[int]):
             episode_no_str = element.get('data-episode-no')
             assert isinstance(episode_no_str, str)
             episode_no = int(episode_no_str)
-            # subtitles[episode_no] = element.select_one("span.subj").text
             subtitles.append(element.select_one("span.subj").text)  # type: ignore
             episode_ids.append(episode_no)
 
-        # return {'subtitles': subtitles, 'episode_ids': episode_ids}
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
         self.is_webtoon_information_loaded = True
-
-    # async def download_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-    #     url = f'{self.BASE_URL}/list?title_no={titleid}'
-    #     image_url_original = self.requests.get(url).soup_select_one('meta[property="og:image"]', no_empty_result=True)
-    #     image_url: str = image_url_original['content']
-    #     image_extension = self.get_file_extension(image_url)
-    #     image_raw = self.requests.get(image_url).content
-    #     thumbnail_file = thumbnail_dir / f'{title}.{image_extension}'
-    #     thumbnail_file.write_bytes(image_raw)
-
-    # async def save_real_webtoon_thumbnail(self, titleid, title, thumbnail_dir):
-    #     '''save another form of thumbnail.'''
-    #     url = f'{self.BASE_URL}/rss?title_no={titleid}'
-    #     image_url = self.requests.get(url).soup_select_one('channel > image > url', no_empty_result=True).text
-    #     image_extension = self.get_file_extension(image_url)
-    #     image_raw = self.requests.get(image_url).content
-    #     thumbnail_path = thumbnail_dir / f'{title}.{image_extension}'
-    #     thumbnail_path.write_bytes(image_raw)
-
-    # async def get_all_episode_no(self, titleid):
-    #     return await super().get_all_episode_no(titleid)
-
-    # async def get_subtitle(self, titleid, episode_no):
-    #     return await super().get_subtitle(titleid, episode_no)
 
     @override
     def get_episode_image_urls(self, episode_no) -> list[str]:

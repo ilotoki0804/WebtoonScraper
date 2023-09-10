@@ -74,7 +74,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
             # demjson3.decode()의 결과값은 dict임. 하지만 어째선지 타입 체커가 오작동하니 type: ignore가 필요.
             decoded_response_data = demjson3.decode(response_text)['html']  # type: ignore
-            # decoded_response_data = demjson3.decode(response_text)
             soup = BeautifulSoup(decoded_response_data, 'html.parser')
 
             subtitle_list += [tag.text.strip() for tag in soup.select('ul > li > a > div > span.ell')]
@@ -99,13 +98,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.title = title
         self.webtoon_thumbnail = image_url
 
-    # async def get_all_episode_no(self, titleid: TitleId):
-    #     """1부터 시작하니 주의!!"""
-    #     return await super().get_all_episode_no(titleid)
-
-    # async def get_subtitle(self, titleid: TitleId, episode_no):
-    #     return await super().get_subtitle(titleid, episode_no)
-
     @override
     def get_episode_image_urls(self, episode_no, attempts: int = 3):
         series_no, member_no = self.webtoon_id
@@ -126,7 +118,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             raise ConnectionError("Unknown error occurred. Just tring again will solve issue.")
 
             # # 가끔씩 너무 자주 오류가 발생할 때가 있음.
-            # # 그럴 때는 이 코드를 이용해서 해당 회차를 스킵하도록 하는 조금 더 온건한 방식을 사용할 것.
+            # # 그럴 때는 ConnectionError 대신 이 코드를 이용해서 해당 회차를 스킵하도록 하는 조금 더 온건한 방식을 사용할 것.
             # logging.warning(f"Unknown error occurred at {episode_id}. Try again later.")
             # return None
 

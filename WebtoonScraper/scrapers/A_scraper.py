@@ -10,11 +10,10 @@ import time
 from typing import Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
-# from collections import namedtuple
-# from contextlib import suppress
 from typing import overload, ClassVar
 import logging
 import threading
+
 # from requests.exceptions import ConnectionError
 # from bs4 import BeautifulSoup
 # from bs4.element import Tag
@@ -181,11 +180,6 @@ class Scraper(ABC, Generic[WebtoonId]):
         url_path = parse.urlparse(filename_or_url).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
         extension_name = re.search(r'(?<=[.])\w+?$', url_path)
         return None if extension_name is None else extension_name.group(0)
-
-        # 이전 방식: 후에 제거할 것.
-        # serch_result: re.Match | None = re.search(r'(?<=[.])(jpg|png|jpeg|gif|webp)(?=[?].+$|$)', filename_or_url, re.I)
-        # return None if serch_result is None else serch_result[0]
-        # # return filename_or_url.split('.')[-1].lower()
 
     @staticmethod
     def get_safe_file_name(file_or_diretory_name: str) -> str:
@@ -365,7 +359,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         episode_images_url = self.get_episode_image_urls(episode_no)
 
-        if episode_images_url is None:  # for lezhin
+        if episode_images_url is None:
             logging.warning(f'this episode is not free or not yet created. This episode won\'t be loaded. {episode_no=}')
             self.set_progress_indication('unknown episode')
             return

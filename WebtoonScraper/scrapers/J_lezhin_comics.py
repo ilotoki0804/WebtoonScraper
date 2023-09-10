@@ -54,14 +54,7 @@ class LezhinComicsScraper(Scraper[str]):
             "X-Lz-Locale": "ko-KR",
         }
         self.cookie: str = ''
-        if authkey:
-            self.authkey = authkey  # 구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 함.
-        else:
-            self.authkey = ''  # 구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 함.
-            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가심
-            # logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
-            #                 'Please set authkey to valid download. '
-            #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
+        self.authkey = authkey or ''
 
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
@@ -88,11 +81,15 @@ class LezhinComicsScraper(Scraper[str]):
     @override
     def fetch_webtoon_information(self, reload: bool = False) -> None:
         super().fetch_webtoon_information()
+        # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수 있으니 주의.
+        logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
+                        'Please set authkey to valid download. '
+                        'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
 
         if reload or not self.is_webtoon_information_loaded:
             self.fetch_episode_informations()
 
-        # fetch_episode_informations에서 해주기 때문에 굳이 필요는 없음.
+        # fetch_episode_informations에서 해주기 때문에 굳이 할 필요는 없음.
         self.is_webtoon_information_loaded = True
 
     @override
@@ -136,7 +133,7 @@ class LezhinComicsScraper(Scraper[str]):
         else:
             is_shuffled = False
 
-        # departure는 product['episodes']와 동일하기에 departure를 사용해도 무관하다.
+        # departure는 product['episodes']와 동일하기에 product['episodes']를 사용해도 무관하다.
         self.get_episode_informations_from_json_data(product["episodes"])
 
         # webtoon infomation
@@ -167,16 +164,8 @@ class LezhinComicsScraper(Scraper[str]):
             # print(episode)
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
+            # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
             is_episode_free = "freedAt" in episode
-
-            # if is_episode_free == episode["coin"]:
-            #     # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
-            #     # 가설이 맞는지 확인하고, 어떤 추측이 더 알맞는 방법인지를 확인한다.
-            #     # 적당히 확인하고 나서는 없애도 무관하다.
-            #     logging.warning(
-            #         '`"freedAt" in episode == (not episode["coin"])` turned out to be false.'
-            #         "[Developing purpose message]")
-            #     logging.warning(f'{is_episode_free = }, {bool(episode["coin"]) = }')
 
             if (is_episode_expired or is_episode_not_for_sale) and not get_unusable_episode:
                 logging.warning(
@@ -186,7 +175,7 @@ class LezhinComicsScraper(Scraper[str]):
                     + "not-for-sale." * is_episode_not_for_sale
                 )
                 continue
-            # logging.warning((is_episode_free, get_paid_episode))
+
             if not is_episode_free and not get_paid_episode:
                 logging.warning(
                     f"episode {episode['display']['title']} is not free so it'll be skipped. "
@@ -210,18 +199,9 @@ class LezhinComicsScraper(Scraper[str]):
         # 기타 레진 한정 정보들
         self.information_chars = episode_type_chars
 
-    # async def get_title(self, titleid):
-    #     return await super().get_title(titleid)
-
     @override
     def download_webtoon_thumbnail(self, webtoon_directory, file_extension: str | None = 'jpg') -> None:
         return super().download_webtoon_thumbnail(webtoon_directory, file_extension=file_extension)
-
-    # async def get_all_episode_no(self, titleid):
-    #     return await super().get_all_episode_no(titleid)
-
-    # async def get_subtitle(self, titleid, episode_no):
-    #     return await super().get_subtitle(titleid, episode_no)
 
     @override
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
@@ -259,7 +239,6 @@ class LezhinComicsScraper(Scraper[str]):
                 raise
             logging.warning('Retrying json decode...')
             return self.get_episode_image_urls(episode_no, attempts=attempts - 1)
-        # print(images_data)
 
         # created_at = images_data["data"]["createdAt"]
         image_urls: list[str] = []
