@@ -33,4 +33,4 @@ else:
     from .scrapers.J_lezhin_comics import LezhinComicsScraper
     from .scrapers.K_kakaopage import KakaopageScraper
 
-__version__ = '2.0.0'
+__version__ = '2.0.1'

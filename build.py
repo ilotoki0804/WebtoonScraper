@@ -2,10 +2,12 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+import contextlib
 
 PYTHON_PATH = Path('python_path.txt').read_text(encoding='utf-8')
 
-shutil.rmtree('dist')
+with contextlib.suppress(FileNotFoundError):
+    shutil.rmtree('dist')
 os.system(f'{PYTHON_PATH}python.exe setup.py sdist bdist_wheel')
 whl_file_name = os.listdir('dist')[0]
 os.system(f'{PYTHON_PATH}python.exe -m pip install --force-reinstall dist/{whl_file_name}')
