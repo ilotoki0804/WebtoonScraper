@@ -24,7 +24,7 @@ long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<dir
 
 
 general_requirements = [line for line in Path('requirements.txt').read_text(encoding='utf-8').split()
-                        if line[0] == '#']
+                        if line[0] == '#' or not line]
 
 if __name__ == '__main__':
     setup(
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         license='MIT',
         url='https://github.com/ilotoki0804/WebtoonScraper',
         install_requires=general_requirements,
-        packages=find_packages(exclude=[]),
+        packages=['WebtoonScraper', 'WebtoonScraper.scrapers'],
         keywords=['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
         python_requires='>=3.10',
         package_data={"WebtoonScraper": ["py.typed"]},
