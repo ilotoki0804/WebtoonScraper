@@ -23,8 +23,8 @@ long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<dir
                           repl_script, long_description)
 
 
-general_requirements = [line for line in Path('requirements.txt').read_text(encoding='utf-8').split()
-                        if line[0] == '#' or not line]
+general_requirements = [line for line in Path('requirements.txt').read_text(encoding='utf-8').splitlines()
+                        if line and line[0] != '#']
 
 if __name__ == '__main__':
     setup(
