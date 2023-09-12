@@ -1,5 +1,4 @@
-"""Work in Progress"""
-# folder 용어 제거
+"""Unshuffles Lezhin Comics Webtoon."""
 from __future__ import annotations
 import logging
 from pathlib import Path
@@ -20,66 +19,83 @@ else:
     from ..exceptions import DirectoryStateUnmatched
 
 
-def unshuffle_typical_webtoon_directory(source_webtoon_directory: Path, episode_id_ints: list[int]):
+def unshuffle_typical_webtoon_directory_and_return_target_directory(source_webtoon_directory: Path, episode_int_ids: list[int] | None = None) -> Path:
     target_webtoon_directory = Path(str(source_webtoon_directory).removesuffix(', shuffled)') + ')')
-    unshuffle_webtoon_directory_to_directory(source_webtoon_directory, target_webtoon_directory, episode_id_ints)
+    unshuffle_webtoon_directory_to_directory(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
     return target_webtoon_directory
 
 
 def unshuffle_webtoon_directory_to_directory(
     source_webtoon_directory,
     target_webtoon_directory,
-    episode_id_ints: list[int],
+    episode_int_ids: list[int] | None,
     process_number: int | None = None,
     proceed_without_checking_directory_state: bool = False,
-):
-    # 웹툰을 다운로드 받을 때 유료 웹툰이거나 하는 이유로 일부 에피소드는 다운로드되지 않을 수 있음
-    # 하지만 episode_id는 0부터 쭉 존재함.
-    # 따라서 다운로드되지 않은 웹툰을 걸러 작업을 하지 않도록 거르는 작업이 필요함.
-    # `unshuffle_episode`에서 직접 episode_id를 고르면 복잡한 로직이 필요없지만 그때마다 get_webtoon_data를 불러야 하기에
-    # 성능 하락의 우려가 아주 살짝 있음. 하지만 크진 않기에 unshuffle_episode에서 직접 episode_id를 가지는 것도 고려해볼만 함.
+) -> None:
+    ids_file_search_result = search_episode_int_ids_exclude_if_from_directory(source_webtoon_directory)
+    if episode_int_ids is None:
+        if not ids_file_search_result:
+            raise ValueError('episode_id_ints is not provided. Provide it or download episode_id_ints.')
 
-    target_webtoon_directory.mkdir(exist_ok=True)
-    move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
+        episode_int_ids, _, _ = ids_file_search_result
 
-    if not proceed_without_checking_directory_state:
-        directory_state = fast_check_container_state(source_webtoon_directory)
-        if directory_state != NORMAL_WEBTOON_DIRECTORY:
-            raise DirectoryStateUnmatched(f'Directory state is {directory_state}, which is not supported.')
+    try:
+        target_webtoon_directory.mkdir(exist_ok=True)
+        move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
 
-    unshuffle_parameters = []
-    for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):
-        source_episode_directory = source_webtoon_directory / episode_directory_name
-        target_episode_directory = target_webtoon_directory / episode_directory_name
+        if not proceed_without_checking_directory_state:
+            directory_state = fast_check_container_state(source_webtoon_directory)
+            if directory_state != NORMAL_WEBTOON_DIRECTORY:
+                raise DirectoryStateUnmatched(f'Directory state is {directory_state}, which is not supported.')
 
-        processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
-        if processed_directory_name is None:
-            logging.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
-            continue
+        unshuffle_parameters = []
+        for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):
+            source_episode_directory = source_webtoon_directory / episode_directory_name
+            target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        episode_no = int(processed_directory_name.group('episode_no'))
-        episode_id = episode_id_ints[episode_no - 1]
+            processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
+            if processed_directory_name is None:
+                logging.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
+                continue
 
-        unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
+            episode_no = int(processed_directory_name.group('episode_no'))
+            episode_id = episode_int_ids[episode_no - 1]
 
-    print("Unshuffling is started. It takes a while and it's very CPU-intensive task. "
-          'So keep patient and wait until the process end.')
-    with multiprocessing.Pool(process_number) as p:
-        # # Unfortunately, this isn't work. But I don't know why.
-        # unshuffled_episode_ids = p.imap(lambda x: unshuffle_episode(*x), unshuffle_parameters)
+            unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
 
-        # # this one cannot utilize tqdm, so deprecated.
-        # p.starmap(unshuffle_episode, unshuffle_parameters)
+        print("Unshuffling is started. It takes a while and it's very CPU-intensive task. "
+              'So keep patient and wait until the process end.')
+        with multiprocessing.Pool(process_number) as p:
+            unshuffled_episode_ids = p.imap(unshuffle_episode_unpacking, unshuffle_parameters)
+            progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
+            for episode_name in progress_bar:
+                progress_bar.set_description(f'Episode {episode_name} unshuffle ended')
+    finally:
+        if ids_file_search_result is not None:
+            _, id_text_file_target_path, id_text_file_source_path = ids_file_search_result
+            os.rename(id_text_file_target_path, id_text_file_source_path)
 
-        unshuffled_episode_ids = p.imap(unshuffle_episode_unpacking, unshuffle_parameters)
-        progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
-        for episode_name in progress_bar:
-            progress_bar.set_description(f'Episode {episode_name} unshuffle ended')
-
-    logging.info('Unshuffling ended.')
+    logging.info('Unshuffling ended successfully.')
 
 
-def unshuffle_episode_unpacking(args):
+def search_episode_int_ids_exclude_if_from_directory(source_webtoon_directory: Path) -> tuple[list[int], Path, Path] | None:
+    for episode_int_ids_or_not in os.listdir(source_webtoon_directory):
+        if episode_int_ids_or_not.endswith('_ids.txt'):  # f'{webtoon_id}_ids.txt'도 고려할 만 함.
+            text_file_name = episode_int_ids_or_not
+            id_text_file_source_path = source_webtoon_directory / text_file_name
+            id_text_file_target_path = source_webtoon_directory.parent / text_file_name
+
+            episode_int_ids_raw = id_text_file_source_path.read_text(encoding='utf-8')
+            episode_int_ids = [int(line) for line in episode_int_ids_raw.splitlines()]
+
+            os.rename(id_text_file_source_path, id_text_file_target_path)
+
+            return episode_int_ids, id_text_file_target_path, id_text_file_source_path
+
+    return None
+
+
+def unshuffle_episode_unpacking(args) -> str | None:
     """
     Equevalent to `lambda x: unshuffle_episode(*x)`,
     but it doesn't work well with multiprocessing.Pool,
@@ -88,23 +104,25 @@ def unshuffle_episode_unpacking(args):
     return unshuffle_episode(*args)
 
 
-def unshuffle_episode(source_episode_directory: Path, target_episode_directory: Path, episode_id_int: int):
+def unshuffle_episode(source_episode_directory: Path, target_episode_directory: Path, episode_id_int: int) -> str | None:
     try:
         target_episode_directory.mkdir()
     except FileExistsError:
+        # stdout이 원본 interpreter와는 다른지 logging이 출력되지는 않음. logging이 출력되게 하거나 제거할 것.
+
         if check_filename_state(target_episode_directory.name) != NORMAL_WEBTOON_DIRECTORY:
-            logging.warning(f'Damaged file or directory detected. Skip and continue. Name: {target_episode_directory.name}')
-            return
-        if len(os.listdir(target_episode_directory)) == len(os.listdir(source_episode_directory)):
+            logging.warning(f'{target_episode_directory.name} is not valid container state. Delete items and continue.')
+        elif len(os.listdir(target_episode_directory)) == len(os.listdir(source_episode_directory)):
             logging.warning(f"Skipping {target_episode_directory.name}, because there are items in the directory and the number of contents in each directory is the same.")
-            return
-        if len(os.listdir(target_episode_directory)) != 0:
-            logging.warning(f'{target_episode_directory.name} is not valid. Delete items and continue.')
-            shutil.rmtree(target_episode_directory)
-            target_episode_directory.mkdir()
+            return None
+        elif len(os.listdir(target_episode_directory)) != 0:
+            logging.warning(f'{target_episode_directory.name} has the invalid number of images. Delete items and continue.')
+
+        shutil.rmtree(target_episode_directory)
+        target_episode_directory.mkdir()
 
     random_numbers = get_random_numbers_of_certain_seed(episode_id_int)
-    image_order = get_image_order_from_random_number(random_numbers)
+    image_order = get_image_order_from_random_numbers(random_numbers)
     for image_name in os.listdir(source_episode_directory):
         source_image_path = source_episode_directory / image_name
         target_image_path = target_episode_directory / image_name
@@ -113,9 +131,9 @@ def unshuffle_episode(source_episode_directory: Path, target_episode_directory: 
     return source_episode_directory.name
 
 
-def get_random_numbers_of_certain_seed(seed):
+def get_random_numbers_of_certain_seed(seed: int) -> list[int]:
     """Mutating Lezhin's random number generator. `random_numbers` are always same if given seed is same."""
-    results = []
+    results: list[int] = []
     state = seed
     for _ in range(25):
         state ^= state >> 12
@@ -126,7 +144,7 @@ def get_random_numbers_of_certain_seed(seed):
     return results
 
 
-def get_image_order_from_random_number(random_numbers):
+def get_image_order_from_random_numbers(random_numbers) -> list[int]:
     image_order = list(range(25))
     for i in range(25):
         shuffle_index = random_numbers[i]
@@ -134,7 +152,7 @@ def get_image_order_from_random_number(random_numbers):
     return image_order
 
 
-def get_episode_directory_no(episode_directory_name: str):
+def get_episode_directory_no(episode_directory_name: str) -> int | None:
     try:
         return int(episode_directory_name.split('.')[0])
     except ValueError as e:
@@ -149,12 +167,12 @@ def get_episode_directory_no(episode_directory_name: str):
                          '`unshuffle_webtoon` does not support merged webtoon.') from e
 
 
-def unshuffle_image_and_save(base_image_path, alt_image_path, image_order):
+def unshuffle_image_and_save(base_image_path, alt_image_path, image_order) -> None:
     with Image.open(base_image_path) as im:
         image_x, image_y = im.size
         margin = image_y % 5
         image_y -= margin
-        cropped_images: list[Image.Image] = [None] * 25
+        cropped_images: list[Image.Image] = [None] * 25  # type: ignore 이 None은 후에 image로 덮어씌워진다.
         for index_x, left, right in ((i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)):
             for index_y, upper, lower in ((i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)):
                 cropped_image: Image.Image = im.crop((left, upper, right, lower))
@@ -167,9 +185,12 @@ def unshuffle_image_and_save(base_image_path, alt_image_path, image_order):
             image_y -= margin
             return index_x * image_x, index_y * image_y
 
+        # assambled_image = im  # 덮어씌우든 새로 만들든 속도차는 크게 없다 (26.71(새로 만듦) > 26.54(덮어씀), 오차 있음.)
         assambled_image = Image.new("RGB", im.size, (256, 0, 0))
         for i, cropped_image in enumerate(cropped_images):
-            assambled_image.paste(cropped_image, tuple(
-                j // 5 for j in position_in_assambled_image(i)))
+            assambled_image.paste(
+                cropped_image,
+                tuple(j // 5 for j in position_in_assambled_image(i))  # type: ignore
+            )
         assambled_image.paste(im.crop((0, image_y, *im.size)), (0, image_y))
         assambled_image.save(alt_image_path)
