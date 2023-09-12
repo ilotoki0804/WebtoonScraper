@@ -123,18 +123,22 @@ class DirectoryMerger:
 
         if manual_container_state is None:
             directory_state = fast_check_container_state(selected_directory)
-            if directory_state == NORMAL_WEBTOON_DIRECTORY:
-                user_answer = input('Directory seems default state. Merge it? (merge, restore, anything else: merge) ').lower()
-                if user_answer not in {'merge', 'restore'}:
-                    user_answer = 'merge'
-            elif directory_state == MERGED_WEBTOON_DIRECTORY:
-                user_answer = input('Directory seems merged state. Restore it? (merge, restore, anything else: merge) ').lower()
-                if user_answer not in {'merge', 'restore'}:
-                    user_answer = 'restore'
-            else:
-                raise DirectoryStateUnmatched('Directory state is nether default state nor merged. Cannot merge or restore.')
         else:
             directory_state = manual_container_state
+        if directory_state == NORMAL_WEBTOON_DIRECTORY:
+            user_answer = input('Directory seems default state. Merge it? (merge(M), restore(R), anything else: merge) ').lower()
+            if user_answer not in {'merge', 'restore', 'm', 'r'}:
+                user_answer = 'merge'
+            elif user_answer in {'m', 'r'}:
+                user_answer = 'merge' if user_answer.lower() == 'm' else 'restore'
+        elif directory_state == MERGED_WEBTOON_DIRECTORY:
+            user_answer = input('Directory seems merged state. Restore it? (restore(R), merge(M), anything else: restore) ').lower()
+            if user_answer not in {'merge', 'restore', 'm', 'r'}:
+                user_answer = 'restore'
+            elif user_answer in {'m', 'r'}:
+                user_answer = 'merge' if user_answer.lower() == 'm' else 'restore'
+        else:
+            raise DirectoryStateUnmatched('Directory state is nether default state nor merged. Cannot merge or restore.')
 
         print(f'You selected {selected_webtoon_directory_name}. {"Merging" if user_answer == "merge" else "Restoring"} webtoon has started.')
         if user_answer == 'merge':
@@ -253,7 +257,13 @@ def merge_webtoon_directory_to_directory(
     os.rmdir(source_webtoon_directory)
 
 
-def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory: Path, is_real_webtoon_directory=False, copy=False) -> None:
+def move_thumbnail_only(
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path,
+    is_real_webtoon_directory=False,
+    copy: bool = False,
+    exclude_file_names: list[str] | None = None
+) -> None:
     """
     is_real_webtoon_directory가 참이면 source_webtoon_directory의 이름에 기반해 썸네일을 찾습니다.
     하지만 기존 방식이 딱히 인식률이 좋지 않거나 단점이 있는 것이 아니라서 일반적인 환경에서는 굳이 이용할 이유가 없습니다.
@@ -268,6 +278,8 @@ def move_thumbnail_only(source_webtoon_directory: Path, target_webtoon_directory
             return
 
         for episode_or_thumbnail in os.listdir(source_webtoon_directory):
+            if exclude_file_names and episode_or_thumbnail in exclude_file_names:
+                continue
             processed_episode_or_thumbnail_directory_name = webtoon_regexes[WEBTOON_DIRECTORY].match(episode_or_thumbnail.removeprefix('TEMP-thumbnail-'))
             if processed_episode_or_thumbnail_directory_name is None or not processed_episode_or_thumbnail_directory_name.group('webtoon_name'):
                 continue
