@@ -158,7 +158,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         Raises:
             AttributeError:
-                download_one_webtoon_async(으)로 시작하지 않은 함수에서 이 함수를 호출한다면 생가는 오류입니다.
+                download_one_webtoon으로 시작하지 않은 함수에서 이 함수를 호출한다면 생기는 오류입니다.
                 예를 들어, 만약 download_one_episode 함수를 단독으로 실행했다면, self.pbar가 선언되지 않았기 때문에 오류가 발생합니다.
                 오류를 해결하려면 self.not_using_tqdm를 True로 하거나 download_webtoon을 사용하세요.
         """
@@ -283,6 +283,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         self.pbar = tqdm(episode_no_list)
         for episode_no in self.pbar:
+            # if를 붙이는 게 self.INTERVAL~이 0인 경우 빨라짐.
             if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
                 time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
             self.download_episode(episode_no, webtoon_directory)
@@ -426,6 +427,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         """해당 회차를 구성하는 이미지들을 불러옵니다."""
 
     def setup(self, reload: bool = False) -> None:
+        """웹툰에 관련한 정보를 불러옵니다."""
         if reload or not self.is_webtoon_information_loaded:
             self.fetch_webtoon_information()
 
