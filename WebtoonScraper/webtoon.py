@@ -4,7 +4,7 @@
 from __future__ import annotations
 import logging
 from typing import Iterable, Literal, TYPE_CHECKING
-
+from multiprocessing import pool
 from requests_utils import requests, souptools
 
 if __name__ in {"__main__", "webtoon"}:
@@ -59,9 +59,10 @@ WebtoonPlatforms = Literal[
 ]
 
 
-def get_webtoon_platform(webtoon_id: TitleId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
+def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
     """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다."""
-    def get_platform(platform_name: WebtoonPlatforms):
+
+    def get_platform(platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
         WebtoonScraperClass = get_scraper_class(platform_name)
         return platform_name, WebtoonScraperClass(webtoon_id).check_if_legitimate_webtoon_id()
 
@@ -87,7 +88,10 @@ def get_webtoon_platform(webtoon_id: TitleId, is_auto_select: bool = False) -> W
     else:
         raise TypeError(f'Unknown type of titleid({type(webtoon_id)})')
 
-    results_raw: list[tuple[WebtoonPlatforms, str | None]] = [get_platform(platform) for platform in test_queue]
+    with pool.ThreadPool(len(test_queue)) as p:
+        results_raw = p.map(get_platform, test_queue)
+
+    # results_raw: list[tuple[WebtoonPlatforms, str | None]] = [get_platform(platform) for platform in test_queue]
 
     results: list[tuple[WebtoonPlatforms, str]] = []
     if TYPE_CHECKING:
@@ -153,7 +157,7 @@ def get_scraper_class(webtoon_type: WebtoonPlatforms) -> type[Scraper]:
 
 
 def download_webtoon(
-        webtoon_id: TitleId,
+        webtoon_id: WebtoonId,
         webtoon_type: WebtoonPlatforms | None = None,
         merge_amount: int | None = None,
         *,
