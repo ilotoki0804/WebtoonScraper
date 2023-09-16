@@ -10,16 +10,16 @@
 
     wt.download_webtoon(1007888, wt.BF)  # 복사했던 수를 여기에다 붙여넣으세요.
     ```
-3. 'Enter cookie of 1007888(시리즈 id) (Enter nothing to preceed without cookie)'라는 문구와 함께 입력란이 나오면 그냥 enter를 눌러줍니다.
+3. `Enter cookie of (시리즈 id) (Enter nothing to preceed without cookie)`라는 문구와 함께 입력란이 나오면 그냥 enter를 눌러줍니다.
 4. 로그인하지 않고 볼 수 있는 모든 에피소드가 다운로드됩니다.
 
 ## 로그인한 상태에서 웹툰 다운로드하기
 이 과정은 PC를 기준으로 설명합니다. 만약 모바일이라면 Kiwi Browser 등을 통해 다음의 과정을 수행할 수 있습니다.
 
 1. 웹툰 페이지에 들어가 주소창의 맨 마지막 수를 복사합니다. 이 예시에서는 1007888입니다.
-    ![출처: 겜덕툰(버프툰) by 돈미니](../images/bufftoon1.png)
+    ![겜덕툰(버프툰) by 돈미니](../images/bufftoon1.png)
 2. 로그인을 하고 f12를 누르고 네트워크 창을 연 뒤 웹툰 페이지에 들어갑니다.
-    ![출처: 겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
+    ![겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
 3. 새로고침을 한 뒤 '이름'에 있는 favicon.ico 요청을 클릭하고 나온 창에 '헤더' 탭을 엽니다.
     ![img](../images/bufftoon3.png)
 4. 내려서 Cookie: 라고 되어 있는 모든 내용을 복사합니다.
@@ -29,7 +29,7 @@
     from WebtoonScraper import Webtoon as wt
 
     cookie = '두 번째로 복사했던 문자를 여기에다 붙여넣으세요.'
-    wt.get_webtoon(1007888, wt.BF, cookie=cookie)  # 첫 번째로 복사했던 수를 여기에다 붙여넣으세요.
+    wt.get_webtoon(1007888, wt.BF, cookie=cookie)  # 첫 번째로 복사했던 수를 1007888의 위치에 붙여넣으세요.
     ```
 6. 로그인하면 볼 수 있는 모든 에피소드가 다운로드됩니다.
 
