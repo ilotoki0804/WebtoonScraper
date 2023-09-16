@@ -105,7 +105,6 @@ class DirectoryMerger:
         manual_container_state: ContainerStates | None = None,
     ) -> None:
         """소스 디렉토리에 있는 웹툰 디렉토리 중 사용자가 선택한 웹툰을 합칩니다."""
-        print('test')
         webtoons = os.listdir(self.source_directory)
 
         print('Select webtoon to merge or restore.')
@@ -125,6 +124,7 @@ class DirectoryMerger:
             directory_state = fast_check_container_state(selected_directory)
         else:
             directory_state = manual_container_state
+
         if directory_state == NORMAL_WEBTOON_DIRECTORY:
             user_answer = input('Directory seems default state. Merge it? (merge(M), restore(R), anything else: merge) ').lower()
             if user_answer not in {'merge', 'restore', 'm', 'r'}:
