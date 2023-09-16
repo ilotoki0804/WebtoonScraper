@@ -9,28 +9,17 @@
 Scrape webtoons with ease.
 """
 
-
 if __name__ in {"__main__", "__init__"}:
     from directory_merger import DirectoryMerger
-    from scrapers.B_naver_webtoon import NaverWebtoonScraper
-    from scrapers.C_best_challenge import BestChallengeScraper
-    from scrapers.D_webtoon_originals import WebtoonOriginalsScraper
-    from scrapers.E_webtoon_canvas import WebtoonCanvasScraper
-    from scrapers.G_bufftoon import BufftoonScraper
-    from scrapers.H_naver_post import NaverPostScraper, NaverPostWebtoonId
-    from scrapers.I_naver_game import NaverGameScraper
-    from scrapers.J_lezhin_comics import LezhinComicsScraper
-    from scrapers.K_kakaopage import KakaopageScraper
 else:
     from .directory_merger import DirectoryMerger
-    from .scrapers.B_naver_webtoon import NaverWebtoonScraper
-    from .scrapers.C_best_challenge import BestChallengeScraper
-    from .scrapers.D_webtoon_originals import WebtoonOriginalsScraper
-    from .scrapers.E_webtoon_canvas import WebtoonCanvasScraper
-    from .scrapers.G_bufftoon import BufftoonScraper
-    from .scrapers.H_naver_post import NaverPostScraper, NaverPostWebtoonId
-    from .scrapers.I_naver_game import NaverGameScraper
-    from .scrapers.J_lezhin_comics import LezhinComicsScraper
-    from .scrapers.K_kakaopage import KakaopageScraper
 
-__version__ = '2.0.2'
+__title__ = "WebtoonScraper"
+__description__ = "Scraping webtoons with ease."
+__url__ = "https://github.com/ilotoki0804/WebtoonScraper"
+__raw_source_url__ = "https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/master"
+__version_info__ = (2, 0, 2)
+__version__ = str.join('.', map(str, __version_info__))
+__author__ = "ilotoki0804"
+__author_email__ = "ilotoki0804@gmail.com"
+__license__ = "MIT License"

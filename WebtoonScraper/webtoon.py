@@ -2,7 +2,6 @@
 # pylint: disable=logging-fstring-interpolation
 
 from __future__ import annotations
-import asyncio
 import logging
 from typing import Iterable, Literal, TYPE_CHECKING
 
@@ -10,30 +9,20 @@ from requests_utils import requests, souptools
 
 if __name__ in {"__main__", "webtoon"}:
     # from directory_merger import DirectoryMerger
-    from scrapers.A_scraper import Scraper
-    from scrapers.B_naver_webtoon import NaverWebtoonScraper
-    from scrapers.C_best_challenge import BestChallengeScraper
-    from scrapers.D_webtoon_originals import WebtoonOriginalsScraper
-    from scrapers.E_webtoon_canvas import WebtoonCanvasScraper
-    from scrapers.G_bufftoon import BufftoonScraper
-    from scrapers.H_naver_post import NaverPostScraper, NaverPostWebtoonId
-    from scrapers.I_naver_game import NaverGameScraper
-    from scrapers.J_lezhin_comics import LezhinComicsScraper
-    from scrapers.K_kakaopage import KakaopageScraper
+    from scrapers import (
+        Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
+        WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
+        NaverGameScraper, LezhinComicsScraper, KakaopageScraper
+    )
 else:
     # from .directory_merger import DirectoryMerger
-    from .scrapers.A_scraper import Scraper
-    from .scrapers.B_naver_webtoon import NaverWebtoonScraper
-    from .scrapers.C_best_challenge import BestChallengeScraper
-    from .scrapers.D_webtoon_originals import WebtoonOriginalsScraper
-    from .scrapers.E_webtoon_canvas import WebtoonCanvasScraper
-    from .scrapers.G_bufftoon import BufftoonScraper
-    from .scrapers.H_naver_post import NaverPostScraper, NaverPostWebtoonId
-    from .scrapers.I_naver_game import NaverGameScraper
-    from .scrapers.J_lezhin_comics import LezhinComicsScraper
-    from .scrapers.K_kakaopage import KakaopageScraper
+    from .scrapers import (
+        Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
+        WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
+        NaverGameScraper, LezhinComicsScraper, KakaopageScraper
+    )
 
-TitleId = int | tuple[int, int] | str
+WebtoonId = int | tuple[int, int] | str | NaverPostWebtoonId
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
