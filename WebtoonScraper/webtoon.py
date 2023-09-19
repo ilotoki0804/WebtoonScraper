@@ -163,7 +163,7 @@ def download_webtoon(
         *,
         cookie: str | None = None,
         is_auto_select: bool = False,
-        episode_no_range: tuple[int, int] | int | None = None,
+        episode_no_range: tuple[int | None, int | None] | int | None = None,
         authkey: str | None = None
 ) -> None:
     if cookie is not None:
