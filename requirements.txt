@@ -5,8 +5,8 @@
 tqdm
 # 사용한 버전: 4.12.2
 beautifulsoup4
-# 사용한 버전: 0.2.2
-requests_utils==0.2.2
+# 사용한 버전: 0.2.3
+requests_utils==0.2.3
 # 사용한 버전: 4.7.1
 typing_extensions
 
@@ -14,6 +14,6 @@ typing_extensions
 # 사용한 버전: 3.0.6
 demjson3
 
-# <레진코믹스에서만 사용되는 requierment>
+# <레진코믹스에서만 사용되는 requirement>
 # 사용한 버전: 10.0.0
 Pillow
