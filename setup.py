@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import re
 from pathlib import Path
-from WebtoonScraper import __version__, __description__, __url__, __author__, __raw_source_url__, __author_email__
+from WebtoonScraper import __version__, __description__, __url__, __author__, __raw_source_url__, __author_email__, __title__
 
 long_description = f'이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [이 깃허브 링크]({__url__})를 참고하세요.\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
@@ -23,7 +23,7 @@ requirements = [line for line in Path('requirements.txt').read_text(encoding='ut
 
 if __name__ == '__main__':
     setup(
-        name='WebtoonScraper',
+        name=__title__,
         version=__version__,
         description=__description__,
         author=__author__,
