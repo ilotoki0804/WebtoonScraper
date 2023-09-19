@@ -131,24 +131,24 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
     return selected_platform
 
 
-def get_scraper_class(webtoon_type: WebtoonPlatforms) -> type[Scraper]:
-    if webtoon_type.lower() == NAVER_WEBTOON:
+def get_scraper_class(webtoon_platform: WebtoonPlatforms) -> type[Scraper]:
+    if webtoon_platform.lower() == NAVER_WEBTOON:
         webtoonscraper = NaverWebtoonScraper
-    elif webtoon_type.lower() == BEST_CHALLENGE:
+    elif webtoon_platform.lower() == BEST_CHALLENGE:
         webtoonscraper = BestChallengeScraper
-    elif webtoon_type.lower() == ORIGINALS:
+    elif webtoon_platform.lower() == ORIGINALS:
         webtoonscraper = WebtoonOriginalsScraper
-    elif webtoon_type.lower() == CANVAS:
+    elif webtoon_platform.lower() == CANVAS:
         webtoonscraper = WebtoonCanvasScraper
-    elif webtoon_type.lower() == BUFFTOON:
+    elif webtoon_platform.lower() == BUFFTOON:
         webtoonscraper = BufftoonScraper
-    elif webtoon_type.lower() == NAVER_POST:
+    elif webtoon_platform.lower() == NAVER_POST:
         webtoonscraper = NaverPostScraper
-    elif webtoon_type.lower() == NAVER_GAME:
+    elif webtoon_platform.lower() == NAVER_GAME:
         webtoonscraper = NaverGameScraper
-    elif webtoon_type.lower() == LEZHIN:
+    elif webtoon_platform.lower() == LEZHIN:
         webtoonscraper = LezhinComicsScraper
-    elif webtoon_type.lower() == KAKAOPAGE:
+    elif webtoon_platform.lower() == KAKAOPAGE:
         webtoonscraper = KakaopageScraper
     else:
         raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, '
@@ -158,7 +158,7 @@ def get_scraper_class(webtoon_type: WebtoonPlatforms) -> type[Scraper]:
 
 def download_webtoon(
         webtoon_id: WebtoonId,
-        webtoon_type: WebtoonPlatforms | None = None,
+        webtoon_platform: WebtoonPlatforms | None = None,
         merge_amount: int | None = None,
         *,
         cookie: str | None = None,
@@ -173,12 +173,12 @@ def download_webtoon(
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
         webtoon_scraper.authkey = authkey
     else:
-        webtoon_type = webtoon_type or get_webtoon_platform(webtoon_id, is_auto_select)
+        webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id, is_auto_select)
 
-        if webtoon_type is None:
+        if webtoon_platform is None:
             raise ValueError('You must select item.')
 
-        webtoon_scraper = get_scraper_class(webtoon_type)(webtoon_id)
+        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id)
         if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
