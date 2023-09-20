@@ -185,7 +185,7 @@ def merge_webtoon(
     try:
         temp_target_webtoon_directory.rename(webtoon_directory)
     except PermissionError:
-        logging.error(f'Failed to rename {temp_target_webtoon_directory.name} to {webtoon_directory.name}. '
+        logging.error(f'Failed to rename {temp_target_webtoon_directory.name} to {webtoon_directory.name}.\n'
                       "It's quite often situation so nothing to concern about. "
                       "But you have to change its name by hand.")
 
@@ -240,7 +240,7 @@ def merge_webtoon_directory_to_directory(
     # merge_last_bundle을 적용함
     merged_images_name_list: list[tuple[int, list[str]]] = sorted(merged_images.items())
     _, last_images = merged_images_name_list[-1]
-    if merge_last_bundle and len(find_episode_nos_of_unified_images(last_images)) > merge_amount:
+    if merge_last_bundle and len(find_episode_nos_of_unified_images(last_images)) < merge_amount:
         merged_second_last_list = merged_images_name_list[-2][1]
         merged_second_last_list += merged_images_name_list.pop()[1]
 
