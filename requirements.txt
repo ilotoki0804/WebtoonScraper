@@ -3,8 +3,6 @@
 # <일반적으로 필요한 requirements>
 # 사용한 버전: 4.66.1
 tqdm
-# 사용한 버전: 4.12.2
-beautifulsoup4
 # 사용한 버전: 0.2.3
 requests_utils==0.2.3
 # 사용한 버전: 4.7.1

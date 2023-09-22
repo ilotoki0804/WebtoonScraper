@@ -59,6 +59,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
         self.download_episode_id_ints_if_shuffled = True
+        self.get_paid = False
 
         # self.authkey 설정에서 되기 때문에 굳이 하지는 않아도 됨.
         self.update_requests()
@@ -152,9 +153,10 @@ class LezhinComicsScraper(Scraper[str]):
     def get_episode_informations_from_json_data(
         self,
         episode_informations_raw: list[dict],
-        get_paid_episode: bool = False,
+        get_paid_episode: bool | None = None,
         get_unusable_episode: bool = False,
     ) -> None:
+        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.get_paid
         episode_int_ids: list[int] = []
         episode_str_ids: list[str] = []
         subtitles: list[str] = []

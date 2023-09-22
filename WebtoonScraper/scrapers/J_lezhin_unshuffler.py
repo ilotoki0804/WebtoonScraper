@@ -162,7 +162,7 @@ def get_episode_directory_no(episode_directory_name: str) -> int | None:
             raise ValueError(
                 'Episode name is not valid. It\'s because you tried merging already merged webtoon folder. '
                 '`unshuffle_webtoon` does not support merged webtoon.'
-            )
+            ) from e
         raise ValueError('`episode_directory_name` is invalid. Maybe you tried to unshuffle merged webtoon directory. '
                          '`unshuffle_webtoon` does not support merged webtoon.') from e
 
@@ -172,7 +172,7 @@ def unshuffle_image_and_save(base_image_path, alt_image_path, image_order) -> No
         image_x, image_y = im.size
         margin = image_y % 5
         image_y -= margin
-        cropped_images: list[Image.Image] = [None] * 25  # type: ignore 이 None은 후에 image로 덮어씌워진다.
+        cropped_images: list[Image.Image] = [None] * 25  # type: ignore # 이 None은 후에 image로 덮어씌워진다.
         for index_x, left, right in ((i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)):
             for index_y, upper, lower in ((i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)):
                 cropped_image: Image.Image = im.crop((left, upper, right, lower))
