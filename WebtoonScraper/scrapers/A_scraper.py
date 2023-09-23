@@ -19,6 +19,8 @@ import threading
 # from bs4.element import Tag
 from tqdm import tqdm
 from requests_utils.custom_defaults import CustomDefaults
+from rich.table import Table
+from rich.console import Console
 
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
@@ -60,6 +62,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                           '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
         }
         self.cookie: str
+        self.rich_console = Console()
 
         self.webtoon_id = webtoon_id
         self.is_webtoon_information_loaded = False
@@ -75,6 +78,15 @@ class Scraper(ABC, Generic[WebtoonId]):
         # ] = 'interrupt_during_download'
 
     # MISCS
+
+    def list_episodes(self) -> None:
+        self.setup()
+        table = Table(show_header=True, header_style="bold blue", box=None)
+        table.add_column("Episode number (ID)", style="dim", width=12)
+        table.add_column("Episode Title", style='bold')
+        for i, (episode_id, episode_title) in enumerate(zip(self.episode_ids, self.episode_titles), 1):
+            table.add_row(f'{i:04d} ({episode_id})', str(episode_title))
+        self.rich_console.print(table)
 
     def update_requests(self, **kwargs) -> None:
         """

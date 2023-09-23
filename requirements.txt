@@ -7,6 +7,7 @@ tqdm
 requests_utils==0.2.3
 # 사용한 버전: 4.7.1
 typing_extensions
+rich
 
 # <네이버 포스트에서만 사용되는 requirement>
 # 사용한 버전: 3.0.6

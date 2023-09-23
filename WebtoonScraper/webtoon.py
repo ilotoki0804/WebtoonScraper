@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 import logging
+from pathlib import Path
 from typing import Iterable, Literal, TYPE_CHECKING
 from multiprocessing import pool
 from requests_utils import requests, souptools
@@ -164,7 +165,9 @@ def download_webtoon(
         cookie: str | None = None,
         is_auto_select: bool = False,
         episode_no_range: tuple[int | None, int | None] | int | None = None,
-        authkey: str | None = None
+        authkey: str | None = None,
+        list_episodes: bool = False,
+        download_directory: str | Path = 'webtoon',
 ) -> None:
     if cookie is not None:
         webtoon_scraper = BufftoonScraper(webtoon_id)
@@ -182,6 +185,11 @@ def download_webtoon(
         if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
+    if list_episodes:
+        webtoon_scraper.list_episodes()
+        return
+
+    webtoon_scraper.BASE_URL = download_directory
     webtoon_scraper.download_webtoon(episode_no_range, merge_amount=merge_amount)
 
 
