@@ -152,8 +152,7 @@ def get_scraper_class(webtoon_platform: WebtoonPlatforms) -> type[Scraper]:
     elif webtoon_platform.lower() == KAKAOPAGE:
         webtoonscraper = KakaopageScraper
     else:
-        raise ValueError('webtoon_type should be among naver_webtoon, best_challenge, originals, '
-                         'canvas, bufftoon, telescope, naver_post, naver_game, lezhin, and kakaopage.')
+        raise ValueError(f'webtoon_type should be among {", ".join(PLATFORMS)}')
     return webtoonscraper
 
 
@@ -189,7 +188,7 @@ def download_webtoon(
         webtoon_scraper.list_episodes()
         return
 
-    webtoon_scraper.BASE_URL = download_directory
+    webtoon_scraper.base_directory = download_directory
     webtoon_scraper.download_webtoon(episode_no_range, merge_amount=merge_amount)
 
 
