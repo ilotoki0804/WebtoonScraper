@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING
 from typing_extensions import override
 
 if __name__ in ("__main__", "G_bufftoon"):
-    from A_scraper import Scraper
+    from A_scraper import Scraper, force_reload_if_reload
 else:
-    from .A_scraper import Scraper
+    from .A_scraper import Scraper, force_reload_if_reload
 
 TitleId = int
 
@@ -52,6 +52,7 @@ class BufftoonScraper(Scraper[int]):
         self.cookie = cookie if cookie is not None else ''
         self.update_requests()
 
+    @force_reload_if_reload
     @override
     def fetch_episode_informations(
         self,
@@ -89,6 +90,7 @@ class BufftoonScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
+    @force_reload_if_reload
     @override
     def fetch_webtoon_information(self):
         response = self.requests.get(f'{self.BASE_URL}/series/{self.webtoon_id}')
@@ -105,14 +107,6 @@ class BufftoonScraper(Scraper[int]):
 
         self.title = title
         self.webtoon_thumbnail = image_url
-
-    # async def get_all_episode_no(self, titleid):
-    #     return await super().get_all_episode_no(titleid)
-
-    # async def get_subtitle(self, titleid, episode_no, sleep=True):
-    #     if sleep:
-    #         time.sleep(1)
-    #     return await super().get_subtitle(titleid, episode_no)
 
     @override
     def get_episode_image_urls(self, episode_no) -> list[str]:

@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 from typing_extensions import override
 
 if __name__ in ("__main__", "D_webtoon_originals"):
-    from A_scraper import Scraper
+    from A_scraper import Scraper, force_reload_if_reload
 else:
-    from .A_scraper import Scraper
+    from .A_scraper import Scraper, force_reload_if_reload
 
 
 class WebtoonOriginalsScraper(Scraper[int]):
@@ -26,10 +26,9 @@ class WebtoonOriginalsScraper(Scraper[int]):
         }
         self.update_requests()
 
+    @force_reload_if_reload
     @override
     def fetch_webtoon_information(self) -> None:
-        super().fetch_webtoon_information()
-
         response = self.requests.get(f'{self.BASE_URL}/list?title_no={self.webtoon_id}')
         title = response.soup_select_one('meta[property="og:title"]', no_empty_result=True).get('content')
         assert isinstance(title, str), f'Title is not string. webtoon_id: {self.webtoon_id}'
@@ -46,12 +45,9 @@ class WebtoonOriginalsScraper(Scraper[int]):
         self.title = title
         self.webtoon_thumbnail = webtoon_thumbnail
 
-        self.is_webtoon_information_loaded = True
-
+    @force_reload_if_reload
     @override
     def fetch_episode_informations(self) -> None:
-        super().fetch_episode_informations()
-
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={self.webtoon_id}'
         title_no_str = self.requests.get(url).soup_select_one('#_listUl > li', no_empty_result=True).get('data-episode-no')
@@ -74,8 +70,6 @@ class WebtoonOriginalsScraper(Scraper[int]):
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
-
-        self.is_webtoon_information_loaded = True
 
     @override
     def get_episode_image_urls(self, episode_no) -> list[str]:

@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing_extensions import override
 
 if __name__ in ("__main__", "K_kakaopage"):
-    from A_scraper import Scraper
+    from A_scraper import Scraper, force_reload_if_reload
     from K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 else:
-    from .A_scraper import Scraper
+    from .A_scraper import Scraper, force_reload_if_reload
     from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 
 
@@ -45,10 +45,9 @@ class KakaopageScraper(Scraper[int]):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
         }
 
+    @force_reload_if_reload
     @override
     def fetch_webtoon_information(self) -> None:
-        super().fetch_webtoon_information()
-
         res = self.requests.get(f"https://page.kakao.com/content/{self.webtoon_id}")
         title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
         if title == '카카오페이지':
@@ -60,8 +59,7 @@ class KakaopageScraper(Scraper[int]):
         self.title = title
         self.webtoon_thumbnail = thumnail_url
 
-        self.is_webtoon_information_loaded = True
-
+    @force_reload_if_reload
     @override
     def fetch_episode_informations(self):
         curser = 0
@@ -100,8 +98,6 @@ class KakaopageScraper(Scraper[int]):
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
-
-        self.is_episode_informations_loaded = True
 
     @override
     def download_image(self, episode_directory, url: str, image_no: int, file_extension: str | None = 'jpg') -> None:

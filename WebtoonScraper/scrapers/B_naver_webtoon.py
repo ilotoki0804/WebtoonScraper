@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, ClassVar
 from typing_extensions import override
 
 if __name__ in ("__main__", "B_naver_webtoon"):
-    from A_scraper import Scraper
+    from A_scraper import Scraper, force_reload_if_reload
 else:
-    from .A_scraper import Scraper
+    from .A_scraper import Scraper, force_reload_if_reload
 
 
 class NaverWebtoonScraper(Scraper[int]):
@@ -23,10 +23,9 @@ class NaverWebtoonScraper(Scraper[int]):
     # 네이버 웹툰과 베스트 도전은 selector가 다르기 때문에 필요함.
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
 
+    @force_reload_if_reload
     @override
     def fetch_webtoon_information(self) -> None:
-        super().fetch_webtoon_information()
-
         webtoon_json_info = self.requests.get(f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}').json()
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
         webtoon_thumbnail = webtoon_json_info['sharedThumbnailUrl']  # 실제로 웹툰 페이지에 사용되는 썸네일
@@ -37,12 +36,9 @@ class NaverWebtoonScraper(Scraper[int]):
         self.title = title
         self.is_best_challenge = is_best_challenge == 'BEST_CHALLENGE'
 
-        self.is_webtoon_information_loaded = True
-
+    @force_reload_if_reload
     @override
     def fetch_episode_informations(self) -> None:
-        super().fetch_episode_informations()
-
         prev_articleList = []
         subtitles = []
         episode_ids = []
@@ -67,8 +63,6 @@ class NaverWebtoonScraper(Scraper[int]):
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
-
-        self.is_episode_informations_loaded = True
 
     @override
     def get_episode_image_urls(self, episode_no) -> list[str]:

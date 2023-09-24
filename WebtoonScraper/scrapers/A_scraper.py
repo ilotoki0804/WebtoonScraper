@@ -1,6 +1,7 @@
 """Abstract Class of all scrapers."""
 
 from __future__ import annotations
+import functools
 import re
 import os
 import shutil
@@ -30,6 +31,26 @@ else:
 
 EpisodeNoRange = tuple[int | None, int | None] | int | None
 WebtoonId = TypeVar('WebtoonId', int, tuple[int, int], str)
+
+
+def force_reload_if_reload(f):
+    # @functools.wraps(f)
+    def wrapper(self, *args, reload: bool = False, **kwargs):
+        # print(self, args, reload, kwargs)
+        if not hasattr(self, '_already_loaded'):
+            self._already_loaded = {}
+
+        if self._already_loaded.get(f, False) and reload:
+            logging.warning('Refreshing webtoon_information')
+
+        if not self._already_loaded.get(f, False) or reload:
+            return_value = f(self, *args, **kwargs)
+            self._already_loaded[f] = True
+            return return_value
+
+        logging.debug(f'{f} is already loaded, so skipping loading. reload=True to re-enable.')
+
+    return wrapper
 
 
 class Scraper(ABC, Generic[WebtoonId]):
@@ -65,8 +86,6 @@ class Scraper(ABC, Generic[WebtoonId]):
         self.rich_console = Console()
 
         self.webtoon_id = webtoon_id
-        self.is_webtoon_information_loaded = False
-        self.is_episode_informations_loaded = False
 
         self.base_directory = 'webtoon'
         self.not_using_tqdm = False
@@ -82,10 +101,10 @@ class Scraper(ABC, Generic[WebtoonId]):
     def list_episodes(self) -> None:
         self.setup()
         table = Table(show_header=True, header_style="bold blue", box=None)
-        table.add_column("Episode number (ID)", style="dim", width=12)
+        table.add_column("Episode number (ID)", width=12)
         table.add_column("Episode Title", style='bold')
         for i, (episode_id, episode_title) in enumerate(zip(self.episode_ids, self.episode_titles), 1):
-            table.add_row(f'{i:04d} ({episode_id})', str(episode_title))
+            table.add_row(f'{i:04d} [dim]({episode_id})[/dim]', str(episode_title))
         self.rich_console.print(table)
 
     def update_requests(self, **kwargs) -> None:
@@ -440,12 +459,10 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     def setup(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
-        if reload or not self.is_webtoon_information_loaded:
-            self.fetch_webtoon_information()
+        self.fetch_webtoon_information(reload=reload)
+        self.fetch_episode_informations(reload=reload)
 
-        if reload or not self.is_episode_informations_loaded:
-            self.fetch_episode_informations()
-
+    @force_reload_if_reload
     @abstractmethod
     def fetch_webtoon_information(self) -> None:
         """
@@ -457,9 +474,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         self.webtoon_thumbnail: str | tuple[bytes, str]
         self.title: str
 
-        if self.is_webtoon_information_loaded:
-            logging.warning('Refreshing webtoon_information')
-
+    @force_reload_if_reload
     @abstractmethod
     def fetch_episode_informations(self) -> None:
         """
@@ -470,6 +485,3 @@ class Scraper(ABC, Generic[WebtoonId]):
         """
         self.episode_titles: list[str]
         self.episode_ids: list[int]
-
-        if self.is_episode_informations_loaded:
-            logging.warning('Refreshing episode_informations')

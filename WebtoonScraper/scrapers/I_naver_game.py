@@ -8,9 +8,9 @@ import json
 from typing_extensions import override
 
 if __name__ in ("__main__", "I_naver_game"):
-    from A_scraper import Scraper
+    from A_scraper import Scraper, force_reload_if_reload
 else:
-    from .A_scraper import Scraper
+    from .A_scraper import Scraper, force_reload_if_reload
 
 
 class NaverGameScraper(Scraper[int]):
@@ -19,6 +19,7 @@ class NaverGameScraper(Scraper[int]):
     BASE_URL = 'https://game.naver.com/original_series'
     IS_CONNECTION_STABLE = True
 
+    @force_reload_if_reload
     @override
     def fetch_webtoon_information(self) -> None:
         url = f'https://apis.naver.com/nng_main/nng_main/original/series/{self.webtoon_id}'
@@ -29,6 +30,7 @@ class NaverGameScraper(Scraper[int]):
         self.title = title
         self.webtoon_thumbnail = thumbnail
 
+    @force_reload_if_reload
     @override
     def fetch_episode_informations(self, episode_max_limit=500):
         # 여러 시즌을 하나로 통합
