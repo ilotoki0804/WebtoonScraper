@@ -3,6 +3,22 @@ import re
 from pathlib import Path
 from WebtoonScraper import __version__, __description__, __url__, __author__, __raw_source_url__, __author_email__, __title__
 
+
+PACKAGES = [__title__, f'{__title__}.scrapers']
+KEYWORDS = ['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon']
+PYTHON_VERSION_MINIMUM = (3, 10)
+CLASSIFIERS = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+EXTRA_REQUIREMENTS = {}
+HAS_CLI = True
+HAS_READTHEDOCS = False  # 지원하기
+LICENSE = 'MIT'
+
+
 long_description = f'이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [이 깃허브 링크]({__url__})를 참고하세요.\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
 
@@ -20,33 +36,45 @@ long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<dir
 
 requirements = [line for line in Path('requirements.txt').read_text(encoding='utf-8').splitlines()
                 if line and line[0] != '#']
+test_requirements = [line for line in Path('requirements_dev.txt').read_text(encoding='utf-8').splitlines()
+                     if line and line[0] != '#']
 
-if __name__ == '__main__':
+
+def main() -> None:
     setup(
         name=__title__,
         version=__version__,
         description=__description__,
         author=__author__,
         author_email=__author_email__,
+        url=__url__,
+        project_urls={
+            "Documentation": f"https://{__title__}.readthedocs.io" if HAS_READTHEDOCS else None,
+            "Source": __url__,
+        },
+
         long_description=long_description,
         long_description_content_type='text/markdown',
-        license='MIT',
-        url=__url__,
+
+        license=LICENSE,
+        packages=PACKAGES,
+        keywords=KEYWORDS,
+        classifiers=CLASSIFIERS,
+        python_requires=F'>={".".join(PYTHON_VERSION_MINIMUM)}',
+
         install_requires=requirements,
-        packages=['WebtoonScraper', 'WebtoonScraper.scrapers'],
-        keywords=['Webtoon', 'Webtoon Scraper', 'Naver Webtoon', 'Webtoon Downloader', 'Download Webtoon'],
-        python_requires='>=3.10',
-        package_data={"WebtoonScraper": ["py.typed"]},
+        test_requires=test_requirements,  # 문제 시 삭제할 것.
+        extras_require=EXTRA_REQUIREMENTS or None,  # or None이 필요하지 않을 수도 있음.
+
+        package_data={__title__: ["py.typed"]},
         zip_safe=False,
-        classifiers=[
-            "License :: OSI Approved :: MIT License",
-            "Operating System :: OS Independent",
-            'Programming Language :: Python :: 3.10',
-            'Programming Language :: Python :: 3.11',
-        ],
         entry_points={
             'console_scripts': [
                 f'{__title__} = {__title__}:__main__.main',
             ],
-        },
+        } if HAS_CLI else None,
     )
+
+
+if __name__ == '__main__':
+    main()
