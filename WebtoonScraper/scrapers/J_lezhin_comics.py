@@ -8,6 +8,7 @@ import json
 from json import JSONDecodeError
 import shutil
 from typing import ClassVar
+import itertools
 
 from typing_extensions import override
 
@@ -59,7 +60,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
         self.download_episode_id_ints_if_shuffled = True
-        self.get_paid = False
+        self.get_paid_episode = False
 
         # self.authkey 설정에서 되기 때문에 굳이 하지는 않아도 됨.
         self.update_requests()
@@ -156,35 +157,21 @@ class LezhinComicsScraper(Scraper[str]):
         get_paid_episode: bool | None = None,
         get_unusable_episode: bool = False,
     ) -> None:
-        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.get_paid
+        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.get_paid_episode
         episode_int_ids: list[int] = []
         episode_str_ids: list[str] = []
         subtitles: list[str] = []
         episode_type_chars: list[str] = []
         display_names: list[str] = []
-        # for episode in departure:
+        is_episode_unusable_list: list[bool] = []
+        is_episode_free_list: list[bool] = []
+        # for episode in reversed(departure):
         for episode in reversed(episode_informations_raw):
-            # print(episode)
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
             # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
+            is_episode_unusable = is_episode_expired or is_episode_not_for_sale
             is_episode_free = "freedAt" in episode
-
-            if (is_episode_expired or is_episode_not_for_sale) and not get_unusable_episode:
-                logging.warning(
-                    f"episode {episode['display']['title']} is not usable because it's marked as "
-                    + "expired." * is_episode_expired
-                    + "And it's " * (is_episode_expired and is_episode_not_for_sale)
-                    + "not-for-sale." * is_episode_not_for_sale
-                )
-                continue
-
-            if not is_episode_free and not get_paid_episode:
-                logging.warning(
-                    f"episode {episode['display']['title']} is not free so it'll be skipped. "
-                    "If you want to get data about paid episode too, make parameter "
-                    "`get_unusable_episode` to True.")
-                continue
 
             episode_int_ids.append(episode["id"])
             episode_str_ids.append(episode["name"])
@@ -193,6 +180,39 @@ class LezhinComicsScraper(Scraper[str]):
             # episode_id_strs와 거의 같지만 특별편인 경우 'x1' 등으로 표시되는 episode_id_strs과는 달리
             # '공지'와 같은 글자로 나타나며 에피소드 위 작은 글씨를 의미한다. 스크래핑과는 큰 관련이 없는 자료이다.
             display_names.append(episode["display"]["displayName"])
+            is_episode_unusable_list.append(is_episode_unusable)
+            is_episode_free_list.append(is_episode_free)
+
+        lists_to_filter = (episode_int_ids,
+                           episode_str_ids,
+                           subtitles,
+                           episode_type_chars,
+                           display_names,
+                           is_episode_unusable_list,
+                           is_episode_free_list)
+
+        if not get_unusable_episode:
+            episode_titles_of_unusables = [episode_title
+                                           for episode_title, is_unusable in zip(subtitles, is_episode_unusable_list)
+                                           if is_unusable]
+            if episode_titles_of_unusables:
+                logging.warning('Unusable episode is skipped. Following epsodes will be skipped: '
+                                f'{", ".join(episode_titles_of_unusables)}')
+
+                for list_ in lists_to_filter:
+                    list_[:] = [i for i, is_unusable in zip(list_, is_episode_unusable_list) if not is_unusable]
+
+        if not get_paid_episode:
+            episode_titles_of_not_free = [episode_title
+                                          for episode_title, is_free in zip(subtitles, is_episode_free_list)
+                                          if not is_free]
+
+            if episode_titles_of_not_free:
+                logging.warning('Not for free episode is skipped. Following epsodes will be skipped: '
+                                f'{", ".join(episode_titles_of_not_free)}')
+
+                for list_ in lists_to_filter:
+                    list_[:] = [i for i, is_free in zip(list_, is_episode_free_list) if is_free]
 
         # episode infomations
         self.episode_titles = subtitles
