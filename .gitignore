@@ -1,3 +1,8 @@
+# exclude all files that starts with '_...'
+_*.*
+_*/
+# reinclude all files that starts with '___...' (for __init__.py)
+!__*.*
 /.vscode
 *~
 .#*
