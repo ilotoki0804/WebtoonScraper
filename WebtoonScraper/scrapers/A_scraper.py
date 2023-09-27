@@ -4,11 +4,12 @@ from __future__ import annotations
 import functools
 import re
 import os
+import sys
 import shutil
 import html
 from pathlib import Path
 import time
-from typing import Generic, Iterable, TypeVar
+from typing import Generic, Iterable, TypeAlias, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
 from typing import overload, ClassVar
@@ -23,13 +24,16 @@ from requests_utils.custom_defaults import CustomDefaults
 from rich.table import Table
 from rich.console import Console
 
+if sys.version_info < (3, 10):
+    logging.warning(f'Version ({sys.version}) is too low. Check your version.')
+
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
     from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 
-EpisodeNoRange = tuple[int | None, int | None] | int | None
+EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 WebtoonId = TypeVar('WebtoonId', int, tuple[int, int], str)
 
 

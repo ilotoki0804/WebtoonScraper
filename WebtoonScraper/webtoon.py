@@ -4,7 +4,7 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
-from typing import Iterable, Literal, TYPE_CHECKING
+from typing import Iterable, Literal, TYPE_CHECKING, TypeAlias
 from multiprocessing import pool
 from requests_utils import requests, souptools
 
@@ -23,7 +23,7 @@ else:
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper
     )
 
-WebtoonId = int | tuple[int, int] | str | NaverPostWebtoonId
+WebtoonId: TypeAlias = 'int | tuple[int, int] | str | NaverPostWebtoonId'
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'

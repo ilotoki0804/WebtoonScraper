@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
+from typing import TypeAlias
 
 from typing_extensions import Literal, Final, NamedTuple
 
@@ -40,7 +41,7 @@ ContainerStates = Literal['normal_webtoon_directory', 'normal_episode_directory'
                           'merged_episode_directory', 'webtoon_directory_container', 'not_matched']
 FileStates = Literal['normal_episode_directory', 'normal_image', 'merged_episode_directory', 'merged_image',
                      'webtoon_directory', 'not_matched']
-PathOrStr = str | Path
+PathOrStr: TypeAlias = 'str | Path'
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
 FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
