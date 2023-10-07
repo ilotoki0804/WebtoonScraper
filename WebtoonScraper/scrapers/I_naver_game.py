@@ -61,9 +61,9 @@ class NaverGameScraper(Scraper[int]):
             episode_image_urls.append(image_urls)
 
         self.episode_titles = subtitles
-        self.episode_image_urls = episode_image_urls
+        self.episodes_image_urls = episode_image_urls
         self.episode_ids = episode_ids
 
     @override
     def get_episode_image_urls(self, episode_no):
-        return self.episode_image_urls[episode_no]
+        return self.episodes_image_urls[episode_no]
