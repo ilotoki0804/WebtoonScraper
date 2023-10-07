@@ -463,8 +463,10 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     def setup(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
-        self.fetch_webtoon_information(reload=reload)
-        self.fetch_episode_informations(reload=reload)
+        with suppress(UseFetchEpisode):
+            self.fetch_webtoon_information(reload=reload)  # 데코레이터 트릭을 이용함.  # type: ignore
+        with suppress(UseFetchEpisode):  # 현재는 필요 없지만 미래의 변화를 위해 남겨둠.
+            self.fetch_episode_informations(reload=reload)  # 데코레이터 트릭을 이용함.  # type: ignore
 
     @force_reload_if_reload
     @abstractmethod
