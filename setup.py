@@ -12,6 +12,7 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
 ]
 EXTRA_REQUIREMENTS = {}
 HAS_CLI = True
@@ -60,7 +61,7 @@ def main() -> None:
         packages=PACKAGES,
         keywords=KEYWORDS,
         classifiers=CLASSIFIERS,
-        python_requires=F'>={".".join(PYTHON_VERSION_MINIMUM)}',
+        python_requires=F'>={".".join(map(str, PYTHON_VERSION_MINIMUM))}',
 
         install_requires=requirements,
         test_requires=test_requirements,  # 문제 시 삭제할 것.
