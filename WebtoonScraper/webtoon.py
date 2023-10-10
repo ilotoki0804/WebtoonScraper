@@ -35,18 +35,6 @@ G = NAVER_GAME = 'naver_game'
 L = LEZHIN = 'lezhin'
 KP = KAKAOPAGE = 'kakaopage'
 
-PLATFORMS = (
-    'naver_webtoon',
-    'best_challenge',
-    'originals',
-    'canvas',
-    'bufftoon',
-    'naver_post',
-    'naver_game',
-    'lezhin',
-    'kakaopage',
-)
-
 WebtoonPlatforms = Literal[
     'naver_webtoon',
     'best_challenge',
@@ -58,6 +46,18 @@ WebtoonPlatforms = Literal[
     'lezhin',
     'kakaopage',
 ]
+
+PLATFORMS: tuple[WebtoonPlatforms, ...] = (
+    'naver_webtoon',
+    'best_challenge',
+    'originals',
+    'canvas',
+    'bufftoon',
+    'naver_post',
+    'naver_game',
+    'lezhin',
+    'kakaopage',
+)
 
 
 def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
