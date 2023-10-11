@@ -17,6 +17,7 @@ CLASSIFIERS = [
 EXTRA_REQUIREMENTS = {}
 HAS_CLI = True
 HAS_READTHEDOCS = False  # 지원하기
+HAS_GITBOOK = True
 LICENSE = 'MIT'
 
 
@@ -50,7 +51,9 @@ def main() -> None:
         author_email=__author_email__,
         url=__url__,
         project_urls={
-            "Documentation": f"https://{__title__}.readthedocs.io" if HAS_READTHEDOCS else None,
+            "Documentation": f'https://ilotoki0804.gitbook.io/{__title__}/' if HAS_GITBOOK
+                             else f"https://{__title__}.readthedocs.io" if HAS_READTHEDOCS
+                             else None,
             "Source": __url__,
         },
 

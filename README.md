@@ -1,6 +1,7 @@
 # WebtoonScraper
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)](https://pypi.org/project/WebtoonScraper/)
 <!-- [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) -->
+![Gitbook Link](https://img.shields.io/badge/Gitbook-Link-blue?link=https%3A%2F%2Filotoki0804.gitbook.io%2Fwebtoonscraper%2F)
 
 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
