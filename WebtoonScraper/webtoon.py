@@ -30,10 +30,11 @@ B = BEST_CHALLENGE = 'best_challenge'
 O = ORIGINALS = 'originals'  # noqa
 C = CANVAS = 'canvas'
 BF = BUFFTOON = 'bufftoon'
-P = POST = NAVER_POST = 'naver_post'
+P = NAVER_POST = 'naver_post'
 G = NAVER_GAME = 'naver_game'
 L = LEZHIN = 'lezhin'
 KP = KAKAOPAGE = 'kakaopage'
+NB = NAVER_BLOG = 'naver_blog'
 
 WebtoonPlatforms = Literal[
     'naver_webtoon',
