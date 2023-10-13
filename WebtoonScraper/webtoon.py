@@ -48,17 +48,17 @@ WebtoonPlatforms = Literal[
     'kakaopage',
 ]
 
-PLATFORMS: tuple[WebtoonPlatforms, ...] = (
-    'naver_webtoon',
-    'best_challenge',
-    'originals',
-    'canvas',
-    'bufftoon',
-    'naver_post',
-    'naver_game',
-    'lezhin',
-    'kakaopage',
-)
+PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
+    'naver_webtoon': NaverWebtoonScraper,
+    'best_challenge': BestChallengeScraper,
+    'originals': WebtoonOriginalsScraper,
+    'canvas': WebtoonCanvasScraper,
+    'bufftoon': BufftoonScraper,
+    'naver_post': NaverPostScraper,
+    'naver_game': NaverGameScraper,
+    'lezhin': LezhinComicsScraper,
+    'kakaopage': KakaopageScraper,
+}
 
 
 def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
@@ -133,28 +133,11 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
     return selected_platform
 
 
-def get_scraper_class(webtoon_platform: WebtoonPlatforms) -> type[Scraper]:
-    if webtoon_platform.lower() == NAVER_WEBTOON:
-        webtoonscraper = NaverWebtoonScraper
-    elif webtoon_platform.lower() == BEST_CHALLENGE:
-        webtoonscraper = BestChallengeScraper
-    elif webtoon_platform.lower() == ORIGINALS:
-        webtoonscraper = WebtoonOriginalsScraper
-    elif webtoon_platform.lower() == CANVAS:
-        webtoonscraper = WebtoonCanvasScraper
-    elif webtoon_platform.lower() == BUFFTOON:
-        webtoonscraper = BufftoonScraper
-    elif webtoon_platform.lower() == NAVER_POST:
-        webtoonscraper = NaverPostScraper
-    elif webtoon_platform.lower() == NAVER_GAME:
-        webtoonscraper = NaverGameScraper
-    elif webtoon_platform.lower() == LEZHIN:
-        webtoonscraper = LezhinComicsScraper
-    elif webtoon_platform.lower() == KAKAOPAGE:
-        webtoonscraper = KakaopageScraper
-    else:
+def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]:
+    platform_class: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
+    if platform_class is None:
         raise ValueError(f'webtoon_type should be among {", ".join(PLATFORMS)}')
-    return webtoonscraper
+    return platform_class
 
 
 def download_webtoon(
