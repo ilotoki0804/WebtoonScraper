@@ -111,7 +111,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             content = response.soup_select_one('#__clipContent')
             if content is None:
                 # '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류
-                # 아마 episode_id에 titleid가 잘못 들어가면 생기는 오류로 추정하지만
+                # 아마 episode_id에 webtoon_id가 잘못 들어가면 생기는 오류로 추정하지만
                 # 정확한 이유는 불명, 가끔씩 생기는 문제.
                 # 제시도로 상황이 그리 나아지지는 않음.
                 logging.warning(f'episode {episode_id} invalid. retrying...')
