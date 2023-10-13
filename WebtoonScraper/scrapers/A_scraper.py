@@ -48,7 +48,11 @@ def force_reload_if_reload(f):
             logging.warning('Refreshing webtoon_information')
 
         if not self._already_loaded.get(f, False) or reload:
-            return_value = f(self, *args, **kwargs)
+                return_value = f(self, *args, **kwargs)
+            except Exception:
+                logging.debug('Exception is occured while function is executed. '
+                              'So function is not marked as loaded.')
+                raise
             self._already_loaded[f] = True
             return return_value
 
