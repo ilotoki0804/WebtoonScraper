@@ -15,6 +15,7 @@ from abc import abstractmethod, ABC
 from typing import overload, ClassVar
 import logging
 import threading
+from contextlib import suppress
 
 # from requests.exceptions import ConnectionError
 # from bs4 import BeautifulSoup
@@ -30,11 +31,13 @@ if sys.version_info < (3, 10):
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
     from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
+    from WebtoonScraper.exceptions import UseFetchEpisode
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
+    from ..exceptions import UseFetchEpisode
 
 EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
-WebtoonId = TypeVar('WebtoonId', int, tuple[int, int], str)
+WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
 
 def force_reload_if_reload(f):
