@@ -27,7 +27,7 @@ WebtoonId: TypeAlias = 'int | tuple[int, int] | str | NaverPostWebtoonId'
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
-O = ORIGINALS = 'originals'  # noqa
+OR = ORIGINALS = 'originals'
 C = CANVAS = 'canvas'
 BF = BUFFTOON = 'bufftoon'
 P = NAVER_POST = 'naver_post'
