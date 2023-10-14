@@ -9,6 +9,7 @@ if __name__ in {"__main__", "__init__"}:
     from I_naver_game import NaverGameScraper
     from J_lezhin_comics import LezhinComicsScraper
     from K_kakaopage import KakaopageScraper
+    from L_naver_blog import NaverBlogScraper, NaverBlogWebtoonId
 else:
     from .A_scraper import Scraper
     from .B_naver_webtoon import NaverWebtoonScraper
@@ -20,3 +21,4 @@ else:
     from .I_naver_game import NaverGameScraper
     from .J_lezhin_comics import LezhinComicsScraper
     from .K_kakaopage import KakaopageScraper
+    from .L_naver_blog import NaverBlogScraper, NaverBlogWebtoonId

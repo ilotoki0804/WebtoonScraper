@@ -4,7 +4,7 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
-from typing import Iterable, Literal, TYPE_CHECKING, TypeAlias
+from typing import Iterable, Literal, TYPE_CHECKING, TypeAlias, reveal_type
 from multiprocessing import pool
 from requests_utils import requests, souptools
 
@@ -13,17 +13,19 @@ if __name__ in {"__main__", "webtoon"}:
     from scrapers import (
         Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
         WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
-        NaverGameScraper, LezhinComicsScraper, KakaopageScraper
+        NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
+        NaverBlogWebtoonId,
     )
 else:
     # from .directory_merger import DirectoryMerger
     from .scrapers import (
         Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
         WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
-        NaverGameScraper, LezhinComicsScraper, KakaopageScraper
+        NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
+        NaverBlogWebtoonId,
     )
 
-WebtoonId: TypeAlias = 'int | tuple[int, int] | str | NaverPostWebtoonId'
+WebtoonId: TypeAlias = 'int | tuple[int, int] | str | NaverPostWebtoonId | NaverBlogWebtoonId'
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
@@ -46,24 +48,26 @@ WebtoonPlatforms = Literal[
     'naver_game',
     'lezhin',
     'kakaopage',
+    'naver_blog',
 ]
 EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
-    'naver_webtoon': NaverWebtoonScraper,
-    'best_challenge': BestChallengeScraper,
-    'originals': WebtoonOriginalsScraper,
-    'canvas': WebtoonCanvasScraper,
-    'bufftoon': BufftoonScraper,
-    'naver_post': NaverPostScraper,
-    'naver_game': NaverGameScraper,
-    'lezhin': LezhinComicsScraper,
-    'kakaopage': KakaopageScraper,
+    NAVER_WEBTOON: NaverWebtoonScraper,
+    BEST_CHALLENGE: BestChallengeScraper,
+    ORIGINALS: WebtoonOriginalsScraper,
+    CANVAS: WebtoonCanvasScraper,
+    BUFFTOON: BufftoonScraper,
+    NAVER_POST: NaverPostScraper,
+    NAVER_GAME: NaverGameScraper,
+    LEZHIN: LezhinComicsScraper,
+    KAKAOPAGE: KakaopageScraper,
+    NAVER_BLOG: NaverBlogScraper,
 }
 
 
 def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
-    """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다."""
+    """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다. 잘못된 타입을 입력할 경우 결과가 제대로 나오지 않을 수 있습니다."""
 
     def get_platform(platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
         WebtoonScraperClass = get_scraper_class(platform_name)
@@ -72,21 +76,23 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
     test_queue: Iterable[WebtoonPlatforms]
     if isinstance(webtoon_id, tuple):
         test_queue = (
-            'naver_post',
+            NAVER_POST,
+        ) if isinstance(webtoon_id[0], int) else (
+            NAVER_BLOG,
         )
     elif isinstance(webtoon_id, str):
         test_queue = (
-            'lezhin',
+            LEZHIN,
         )
     elif isinstance(webtoon_id, int):
         test_queue = (
-            'naver_webtoon',
-            'best_challenge',
-            'originals',
-            'canvas',
-            'bufftoon',
-            'naver_game',
-            'kakaopage',
+            NAVER_WEBTOON,
+            BEST_CHALLENGE,
+            ORIGINALS,
+            CANVAS,
+            BUFFTOON,
+            NAVER_GAME,
+            KAKAOPAGE,
         )
     else:
         raise TypeError(f'Unknown type of titleid({type(webtoon_id)})')
@@ -94,18 +100,9 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
 
-    # results_raw: list[tuple[WebtoonPlatforms, str | None]] = [get_platform(platform) for platform in test_queue]
-
-    results: list[tuple[WebtoonPlatforms, str]] = []
-    if TYPE_CHECKING:
-        for platform, name_or_none in results_raw:  # 리스트 컴프리헨션을 이용하면 타입 힌트가 제대로 작동하지 않음
-            if name_or_none is not None:
-                results.append((platform, name_or_none))
-    else:
-        # 타입 힌트가 없을 경우 더 효율적인 동일한 코드
-        # results = list(filter(lambda x: x[1] is not None, results_raw))
-        # filter보다 리스트 컴프레헨션이 더 빠름.
-        results = [result for result in results_raw if result[1] is not None]
+    # results: list[tuple[WebtoonPlatforms, str]] = []
+    results = [(platform, title) for platform, title in results_raw
+               if title is not None]
 
     if (webtoon_length := len(results)) == 1:
         print(f"Webtoon's platform is assumed to be {results[0][0]}")
@@ -115,10 +112,10 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
         return None
 
     for i, (platform, name) in enumerate(results, 1):
-        print(f'{i}. {platform}: {name}')
+        print(f'#{i} {platform}: {name}')
 
     platform_no = '' if is_auto_select else input(
-        'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select no.1): '
+        'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select #1): '
     )
 
     try:
@@ -159,15 +156,27 @@ def download_webtoon(
     elif authkey is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
         webtoon_scraper.authkey = authkey
+    webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id, is_auto_select)
+    if webtoon_platform is None:
+        raise ValueError("You didn't select a valid item, or webtoon id was inappropriate. Select a valid item or webtoon id.")
+
+    if cookie is not None:
+        if webtoon_platform != BUFFTOON:
+            raise ValueError('Cookie is not required unless you are downloading Bufftoon. '
+                             'Use authkey if platform what you want to download is Lezhin.')
+        webtoon_scraper = BufftoonScraper(webtoon_id, cookie=cookie)
+    elif authkey is not None:
+        if webtoon_platform != LEZHIN:
+            raise ValueError('Authkey is not required unless you are downloading Lezhin. '
+                             'Use cookie if platform what you want to download is Bufftoon.')
+        assert isinstance(webtoon_id, str)
+        webtoon_scraper = LezhinComicsScraper(webtoon_id, authkey=authkey)
     else:
-        webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id, is_auto_select)
-
-        if webtoon_platform is None:
-            raise ValueError('You must select item.')
-
         webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id)
-        if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
+        if isinstance(webtoon_scraper, BufftoonScraper):
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
+        if isinstance(webtoon_scraper, LezhinComicsScraper):
+            logging.warning("Proceed without authkey. It'll limit the number of episodes can be downloaded of Lezhin Comics.")
 
     if is_list_episodes:
         webtoon_scraper.list_episodes()
