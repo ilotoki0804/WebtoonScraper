@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "webtoonscraper"
+version = "2.1.0"
+description = "Scraping webtoons with ease."
+authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+requests-utils = "^0.3.0"
+tqdm = "^4.66.1"
+typing-extensions = "^4.8.0"
+rich = "^13.6.0"
+demjson3 = "^3.0.6"
+Pillow = "^10.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
