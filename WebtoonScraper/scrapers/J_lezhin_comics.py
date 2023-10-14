@@ -28,7 +28,7 @@ class LezhinComicsScraper(Scraper[str]):
     '''Scrape webtoons from Lezhin Comics.'''
     BASE_URL = 'https://www.lezhin.com/ko/comic'
     TEST_WEBTOON_ID = 'noway'
-    TEST_WEBTOON_ID_SHUFFLED: ClassVar[str] = 'brianoslab'
+    TEST_SHUFFLED_WEBTOON_ID: ClassVar[str] = 'brianoslab'
     IS_CONNECTION_STABLE = True
 
     @override
