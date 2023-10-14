@@ -6,15 +6,41 @@ class WebtoonScraperError(Exception):
 
 
 class DirectoryStateUnmatched(WebtoonScraperError):
-    """directory state recieved from check_directory_state is not wanted."""
+    """Directory state recieved from check_directory_state is not wanted."""
 
 
 class InvalidWebtoonId(WebtoonScraperError):
-    """webtoon id is invalid. Or it can be adult webtoon, which is currently not supported."""
+    """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported."""
+
+
+class UnsupportedWebtoonRating(InvalidWebtoonId):
+    """The weboon is not supported to download due to rating.
+
+    WebtoonScraper does not support adult webtoon officially.
+
+    도입할 가능성이 있지만 일반 fetch 실패인지 rating unmatch로 인한 실패인지 구분하는 것이 가능할지는 의문임.
+    현재는 사용되고 있지 않음.
+    """
 
 
 class UseFetchEpisode(WebtoonScraperError):
-    """Only fetch_episode_informations exists."""
+    """Only fetch_episode_informations exists.
+
+    사용되고 있지 않고 사용될지 여부가 불확실함.
+    """
 
     def __init__(self, message: str = ''):
         super().__init__(message or 'Use `fetch_episode_informations` for get webtoon information.')
+
+
+class InvalidBlogId(InvalidWebtoonId):
+    """Invalid blog id. Maybe there's a typo or blog is closed.
+
+    네이버 블로그의 경우 일반적인 웹툰 플렛폼들과는 다르게 blog id와 category number로
+    분리되어 있고 처리 과정 중에 blog id가 잘못됐는지 category number가 잘못됐는지 확인할 수 있는
+    로직이 있어서 따로 분리됨.
+    """
+
+
+class InvalidCategoryNo(InvalidWebtoonId):
+    """Invalid category number. Maybe there's a typo or category is deleted. Check docs of InvalidBlogId for full description."""
