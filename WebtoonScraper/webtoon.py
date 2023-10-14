@@ -150,7 +150,7 @@ def download_webtoon(
         is_auto_select: bool = False,
         episode_no_range: EpisodeNoRange = None,
         authkey: str | None = None,
-        list_episodes: bool = False,
+        is_list_episodes: bool = False,
         download_directory: str | Path = 'webtoon',
 ) -> None:
     if cookie is not None:
@@ -169,7 +169,7 @@ def download_webtoon(
         if isinstance(webtoon_scraper, BufftoonScraper):  # == webtoon_type.lower() == BUFFTOON
             logging.warning("Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon.")
 
-    if list_episodes:
+    if is_list_episodes:
         webtoon_scraper.list_episodes()
         return
 

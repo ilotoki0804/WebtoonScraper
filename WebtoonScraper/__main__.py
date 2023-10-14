@@ -109,7 +109,7 @@ def main(argv=None) -> Literal[0, 1]:
                 authkey=args.authkey,
                 episode_no_range=args.range,
                 download_directory=args.download_directory,
-                list_episodes=args.list_episodes
+                is_list_episodes=args.list_episodes
             )
         except Exception as e:
             logging.error(f'An error accured. Error: {e}')
