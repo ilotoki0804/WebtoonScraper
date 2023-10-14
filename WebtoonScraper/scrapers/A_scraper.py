@@ -32,11 +32,10 @@ if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
     from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
     from WebtoonScraper.exceptions import UseFetchEpisode
-    from WebtoonScraper.webtoon import EpisodeNoRange
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
     from ..exceptions import UseFetchEpisode
-    from ..webtoon import EpisodeNoRange
+from ..miscs import EpisodeNoRange
 
 WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
@@ -120,10 +119,10 @@ class Scraper(ABC, Generic[WebtoonId]):
     def list_episodes(self) -> None:
         self.setup()
         table = Table(show_header=True, header_style="bold blue", box=None)
-        table.add_column("Episode number (ID)", width=12)
+        table.add_column("Episode number [dim](ID)[/dim]", width=12)
         table.add_column("Episode Title", style='bold')
         for i, (episode_id, episode_title) in enumerate(zip(self.episode_ids, self.episode_titles), 1):
-            table.add_row(f'{i:04d} [dim]({episode_id})[/dim]', str(episode_title))
+            table.add_row(f'[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]', str(episode_title))
         self.rich_console.print(table)
 
     def update_requests(self, **kwargs) -> None:

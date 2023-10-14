@@ -5,12 +5,14 @@ import logging
 from pathlib import Path
 import sys
 import os
+import re
 from typing import Literal
 
 path = os.path.realpath(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(path))
 
-from WebtoonScraper import webtoon, __version__  # noqa
+from . import webtoon, __version__  # noqa
+from .miscs import WebtoonId, EpisodeNoRange  # noqa
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
 acceptable_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_')
@@ -18,22 +20,28 @@ acceptable_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123
 remove_space_and_parentheses = lambda value: value.replace(' ', '').removeprefix('(').removesuffix(')')  # noqa
 
 
-def str_to_webtoon_id(webtoon_id: str) -> int | str | tuple[int, int]:
+def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
     if webtoon_id.isdigit():
         # all others
         return int(webtoon_id)
     if all(char in acceptable_chars for char in webtoon_id):
         # Lezhin
         return webtoon_id
-    if ',' in webtoon_id:
-        # If failed, check you type webtoon id currectly. example:
-        # python -m WebtoonScraper 614921,19803452    >> valid
-        # python -m WebtoonScraper 614921, 19803452   >> invalid due to space
-        # python -m WebtoonScraper "614921, 19803452" >> valid
-        series_no, member_no = [int(remove_space_and_parentheses(i)) for i in webtoon_id.split(',')]
+    if ',' not in webtoon_id:
+        raise ValueError("Invalid webtoon id.")
 
-        return series_no, member_no
-    raise ValueError("Invalid webtoon id.")
+    match_result = re.match(r""" *[(]? *(['"]?(.+?)['"]?) *, *(.+?) *[)]? *$""", webtoon_id)
+    assert match_result is not None, 'Invalid webtoon id.'
+    arg1, arg2 = match_result.group(1), match_result.group(3)
+    if (arg1.isdigit()
+            and not arg1[0] == arg1[-1] == '"'
+            and not arg1[0] == arg1[-1] == "'"):
+        # 네이버 포스트
+        return int(arg1), int(arg2)
+    # 네이버 블로그
+    blog_id = match_result.group(2)
+    assert isinstance(blog_id, str)
+    return blog_id, int(arg2)
 
 
 def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, int | None] | None:
@@ -46,7 +54,8 @@ def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, in
 
     make_none_if_value_is_none_or_make_int = lambda value: int(value) if value and value.lower() != 'none' else None  # noqa
 
-    start, end = [make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i)) for i in episode_no_range.split(',')]
+    start, end = (make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i))
+                  for i in episode_no_range.split(','))
 
     return start, end
 
@@ -54,7 +63,7 @@ def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, in
 parser = argparse.ArgumentParser(prog='WebtoonScraper', usage='Download webtoons in CLI', description='Download webtoons with ease!')
 parser.add_argument('--mock', action='store_true',
                     help='No actual download.')
-parser.add_argument('--version', action='version', version=__version__)
+parser.add_argument('--version', action='version', version=f'WebtoonScraper {__version__} of {sys.version}')
 
 subparsers = parser.add_subparsers(title='Commands',
                                    # description='valid commands',

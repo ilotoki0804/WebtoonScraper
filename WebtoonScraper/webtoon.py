@@ -24,8 +24,7 @@ else:
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
         NaverBlogWebtoonId,
     )
-
-WebtoonId: TypeAlias = 'int | tuple[int, int] | str | NaverPostWebtoonId | NaverBlogWebtoonId'
+from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = 'naver_webtoon'
 B = BEST_CHALLENGE = 'best_challenge'
@@ -50,7 +49,6 @@ WebtoonPlatforms = Literal[
     'kakaopage',
     'naver_blog',
 ]
-EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
