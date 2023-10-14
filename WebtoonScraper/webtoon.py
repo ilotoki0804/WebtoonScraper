@@ -47,6 +47,7 @@ WebtoonPlatforms = Literal[
     'lezhin',
     'kakaopage',
 ]
+EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     'naver_webtoon': NaverWebtoonScraper,
@@ -147,7 +148,7 @@ def download_webtoon(
         *,
         cookie: str | None = None,
         is_auto_select: bool = False,
-        episode_no_range: tuple[int | None, int | None] | int | None = None,
+        episode_no_range: EpisodeNoRange = None,
         authkey: str | None = None,
         list_episodes: bool = False,
         download_directory: str | Path = 'webtoon',

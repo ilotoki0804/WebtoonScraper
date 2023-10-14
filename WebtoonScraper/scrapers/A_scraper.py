@@ -32,11 +32,12 @@ if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
     from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
     from WebtoonScraper.exceptions import UseFetchEpisode
+    from WebtoonScraper.webtoon import EpisodeNoRange
 else:
     from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
     from ..exceptions import UseFetchEpisode
+    from ..webtoon import EpisodeNoRange
 
-EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
 
