@@ -40,26 +40,33 @@ EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
 
-def force_reload_if_reload(f):
+def force_reload_if_reload(f):  # TODO: reloading manager로 이름 변경 필요
+    """어떤 함수를 받아 reload를 인자로 """
+    # __slots__가 필요하다면 Scraper에 _return_cache를 구현하면 됨!
     # @functools.wraps(f)
     def wrapper(self, *args, reload: bool = False, **kwargs):
         # print(self, args, reload, kwargs)
-        if not hasattr(self, '_already_loaded'):
-            self._already_loaded = {}
+        try:
+            self._return_cache
+        except AttributeError:
+            self._return_cache = {}
 
-        if self._already_loaded.get(f, False) and reload:
+        if self._return_cache.get(f, False) and reload:
             logging.warning('Refreshing webtoon_information')
 
-        if not self._already_loaded.get(f, False) or reload:
-                return_value = f(self, *args, **kwargs)
-            except Exception:
-                logging.debug('Exception is occured while function is executed. '
-                              'So function is not marked as loaded.')
-                raise
-            self._already_loaded[f] = True
-            return return_value
+        if self._return_cache.get(f, False) or not reload:
+            logging.debug(f'{f} is already loaded, so skipping loading. reload=True to re-enable.')
+            return self._return_cache[f]
 
-        logging.debug(f'{f} is already loaded, so skipping loading. reload=True to re-enable.')
+        try:
+            return_value = f(self, *args, **kwargs)
+        except:  # noqa
+            logging.debug('Exception is occured while function is executed. '
+                          'So function is not marked as loaded.')
+            raise
+
+        self._return_cache[f] = return_value
+        return return_value
 
     return wrapper
 
