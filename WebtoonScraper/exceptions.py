@@ -5,7 +5,7 @@ class WebtoonScraperError(Exception):
     """Base class of every error of WebtoonScraper."""
 
 
-class DirectoryStateUnmatched(WebtoonScraperError):
+class DirectoryStateUnmatched(WebtoonScraperError):  # TODO: 뒤에 Error 붙이기
     """Directory state recieved from check_directory_state is not wanted."""
 
 
@@ -44,3 +44,7 @@ class InvalidBlogId(InvalidWebtoonId):
 
 class InvalidCategoryNo(InvalidWebtoonId):
     """Invalid category number. Maybe there's a typo or category is deleted. Check docs of InvalidBlogId for full description."""
+
+
+class InvalidPlatformError(WebtoonScraperError):
+    """Invalid platfrom error. Maybe you didn't select platform or typed invalid parameter."""

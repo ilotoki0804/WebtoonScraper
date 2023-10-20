@@ -9,21 +9,21 @@ from multiprocessing import pool
 from requests_utils import requests, souptools
 
 if __name__ in {"__main__", "webtoon"}:
-    # from directory_merger import DirectoryMerger
     from scrapers import (
         Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
         WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
         NaverBlogWebtoonId,
     )
+    from .exceptions import InvalidPlatformError
 else:
-    # from .directory_merger import DirectoryMerger
     from .scrapers import (
         Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
         WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
         NaverBlogWebtoonId,
     )
+    from exceptions import InvalidPlatformError
 from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = 'naver_webtoon'
@@ -196,3 +196,10 @@ def download_webtoons_getting_paid(
 
     for titleid in titleids:
         download_webtoon(titleid, NAVER_WEBTOON, merge_amount=merge_amount)
+
+
+# TODO
+# def get_scraper_instance(self, webtoon_id: WebtoonId, platform: WebtoonPlatforms | None = None, **kwargs):
+#     platform = platform or get_webtoon_platform(webtoon_id)
+#     if platform is None:
+#         raise InvalidPlatformError()
