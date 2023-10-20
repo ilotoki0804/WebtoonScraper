@@ -51,18 +51,18 @@ def force_reload_if_reload(f):  # TODO: reloading manager로 이름 변경 필�
         except AttributeError:
             self._return_cache = {}
 
-        if self._return_cache.get(f, False) and reload:
+        if self._return_cache.get(f, False):
+            if not reload:
+                logging.info(f'{f} is already loaded, so skipping loading. '
+                             'In order to reload, set parameter by reload=True.')
+                return self._return_cache[f]
             logging.warning('Refreshing webtoon_information')
-
-        if self._return_cache.get(f, False) or not reload:
-            logging.debug(f'{f} is already loaded, so skipping loading. reload=True to re-enable.')
-            return self._return_cache[f]
 
         try:
             return_value = f(self, *args, **kwargs)
         except:  # noqa
-            logging.debug('Exception is occured while function is executed. '
-                          'So function is not marked as loaded.')
+            logging.info('Exception is occured while function is executed. '
+                         'So function is not marked as loaded.')
             raise
 
         self._return_cache[f] = return_value
