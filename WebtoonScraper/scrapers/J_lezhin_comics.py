@@ -57,6 +57,7 @@ class LezhinComicsScraper(Scraper[str]):
             "X-Lz-Locale": "ko-KR",
         }
         self.cookie: str = ''
+        self.timeout = 30  # 일부 웹툰은 10초 이상이 걸릴 정도로 느리다 (gahu_r). 심지어 20초도 일부 연결은 실패할 정도로 느리다.
         self.authkey = authkey or ''
 
         self.do_not_unshuffle = False
@@ -221,8 +222,6 @@ class LezhinComicsScraper(Scraper[str]):
             self.download_episode_int_ids_as_file(webtoon_directory)
 
     def download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
-        if not self.is_episode_informations_loaded:
-            self.setup()
         file_content = '\n'.join(map(str, self.episode_int_ids))
         file_path = webtoon_directory / f'{self.webtoon_id}_ids.txt'
         file_path.write_text(file_content, encoding='utf-8')
