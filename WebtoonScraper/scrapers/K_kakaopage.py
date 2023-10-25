@@ -18,6 +18,7 @@ class KakaopageScraper(Scraper[int]):
     BASE_URL = 'https://page.kakao.com'
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
+    URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
 
     @override
     def __init__(self, webtoon_id: int):

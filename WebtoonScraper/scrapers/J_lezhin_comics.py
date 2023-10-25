@@ -30,6 +30,7 @@ class LezhinComicsScraper(Scraper[str]):
     TEST_WEBTOON_ID = 'noway'
     TEST_SHUFFLED_WEBTOON_ID: ClassVar[str] = 'brianoslab'
     IS_CONNECTION_STABLE = True
+    URL_REGEX = r'(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)'
 
     @override
     def __init__(self, webtoon_id: str, authkey: str | None = None) -> None:

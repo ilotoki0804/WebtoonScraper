@@ -22,12 +22,7 @@ class NaverWebtoonScraper(Scraper[int]):
     IS_BEST_CHALLENGE: ClassVar[bool] = False
     # 네이버 웹툰과 베스트 도전은 selector가 다르기 때문에 필요함.
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
-    URL_REGEX: str = r"(?:https:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?titleId=(?P<webtoon_id>\d+)"
-    # test cases:
-    # https://comic.naver.com/webtoon/list?titleId=552960
-    # https://m.comic.naver.com/webtoon/list?titleId=552960
-    # m.comic.naver.com/webtoon/list?titleId=552960
-    # comic.naver.com/webtoon/list?titleId=552960
+    URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
     @force_reload_if_reload
     @override

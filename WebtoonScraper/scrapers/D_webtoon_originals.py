@@ -16,6 +16,7 @@ class WebtoonOriginalsScraper(Scraper[int]):
     BASE_URL = 'https://www.webtoons.com/en/fantasy/watermelon'
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 5291  # Wumpus
+    URL_REGEX: str = r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
 
     @override
     def __init__(self, titleid) -> None:

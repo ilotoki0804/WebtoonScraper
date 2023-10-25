@@ -13,3 +13,4 @@ class BestChallengeScraper(NaverWebtoonScraper):
     TEST_WEBTOON_ID = 809971  # 까마귀
     IS_BEST_CHALLENGE = True
     EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
+    URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/bestChallenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"

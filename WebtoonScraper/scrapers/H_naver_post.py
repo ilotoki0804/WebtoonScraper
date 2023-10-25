@@ -27,6 +27,8 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     TEST_WEBTOON_ID = NaverPostWebtoonId(597061, 19803452)  # 겜덕겜소
     IS_CONNECTION_STABLE = True
     BASE_URL = 'https://post.naver.com'
+    URL_REGEX: str = (r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
+                      r"\?(?:.*&)*seriesNo=(?P<webtoon_id>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*")
 
     @override
     def __init__(self, webtoon_id) -> None:
@@ -118,7 +120,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             else:
                 break
         else:
-            raise ConnectionError("Unknown error occurred. Just tring again will solve issue.")
+            raise ConnectionError("Unknown error occurred. Just trying again will solve issue.")
 
             # # 가끔씩 너무 자주 오류가 발생할 때가 있음.
             # # 그럴 때는 ConnectionError 대신 이 코드를 이용해서 해당 회차를 스킵하도록 하는 조금 더 온건한 방식을 사용할 것.

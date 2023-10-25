@@ -18,6 +18,7 @@ class NaverGameScraper(Scraper[int]):
     TEST_WEBTOON_ID = 5  # 모배툰
     BASE_URL = 'https://game.naver.com/original_series'
     IS_CONNECTION_STABLE = True
+    URL_REGEX = r'(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?'
 
     @force_reload_if_reload
     @override

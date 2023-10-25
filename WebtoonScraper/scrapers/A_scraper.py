@@ -82,6 +82,7 @@ class Scraper(ABC, Generic[WebtoonId]):
     IS_CONNECTION_STABLE: ClassVar[bool]
     TEST_WEBTOON_ID: ClassVar
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int] = 0
+    URL_REGEX: str
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """시작에 필요한 여러가지를 관여합니다.
