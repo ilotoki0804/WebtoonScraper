@@ -144,7 +144,7 @@ class DirectoryMerger:
         print(f'You selected {selected_webtoon_directory_name}. {"Merging" if user_answer == "merge" else "Restoring"} webtoon has started.')
         if user_answer == 'merge':
             if merge_amount is None:
-                merge_amount = int(input('merge amout: '))
+                merge_amount = int(input('merge amount: '))
             merge_webtoon(selected_directory, merge_amount)
         else:
             restore_webtoon(selected_directory)
