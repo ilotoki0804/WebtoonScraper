@@ -71,7 +71,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
         WebtoonScraperClass = get_scraper_class(platform_name)
         return platform_name, WebtoonScraperClass(webtoon_id).check_if_legitimate_webtoon_id()
 
-    test_queue: Iterable[WebtoonPlatforms]
+    test_queue: tuple[WebtoonPlatforms, ...]
     if isinstance(webtoon_id, tuple):
         test_queue = (
             NAVER_POST,
