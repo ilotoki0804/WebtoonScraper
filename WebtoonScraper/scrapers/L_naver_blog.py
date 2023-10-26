@@ -73,6 +73,10 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         fetch_result = response.json()['result']
 
+        if len(fetch_result['items']) == limit:
+            logging.warning('It seems to go beyond limit. automatically increase limit.')
+            return self.fetch_episode_informations(limit * 2)
+
         self.title: str = fetch_result['categoryName']
         self.webtoon_thumbnail: str = fetch_result['items'][0]['thumbnailUrl'] + '?type=ffn640_640'
 
