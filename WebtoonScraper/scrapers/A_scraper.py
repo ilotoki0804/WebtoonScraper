@@ -485,9 +485,6 @@ class Scraper(ABC, Generic[WebtoonId]):
     def fetch_webtoon_information(self) -> None:
         """
         웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
-
-        주의: subclass에서의 구현은 super().fetch_webtoon_information()를 프로그램 맨 앞에 포함하세요.
-        또한 프로그램이 끝나고 self.is_webtoon_information_loaded = True를 실행해야 한다는 것을 잊지 마세요.
         """
         self.webtoon_thumbnail: str | tuple[bytes, str]
         self.title: str
@@ -497,9 +494,6 @@ class Scraper(ABC, Generic[WebtoonId]):
     def fetch_episode_informations(self) -> None:
         """
         웹툰의 에피소드 정보를 불러옵니다. 웹툰에 대한 정보는 포함하지 않습니다.
-
-        주의: subclass에서의 구현은 super().fetch_episode_informations()를 프로그램 맨 앞에 포함하세요.
-        또한 프로그램이 끝나고 self.is_episode_informations_loaded = True를 실행해야 한다는 것을 잊지 마세요.
         """
         self.episode_titles: list[str]
         self.episode_ids: list[int]
