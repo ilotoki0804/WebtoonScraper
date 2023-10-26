@@ -47,4 +47,8 @@ class InvalidCategoryNo(InvalidWebtoonId):
 
 
 class InvalidPlatformError(WebtoonScraperError):
-    """Invalid platfrom error. Maybe you didn't select platform or typed invalid parameter."""
+    """Invalid platfrom error.
+
+    Maybe you didn't select platform or typed invalid parameter.
+    Or you misuse naver webtoon and best challenge.
+    """

@@ -10,8 +10,10 @@ from typing_extensions import override
 
 if __name__ in ("__main__", "B_naver_webtoon"):
     from A_scraper import Scraper, force_reload_if_reload
+    from WebtoonScraper.exceptions import InvalidPlatformError
 else:
     from .A_scraper import Scraper, force_reload_if_reload
+    from ..exceptions import InvalidPlatformError
 
 
 class NaverWebtoonScraper(Scraper[int]):
@@ -36,6 +38,10 @@ class NaverWebtoonScraper(Scraper[int]):
         self.webtoon_thumbnail = webtoon_thumbnail
         self.title = title
         self.is_best_challenge = is_best_challenge == 'BEST_CHALLENGE'
+
+        if self.is_best_challenge is not self.IS_BEST_CHALLENGE:
+            platform_name = 'Best Challenge' if is_best_challenge else 'Naver Webtoon'
+            raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
     @force_reload_if_reload
     @override
@@ -89,6 +95,6 @@ class NaverWebtoonScraper(Scraper[int]):
     def check_if_legitimate_webtoon_id(self) -> str | None:
         try:
             self.fetch_webtoon_information()
-        except Exception:
+        except (InvalidPlatformError, Exception):
             return None
         return self.title if self.is_best_challenge is self.IS_BEST_CHALLENGE else None
