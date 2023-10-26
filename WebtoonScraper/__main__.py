@@ -64,11 +64,11 @@ parser = argparse.ArgumentParser(prog='WebtoonScraper', usage='Download webtoons
 parser.add_argument('--mock', action='store_true',
                     help='No actual download.')
 parser.add_argument('--version', action='version', version=f'WebtoonScraper {__version__} of {sys.version}')
-
 subparsers = parser.add_subparsers(title='Commands',
                                    # description='valid commands',
                                    help='Choose command you want. Currently download is only valid option.')
 
+# 'download' subparsers
 download_subparser = subparsers.add_parser('download', help='Download webtoons.')
 download_subparser.add_argument('webtoon_id', type=str_to_webtoon_id, metavar='webtoon_id',
                                 help='Webtoon ID. If you want to download Naver Post, you should follow this format: '
@@ -91,17 +91,15 @@ download_subparser.add_argument('--authkey', type=str, metavar='authkey',
 download_subparser.add_argument('-r', '--range', type=str_to_episode_no_range, metavar='[start],[end]',
                                 help="Episode number range you want to download.")
 download_subparser.add_argument('-d', '--download-directory', type=Path, metavar='directory', default='webtoon',
-                                help="Episode number range you want to download.")
+                                help="The directory you want to download to.")
 download_subparser.add_argument('--list-episodes', action='store_true',
                                 help='List all episodes.')
-# 사용자들이 햇갈릴 염려가 있어 사용하지 않음.
-# download_subparser.add_argument('--naver-post', type=int, nargs=2, metavar=('seriesNo', 'memberNo'),
-#                     help="Naver Post needs two arguments, so if you want to download Naver Post, you can use this for download. "
-#                          "You don't need to specify webtoon platform if you use this.")
+
+# TODO: 'merge' parser 추가하기
 
 
 def main(argv=None) -> Literal[0, 1]:
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv)  # 주어진 argv가 None이면 sys.argv[1:]을 기본값으로 삼음
 
     if args.mock:
         print('Arguments:', str(args).removeprefix('Namespace(').removesuffix(')'))
@@ -109,6 +107,11 @@ def main(argv=None) -> Literal[0, 1]:
 
     if hasattr(args, 'webtoon_id'):
         print('Download has started.', str(args).removeprefix('Namespace'))
+
+        # 만약 (int, int)인데 NAVER_BLOG라면 자동으로 (str, str)으로 변환한다.
+        if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
+            args.webtoon_id = str(args.webtoon_id[0]), args.webtoon_id[1]
+
         try:
             webtoon.download_webtoon(
                 args.webtoon_id,
