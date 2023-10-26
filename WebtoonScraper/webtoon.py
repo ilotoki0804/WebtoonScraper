@@ -15,7 +15,7 @@ if __name__ in {"__main__", "webtoon"}:
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
         NaverBlogWebtoonId,
     )
-    from .exceptions import InvalidPlatformError
+    from exceptions import InvalidPlatformError
 else:
     from .scrapers import (
         Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
@@ -23,7 +23,7 @@ else:
         NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
         NaverBlogWebtoonId,
     )
-    from exceptions import InvalidPlatformError
+    from .exceptions import InvalidPlatformError
 from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = 'naver_webtoon'
