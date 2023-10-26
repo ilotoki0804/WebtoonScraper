@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, ClassVar
 from typing_extensions import override
 
 if __name__ in ("__main__", "B_naver_webtoon"):
-    from A_scraper import Scraper, force_reload_if_reload
+    from A_scraper import Scraper, reload_manager
     from WebtoonScraper.exceptions import InvalidPlatformError
 else:
-    from .A_scraper import Scraper, force_reload_if_reload
+    from .A_scraper import Scraper, reload_manager
     from ..exceptions import InvalidPlatformError
 
 
@@ -26,9 +26,9 @@ class NaverWebtoonScraper(Scraper[int]):
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self) -> None:
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         webtoon_json_info = self.requests.get(f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}').json()
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
         webtoon_thumbnail = webtoon_json_info['sharedThumbnailUrl']  # 실제로 웹툰 페이지에 사용되는 썸네일
@@ -43,9 +43,9 @@ class NaverWebtoonScraper(Scraper[int]):
             platform_name = 'Best Challenge' if is_best_challenge else 'Naver Webtoon'
             raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_episode_informations(self) -> None:
+    def fetch_episode_informations(self, *, reload: bool = False) -> None:
         prev_articleList = []
         subtitles = []
         episode_ids = []

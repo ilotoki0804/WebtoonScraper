@@ -8,9 +8,9 @@ import json
 from typing_extensions import override
 
 if __name__ in ("__main__", "I_naver_game"):
-    from A_scraper import Scraper, force_reload_if_reload
+    from A_scraper import Scraper, reload_manager
 else:
-    from .A_scraper import Scraper, force_reload_if_reload
+    from .A_scraper import Scraper, reload_manager
 
 
 class NaverGameScraper(Scraper[int]):
@@ -20,9 +20,9 @@ class NaverGameScraper(Scraper[int]):
     IS_CONNECTION_STABLE = True
     URL_REGEX = r'(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?'
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self) -> None:
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         url = f'https://apis.naver.com/nng_main/nng_main/original/series/{self.webtoon_id}'
         webtoon_data = self.requests.get(url).json()['content']
         title = webtoon_data['seriesName']
@@ -31,9 +31,9 @@ class NaverGameScraper(Scraper[int]):
         self.title = title
         self.webtoon_thumbnail = thumbnail
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_episode_informations(self, episode_max_limit=500):
+    def fetch_episode_informations(self, episode_max_limit=500, *, reload: bool = False):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):

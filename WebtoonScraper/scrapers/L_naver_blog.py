@@ -9,7 +9,7 @@ from typing import NamedTuple, TYPE_CHECKING, NoReturn
 
 from typing_extensions import override
 
-from .A_scraper import Scraper, force_reload_if_reload
+from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidWebtoonId, InvalidBlogId, InvalidCategoryNo
 
 
@@ -58,9 +58,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         # 예를 들어 ('hello', 123)을 stringfy하면 "('hello', 123)"이 됨.
         return f'{self.title}({blog_id}, {category_no})'
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_episode_informations(self, limit: int = 1000):
+    def fetch_episode_informations(self, limit: int = 1000, *, reload: bool = False):
         blog_id, category_no = self.webtoon_id
 
         url = f'{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount={limit}&page=1'
@@ -107,9 +107,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
             self.episodes_image_urls.append(one_episode_image_urls)
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self) -> None:
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         # raise UseFetchEpisode()
         self.fetch_episode_informations()
 

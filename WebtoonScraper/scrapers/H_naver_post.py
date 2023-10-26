@@ -12,9 +12,9 @@ from bs4 import BeautifulSoup
 from typing_extensions import override
 
 if __name__ in ("__main__", "H_naver_post"):
-    from A_scraper import Scraper, force_reload_if_reload
+    from A_scraper import Scraper, reload_manager
 else:
-    from .A_scraper import Scraper, force_reload_if_reload
+    from .A_scraper import Scraper, reload_manager
 
 
 class NaverPostWebtoonId(NamedTuple):
@@ -57,9 +57,9 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return f'{self.title}{tuple(self.webtoon_id)}'
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_episode_informations(self):
+    def fetch_episode_informations(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
         subtitle_list: list[str] = []
         episode_id_list: list[int] = []
@@ -89,9 +89,9 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.episode_titles = subtitle_list[::-1]
         self.episode_ids = episode_id_list[::-1]
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self):
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
         response = self.requests.get(
             f'https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}')

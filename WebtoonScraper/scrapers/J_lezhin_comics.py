@@ -15,10 +15,10 @@ from typing_extensions import override
 from ..exceptions import UseFetchEpisode
 
 if __name__ in ("__main__", "J_lezhin_comics"):
-    from A_scraper import Scraper, force_reload_if_reload
+    from A_scraper import Scraper, reload_manager
     from J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
 else:
-    from .A_scraper import Scraper, force_reload_if_reload
+    from .A_scraper import Scraper, reload_manager
     from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
 
 TitleId = str
@@ -85,18 +85,18 @@ class LezhinComicsScraper(Scraper[str]):
         return (f'{self.get_safe_file_name(self.title)}({self.webtoon_id}, shuffled)'
                 if self.is_shuffled else f'{self.get_safe_file_name(self.title)}({self.webtoon_id})')
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self) -> None:
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수 있으니 주의.
         # logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
         #                 'Please set authkey to valid download. '
         #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
         raise UseFetchEpisode()
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_episode_informations(self) -> None:
+    def fetch_episode_informations(self, *, reload: bool = False) -> None:
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         res = self.requests.get(f'{self.BASE_URL}/{self.webtoon_id}')
         if res.soup_select_one('meta[property="og:title"]', no_empty_result=True).content == "404 - 레진코믹스":

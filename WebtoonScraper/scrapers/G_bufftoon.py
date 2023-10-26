@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING
 from typing_extensions import override
 
 if __name__ in ("__main__", "G_bufftoon"):
-    from A_scraper import Scraper, force_reload_if_reload
+    from A_scraper import Scraper, reload_manager
 else:
-    from .A_scraper import Scraper, force_reload_if_reload
+    from .A_scraper import Scraper, reload_manager
 
 TitleId = int
 
@@ -53,13 +53,15 @@ class BufftoonScraper(Scraper[int]):
         self.cookie = cookie if cookie is not None else ''
         self.update_requests()
 
-    @force_reload_if_reload
+    @reload_manager
     @override
     def fetch_episode_informations(
         self,
         get_payment_required_episode: bool = False,
         get_login_requiered_episode: bool | None = None,
-        limit: int = 500
+        limit: int = 500,
+        *,
+        reload: bool = False,
     ) -> None:
         if not self.cookie:
             # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수도 있음.
@@ -91,9 +93,9 @@ class BufftoonScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    @force_reload_if_reload
+    @reload_manager
     @override
-    def fetch_webtoon_information(self):
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         response = self.requests.get(f'{self.BASE_URL}/series/{self.webtoon_id}')
         selector = '#content > div > div > div.series-info > div.cont > div.title'
         title = response.soup_select_one(selector, no_empty_result=True).text.strip()
