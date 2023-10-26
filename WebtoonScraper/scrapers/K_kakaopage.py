@@ -103,7 +103,7 @@ class KakaopageScraper(Scraper[int]):
 
     @override
     def download_image(self, episode_directory, url: str, image_no: int, file_extension: str | None = 'jpg') -> None:
-        super().download_image(episode_directory, url, image_no, file_extension)
+        return super().download_image(episode_directory, url, image_no, file_extension)
 
     @override
     def download_webtoon_thumbnail(self, thumbnail_directory, file_extension: str | None = 'jpg') -> None:

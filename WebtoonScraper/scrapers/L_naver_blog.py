@@ -114,4 +114,4 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         return self.episodes_image_urls[episode_no]
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        super().check_if_legitimate_webtoon_id(InvalidWebtoonId)
+        return super().check_if_legitimate_webtoon_id(InvalidWebtoonId)
