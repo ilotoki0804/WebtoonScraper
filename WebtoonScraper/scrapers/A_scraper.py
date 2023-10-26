@@ -25,9 +25,6 @@ from requests_utils.custom_defaults import CustomDefaults
 from rich.table import Table
 from rich.console import Console
 
-if sys.version_info < (3, 10):
-    logging.warning(f'Version ({sys.version}) is too low. Check your version.')
-
 if __name__ in ("__main__", "A_scraper"):
     logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
     from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
