@@ -8,12 +8,8 @@ from typing import TYPE_CHECKING, ClassVar
 
 from typing_extensions import override
 
-if __name__ in ("__main__", "B_naver_webtoon"):
-    from A_scraper import Scraper, reload_manager
-    from WebtoonScraper.exceptions import InvalidPlatformError
-else:
-    from .A_scraper import Scraper, reload_manager
-    from ..exceptions import InvalidPlatformError
+from .A_scraper import Scraper, reload_manager
+from ..exceptions import InvalidPlatformError
 
 
 class NaverWebtoonScraper(Scraper[int]):

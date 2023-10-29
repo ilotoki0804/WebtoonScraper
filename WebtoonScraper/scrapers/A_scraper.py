@@ -25,13 +25,8 @@ from requests_utils.custom_defaults import CustomDefaults
 from rich.table import Table
 from rich.console import Console
 
-if __name__ in ("__main__", "A_scraper"):
-    logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
-    from WebtoonScraper.exceptions import UseFetchEpisode
-else:
-    from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
-    from ..exceptions import UseFetchEpisode
+from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
+from ..exceptions import UseFetchEpisode
 from ..miscs import EpisodeNoRange
 
 WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])

@@ -12,14 +12,9 @@ import itertools
 
 from typing_extensions import override
 
+from .A_scraper import Scraper, reload_manager
+from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
 from ..exceptions import UseFetchEpisode
-
-if __name__ in ("__main__", "J_lezhin_comics"):
-    from A_scraper import Scraper, reload_manager
-    from J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
-else:
-    from .A_scraper import Scraper, reload_manager
-    from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
 
 TitleId = str
 

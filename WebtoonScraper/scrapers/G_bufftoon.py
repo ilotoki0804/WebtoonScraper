@@ -9,10 +9,7 @@ from typing import TYPE_CHECKING
 
 from typing_extensions import override
 
-if __name__ in ("__main__", "G_bufftoon"):
-    from A_scraper import Scraper, reload_manager
-else:
-    from .A_scraper import Scraper, reload_manager
+from .A_scraper import Scraper, reload_manager
 
 TitleId = int
 

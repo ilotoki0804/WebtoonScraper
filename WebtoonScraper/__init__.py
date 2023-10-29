@@ -9,10 +9,7 @@
 Scrape webtoons with ease.
 """  # noqa
 
-if __name__ in {"__main__", "__init__"}:
-    from directory_merger import DirectoryMerger
-else:
-    from .directory_merger import DirectoryMerger
+from .directory_merger import DirectoryMerger
 
 __title__ = "WebtoonScraper"
 __description__ = "Scraping webtoons with ease."

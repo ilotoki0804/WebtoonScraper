@@ -10,13 +10,8 @@ import multiprocessing
 from tqdm import tqdm
 from PIL import Image
 
-if __name__ in {"__main__", "J_lezhin_unshuffler"}:
-    logging.warning(f'파일이 아닌 WebtoonScraper 모듈에서 실행되고 있습니다. {__name__ = }')
-    from WebtoonScraper.directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
-    from WebtoonScraper.exceptions import DirectoryStateUnmatched
-else:
-    from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
-    from ..exceptions import DirectoryStateUnmatched
+from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
+from ..exceptions import DirectoryStateUnmatched
 
 
 def unshuffle_typical_webtoon_directory_and_return_target_directory(source_webtoon_directory: Path, episode_int_ids: list[int] | None = None) -> Path:

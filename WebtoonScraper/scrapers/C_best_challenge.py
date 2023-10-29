@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-if __name__ in ("__main__", "C_best_challenge"):
-    from B_naver_webtoon import NaverWebtoonScraper
-else:
-    from .B_naver_webtoon import NaverWebtoonScraper
+from .B_naver_webtoon import NaverWebtoonScraper
 
 
 class BestChallengeScraper(NaverWebtoonScraper):

@@ -11,10 +11,7 @@ from typing import TypeAlias
 
 from typing_extensions import Literal, Final, NamedTuple
 
-if __name__ in {'__main__', 'directory_merger'}:
-    from exceptions import DirectoryStateUnmatched
-else:
-    from .exceptions import DirectoryStateUnmatched
+from .exceptions import DirectoryStateUnmatched
 
 # container는 file을 담고 있는 것을 의미합니다.
 # container에 들어가는 file이 directory일 수 있기 때문에
