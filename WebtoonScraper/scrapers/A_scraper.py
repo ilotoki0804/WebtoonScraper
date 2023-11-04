@@ -1,6 +1,7 @@
 """Abstract Class of all scrapers."""
 
 from __future__ import annotations
+from dataclasses import dataclass
 import functools
 import re
 import os
@@ -10,6 +11,7 @@ import html
 from pathlib import Path
 import time
 from typing import Generic, Iterable, TypeAlias, TypeVar
+from typing_extensions import TypedDict, NotRequired
 from urllib import parse
 from abc import abstractmethod, ABC
 from typing import overload, ClassVar
@@ -31,6 +33,13 @@ from ..miscs import EpisodeNoRange
 
 WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
+
+# # TODO
+# class RequestsArguments(TypedDict):
+#     attempts: int
+#     timeout: int
+#     headers: dict[str, str]
+#     cookie: NotRequired[str]
 
 
 def reload_manager(f):
