@@ -55,7 +55,7 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
 }
 
 
-def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) -> WebtoonPlatforms | None:
+def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다. 잘못된 타입을 입력할 경우 결과가 제대로 나오지 않을 수 있습니다."""
 
     def get_platform(platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
@@ -103,7 +103,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId, is_auto_select: bool = False) ->
     for i, (platform, name) in enumerate(results, 1):
         print(f'#{i} {platform}: {name}')
 
-    platform_no = '' if is_auto_select else input(
+    platform_no = input(
         'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select #1): '
     )
 
@@ -133,7 +133,6 @@ def download_webtoon(
         merge_amount: int | None = None,
         *,
         cookie: str | None = None,
-        is_auto_select: bool = False,
         episode_no_range: EpisodeNoRange = None,
         authkey: str | None = None,
         is_list_episodes: bool = False,
@@ -145,7 +144,7 @@ def download_webtoon(
     elif authkey is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
         webtoon_scraper.authkey = authkey
-    webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id, is_auto_select)
+    webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
     if webtoon_platform is None:
         raise ValueError("You didn't select a valid item, or webtoon id was inappropriate. Select a valid item or webtoon id.")
 
