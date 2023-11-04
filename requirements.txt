@@ -1,10 +1,9 @@
 # WebtoonScraper dependancy list; Synced automatically with setup.py.
 
 # <General requirements>
+requests_utils==0.4.1
 # 4.66.1
 tqdm
-# 0.4.0
-requests_utils==0.4.0
 # 4.7.1
 typing_extensions
 rich
