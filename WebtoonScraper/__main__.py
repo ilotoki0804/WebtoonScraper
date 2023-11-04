@@ -94,6 +94,8 @@ download_subparser.add_argument('-d', '--download-directory', type=Path, metavar
                                 help="The directory you want to download to.")
 download_subparser.add_argument('--list-episodes', action='store_true',
                                 help='List all episodes.')
+download_subparser.add_argument('--get-paid-episode', action='store_true', default=False,
+                                help='Get paid episode. Lezhin Comics only.')
 
 # TODO: 'merge' parser 추가하기
 
@@ -106,7 +108,7 @@ def main(argv=None) -> Literal[0, 1]:
         return 0
 
     if hasattr(args, 'webtoon_id'):
-        print('Download has started.', str(args).removeprefix('Namespace'))
+        print(f'Download has started{str(args).removeprefix("Namespace")}.')
 
         # 만약 (int, int)인데 NAVER_BLOG라면 자동으로 (str, str)으로 변환한다.
         if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
@@ -121,7 +123,8 @@ def main(argv=None) -> Literal[0, 1]:
                 authkey=args.authkey,
                 episode_no_range=args.range,
                 download_directory=args.download_directory,
-                is_list_episodes=args.list_episodes
+                is_list_episodes=args.list_episodes,
+                get_paid_episode=args.get_paid_episode,
             )
         except Exception as e:
             logging.error(f'An error accured. Error: {e}')

@@ -128,15 +128,16 @@ def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]
 
 
 def download_webtoon(
-        webtoon_id: WebtoonId,
-        webtoon_platform: WebtoonPlatforms | None = None,
-        merge_amount: int | None = None,
-        *,
-        cookie: str | None = None,
-        episode_no_range: EpisodeNoRange = None,
-        authkey: str | None = None,
-        is_list_episodes: bool = False,
-        download_directory: str | Path = 'webtoon',
+    webtoon_id: WebtoonId,
+    webtoon_platform: WebtoonPlatforms | None = None,
+    merge_amount: int | None = None,
+    *,
+    cookie: str | None = None,
+    episode_no_range: EpisodeNoRange = None,
+    authkey: str | None = None,
+    is_list_episodes: bool = False,
+    download_directory: str | Path = 'webtoon',
+    get_paid_episode: bool = False,
 ) -> None:
     if cookie is not None:
         webtoon_scraper = BufftoonScraper(webtoon_id)
@@ -144,6 +145,7 @@ def download_webtoon(
     elif authkey is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
         webtoon_scraper.authkey = authkey
+        webtoon_scraper.get_paid_episode = get_paid_episode
     webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
     if webtoon_platform is None:
         raise ValueError("You didn't select a valid item, or webtoon id was inappropriate. Select a valid item or webtoon id.")
@@ -189,10 +191,3 @@ def download_webtoons_getting_paid(
             download_webtoon(titleid, NAVER_WEBTOON, merge_amount=merge_amount)
         except UnsupportedWebtoonRating as e:
             print(e)
-
-
-# TODO
-# def get_scraper_instance(self, webtoon_id: WebtoonId, platform: WebtoonPlatforms | None = None, **kwargs):
-#     platform = platform or get_webtoon_platform(webtoon_id)
-#     if platform is None:
-#         raise InvalidPlatformError()
