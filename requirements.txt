@@ -1,18 +1,18 @@
-# WebtoonScraper 의존성 목록; setup.py와 자동으로 동기화됨.
+# WebtoonScraper dependancy list; Synced automatically with setup.py.
 
-# <일반적으로 필요한 requirements>
-# 사용한 버전: 4.66.1
+# <General requirements>
+# 4.66.1
 tqdm
-# 사용한 버전: 0.2.3
-requests_utils==0.2.3
-# 사용한 버전: 4.7.1
+# 0.4.0
+requests_utils==0.4.0
+# 4.7.1
 typing_extensions
 rich
 
-# <네이버 포스트에서만 사용되는 requirement>
+# <Dependency of NaverPostScraper>
 # 사용한 버전: 3.0.6
 demjson3
 
-# <레진코믹스에서만 사용되는 requirement>
+# <Dependency of LezhinComicsScraper>
 # 사용한 버전: 10.0.0
 Pillow
