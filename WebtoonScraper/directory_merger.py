@@ -7,9 +7,9 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-from typing import TypeAlias
+from typing import TypeAlias, Final
 
-from typing_extensions import Literal, Final, NamedTuple
+from typing_extensions import Literal, NamedTuple
 
 from .exceptions import DirectoryStateUnmatched
 
