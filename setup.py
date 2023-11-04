@@ -67,7 +67,6 @@ def main() -> None:
         python_requires=F'>={".".join(map(str, PYTHON_VERSION_MINIMUM))}',
 
         install_requires=requirements,
-        test_requires=test_requirements,  # 문제 시 삭제할 것.
         extras_require=EXTRA_REQUIREMENTS or None,  # or None이 필요하지 않을 수도 있음.
 
         package_data={__title__: ["py.typed"]},
