@@ -180,28 +180,26 @@ class LezhinComicsScraper(Scraper[str]):
                            is_episode_unusable_list,
                            is_episode_free_list)
 
-        if not get_unusable_episode:
-            episode_titles_of_unusables = [episode_title
-                                           for episode_title, is_unusable in zip(subtitles, is_episode_unusable_list)
-                                           if is_unusable]
-            if episode_titles_of_unusables:
-                logging.warning('Unusable episode is skipped. Following epsodes will be skipped: '
-                                f'{", ".join(episode_titles_of_unusables)}')
+        to_downloads = [(get_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
+                        for is_unusable, is_free in zip(is_episode_unusable_list, is_episode_free_list)]
 
-                for list_ in lists_to_filter:
-                    list_[:] = [i for i, is_unusable in zip(list_, is_episode_unusable_list) if not is_unusable]
+        if len(subtitles) - sum(to_downloads):
+            warning_message = (
+                "Unusable or not for free episode will be skipped."
+                if not get_unusable_episode and not get_paid_episode else
+                "Not for free episode will be skipped."
+                if not get_unusable_episode else
+                "Unusable episode will be skipped."
+                if not get_paid_episode else
+                "Call developer if this message presents. This is clearly a bug."
+            ) + (
+                " Following epsodes will be skipped: "
+                + ', '.join(subtitle for to_download, subtitle in zip(to_downloads, subtitles) if not to_download)
+            )
+            logging.warning(warning_message)
 
-        if not get_paid_episode:
-            episode_titles_of_not_free = [episode_title
-                                          for episode_title, is_free in zip(subtitles, is_episode_free_list)
-                                          if not is_free]
-
-            if episode_titles_of_not_free:
-                logging.warning('Not for free episode is skipped. Following epsodes will be skipped: '
-                                f'{", ".join(episode_titles_of_not_free)}')
-
-                for list_ in lists_to_filter:
-                    list_[:] = [i for i, is_free in zip(list_, is_episode_free_list) if is_free]
+        for list_to_filter in lists_to_filter:
+            list_to_filter[:] = itertools.compress(list_to_filter, to_downloads)  # type: ignore
 
         # episode infomations
         self.episode_titles = subtitles
