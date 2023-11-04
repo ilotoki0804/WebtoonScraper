@@ -17,9 +17,6 @@ class UnsupportedWebtoonRating(InvalidWebtoonId):
     """The weboon is not supported to download due to rating.
 
     WebtoonScraper does not support adult webtoon officially.
-
-    도입할 가능성이 있지만 일반 fetch 실패인지 rating unmatch로 인한 실패인지 구분하는 것이 가능할지는 의문임.
-    현재는 사용되고 있지 않음.
     """
 
 
