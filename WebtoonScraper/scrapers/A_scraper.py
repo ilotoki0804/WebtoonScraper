@@ -254,7 +254,10 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         return processed
 
-    def check_if_legitimate_webtoon_id(self, exception_type: type[BaseException] = Exception) -> str | None:
+    def check_if_legitimate_webtoon_id(
+        self,
+        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception
+    ) -> str | None:
         """If webtoon_id is legitimate, return title. Otherwise, return None"""
         try:
             self.fetch_webtoon_information()
