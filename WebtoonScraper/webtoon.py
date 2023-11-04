@@ -177,7 +177,7 @@ def download_webtoon(
 
 def download_webtoons_getting_paid(
         noticeid: int,
-        merge_amount: int | None = None,
+        merge_amount: int | None = 5,
 ) -> None:
     res = requests.get(f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})  # type: ignore
     raw_soup = res.json().get('notice').get('content')
