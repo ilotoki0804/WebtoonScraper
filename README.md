@@ -128,12 +128,12 @@ WetoonScraper download 766648 -p naver_webtoon -r 15,  # 15번부터 끝까지
 기타 옵션들:
 
 ```console
-    -h, --help: 도움말을 출력합니다.
-    -m, --merge: 만약에 merge를 사용한다면, merge할 양을 정합니다. (['여러 회차 하나로 묶기' 참고](https://github.com/ilotoki0804/WebtoonScraper#여러-회차-하나로-묶기))
-    --list-episodes: 전체 에피소드들을 에피소드 번호와 함께 표로 출력합니다. 이 기능을 사용한다면 webtoon_id, cookie, authkey를 제외한 나머지 인수들은 사용되지 않습니다.
-    -d, --download-directory: 웹툰을 다운로드할 디렉토리를 설정합니다. 기본은 'webtoon'이고 만약 현재 폴더에 바로 다운로드받고 싶다면 '.'을 입력하세요.
-    --authkey: (레진코믹스 전용): authkey를 설정합니다. 앞뒤에 큰따옴표(")를 붙이세요.
-    --cookie: (버프툰 전용): cookie를 설정합니다. 앞뒤에 큰따옴표(")를 붙이세요.
+-h, --help: 도움말을 출력합니다.
+-m, --merge: 만약에 merge를 사용한다면, merge할 양을 정합니다. (['여러 회차 하나로 묶기' 참고](https://github.com/ilotoki0804/WebtoonScraper#여러-회차-하나로-묶기))
+--list-episodes: 전체 에피소드들을 에피소드 번호와 함께 표로 출력합니다. 이 기능을 사용한다면 webtoon_id, cookie, authkey를 제외한 나머지 인수들은 사용되지 않습니다.
+-d, --download-directory: 웹툰을 다운로드할 디렉토리를 설정합니다. 기본은 'webtoon'이고 만약 현재 폴더에 바로 다운로드받고 싶다면 '.'을 입력하세요.
+--authkey: (레진코믹스 전용): authkey를 설정합니다. 앞뒤에 큰따옴표(")를 붙이세요.
+--cookie: (버프툰 전용): cookie를 설정합니다. 앞뒤에 큰따옴표(")를 붙이세요.
 ```
 
 예를 들어 다음과 같이 사용할 수 있습니다.
