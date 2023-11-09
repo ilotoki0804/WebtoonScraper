@@ -22,7 +22,6 @@ class BufftoonScraper(Scraper[int]):
     IS_CONNECTION_STABLE = True
     URL_REGEX = r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)"
 
-    @override
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.info_headers = {
@@ -51,7 +50,6 @@ class BufftoonScraper(Scraper[int]):
         self.update_requests()
 
     @reload_manager
-    @override
     def fetch_episode_informations(
         self,
         get_payment_required_episode: bool = False,
@@ -91,7 +89,6 @@ class BufftoonScraper(Scraper[int]):
         self.episode_ids = episode_ids
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         response = self.requests.get(f'{self.BASE_URL}/series/{self.webtoon_id}')
         selector = '#content > div > div > div.series-info > div.cont > div.title'
@@ -108,7 +105,6 @@ class BufftoonScraper(Scraper[int]):
         self.title = title
         self.webtoon_thumbnail = image_url
 
-    @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
         url = f'{self.BASE_URL}/series/{self.webtoon_id}/{episode_id}'
@@ -125,6 +121,5 @@ class BufftoonScraper(Scraper[int]):
 
         return episode_images_url
 
-    @override
     def download_image(self, episode_directory: Path, url: str, image_no: int, file_extension: str | None = 'png') -> None:
         return super().download_image(episode_directory, url, image_no, file_extension)

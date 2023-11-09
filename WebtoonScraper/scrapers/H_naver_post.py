@@ -27,7 +27,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     URL_REGEX: str = (r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
                       r"\?(?:.*&)*seriesNo=(?P<webtoon_id>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*")
 
-    @override
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
         self.headers = {
@@ -49,13 +48,11 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         }
         self.update_requests()
 
-    @override
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return f'{self.title}{tuple(self.webtoon_id)}'
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
         subtitle_list: list[str] = []
@@ -87,7 +84,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.episode_ids = episode_id_list[::-1]
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
         response = self.requests.get(
@@ -100,7 +96,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.title = title
         self.webtoon_thumbnail = image_url
 
-    @override
     def get_episode_image_urls(self, episode_no, attempts: int = 3):
         series_no, member_no = self.webtoon_id
         episode_id = self.episode_ids[episode_no]

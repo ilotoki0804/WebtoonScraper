@@ -23,7 +23,6 @@ class NaverWebtoonScraper(Scraper[int]):
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         webtoon_json_info = self.requests.get(f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}').json()
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
@@ -44,7 +43,6 @@ class NaverWebtoonScraper(Scraper[int]):
             raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         prev_articleList = []
         subtitles = []
@@ -71,7 +69,6 @@ class NaverWebtoonScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         # sourcery skip: de-morgan
         episode_id = self.episode_ids[episode_no]
@@ -91,6 +88,5 @@ class NaverWebtoonScraper(Scraper[int]):
 
         return episode_image_urls
 
-    @override
     def check_if_legitimate_webtoon_id(self) -> str | None:
         return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedWebtoonRating))

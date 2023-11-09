@@ -15,7 +15,6 @@ class WebtoonOriginalsScraper(Scraper[int]):
     TEST_WEBTOON_ID = 5291  # Wumpus
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
 
-    @override
     def __init__(self, titleid) -> None:
         super().__init__(titleid)
         self.headers = {
@@ -25,7 +24,6 @@ class WebtoonOriginalsScraper(Scraper[int]):
         self.update_requests()
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         response = self.requests.get(f'{self.BASE_URL}/list?title_no={self.webtoon_id}')
         title = response.soup_select_one('meta[property="og:title"]', no_empty_result=True).get('content')
@@ -44,7 +42,6 @@ class WebtoonOriginalsScraper(Scraper[int]):
         self.webtoon_thumbnail = webtoon_thumbnail
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         # getting title_no
         url = f'{self.BASE_URL}/list?title_no={self.webtoon_id}'
@@ -69,7 +66,6 @@ class WebtoonOriginalsScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
         url = f'{self.BASE_URL}/prologue/viewer?title_no={self.webtoon_id}&episode_no={episode_id}'

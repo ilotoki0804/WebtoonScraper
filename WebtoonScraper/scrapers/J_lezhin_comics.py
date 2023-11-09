@@ -27,7 +27,6 @@ class LezhinComicsScraper(Scraper[str]):
     IS_CONNECTION_STABLE = True
     URL_REGEX = r'(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)'
 
-    @override
     def __init__(self, webtoon_id: str, authkey: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.headers = {
@@ -75,13 +74,11 @@ class LezhinComicsScraper(Scraper[str]):
         self.headers['Authorization'] = value
         self.update_requests()
 
-    @override
     def get_webtoon_directory_name(self) -> str:
         return (f'{self.get_safe_file_name(self.title)}({self.webtoon_id}, shuffled)'
                 if self.is_shuffled else f'{self.get_safe_file_name(self.title)}({self.webtoon_id})')
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수 있으니 주의.
         # logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
@@ -90,7 +87,6 @@ class LezhinComicsScraper(Scraper[str]):
         raise UseFetchEpisode()
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         res = self.requests.get(f'{self.BASE_URL}/{self.webtoon_id}')
@@ -209,7 +205,6 @@ class LezhinComicsScraper(Scraper[str]):
         # 기타 레진 한정 정보들
         self.information_chars = episode_type_chars
 
-    @override
     def download_webtoon_thumbnail(self, webtoon_directory, file_extension: str | None = 'jpg') -> None:
         super().download_webtoon_thumbnail(webtoon_directory, file_extension=file_extension)
         if self.is_shuffled and self.download_episode_id_ints_if_shuffled:
@@ -220,7 +215,6 @@ class LezhinComicsScraper(Scraper[str]):
         file_path = webtoon_directory / f'{self.webtoon_id}_ids.txt'
         file_path.write_text(file_content, encoding='utf-8')
 
-    @override
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
         episode_id_str = self.episode_ids[episode_no]
@@ -267,7 +261,6 @@ class LezhinComicsScraper(Scraper[str]):
 
         return image_urls
 
-    @override
     def unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
@@ -281,7 +274,6 @@ class LezhinComicsScraper(Scraper[str]):
             print('Shuffled webtoon directory is deleted.')
         return target_webtoon_directory
 
-    @override
     def check_if_legitimate_webtoon_id(self) -> str | None:
         try:
             title = self.requests.get(f'https://www.lezhin.com/ko/comic/{self.webtoon_id}').soup_select_one(

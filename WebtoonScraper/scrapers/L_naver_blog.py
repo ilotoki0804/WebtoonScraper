@@ -29,7 +29,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     BASE_URL = 'https://m.blog.naver.com'
     URL_REGEX = r'(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*'
 
-    @override
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
         self.headers = {
@@ -50,7 +49,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         }
         self.update_requests()
 
-    @override
     def get_webtoon_directory_name(self) -> str:
         blog_id, category_no = self.webtoon_id
 
@@ -59,7 +57,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         return f'{self.title}({blog_id}, {category_no})'
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, limit: int = 1000, *, reload: bool = False):
         blog_id, category_no = self.webtoon_id
 
@@ -108,12 +105,10 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             self.episodes_image_urls.append(one_episode_image_urls)
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         # raise UseFetchEpisode()
         self.fetch_episode_informations()
 
-    @override
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
 

@@ -16,7 +16,6 @@ class KakaopageScraper(Scraper[int]):
     TEST_WEBTOON_ID = 53397318  # 부기영화
     URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
 
-    @override
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
         self.headers = {}
@@ -44,7 +43,6 @@ class KakaopageScraper(Scraper[int]):
         self.update_requests()
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         res = self.requests.get(f"https://page.kakao.com/content/{self.webtoon_id}")
         title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
@@ -58,7 +56,6 @@ class KakaopageScraper(Scraper[int]):
         self.webtoon_thumbnail = thumnail_url
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         curser = 0
         # episode_length: int = 0
@@ -97,15 +94,12 @@ class KakaopageScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    @override
     def download_image(self, episode_directory, url: str, image_no: int, file_extension: str | None = 'jpg') -> None:
         return super().download_image(episode_directory, url, image_no, file_extension)
 
-    @override
     def download_webtoon_thumbnail(self, thumbnail_directory, file_extension: str | None = 'jpg') -> None:
         return super().download_webtoon_thumbnail(thumbnail_directory, file_extension)
 
-    @override
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
 

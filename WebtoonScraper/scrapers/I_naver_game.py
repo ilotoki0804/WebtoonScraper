@@ -18,7 +18,6 @@ class NaverGameScraper(Scraper[int]):
     URL_REGEX = r'(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?'
 
     @reload_manager
-    @override
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         url = f'https://apis.naver.com/nng_main/nng_main/original/series/{self.webtoon_id}'
         webtoon_data = self.requests.get(url).json()['content']
@@ -29,7 +28,6 @@ class NaverGameScraper(Scraper[int]):
         self.webtoon_thumbnail = thumbnail
 
     @reload_manager
-    @override
     def fetch_episode_informations(self, episode_max_limit=500, *, reload: bool = False):
         # 여러 시즌을 하나로 통합
         content_raw_data = []
@@ -62,6 +60,5 @@ class NaverGameScraper(Scraper[int]):
         self.episodes_image_urls = episode_image_urls
         self.episode_ids = episode_ids
 
-    @override
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
