@@ -14,7 +14,7 @@ from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
 from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
-from ..exceptions import UseFetchEpisode
+from ..exceptions import UseFetchEpisode, WebtoonScraperError
 
 TitleId = str
 
@@ -103,7 +103,7 @@ class LezhinComicsScraper(Scraper[str]):
         try:
             product_start = re.search(r"__LZ_PRODUCT__ *= *{\n *productType: *'comic',\n *product: *", webtoon_raw_data.text).end()  # type: ignore
             product_end, departure_start = re.search(",\n *departure: *'',\n *all: *", webtoon_raw_data.text).span()  # type: ignore
-            departure_end = re.search(",\n *prefree", webtoon_raw_data.text).start()  # type: ignore
+            # departure_end = re.search(",\n *prefree", webtoon_raw_data.text).start()  # type: ignore
 
             product = json.loads(webtoon_raw_data.text[product_start:product_end])
 
@@ -180,18 +180,28 @@ class LezhinComicsScraper(Scraper[str]):
                         for is_unusable, is_free in zip(is_episode_unusable_list, is_episode_free_list)]
 
         if len(subtitles) - sum(to_downloads):
-            warning_message = (
-                "Unusable or not for free episode will be skipped."
-                if not get_unusable_episode and not get_paid_episode else
-                "Not for free episode will be skipped."
-                if not get_unusable_episode else
-                "Unusable episode will be skipped."
-                if not get_paid_episode else
-                "Call developer if this message presents. This is clearly a bug."
-            ) + (
-                " Following epsodes will be skipped: "
-                + ', '.join(subtitle for to_download, subtitle in zip(to_downloads, subtitles) if not to_download)
-            )
+            match get_unusable_episode, get_paid_episode:
+                case False, False:
+                    warning_message = "Unusable or not for free episode will be skipped."
+                case True, False:
+                    warning_message = "Unusable episode will be skipped."
+                case False, True:
+                    warning_message = "Not for free episode will be skipped."
+                case _:
+                    raise WebtoonScraperError("get_unusable_episode=False, get_paid_episode=False should never pass here. "
+                                              "Call developer if this error is presented. This is clearly developer's mistake.")
+
+            # # 3.10 미만에서는 다음과 같이 작성 가능
+            # warning_messages: dict[tuple[bool, bool], str] = {
+            #     (False, False): "Unusable or not for free episode will be skipped."
+            #     (True, False): "Unusable episode will be skipped.",
+            #     (False, True): "Not for free episode will be skipped.",
+            #     (True, True): "Call developer if this message presents. This is clearly a bug.",
+            # }
+            # warning_message = warning_messages[get_unusable_episode, get_paid_episode]
+
+            warning_message += " Following epsodes will be skipped: " + ', '.join(
+                subtitle for to_download, subtitle in zip(to_downloads, subtitles) if not to_download)
             logging.warning(warning_message)
 
         for list_to_filter in lists_to_filter:
