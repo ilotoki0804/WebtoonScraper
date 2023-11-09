@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Iterable, Literal, TYPE_CHECKING, TypeAlias, reveal_type
 from multiprocessing import pool
-from requests_utils import requests, souptools
+from requests_utils import requests, SoupTools
 
 from .scrapers import (
     Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
@@ -181,10 +181,10 @@ def download_webtoons_getting_paid(
         merge_amount: int | None = 5,
 ) -> None:
     res = requests.get(f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})  # type: ignore
-    raw_soup = res.json().get('notice').get('content')
+    raw_html = res.json().get('notice').get('content')
 
     titleids = (int(tag.get('href').removeprefix('https://comic.naver.com/webtoon/list?titleId='))  # type: ignore
-                for tag in souptools.soup_select(raw_soup, 'a'))
+                for tag in SoupTools(raw_html).soup_select('a'))
 
     for titleid in titleids:
         try:
