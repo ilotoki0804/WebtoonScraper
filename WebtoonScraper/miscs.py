@@ -8,7 +8,7 @@ from typing import (
 )
 import contextlib
 
-WebtoonId: TypeAlias = 'int | tuple[int, int] | tuple[str, int] | str'  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
+WebtoonId: TypeAlias = 'int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]'  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
 EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
 
 

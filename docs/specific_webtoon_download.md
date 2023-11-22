@@ -11,16 +11,22 @@
 #### ID 복사
 
 웹툰 페이지에 들어가 주소창의 맨 마지막 수를 복사합니다. 이 예시에서는 1007888입니다.
-    ![겜덕툰(버프툰) by 돈미니](../images/bufftoon1.png)
+
+![겜덕툰(버프툰) by 돈미니](../images/bufftoon1.png)
 
 #### cookie 찾기
 
 **로그인을 후** f12를 누르고 네트워크 창을 연 뒤 웹툰 페이지에 들어갑니다.
-    ![겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
+
+![겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
+
 새로고침을 한 뒤 '이름'에 있는 favicon.ico 요청을 클릭하고 나온 창에 '헤더' 탭을 엽니다.
-    ![img](../images/bufftoon3.png)
+
+![img](../images/bufftoon3.png)
+
 내려서 Cookie: 라고 되어 있는 모든 내용을 복사합니다.
-    ![img](../images/bufftoon4.png)
+
+![img](../images/bufftoon4.png)
 
 #### 다운로드
 
@@ -51,6 +57,7 @@ wt.download_webtoon(1007888, wt.BF, cookie=cookie)  # 첫 번째로 복사했던
 ## 네이버 포스트 다운로드하기
 
 웹툰이 있는 페이지로 가서 주소창에서 seriesNo와 memberNo를 복사하세요. 예시에서는 각각 597061과 19803452입니다.
+
 ![돈미니의 겜덕겜소(네이버 포스트) by 돈미니](../images/naver_post.png)
 
 다음과 같이 다운로드할 수 있습니다.
@@ -160,4 +167,30 @@ WebtoonScraper download '2394',55
 
 # 하지만 플랫폼을 명시했다면 괜찮습니다.
 WebtoonScraper download 2394,55 -p naver_blog
+```
+
+## 티스토리 다운로드하기
+
+주의: 특정 티스토리 사이트는 다운로드가 되지 않을 수 있습니다. 만약 어떤 티스토리 사이트를 다운로드받는 데에 실패했다면 이슈를 열거나 이메일로 알려주세요.
+
+우선 url에서 블로그 ID와 카테고리를 찾아냅니다.
+
+```url
+https://<블로그 ID>.tistory.com/category/<카테고리>
+```
+
+예를 들어 다음과 같은 URL에서 블로그 ID와 카테고리는 다음과 같습니다.
+
+그런 다음 CLI에서 다음과 같이 입력하세요.
+
+```
+https://doldistudio.tistory.com/category/돌디툰
+        ^^^^^^^^^^^                      ^^^^^
+         블로그 ID                       카테고리
+```
+
+그런 다음 console에 다음과 같이 입력합니다. 이때 스페이스를 중간에 넣지 않도록 주의하세요. 오류가 날 수 있습니다.
+
+```console
+WebtoonScraper download doldistudio,돌디툰 -p naver_blog
 ```

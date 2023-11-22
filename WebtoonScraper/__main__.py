@@ -30,18 +30,24 @@ def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
     if ',' not in webtoon_id:
         raise ValueError("Invalid webtoon id.")
 
-    match_result = re.match(r""" *[(]? *(['"]?(.+?)['"]?) *, *(.+?) *[)]? *$""", webtoon_id)
+    match_result = re.match(r""" * *[(]? *(['"]?(.+?)['"]?) *, *(['"]?(.+?)['"]?) *[)]? *$""", webtoon_id)
     assert match_result is not None, 'Invalid webtoon id.'
-    arg1, arg2 = match_result.group(1), match_result.group(3)
-    if (arg1.isdigit()
-            and not arg1[0] == arg1[-1] == '"'
-            and not arg1[0] == arg1[-1] == "'"):
+    is_arg1_quoted, is_arg2_quoted = match_result.group(2)[0] in {'"', "'"}, match_result.group(3)[0] in {'"', "'"}
+    arg1, arg2 = match_result.group(2), match_result.group(4)
+
+    if arg1.isdigit() and not is_arg1_quoted:
         # 네이버 포스트
         return int(arg1), int(arg2)
-    # 네이버 블로그
-    blog_id = match_result.group(2)
-    assert isinstance(blog_id, str)
-    return blog_id, int(arg2)
+    elif arg2.isdigit() and not is_arg2_quoted:
+        # 네이버 블로그
+        blog_id = match_result.group(2)
+        assert isinstance(blog_id, str)
+        return blog_id, int(arg2)
+    else:
+        # 티스토리
+        assert isinstance(arg1, str)
+        assert isinstance(arg2, str)
+        return arg1, arg2
 
 
 def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, int | None] | None:
@@ -113,9 +119,13 @@ def main(argv=None) -> Literal[0, 1]:
 
     print(f'Download has started{str(args).removeprefix("Namespace")}.')
 
-    # 만약 (int, int)인데 NAVER_BLOG라면 자동으로 (str, str)으로 변환한다.
+    # 만약 다른 타입의 튜플인데 NAVER_BLOG라면 자동으로 (str, int)로 변환한다.
     if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
-        args.webtoon_id = str(args.webtoon_id[0]), args.webtoon_id[1]
+        args.webtoon_id = str(args.webtoon_id[0]), int(args.webtoon_id[1])
+
+    # 만약 다른 타입의 튜플인데 TISTORY라면 자동으로 (str, str)로 변환한다.
+    if args.platform == webtoon.TISTORY and isinstance(args.webtoon_id[0], int):
+        args.webtoon_id = str(args.webtoon_id[0]), str(args.webtoon_id[1])
 
     try:
         webtoon.download_webtoon(

@@ -145,6 +145,12 @@ wt.download_webtoon('dr_hearthstone', wt.L, is_list_episodes=True)
     <td>NAVER_BLOG</td>
     <td>'naver_blog'</td>
   </tr>
+  <tr>
+    <td>티스토리(사진)</td>
+    <td>T</td>
+    <td>TISTORY</td>
+    <td>'tistory'</td>
+  </tr>
 </tbody>
 </table>
 * (사진)이라고 괄호 표시 되어 있는 것은 글과 사진이 혼합된 플랫폼일 경우 사진 다운로드만을 지원한다는 의미입니다.

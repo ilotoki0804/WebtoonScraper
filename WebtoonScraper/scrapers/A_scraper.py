@@ -31,7 +31,7 @@ from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
 from ..miscs import EpisodeNoRange
 
-WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
+WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int], tuple[str, str])
 
 
 # # TODO

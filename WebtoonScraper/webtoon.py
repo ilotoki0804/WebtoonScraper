@@ -12,7 +12,7 @@ from .scrapers import (
     Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
     WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
     NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
-    NaverBlogWebtoonId,
+    NaverBlogWebtoonId, TistoryScraper, TistoryWebtoonId
 )
 from .exceptions import InvalidPlatformError, UnsupportedWebtoonRating
 from .miscs import WebtoonId, EpisodeNoRange
@@ -27,6 +27,7 @@ G = NAVER_GAME = 'naver_game'
 L = LEZHIN = 'lezhin'
 KP = KAKAOPAGE = 'kakaopage'
 NB = NAVER_BLOG = 'naver_blog'
+T = TISTORY = 'tistory'
 
 WebtoonPlatforms = Literal[
     'naver_webtoon',
@@ -39,6 +40,7 @@ WebtoonPlatforms = Literal[
     'lezhin',
     'kakaopage',
     'naver_blog',
+    'tistory'
 ]
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
@@ -52,6 +54,7 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     LEZHIN: LezhinComicsScraper,
     KAKAOPAGE: KakaopageScraper,
     NAVER_BLOG: NaverBlogScraper,
+    TISTORY: TistoryScraper,
 }
 
 
@@ -64,11 +67,12 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
 
     test_queue: tuple[WebtoonPlatforms, ...]
     if isinstance(webtoon_id, tuple):
-        test_queue = (
-            NAVER_POST,
-        ) if isinstance(webtoon_id[0], int) else (
-            NAVER_BLOG,
-        )
+        if isinstance(webtoon_id[0], int):
+            test_queue = (NAVER_POST,)
+        elif isinstance(webtoon_id[1], int):
+            test_queue = (NAVER_BLOG,)
+        else:
+            test_queue = (TISTORY,)
     elif isinstance(webtoon_id, str):
         test_queue = (
             LEZHIN,
@@ -85,6 +89,8 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         )
     else:
         raise TypeError(f'Unknown type of titleid({type(webtoon_id)})')
+
+    print(f"Checking these platforms: {', '.join(test_queue)}")
 
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
@@ -104,7 +110,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         print(f'#{i} {platform}: {name}')
 
     platform_no = input(
-        'Multiple webtoon is searched. Please type number of webtoon you want to download(enter nothing to select #1): '
+        'Multiple webtoon is found. Please type number of webtoon you want to download(enter nothing to select #1): '
     )
 
     try:
@@ -148,7 +154,8 @@ def download_webtoon(
         webtoon_scraper.get_paid_episode = get_paid_episode
     webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
     if webtoon_platform is None:
-        raise ValueError("You didn't select a valid item, or webtoon id was inappropriate. Select a valid item or webtoon id.")
+        raise ValueError("You didn't select a valid item, or webtoon id was inappropriate. "
+                         "Select a valid item or webtoon id.")
 
     if cookie is not None:
         if webtoon_platform != BUFFTOON:
