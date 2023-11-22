@@ -6,11 +6,11 @@ from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
 from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
+from ..exceptions import InvalidWebtoonId
 
 
 class KakaopageScraper(Scraper[int]):
     '''Scrape webtoons from Kakaopage.'''
-    IS_CONNECTION_STABLE = False
     BASE_URL = 'https://page.kakao.com'
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
@@ -45,10 +45,11 @@ class KakaopageScraper(Scraper[int]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         res = self.requests.get(f"https://page.kakao.com/content/{self.webtoon_id}")
+
         title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
-        if title == '카카오페이지':
-            title = None
-        assert isinstance(title, str)
+        if title == '카카오페이지' or not isinstance(title, str):
+            raise InvalidWebtoonId("WebtoonId is invalid or that of adult webtoon.")
+
         thumnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
         assert isinstance(thumnail_url, str)
 

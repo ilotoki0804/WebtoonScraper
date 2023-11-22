@@ -43,9 +43,10 @@ WebtoonId = TypeVar('WebtoonId', int, str, tuple[int, int], tuple[str, int])
 
 
 def reload_manager(f):
-    """어떤 함수를 받아 reload를 인자로 """
+    """reload를 인자로 가지는 어떤 함수를 받아 reload가 True라면 cache가 있다면 제거하고
+    다시 정보를 불러오도록 하는 decorator."""
     # __slots__가 필요하다면 Scraper에 _return_cache를 구현하면 됨!
-    # @functools.wraps(f)
+    @functools.wraps(f)
     def wrapper(self, *args, reload: bool = False, **kwargs):
         # print(self, args, reload, kwargs)
         try:
