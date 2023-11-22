@@ -9,9 +9,9 @@ typing_extensions
 rich
 
 # <Dependency of NaverPostScraper>
-# 사용한 버전: 3.0.6
+# Version Used When Testing: 3.0.6
 demjson3
 
 # <Dependency of LezhinComicsScraper>
-# 사용한 버전: 10.0.0
+# Version Used When Testing: 10.0.0
 Pillow
