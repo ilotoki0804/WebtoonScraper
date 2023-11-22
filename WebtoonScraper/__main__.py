@@ -63,7 +63,7 @@ def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, in
 parser = argparse.ArgumentParser(prog='WebtoonScraper', usage='Download webtoons in CLI', description='Download webtoons with ease!')
 parser.add_argument('--mock', action='store_true',
                     help='No actual download.')
-parser.add_argument('--version', action='version', version=f'WebtoonScraper {__version__} of {sys.version}')
+parser.add_argument('--version', action='version', version=f'WebtoonScraper {__version__} of Python {sys.version}')
 subparsers = parser.add_subparsers(title='Commands',
                                    # description='valid commands',
                                    help='Choose command you want. Currently download is only valid option.')
@@ -94,7 +94,7 @@ download_subparser.add_argument('-d', '--download-directory', type=Path, metavar
                                 help="The directory you want to download to.")
 download_subparser.add_argument('--list-episodes', action='store_true',
                                 help='List all episodes.')
-download_subparser.add_argument('--get-paid-episode', action='store_true', default=False,
+download_subparser.add_argument('--get-paid-episode', action='store_true',
                                 help='Get paid episode. Lezhin Comics only.')
 
 # TODO: 'merge' parser 추가하기
@@ -107,33 +107,33 @@ def main(argv=None) -> Literal[0, 1]:
         print('Arguments:', str(args).removeprefix('Namespace(').removesuffix(')'))
         return 0
 
-    if hasattr(args, 'webtoon_id'):
-        print(f'Download has started{str(args).removeprefix("Namespace")}.')
+    if not hasattr(args, 'webtoon_id'):
+        logging.error("Invalid state. Maybe you forgot to write 'download'?")
+        return 1
 
-        # 만약 (int, int)인데 NAVER_BLOG라면 자동으로 (str, str)으로 변환한다.
-        if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
-            args.webtoon_id = str(args.webtoon_id[0]), args.webtoon_id[1]
+    print(f'Download has started{str(args).removeprefix("Namespace")}.')
 
-        try:
-            webtoon.download_webtoon(
-                args.webtoon_id,
-                args.platform,
-                args.merge_amount,
-                cookie=args.cookie,
-                authkey=args.authkey,
-                episode_no_range=args.range,
-                download_directory=args.download_directory,
-                is_list_episodes=args.list_episodes,
-                get_paid_episode=args.get_paid_episode,
-            )
-        except Exception as e:
-            logging.error(f'An error accured. Error: {e}')
-            return 1
-        else:
-            return 0
+    # 만약 (int, int)인데 NAVER_BLOG라면 자동으로 (str, str)으로 변환한다.
+    if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
+        args.webtoon_id = str(args.webtoon_id[0]), args.webtoon_id[1]
 
-    logging.error("Invalid state. Maybe you forgot to write 'download'?")
-    return 1
+    try:
+        webtoon.download_webtoon(
+            args.webtoon_id,
+            args.platform,
+            args.merge_amount,
+            cookie=args.cookie,
+            authkey=args.authkey,
+            episode_no_range=args.range,
+            download_directory=args.download_directory,
+            is_list_episodes=args.list_episodes,
+            get_paid_episode=args.get_paid_episode,
+        )
+    except Exception as e:
+        logging.error(f'An error accured. Error: {e}')
+        return 1
+    else:
+        return 0
 
 
 if __name__ == '__main__':
