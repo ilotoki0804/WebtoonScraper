@@ -26,7 +26,8 @@ if _sys.version_info < (3, 10):
     import logging
     logging.warning(f'Python version ({_sys.version}) is too low. Program may be run but not tested. '
                     'Upgrade Python if program not works well.')
-if _sys.version_info >= (3, 12):
+if _sys.version_info > (3, 11, 4):
     import logging
-    logging.warning('This program works on Python 3.12.0, but it hurts performance. '
-                    'Use python 3.11(3.11.4 is recommended.) or 3.10.')
+    logging.warning('Since Python 3.11.5 and later (including 3.12) uses OpenSSL 3, '
+                    'siginificant performace damage is occured. '
+                    "Use Python 3.11.4 or lower to use this program without performace damage.")
