@@ -6,7 +6,7 @@ from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
 from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
-from ..exceptions import InvalidWebtoonId
+from ..exceptions import InvalidWebtoonIdError
 
 
 class KakaopageScraper(Scraper[int]):
@@ -48,7 +48,7 @@ class KakaopageScraper(Scraper[int]):
 
         title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
         if title == '카카오페이지' or not isinstance(title, str):
-            raise InvalidWebtoonId("WebtoonId is invalid or that of adult webtoon.")
+            raise InvalidWebtoonIdError("WebtoonId is invalid or that of adult webtoon.")
 
         thumnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
         assert isinstance(thumnail_url, str)

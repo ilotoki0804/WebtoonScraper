@@ -11,7 +11,7 @@ from tqdm import tqdm
 from PIL import Image
 
 from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
-from ..exceptions import DirectoryStateUnmatched
+from ..exceptions import DirectoryStateUnmatchedError
 
 
 def unshuffle_typical_webtoon_directory_and_return_target_directory(source_webtoon_directory: Path, episode_int_ids: list[int] | None = None) -> Path:
@@ -41,7 +41,7 @@ def unshuffle_webtoon_directory_to_directory(
         if not proceed_without_checking_directory_state:
             directory_state = fast_check_container_state(source_webtoon_directory)
             if directory_state != NORMAL_WEBTOON_DIRECTORY:
-                raise DirectoryStateUnmatched(f'Directory state is {directory_state}, which is not supported.')
+                raise DirectoryStateUnmatchedError(f'Directory state is {directory_state}, which is not supported.')
 
         unshuffle_parameters = []
         for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):

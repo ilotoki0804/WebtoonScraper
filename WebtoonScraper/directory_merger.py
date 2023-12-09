@@ -11,7 +11,7 @@ from typing import TypeAlias, Final
 
 from typing_extensions import Literal, NamedTuple
 
-from .exceptions import DirectoryStateUnmatched, UserCanceledError
+from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 
 # container는 file을 담고 있는 것을 의미합니다.
 # container에 들어가는 file이 directory일 수 있기 때문에
@@ -129,7 +129,7 @@ class DirectoryMerger:
         elif directory_state == MERGED_WEBTOON_DIRECTORY:
             to_do = 'restore'
         else:
-            raise DirectoryStateUnmatched('Directory state is nether default state nor merged. Cannot merge or restore.')
+            raise DirectoryStateUnmatchedError('Directory state is nether default state nor merged. Cannot merge or restore.')
 
         if ask:
             if directory_state == NORMAL_WEBTOON_DIRECTORY:
@@ -162,7 +162,7 @@ class DirectoryMerger:
             webtoon_directory = self.target_directory / webtoon
             try:
                 merge_webtoon(webtoon_directory, merge_amount)
-            except DirectoryStateUnmatched:
+            except DirectoryStateUnmatchedError:
                 logging.warning(f'Skip {webtoon_directory} directory. It looks not available to merge.')
 
     def restore_webtoons_from_source_directory(self) -> None:
@@ -172,7 +172,7 @@ class DirectoryMerger:
             webtoon_directory = self.source_directory / webtoon
             try:
                 restore_webtoon(webtoon_directory)
-            except DirectoryStateUnmatched:
+            except DirectoryStateUnmatchedError:
                 logging.warning(f'Skip {webtoon_directory} directory. It looks not available to restore.')
 
 
@@ -222,7 +222,7 @@ def merge_webtoon_directory_to_directory(
         restore_webtoon(source_webtoon_directory)
         return
     if directory_state in {MERGED_WEBTOON_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY_CONTAINER}:
-        raise DirectoryStateUnmatched(f'State of directory is {directory_state}, which cannot be merged.\n'
+        raise DirectoryStateUnmatchedError(f'State of directory is {directory_state}, which cannot be merged.\n'
                                       f'sorce webtoon directory: {source_webtoon_directory}')
 
     # exist_ok=True는 옮기다 중간에 interrupt를 받아 끊긴 뒤 나중에 다시 재개할 때 도움이 된다.
@@ -366,7 +366,7 @@ def find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
         result = webtoon_regexes[MERGED_IMAGE].match(image)
         if result is None:
             directory_state = check_filename_state(image)
-            raise DirectoryStateUnmatched(
+            raise DirectoryStateUnmatchedError(
                 f'State of directory is {FILE_TO_CONTAINER[directory_state]}, which cannot be merged.\nProblematic image name: {image}')
         unique_ids.add(int(result.group('episode_no')))
     return unique_ids
@@ -499,7 +499,7 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
         elif directory_state == UNIFIED_WEBTOON_DIRECTORY:
             ...  # 나중의 코드 처리를 위한 빈칸
         else:
-            raise DirectoryStateUnmatched(f'State of directory is {directory_state}, which cannot be restored.\n'
+            raise DirectoryStateUnmatchedError(f'State of directory is {directory_state}, which cannot be restored.\n'
                                           f'Directory name: {directory}')
     else:
         directory_state = manual_directory_state

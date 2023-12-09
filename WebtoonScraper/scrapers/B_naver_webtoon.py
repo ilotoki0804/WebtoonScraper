@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, ClassVar
 from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
-from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRating
+from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 
 
 class NaverWebtoonScraper(Scraper[int]):
@@ -73,7 +73,7 @@ class NaverWebtoonScraper(Scraper[int]):
         is_best_challenge = webtoon_json_info['webtoonLevelCode']  # BEST_CHALLENGE or WEBTOON
 
         if webtoon_json_info['age']['type'] == "RATE_18":
-            raise UnsupportedWebtoonRating(f"Webtoon {title} is adult webtoon, which is not supported in NaverWebtoonScraper. "
+            raise UnsupportedWebtoonRatingError(f"Webtoon {title} is adult webtoon, which is not supported in NaverWebtoonScraper. "
                                            "Thus cannot download this webtoon.")
 
         self.webtoon_thumbnail = webtoon_thumbnail
@@ -131,7 +131,7 @@ class NaverWebtoonScraper(Scraper[int]):
         return episode_image_urls
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedWebtoonRating))
+        return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedWebtoonRatingError))
 
 
 class BestChallengeScraper(NaverWebtoonScraper):

@@ -14,7 +14,7 @@ from .scrapers import (
     NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
     NaverBlogWebtoonId, TistoryScraper, TistoryWebtoonId
 )
-from .exceptions import InvalidPlatformError, UnsupportedWebtoonRating
+from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = 'naver_webtoon'
@@ -196,5 +196,5 @@ def download_webtoons_getting_paid(
     for titleid in titleids:
         try:
             download_webtoon(titleid, NAVER_WEBTOON, merge_amount=merge_amount)
-        except UnsupportedWebtoonRating as e:
+        except UnsupportedWebtoonRatingError as e:
             print(e)

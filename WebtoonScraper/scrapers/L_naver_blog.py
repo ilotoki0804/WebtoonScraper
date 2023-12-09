@@ -10,7 +10,7 @@ from typing import NamedTuple, TYPE_CHECKING, NoReturn
 from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
-from ..exceptions import InvalidWebtoonId, InvalidBlogId, InvalidCategoryNo
+from ..exceptions import InvalidWebtoonIdError, InvalidBlogIdError, InvalidCategoryNoError
 
 
 class NaverBlogWebtoonId(NamedTuple):
@@ -64,9 +64,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         response = self.requests.get(url)
         if response.json()['isSuccess'] is False:
-            raise InvalidBlogId("Invalid blog id. Maybe there's a typo or blog is closed.")
+            raise InvalidBlogIdError("Invalid blog id. Maybe there's a typo or blog is closed.")
         if response.json()['result']['categoryName'] == '전체글':
-            raise InvalidCategoryNo("Invalid category number. Maybe there's a typo or category is deleted.")
+            raise InvalidCategoryNoError("Invalid category number. Maybe there's a typo or category is deleted.")
 
         fetch_result = response.json()['result']
 
@@ -113,4 +113,4 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         return self.episodes_image_urls[episode_no]
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id(InvalidWebtoonId)
+        return super().check_if_legitimate_webtoon_id(InvalidWebtoonIdError)
