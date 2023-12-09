@@ -1,17 +1,21 @@
+"""빌드를 자동화합니다."""
 import os
 import shutil
-import subprocess
 from pathlib import Path
-import contextlib
 
-PYTHON_PATH = Path('python_path.txt').read_text(encoding='utf-8')
+import tomlkit
+from WebtoonScraper import __version__
 
-with contextlib.suppress(FileNotFoundError):
+try:
     shutil.rmtree('dist')
-os.system('python setup.py sdist bdist_wheel')
-whl_file_name = os.listdir('dist')[0]
-os.system(f'python.exe -m pip install --force-reinstall dist/{whl_file_name}')
-if input('Submit changes? (y or not)') in ('y', 'Y', 'ㅛ'):
-    token = Path('token.txt').read_text(encoding='utf-8')
-    subprocess.run(["twine", "upload", "-u", '__token__', "-p", token, "dist/*"])
-    os.system('python -m pip show webtoonscraper')
+except FileNotFoundError:
+    os.mkdir('dist')
+
+# update pyproject.toml version
+pyproject_path = Path("pyproject.toml")
+pyproject_data = tomlkit.parse(pyproject_path.read_text())
+pyproject_data['tool']['poetry']['version'] = __version__  # type: ignore
+pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding='utf-8')
+
+os.system('poetry build')
+# os.system(f'poetry publish -u __token__ -p {Path("_token.txt").read_text("utf-8")}')
