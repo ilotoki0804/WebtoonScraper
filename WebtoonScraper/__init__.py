@@ -22,11 +22,11 @@ __author_email__ = "ilotoki0804@gmail.com"
 __license__ = "MIT License"
 
 import sys as _sys
-if _sys.version_info < (3, 10):
+if _sys.version_info < (3, 11, 0):
     import logging
     logging.warning(f'Python version ({_sys.version}) is too low. Program may be run but not tested. '
                     'Upgrade Python if program not works well.')
-if _sys.version_info > (3, 11, 4):
+if _sys.version_info >= (3, 11, 5):
     import logging
     logging.warning('Since Python 3.11.5 and later (including 3.12) uses OpenSSL 3, '
                     'siginificant performace damage is occured. '
