@@ -337,6 +337,8 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 
 ## Relese Note
 
+2.3.1 (Dec 09, 2023): 네이버 포스트 & 네이버 블로그 버그 수정, resoup 사용, pyfilename 사용, best_challenge 관련 모듈 수정 및 seamless_redirect 추가, download_webtoons_getting_paid 관련 버그 수정, dm.select로 이름 변경 및 리팩토링, .gitignore 변경, 버전에 대한 경고 메시지
+
 2.3.0 (Nov 22, 2023): 티스토리 추가, 코드 개선 및 리팩토링
 
 2.2.0 (Nov 4, 2023): 네이버 블로그 추가, gitbook 추가, URL_REGEX 추가(현재는 사용처가 없지만 향후에 생길 예정), 리팩토링, 절대 경로 지원 제거
@@ -349,7 +351,7 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 
 2.0.0 (Sep 10, 2023): (버그 있음 -- 사용하지 말 것을 권장함.) pyjsparser, async_lru 의존성 제거, 대규모 리팩토링(scraper 폴더 생성, directory_merger 리팩토링, exceptions 추가, py.typed 추가, 독스 추가, 그 외 버그 수정 등.), 레진 unshuffler 분리 및 unshuffler 버그 수정, Scraper 완전 변경, 만화경 지원 제거, async 로직에서 제거
 
-1.3.0 (Aug 27, 2023): 카카오페이지 추가, 의존성 증가([requests-utils](https://github.com/ilotoki0804/requests-utils))
+1.3.0 (Aug 27, 2023): 카카오페이지 추가, 의존성 증가([requests-utils](https://github.com/ilotoki0804/resoup))
 
 1.2.0 (Jul 27, 2023): 레진코믹스 추가, 의존성 증가(~~pyjsparser~~(2.0.0 버전에서 의존성에서 제거됨), Pillow)
 

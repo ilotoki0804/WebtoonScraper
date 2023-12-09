@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "webtoonscraper"
-version = "2.1.0"  # This version will be matched when build.py is run.
+version = "2.3.1"  # This version will be matched when build.py is run.
 description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "MIT License"
