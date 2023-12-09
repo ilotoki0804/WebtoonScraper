@@ -59,9 +59,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         episode_id_list: list[int] = []
         prev_data = decoded_response_data = None
         for i in count(1):
-            if prev_data == decoded_response_data is not None:
-                break
-
             # n번째 리스트 불러옴
             url = (f'{self.BASE_URL}/my/series/detail/more.nhn'
                    f'?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49'
@@ -73,6 +70,9 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             # demjson3.decode()의 결과값은 dict임. 하지만 어째선지 타입 체커가 오작동하니 type: ignore가 필요.
             decoded_response_data = demjson3.decode(response_text)['html']  # type: ignore
             soup = BeautifulSoup(decoded_response_data, 'html.parser')
+
+            if prev_data == decoded_response_data is not None:
+                break
 
             subtitle_list += [tag.text.strip() for tag in soup.select('ul > li > a > div > span.ell')]
             episode_id_list += [next(map(int, tag.get('data-cid').split('_')))  # type: ignore
