@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Iterable, Literal, TYPE_CHECKING, TypeAlias, reveal_type
 from multiprocessing import pool
-from requests_utils import requests, SoupTools
+from resoup import requests, SoupTools
 
 from .scrapers import (
     Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,

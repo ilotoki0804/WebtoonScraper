@@ -23,7 +23,7 @@ from contextlib import suppress
 # from bs4 import BeautifulSoup
 # from bs4.element import Tag
 from tqdm import tqdm
-from requests_utils.custom_defaults import CustomDefaults
+from resoup.custom_defaults import CustomDefaults
 from rich.table import Table
 from rich.console import Console
 import pyfilename as pf
