@@ -49,3 +49,7 @@ class InvalidPlatformError(WebtoonScraperError):
     Maybe you didn't select platform or typed invalid parameter.
     Or you misuse naver webtoon and best challenge.
     """
+
+
+class UserCanceledError(WebtoonScraperError):
+    """User revoked process."""

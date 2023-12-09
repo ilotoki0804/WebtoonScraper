@@ -11,7 +11,7 @@ from typing import TypeAlias, Final
 
 from typing_extensions import Literal, NamedTuple
 
-from .exceptions import DirectoryStateUnmatched
+from .exceptions import DirectoryStateUnmatched, UserCanceledError
 
 # container는 file을 담고 있는 것을 의미합니다.
 # container에 들어가는 file이 directory일 수 있기 때문에
@@ -97,10 +97,11 @@ class DirectoryMerger:
 
     ############### MAIN FUNCTIONALITY ###############
 
-    def select_webtoon_and_merge_or_restore(
+    def select(
         self,
         merge_amount: int | None = None,
         manual_container_state: ContainerStates | None = None,
+        ask: bool = False,
     ) -> None:
         """소스 디렉토리에 있는 웹툰 디렉토리 중 사용자가 선택한 웹툰을 합칩니다."""
         webtoons = os.listdir(self.source_directory)
@@ -124,28 +125,35 @@ class DirectoryMerger:
             directory_state = manual_container_state
 
         if directory_state == NORMAL_WEBTOON_DIRECTORY:
-            user_answer = input('Directory seems default state. Merge it? (merge(M), restore(R), anything else: merge) ').lower()
-            if user_answer not in {'merge', 'restore', 'm', 'r'}:
-                user_answer = 'merge'
-            elif user_answer in {'m', 'r'}:
-                user_answer = 'merge' if user_answer.lower() == 'm' else 'restore'
+            to_do = 'merge'
         elif directory_state == MERGED_WEBTOON_DIRECTORY:
-            user_answer = input('Directory seems merged state. Restore it? (restore(R), merge(M), anything else: restore) ').lower()
-            if user_answer not in {'merge', 'restore', 'm', 'r'}:
-                user_answer = 'restore'
-            elif user_answer in {'m', 'r'}:
-                user_answer = 'merge' if user_answer.lower() == 'm' else 'restore'
+            to_do = 'restore'
         else:
             raise DirectoryStateUnmatched('Directory state is nether default state nor merged. Cannot merge or restore.')
 
-        print(f'You selected {selected_webtoon_directory_name}. {"Merging" if user_answer == "merge" else "Restoring"} webtoon has started.')
-        if user_answer == 'merge':
+        if ask:
+            if directory_state == NORMAL_WEBTOON_DIRECTORY:
+                user_answer = input(f'{selected_webtoon_directory_name} seems default state. Merge it? '
+                                    '(merge(m), restore(r), cancel(c), default: merge) ').lower()
+                to_do = 'restore' if user_answer in {'restore', 'r'} else 'merge'
+            else:
+                user_answer = input(f'{selected_webtoon_directory_name} seems merged state. Restore it? '
+                                    '(restore(r), merge(m), cancel(c) default: restore) ').lower()
+                to_do = 'merge' if user_answer in {'merge', 'm'} else 'restore'
+
+            if user_answer in {'cancel', 'c'}:
+                raise UserCanceledError("User canceled to merge or restore.")
+
+        message = "Merging" if to_do == "merge" else "Restoring"
+
+        print(f'{selected_webtoon_directory_name} is selected. {message} webtoon has started.')
+        if to_do == 'merge':
             if merge_amount is None:
                 merge_amount = int(input('merge amount: '))
             merge_webtoon(selected_directory, merge_amount)
         else:
             restore_webtoon(selected_directory)
-        print(f'{"Merging" if user_answer == "merge" else "Restoring"} webtoon has ended.')
+        print(f'{message} webtoon has ended.')
 
     def merge_webtoons_from_source_directory(self, merge_amount: int) -> None:
         """소스 디렉토리에 있는 모든 웹툰 디렉토리들을 합쳐 다시 소스 디렉토리에 놓습니다."""
