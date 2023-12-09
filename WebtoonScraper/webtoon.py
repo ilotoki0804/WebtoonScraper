@@ -190,7 +190,7 @@ def download_webtoons_getting_paid(
     res = requests.get(f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})  # type: ignore
     raw_html = res.json().get('notice').get('content')
 
-    titleids = (int(tag.get('href').removeprefix('https://comic.naver.com/webtoon/list?titleId='))  # type: ignore
+    titleids = (int(tag.get('href').removeprefix('https://comic.naver.com/webtoon/list?titleId=').partition("&")[0])  # type: ignore
                 for tag in SoupTools(raw_html).soup_select('a'))
 
     for titleid in titleids:
