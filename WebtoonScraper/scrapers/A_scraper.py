@@ -26,6 +26,7 @@ from tqdm import tqdm
 from requests_utils.custom_defaults import CustomDefaults
 from rich.table import Table
 from rich.console import Console
+import pyfilename as pf
 
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
@@ -241,19 +242,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         Caution: Do NOT put here diretory path(e.g. webtoon/ep1/001.jpg),
         beacause it will translate slash and backslash to acceptable(and cannot be used for going directory) name.
         """
-        # sourcery skip: remove-zero-from-range
-        table = str.maketrans('\\/:*?"<>|\t\n', '⧵／：＊？＂＜＞∣   ')  # pylint: disable=invalid-character-backspace
-        table.update(
-            {i: 32 for i in range(0, 31)}
-        )
-
-        processed = html.unescape(file_or_diretory_name)  # change things like "&amp;" to "'".
-
-        processed = processed.translate(table).strip()
-
-        processed = re.sub(r'\.$', '．', processed)
-
-        return processed
+        return pf.to_safe_name(file_or_diretory_name)
 
     def check_if_legitimate_webtoon_id(
         self,
