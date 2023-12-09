@@ -87,7 +87,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             # 아래 코드보다 콤펙트한 버전. 만약 다운로드가 잘 안 될 경우
             # 이 코드를 비활성화하고 아래 코드를 활성화해서 경고가 나오지는 않는지 확인할 것.
             one_episode_image_urls = [thumbnail['encodedThumbnailUrl'] + '?type=w800'
-                                      for thumbnail in fetch_result['items'][-1]['thumbnailList']]
+                                      for thumbnail in episode['thumbnailList']]
 
             # 흔하지 않은 타입에 대한 경고를 포함한 버전.
             # 위의 리스트 컴프리헨션 버전이 실사용 시에 충분히 문제 없이 동작한다면 제거하기.
