@@ -125,9 +125,9 @@ class DirectoryMerger:
             directory_state = manual_container_state
 
         if directory_state == NORMAL_WEBTOON_DIRECTORY:
-            to_do = 'merge'
+            action = 'merge'
         elif directory_state == MERGED_WEBTOON_DIRECTORY:
-            to_do = 'restore'
+            action = 'restore'
         else:
             raise DirectoryStateUnmatchedError('Directory state is nether default state nor merged. Cannot merge or restore.')
 
@@ -135,19 +135,19 @@ class DirectoryMerger:
             if directory_state == NORMAL_WEBTOON_DIRECTORY:
                 user_answer = input(f'{selected_webtoon_directory_name} seems default state. Merge it? '
                                     '(merge(m), restore(r), cancel(c), default: merge) ').lower()
-                to_do = 'restore' if user_answer in {'restore', 'r'} else 'merge'
+                action = 'restore' if user_answer in {'restore', 'r'} else 'merge'
             else:
                 user_answer = input(f'{selected_webtoon_directory_name} seems merged state. Restore it? '
                                     '(restore(r), merge(m), cancel(c) default: restore) ').lower()
-                to_do = 'merge' if user_answer in {'merge', 'm'} else 'restore'
+                action = 'merge' if user_answer in {'merge', 'm'} else 'restore'
 
             if user_answer in {'cancel', 'c'}:
                 raise UserCanceledError("User canceled to merge or restore.")
 
-        message = "Merging" if to_do == "merge" else "Restoring"
+        message = "Merging" if action == "merge" else "Restoring"
 
         print(f'{selected_webtoon_directory_name} is selected. {message} webtoon has started.')
-        if to_do == 'merge':
+        if action == 'merge':
             if merge_amount is None:
                 merge_amount = int(input('merge amount: '))
             merge_webtoon(selected_directory, merge_amount)
