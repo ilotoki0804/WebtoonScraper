@@ -1,10 +1,30 @@
 [tool.poetry]
-name = "webtoonscraper"
-version = "2.3.1"  # This version will be matched when build.py is run.
+name = "WebtoonScraper"
+version = "2.3.2"  # This version will be matched when build.py is run.
 description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
-license = "MIT License"
-readme = "README.md"
+license = "MIT"
+readme = "README_build.md"
+keywords = ["Webtoon", "Webtoon Scraper", "Naver Webtoon", "Webtoon Downloader", "Download Webtoon"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    # "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.urls]
+Homepage = "https://ilotoki0804.gitbook.io/webtoonscraper/"
+Documentation = "https://github.com/ilotoki0804/WebtoonScraper"
+Repository = "https://github.com/ilotoki0804/WebtoonScraper"
+Issues = "https://github.com/ilotoki0804/WebtoonScraper/issues"
+Changelog = "https://github.com/ilotoki0804/WebtoonScraper#relese-note"
+
+[tool.poetry.scripts]
+WebtoonScraper = "WebtoonScraper:__main__.main"
+webtoon = "WebtoonScraper.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -15,7 +35,6 @@ demjson3 = "^3.0.6"
 Pillow = "^10.0.1"
 pyfilename = "^0.4.0"
 resoup = "==0.5.1"
-
 
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
