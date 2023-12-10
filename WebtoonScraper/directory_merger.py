@@ -485,6 +485,21 @@ def detailed_check_directory_state(directory: PathOrStr) -> ContainerStates:
 ############### RESTORE FUNCTIONALITY ###############
 
 
+def restore_webtoon_directory_to_directory(
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path,
+    manual_directory_state: ContainerStates | None = None,
+) -> None:
+    restore_webtoon(source_webtoon_directory, manual_directory_state)
+    target_webtoon_directory.parent.mkdir(exist_ok=True, parents=True)
+    try:
+        source_webtoon_directory.rename(target_webtoon_directory)
+    except PermissionError:
+        logging.error(f'Failed to rename {source_webtoon_directory.name} to {target_webtoon_directory.name}.\n'
+                      "It's quite often situation so nothing to concern about. "
+                      "But you have to change its name by hand.")
+
+
 def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | None = None) -> None:
     """Merged된 웹툰 폴더의 상태를 되돌립니다."""
     # Thumbnail 옮기기
