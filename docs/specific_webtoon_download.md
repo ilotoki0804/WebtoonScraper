@@ -65,7 +65,7 @@ wt.download_webtoon(1007888, wt.BF, cookie=cookie)  # 첫 번째로 복사했던
 자세한 내용은 [여기](https://github.com/ilotoki0804/WebtoonScraper#WebtoonScraper-CLI로-웹툰-다운로드하기)를 참고하세요.
 
 ```console
-WebtoonScraper 597061,19803452
+webtoon 597061,19803452 -p naver_post
 ```
 
 혹은 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
@@ -154,19 +154,19 @@ CLI로도 사용할 수 있습니다. 이때는 괄호는 선택이고 스페이
 
 ```console
 # 기본적으로는 이렇게 사용하는 것을 추천합니다.
-WebtoonScraper download bkid4,55 -p naver_blog
+webtoon download bkid4,55 -p naver_blog
 
 # 괄호는 넣어도 되고 안 넣어도 됩니다.
-WebtoonScraper download (bkid4,55) -p naver_blog
+webtoon download (bkid4,55) -p naver_blog
 
 # 만약 정 스페이스를 포함하고 싶다면 따옴표로 감싸주세요.
-WebtoonScraper download "(bkid4, 55)" -p naver_blog
+webtoon download "(bkid4, 55)" -p naver_blog
 
 # blogId에 알파벳이 섞여있다면 상관없지만 만약 모두 숫자라면 네이버 포스트와 구분해야 하기에 따옴표나 쌍따옴표로 감싸주세요.
-WebtoonScraper download '2394',55
+webtoon download '2394',55
 
 # 하지만 플랫폼을 명시했다면 괜찮습니다.
-WebtoonScraper download 2394,55 -p naver_blog
+webtoon download 2394,55 -p naver_blog
 ```
 
 ## 티스토리 다운로드하기
@@ -192,5 +192,5 @@ https://doldistudio.tistory.com/category/돌디툰
 그런 다음 console에 다음과 같이 입력합니다. 이때 스페이스를 중간에 넣지 않도록 주의하세요. 오류가 날 수 있습니다.
 
 ```console
-WebtoonScraper download doldistudio,돌디툰 -p naver_blog
+webtoon download doldistudio,돌디툰 -p naver_blog
 ```
