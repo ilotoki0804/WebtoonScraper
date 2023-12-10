@@ -209,8 +209,8 @@ def merge_webtoon_directory_to_directory(
     """
     # base_webtoon_directory와 alt_webtoon_directory가 같으면 코드가 망가짐.
     if source_webtoon_directory == target_webtoon_directory:
-        logging.warning('base_webtoon_directory and alt_webtoon_directory are same. Use merge_webtoon_episodes instead.')
-        merge_webtoon(source_webtoon_directory, merge_amount)
+        # logging.warning('base_webtoon_directory and alt_webtoon_directory are same. Use merge_webtoon_episodes instead.')
+        return merge_webtoon(source_webtoon_directory, merge_amount)
 
     if manual_directory_state is None:
         directory_state = fast_check_container_state(source_webtoon_directory)
@@ -223,7 +223,7 @@ def merge_webtoon_directory_to_directory(
         return
     if directory_state in {MERGED_WEBTOON_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY_CONTAINER}:
         raise DirectoryStateUnmatchedError(f'State of directory is {directory_state}, which cannot be merged.\n'
-                                      f'sorce webtoon directory: {source_webtoon_directory}')
+                                           f'sorce webtoon directory: {source_webtoon_directory}')
 
     # exist_ok=True는 옮기다 중간에 interrupt를 받아 끊긴 뒤 나중에 다시 재개할 때 도움이 된다.
     target_webtoon_directory.mkdir(parents=True, exist_ok=True)
@@ -499,8 +499,10 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
         elif directory_state == UNIFIED_WEBTOON_DIRECTORY:
             ...  # 나중의 코드 처리를 위한 빈칸
         else:
-            raise DirectoryStateUnmatchedError(f'State of directory is {directory_state}, which cannot be restored.\n'
-                                          f'Directory name: {directory}')
+            raise DirectoryStateUnmatchedError(
+                f'State of directory is {directory_state}, which cannot be restored.\n'
+                f'Directory name: {directory}'
+            )
     else:
         directory_state = manual_directory_state
 
