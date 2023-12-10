@@ -2,9 +2,18 @@
 import os
 import shutil
 from pathlib import Path
+import re
 
 import tomlkit
-from WebtoonScraper import __version__
+from WebtoonScraper import __version__, __url__, __raw_source_url__
+
+
+def repl_script(match: re.Match) -> str:
+    if match.group('directory_type') == 'images':
+        return rf'[{match.group("description")}]({__raw_source_url__}/{match.group("path")})'
+
+    return rf'[{match.group("description")}]({__raw_source_url__}/{match.group("path")})'
+
 
 try:
     shutil.rmtree('dist')
@@ -17,5 +26,15 @@ pyproject_data = tomlkit.parse(pyproject_path.read_text())
 pyproject_data['tool']['poetry']['version'] = __version__  # type: ignore
 pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding='utf-8')
 
-os.system('poetry build')
-os.system(f'poetry publish -u __token__ -p {Path("_token.txt").read_text("utf-8")}')
+long_description = f'이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [이 깃허브 링크]({__url__})를 참고하세요.\n'
+long_description += Path('README.md').read_text(encoding='utf-8')
+long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<directory_type>images|docs).*?)[)]',
+                          repl_script, long_description)
+
+try:
+    Path("README_build.md").write_text(long_description, encoding='utf-8')
+
+    os.system('poetry build')
+    os.system(f'poetry publish -u __token__ -p {Path("_token.txt").read_text("utf-8")}')
+finally:
+    os.remove("README_build.md")
