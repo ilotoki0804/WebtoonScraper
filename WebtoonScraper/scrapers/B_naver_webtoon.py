@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 from itertools import count
-import logging
 from json.decoder import JSONDecodeError
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from typing_extensions import override
 
@@ -12,76 +11,41 @@ from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 
 
-class NaverWebtoonScraper(Scraper[int]):
+class AbstractNaverWebtoonScraper(Scraper[int]):
     '''Scrape webtoons from Naver Webtoon.'''
-    BASE_URL = 'https://comic.naver.com/webtoon'
+    BASE_URL: str
+    TEST_WEBTOON_ID: int
+    WEBTOON_TYPE: ClassVar[Literal['WEBTOON', 'BEST_CHALLENGE', 'CHALLENGE']]
+    URL_REGEX: str
+    EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
     IS_CONNECTION_STABLE = True
-    TEST_WEBTOON_ID = 809590  # 이번 생
-    IS_BEST_CHALLENGE: ClassVar[bool] = False
-    # 네이버 웹툰과 베스트 도전은 selector가 다르기 때문에 필요함.
-    EPISODE_IMAGES_URL_SELECTOR: ClassVar[str] = '#sectionContWide > img'
-    URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
-    seamless_redirect = True
-
-    def __new__(cls, *args, _seamless_redirect: bool | None = None, **kwargs) -> Scraper:
-        self = super().__new__(cls)
-        self.__init__(*args, **kwargs)
-        if _seamless_redirect is False or not cls.seamless_redirect:
-            return self
-
-        try:
-            self.fetch_webtoon_information()
-        except InvalidPlatformError:
-            try:
-                alternative_platforms = [
-                    platform
-                    for platform in NAVER_WEBTOON_CLASSES
-                    if platform.IS_BEST_CHALLENGE is not cls.IS_BEST_CHALLENGE
-                ]
-            except AttributeError as e:
-                raise ValueError(
-                    "class inside NAVER_WEBTOON_CLASSES should has `IS_BEST_CHALLENGE` attribute.") from e
-
-            if len(alternative_platforms) != 1:
-                raise ValueError(
-                    f"Length of alternative platforms({alternative_platforms}) should be 1. "
-                    "If you want to make a subclass of NaverWebtoonScraper or "
-                    "BestChallengeScraper, there's a few solutions.\n"
-                    "1. Change `seamless_redirect` to False.\n"
-                    f"2. Replace `NAVER_WEBTOON_CLASSES` as your class "
-                    "at `WebtoonScraper/scrapers/B_naver_webtoon.py`."
-                ) from None
-            alternative_platform, = alternative_platforms
-            logging.info(f"Redirect to `{alternative_platform}` due to `seamless_redirect`.")
-
-            self = alternative_platform.__new__(
-                alternative_platform,
-                *args,
-                _seamless_redirect=False,  # type: ignore
-                **kwargs
-            )
-            return self
-        else:
-            return self
 
     @reload_manager
-    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        webtoon_json_info = self.requests.get(f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}').json()
+    def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
+        url = f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}'
+        webtoon_json_info = self.requests.get(url).json()
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
         webtoon_thumbnail = webtoon_json_info['sharedThumbnailUrl']  # 실제로 웹툰 페이지에 사용되는 썸네일
         title = webtoon_json_info['titleName']  # 제목
-        is_best_challenge = webtoon_json_info['webtoonLevelCode']  # BEST_CHALLENGE or WEBTOON
+        webtoon_type = webtoon_json_info['webtoonLevelCode']  # BEST_CHALLENGE or WEBTOON
 
         if webtoon_json_info['age']['type'] == "RATE_18":
-            raise UnsupportedWebtoonRatingError(f"Webtoon {title} is adult webtoon, which is not supported in NaverWebtoonScraper. "
-                                           "Thus cannot download this webtoon.")
+            raise UnsupportedWebtoonRatingError(
+                f"Webtoon {title} is adult webtoon, "
+                "which is not supported in NaverWebtoonScraper. "
+                f"Thus cannot download {title}."
+            )
 
         self.webtoon_thumbnail = webtoon_thumbnail
         self.title = title
-        self.is_best_challenge = is_best_challenge == 'BEST_CHALLENGE'
+        self.webtoon_type = webtoon_type
 
-        if self.is_best_challenge is not self.IS_BEST_CHALLENGE:
-            platform_name = 'Best Challenge' if is_best_challenge else 'Naver Webtoon'
+        if not no_invalid_webtoon_type_error and self.WEBTOON_TYPE != webtoon_type:
+            platform_name = {
+                'WEBTOON': 'Naver Webtoon',
+                'BEST_CHALLENGE': 'Best Challenge',
+                'CHALLENGE': 'Challenge',
+            }.get(webtoon_type, '!!INVALID WEBTOON TYPE. PLEASE CONTACT DEVELOPER!!')
             raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
     @reload_manager
@@ -94,9 +58,13 @@ class NaverWebtoonScraper(Scraper[int]):
             try:
                 res = self.requests.get(url).json()
             except JSONDecodeError:
-                raise ValueError('Naver Webtoon changed their api specification. Contect developer to update get_title. '
-                                 '...Or just webtoon you tried to download invalid or adult webtoon. '
-                                 'WebtoonScraper currently not support downloading adult webtoon.')
+                # fetch_webtoon_information은 지원하지 않는 rating일 때 오류를 낸다.
+                # 만약 fetch_webtoon_information보다 fetch_episode_informations가 먼저
+                # 실행되었을 경우 UnsupportedWebtoonRatingError를 미처 내지 못했을 수 있다.
+                # 그런 경우인지 확인한 후 만약 지원하지 않는 rating에 대한 오류가 아니었다면
+                # 다른 버그로 간주하고 다시 raise한다.
+                self.fetch_webtoon_information()
+                raise
 
             curr_articleList = res["articleList"]
             if prev_articleList == curr_articleList:
@@ -134,12 +102,61 @@ class NaverWebtoonScraper(Scraper[int]):
         return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedWebtoonRatingError))
 
 
-class BestChallengeScraper(NaverWebtoonScraper):
+class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
+    """네이버 정식 연재만 다운로드받을 수 있는 스크래퍼입니다.
+
+    네이버 베스트 도전, 네이버 도전만화는 이것으로 다운로드받을 수 없습니다.
+    만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
+    NaverWebtoonScraper를 이용하세요.
+    """
+    BASE_URL = 'https://comic.naver.com/webtoon'
+    TEST_WEBTOON_ID = 809590  # 이번 생
+    WEBTOON_TYPE = 'WEBTOON'
+    EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'
+    URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+
+
+class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
+    """네이버 베스트 도전만 다운로드받을 수 있는 스크래퍼입니다.
+
+    네이버 정식 연재, 네이버 도전만화는 이것으로 다운로드받을 수 없습니다.
+    만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
+    NaverWebtoonScraper를 이용하세요.
+    """
     BASE_URL = 'https://comic.naver.com/bestChallenge'
     TEST_WEBTOON_ID = 809971  # 까마귀
-    IS_BEST_CHALLENGE = True
+    WEBTOON_TYPE = 'BEST_CHALLENGE'
     EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
     URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/bestChallenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
 
-NAVER_WEBTOON_CLASSES: set[type[NaverWebtoonScraper]] = {NaverWebtoonScraper, BestChallengeScraper}
+class ChallengeSpecificScraper(AbstractNaverWebtoonScraper):
+    """네이버 도전만화만 다운로드받을 수 있는 스크래퍼입니다.
+
+    네이버 정식 연재, 네이버 베스트 도전은 이것으로 다운로드받을 수 없습니다.
+    만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
+    NaverWebtoonScraper를 이용하세요.
+    """
+    BASE_URL = 'https://comic.naver.com/challenge'
+    TEST_WEBTOON_ID = 818058  # T/F
+    WEBTOON_TYPE = 'CHALLENGE'
+    EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
+    URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/challenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+
+
+class NaverWebtoonScraper(NaverWebtoonSpecificScraper, BestChallengeSpecificScraper, ChallengeSpecificScraper):
+    """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
+    def __new__(
+        cls, *args, **kwargs
+    ) -> NaverWebtoonSpecificScraper | BestChallengeSpecificScraper | ChallengeSpecificScraper:
+        scraper = NaverWebtoonSpecificScraper(*args, **kwargs)
+        scraper.fetch_webtoon_information(no_invalid_webtoon_type_error=True)
+        match scraper.webtoon_type:
+            case 'WEBTOON':
+                return scraper
+            case 'BEST_CHALLENGE':
+                return BestChallengeSpecificScraper(*args, **kwargs)
+            case 'CHALLENGE':
+                return ChallengeSpecificScraper(*args, **kwargs)
+            case _:
+                raise ValueError('!!INVALID WEBTOON TYPE. PLEASE CONTACT DEVELOPER!!')

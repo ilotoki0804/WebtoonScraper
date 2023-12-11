@@ -9,7 +9,7 @@ from multiprocessing import pool
 from resoup import requests, SoupTools
 
 from .scrapers import (
-    Scraper, NaverWebtoonScraper, BestChallengeScraper, WebtoonOriginalsScraper,
+    Scraper, NaverWebtoonScraper, WebtoonOriginalsScraper,
     WebtoonCanvasScraper, BufftoonScraper, NaverPostScraper, NaverPostWebtoonId,
     NaverGameScraper, LezhinComicsScraper, KakaopageScraper, NaverBlogScraper,
     NaverBlogWebtoonId, TistoryScraper, TistoryWebtoonId
@@ -18,7 +18,6 @@ from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = 'naver_webtoon'
-B = BEST_CHALLENGE = 'best_challenge'
 OR = ORIGINALS = 'originals'
 C = CANVAS = 'canvas'
 BF = BUFFTOON = 'bufftoon'
@@ -31,7 +30,6 @@ T = TISTORY = 'tistory'
 
 WebtoonPlatforms = Literal[
     'naver_webtoon',
-    'best_challenge',
     'originals',
     'canvas',
     'bufftoon',
@@ -45,7 +43,6 @@ WebtoonPlatforms = Literal[
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
-    BEST_CHALLENGE: BestChallengeScraper,
     ORIGINALS: WebtoonOriginalsScraper,
     CANVAS: WebtoonCanvasScraper,
     BUFFTOON: BufftoonScraper,
@@ -80,7 +77,6 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     elif isinstance(webtoon_id, int):
         test_queue = (
             NAVER_WEBTOON,
-            BEST_CHALLENGE,
             ORIGINALS,
             CANVAS,
             BUFFTOON,
@@ -115,13 +111,16 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
 
     try:
         platform_no = 1 if platform_no == '' else int(platform_no)
-    except ValueError as e:
-        raise ValueError('Webtoon ID should be integer.') from e
+    except ValueError:
+        raise ValueError(
+            'Webtoon ID should be integer. '
+            f'{platform_no!r} is cannot be converted to integer.'
+        ) from None
 
     try:
         selected_platform, selected_webtoon = results[platform_no - 1]
-    except IndexError as e:
-        raise ValueError('Exceeded the range of webtoons.') from e
+    except IndexError:
+        raise ValueError(f'Exceeded the range of webtoons(length of results was {results}).') from None
     logging.info(f'Webtoon {selected_webtoon} is selected.')
     return selected_platform
 
@@ -184,8 +183,8 @@ def download_webtoon(
 
 
 def download_webtoons_getting_paid(
-        noticeid: int,
-        merge_amount: int | None = 5,
+    noticeid: int,
+    merge_amount: int | None = 5,
 ) -> None:
     res = requests.get(f'https://comic.naver.com/api/notice/detail?noticeId={noticeid}', headers={})  # type: ignore
     raw_html = res.json().get('notice').get('content')
