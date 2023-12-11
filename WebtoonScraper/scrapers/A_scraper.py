@@ -64,7 +64,7 @@ def reload_manager(f):
 
         try:
             return_value = f(self, *args, reload=reload, **kwargs)
-        except:  # noqa
+        except Exception:
             logging.info('Exception is occured while function is executed. '
                          'So function is not marked as loaded.')
             raise
