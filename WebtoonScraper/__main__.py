@@ -25,7 +25,7 @@ from WebtoonScraper.directory_merger import (
     fast_check_container_state,
 )
 
-DEBUG = False
+SHOW_ERROR = False
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
 acceptable_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_')
@@ -291,7 +291,7 @@ def main(argv=None) -> Literal[0, 1]:
             raise NotImplementedError(f'Subparser {args.subparser_name} is not implemented.')
         parse_download(args)
     except Exception as e:
-        if DEBUG:
+        if SHOW_ERROR:
             raise
         logging.error(e)
         return 1
