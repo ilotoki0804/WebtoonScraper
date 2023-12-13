@@ -63,7 +63,7 @@ def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
         return arg1, arg2
 
 
-def str_to_episode_no_range(episode_no_range: str) -> int | tuple[int | None, int | None] | None:
+def str_to_episode_no_range(episode_no_range: str) -> EpisodeNoRange:
     if ',' not in episode_no_range:
         try:
             return int(episode_no_range)
