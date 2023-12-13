@@ -21,6 +21,9 @@ __author__ = "ilotoki0804"
 __author_email__ = "ilotoki0804@gmail.com"
 __license__ = "MIT License"
 
+__github_user_name__ = __author__
+__github_project_name__ = __title__
+
 import sys as _sys
 if _sys.version_info < (3, 11, 0):
     import logging
