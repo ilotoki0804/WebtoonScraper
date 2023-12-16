@@ -114,6 +114,17 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     # MISCS
 
+    def callback(self, situation: str, context=None):
+        match situation:
+            case "download_episode_end":
+                print(f'A webtoon {self.title} download ended.')
+            case "merge_webtoon_end":
+                print('Merging webtoon ended.')
+            case "merge_webtoon_start":
+                print('Merging webtoon has started...')
+            case the_others:
+                logging.info(the_others)
+
     def list_episodes(self) -> None:
         self.setup()
         table = Table(show_header=True, header_style="bold blue", box=None)
@@ -136,7 +147,6 @@ class Scraper(ABC, Generic[WebtoonId]):
             "avoid_sslerror",
             "params",
             "data",
-            # "headers",
             "cookies",
             "files",
             "auth",
@@ -292,20 +302,21 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         episode_no_list = self.episode_no_range_to_real_range(episode_no_range)
 
+        self.callback("download_episode_start")
         self.pbar = tqdm(episode_no_list)
         for episode_no in self.pbar:
             # if를 붙이는 게 self.INTERVAL~이 0인 경우 빨라짐.
             if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
                 time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
             self.download_episode(episode_no, webtoon_directory)
-        print(f'A webtoon {self.title} download ended.')
+        self.callback("download_episode_end")
 
         webtoon_directory = self.unshuffle_lezhin_webtoon(webtoon_directory)
 
         if merge_amount is not None:
-            print('Merging webtoon has started...')
+            self.callback("merge_webtoon_start")
             merge_webtoon(webtoon_directory, 5)
-            print('Merging webtoon ended.')
+            self.callback("merge_webtoon_end")
 
     def get_webtoon_directory_name(self) -> str:
         """
@@ -402,6 +413,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             webtoon_directory (Path): 썸네일을 저장할 디렉토리입니다.
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
+        self.callback("download_thubnail_start")
         thumbnail_data: str | tuple[bytes, str] = self.webtoon_thumbnail
         if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
             if file_extension:
@@ -419,6 +431,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         image_path = webtoon_directory / f'{self.get_safe_file_name(self.title)}.{image_extension}'
         image_path.write_bytes(image_raw)
+        self.callback("download_thubnail_end")
 
     @abstractmethod
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
@@ -426,10 +439,12 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     def setup(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
+        self.callback("setup_start")
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
         with suppress(UseFetchEpisode):  # 현재는 필요 없지만 혹시 모를 변화를 위해 남김.
             self.fetch_episode_informations(reload=reload)
+        self.callback("setup_end")
 
     @reload_manager
     @abstractmethod
