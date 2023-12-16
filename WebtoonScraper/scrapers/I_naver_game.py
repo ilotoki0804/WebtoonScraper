@@ -5,8 +5,6 @@ import contextlib
 from itertools import count
 import json
 
-from typing_extensions import override
-
 from .A_scraper import Scraper, reload_manager
 
 

@@ -12,7 +12,7 @@ import time
 from typing import Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
-from typing import overload, ClassVar
+from typing import ClassVar
 import logging
 import threading
 from contextlib import suppress

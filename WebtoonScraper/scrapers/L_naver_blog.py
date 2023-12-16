@@ -1,13 +1,8 @@
 '''Download Webtoons from Naver Blog.'''
 
 from __future__ import annotations
-from pathlib import Path
-from itertools import count
 import logging
-import time
-from typing import NamedTuple, TYPE_CHECKING, NoReturn
-
-from typing_extensions import override
+from typing import NamedTuple
 
 from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidWebtoonIdError, InvalidBlogIdError, InvalidCategoryNoError

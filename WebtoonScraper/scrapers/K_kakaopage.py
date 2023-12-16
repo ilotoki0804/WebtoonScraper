@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing_extensions import override
-
 from .A_scraper import Scraper, reload_manager
 from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 from ..exceptions import InvalidWebtoonIdError

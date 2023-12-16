@@ -10,7 +10,14 @@ import multiprocessing
 from tqdm import tqdm
 from PIL import Image
 
-from ..directory_merger import fast_check_container_state, check_filename_state, NORMAL_WEBTOON_DIRECTORY, webtoon_regexes, move_thumbnail_only, NORMAL_EPISODE_DIRECTORY
+from ..directory_merger import (
+    fast_check_container_state,
+    check_filename_state,
+    NORMAL_WEBTOON_DIRECTORY,
+    webtoon_regexes,
+    move_thumbnail_only,
+    NORMAL_EPISODE_DIRECTORY
+)
 from ..exceptions import DirectoryStateUnmatchedError
 
 

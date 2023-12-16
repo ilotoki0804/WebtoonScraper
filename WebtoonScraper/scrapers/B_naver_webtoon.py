@@ -5,8 +5,6 @@ from itertools import count
 from json.decoder import JSONDecodeError
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-from typing_extensions import override
-
 from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 

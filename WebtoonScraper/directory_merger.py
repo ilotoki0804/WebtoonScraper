@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 from typing import TypeAlias, Final
 
-from typing_extensions import Literal, NamedTuple
+from typing_extensions import Literal
 
 from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 

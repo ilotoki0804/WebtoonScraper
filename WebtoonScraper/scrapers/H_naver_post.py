@@ -1,15 +1,12 @@
 '''Download Webtoons from Naver Post.'''
 
 from __future__ import annotations
-from pathlib import Path
 from itertools import count
 import logging
-import time
 from typing import NamedTuple, TYPE_CHECKING
 
 import demjson3
 from bs4 import BeautifulSoup
-from typing_extensions import override
 
 from .A_scraper import Scraper, reload_manager
 

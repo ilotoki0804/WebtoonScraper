@@ -7,8 +7,6 @@ import time
 import logging
 from typing import TYPE_CHECKING
 
-from typing_extensions import override
-
 from .A_scraper import Scraper, reload_manager
 
 TitleId = int
