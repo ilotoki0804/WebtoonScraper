@@ -108,7 +108,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                 # 아마 episode_id에 webtoon_id가 잘못 들어가면 생기는 오류로 추정하지만
                 # 정확한 이유는 불명, 가끔씩 생기는 문제.
                 # 제시도로 상황이 그리 나아지지는 않음.
-                logging.warning(f'episode {episode_id} invalid. retrying...')
+                logging.warning(f'Data got from episode {episode_id} is invalid. retrying...')
             else:
                 break
         else:

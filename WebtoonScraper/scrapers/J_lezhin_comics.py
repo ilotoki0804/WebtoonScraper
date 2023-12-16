@@ -23,7 +23,10 @@ class LezhinComicsScraper(Scraper[str]):
     '''Scrape webtoons from Lezhin Comics.'''
     BASE_URL = 'https://www.lezhin.com/ko/comic'
     TEST_WEBTOON_ID = 'noway'
-    TEST_SHUFFLED_WEBTOON_ID: ClassVar[str] = 'brianoslab'
+    TEST_WEBTOON_IDS = (
+        'noway',  # general test
+        'brianoslab',  # shuffle test
+    )
     IS_CONNECTION_STABLE = True
     URL_REGEX = r'(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)'
 
@@ -35,7 +38,7 @@ class LezhinComicsScraper(Scraper[str]):
             "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
             # "Authorization": self.AUTHORIZATION,
             "Cache-Control": "no-cache",
-            # "Cookie": self.cookie,
+            "Cookie": "x-lz-locale=ko_KR",
             "Dnt": "1",
             "Referer": "https://www.lezhin.com/ko/comic/revatoon/x1",
             "Sec-Ch-Ua": '"Not.A/Brand";v="8", "Chromium";v="114", "Microsoft Edge";v="114"',
@@ -51,7 +54,6 @@ class LezhinComicsScraper(Scraper[str]):
             "X-Lz-Country": "kr",
             "X-Lz-Locale": "ko-KR",
         }
-        self.cookie: str = ''
         self.timeout = 30  # 일부 웹툰은 10초 이상이 걸릴 정도로 느리다 (gahu_r). 심지어 20초도 일부 연결은 실패할 정도로 느리다.
         self.authkey = authkey or ''
 
