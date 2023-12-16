@@ -60,7 +60,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             url = (f'{self.BASE_URL}/my/series/detail/more.nhn'
                    f'?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49'
                    f'&prevVolumeNo=&fromNo={i}&totalCount=68')
-            # print(url)
             response_text: str = self.requests.get(url).text
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요

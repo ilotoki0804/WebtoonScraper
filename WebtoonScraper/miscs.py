@@ -48,9 +48,7 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
 
     def set_value(self, value: ValueType, instance: UsingClass) -> None:
         try:
-            # print('trying set_value')
             setattr(instance, f'_{self.name}_value', value)
-            # print('set_value to', f'_{self.name}_value', 'succeed.')
         except AttributeError:
             logging.warning("Failed to set value to instance. Instance may be defined __slots__. "
                             f"Please delete it or add '_{self.name}_value' to your __slots__.")
@@ -64,8 +62,6 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
         raise AttributeError(f"AttributeError: '{cls.__name__}' object has no attribute '{self.name}'")
 
     def __set__(self, instance: UsingClass, new_value: ValueType) -> None:
-        # print('set', instance, new_value)
-
         old_value = self.get_value()
         if self.value_changing_callback is not None:
             new_value = self.value_changing_callback(instance, old_value, new_value, self.name)
@@ -75,12 +71,8 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
         self.set_value(new_value, instance)
 
     def __delete__(self, instance: UsingClass) -> None:
-        # print('delete', instance)
-
         with contextlib.suppress(AttributeError):
             delattr(instance, f'_{self.name}_value')
 
     def __set_name__(self, owner: type[UsingClass], name: str) -> None:
-        # print('set_name', owner, name)
-
         self.name = name

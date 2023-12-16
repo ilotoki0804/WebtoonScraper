@@ -68,7 +68,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             if prev_articleList == curr_articleList:
                 break
             for article in curr_articleList:
-                # subtitles[article["no"]] = article["subtitle"]
                 subtitles.append(article["subtitle"])
                 episode_ids.append(article["no"])
 

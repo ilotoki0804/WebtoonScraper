@@ -27,7 +27,7 @@ class WebtoonOriginalsScraper(Scraper[int]):
         title = response.soup_select_one('meta[property="og:title"]', no_empty_result=True).get('content')
         assert isinstance(title, str), f'Title is not string. webtoon_id: {self.webtoon_id}'
 
-        # # 자세한 건 잘 모르지만 네이버 오리지날은 webtoon thumbnail이 2개고 이 방식으로는 다른 형식의 thubnail을 이용할 수 있음.
+        # # 자세한 건 잘 모르겠지만 네이버 오리지날은 webtoon thumbnail이 2개고 이 방식으로는 다른 형식의 thubnail을 이용할 수 있음.
         # url = f'{self.BASE_URL}/rss?title_no={self.webtoon_id}'
         # webtoon_thumbnail = self.requests.get(url).soup_select_one('channel > image > url', no_empty_result=True).text
 

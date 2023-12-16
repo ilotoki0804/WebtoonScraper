@@ -1,5 +1,4 @@
 """Download webtoons automatiallly or easily"""
-# pylint: disable=logging-fstring-interpolation
 
 from __future__ import annotations
 import logging
@@ -101,7 +100,6 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
 
-    # results: list[tuple[WebtoonPlatforms, str]] = []
     results = [(platform, title) for platform, title in results_raw
                if title is not None]
 
