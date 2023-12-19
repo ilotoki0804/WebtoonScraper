@@ -1,6 +1,7 @@
 '''Download Webtoons from Naver Blog.'''
 
 from __future__ import annotations
+from itertools import count
 import logging
 from typing import NamedTuple
 
@@ -55,9 +56,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     def fetch_episode_informations(self, limit: int = 1000, *, reload: bool = False):
         blog_id, category_no = self.webtoon_id
 
-        url = f'{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount={limit}&page=1'
+        url = f'{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount=24&page={{i}}'
 
-        response = self.requests.get(url)
+        response = self.requests.get(url.format(i=1))
         if response.json()['isSuccess'] is False:
             raise InvalidBlogIdError("Invalid blog id. Maybe there's a typo or blog is closed.")
         if response.json()['result']['categoryName'] == '전체글':
@@ -72,10 +73,19 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         self.title: str = fetch_result['categoryName']
         self.webtoon_thumbnail: str = fetch_result['items'][0]['thumbnailUrl'] + '?type=ffn640_640'
 
+        items = fetch_result['items']
+        for i in count(1):
+            response = self.requests.get(url.format(i=i))
+
+            if current_items := response.json()['result']['items']:
+                items += current_items
+            else:
+                break
+
         self.episode_titles: list[str] = []
         self.episode_ids: list[int] = []
         self.episodes_image_urls: list[list[str]] = []
-        for episode in reversed(fetch_result['items']):
+        for episode in reversed(items):
             self.episode_titles.append(episode['titleWithInspectMessage'])
             self.episode_ids.append(episode['logNo'])
 
