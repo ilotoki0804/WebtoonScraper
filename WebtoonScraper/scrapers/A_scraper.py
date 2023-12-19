@@ -251,30 +251,36 @@ class Scraper(ABC, Generic[WebtoonId]):
         # 주의 episode_no_list는 0부터 시작합니다.
         episode_length = len(self.episode_ids)
 
-        if not episode_no_range:
+        if episode_no_range is None:
             return range(episode_length)
 
         if isinstance(episode_no_range, int):
             # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
             return (episode_no_range - 1,)
 
-        if not isinstance(episode_no_range, tuple):
-            raise TypeError(f'Unknown type for episode_no_range({type(episode_no_range)}), check it again.')
+        if isinstance(episode_no_range, tuple):
+            start, end = episode_no_range
 
-        start, end = episode_no_range
+            if start is None:
+                start = 1
+            if end is None:
+                end = episode_length
 
-        if start is None:
-            start = 1
-        if end is None:
-            end = episode_length
+            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            return range(start - 1, end)
 
-        # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-        return range(start - 1, end)
+        if isinstance(episode_no_range, slice):
+            return (i - 1 for i in range(1, episode_length + 1)[episode_no_range])
+
+        if isinstance(episode_no_range, Iterable):
+            return sorted(i - 1 for i in set(episode_no_range))
+
+        raise TypeError(f'Unknown type for episode_no_range({type(episode_no_range)}). Please check again.')
 
     def download_webtoon(
         self,
         episode_no_range: EpisodeNoRange = None,
-        merge_amount: int | None = None
+        merge_amount: int | None = None,
     ) -> None:
         """웹툰 다운로드의 주축이 되는 함수. 이 함수를 통해 웹툰을 다운로드합니다.
 

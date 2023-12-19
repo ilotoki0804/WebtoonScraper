@@ -4,12 +4,13 @@ from typing import (
     Any,
     Callable,
     TypeVar,
-    Generic
+    Generic,
+    Iterable,
 )
 import contextlib
 
 WebtoonId: TypeAlias = 'int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]'  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
-EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None'
+EpisodeNoRange: TypeAlias = 'tuple[int | None, int | None] | int | None | Iterable | slice'
 
 
 # CHANGE REPORTER
