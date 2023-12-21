@@ -58,13 +58,13 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         url = f'{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount=24&page={{i}}'
 
-        response = self.requests.get(url.format(i=1))
-        if response.json()['isSuccess'] is False:
+        response = self.requests.get(url.format(i=1)).json()
+        if response['isSuccess'] is False:
             raise InvalidBlogIdError("Invalid blog id. Maybe there's a typo or blog is closed.")
-        if response.json()['result']['categoryName'] == '전체글':
+        if response['result']['categoryName'] == '전체글':
             raise InvalidCategoryNoError("Invalid category number. Maybe there's a typo or category is deleted.")
 
-        fetch_result = response.json()['result']
+        fetch_result = response['result']
 
         if len(fetch_result['items']) == limit:
             logging.warning('It seems to go beyond limit. automatically increase limit.')
