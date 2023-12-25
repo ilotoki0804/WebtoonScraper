@@ -185,7 +185,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                 self.pbar.set_description(description)
                 return
 
-        print(description)
+        self.callback("downloading", description)
 
     @staticmethod
     def get_file_extension(filename_or_url: str) -> str | None:
