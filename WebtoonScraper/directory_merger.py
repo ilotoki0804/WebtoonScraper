@@ -497,62 +497,6 @@ def fast_check_container_state(directory: PathOrStr) -> ContainerStates:
     return NOT_MATCHED
 
 
-def detailed_check_directory_state(directory: PathOrStr) -> ContainerStates:
-    """
-    XXX 대신 fast_check_container_state를 사용하세요.
-    """
-    episodes_or_images: list[str] = os.listdir(directory)
-
-    if len(episodes_or_images) == 0:  # sourcery skip: simplify-len-comparison; 일관성을 위해 사용하지 않음.
-        logging.warning("It looks like the directory is empty. It cannot be something")
-        return NOT_MATCHED
-
-    if len(episodes_or_images) == 1:
-        # 1개일 경우 썸네일 스킵 기능('<=1'을 사용해 NOT_MATCHED로 나옴)으로 인해 fast_check_directory_state가 제대로 동작하지 않는데,
-        # 이때 check_filename_state를 사용하면 정확한 결과를 얻을 수 있다.
-        return FILE_TO_CONTAINER[check_filename_state(episodes_or_images[0])]
-
-    directory_states_dict: dict[FileStates, tuple[bool, int]] = {}
-
-    for state_name, regex in webtoon_regexes.items():
-        # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
-        number_of_images_NOT_matched = sum(
-            0 if regex.match(episode_or_image) else 1
-            for episode_or_image in episodes_or_images
-        )
-
-        # 썸네일은 일반적으로 매치되지 않기 때문에 1의 여지를 둔다.
-        # tuple의 0번째 값은 해당 state가 맞는지 여부이다.
-        directory_states_dict[state_name] = (number_of_images_NOT_matched <= 1, number_of_images_NOT_matched)
-
-    not_matched_state = sum(value[0] for value in directory_states_dict.values())
-
-    if not_matched_state == 0:
-        logging.warning('This directory is not any specific state. '
-                        "Probably the directory is not a webtoon directory. "
-                        "Or something went wrong when being processed.")
-
-    if not_matched_state == 1:
-        for state_name, (bool_state, int_state) in directory_states_dict.items():
-            if bool_state:
-                return FILE_TO_CONTAINER[state_name]
-
-    elif not_matched_state == 2:
-        detected_states = [state_name for state_name, (bool_state, int_state)
-                           in directory_states_dict.items() if bool_state]
-
-        logging.warning(f'This directory is either {detected_states[0]} and {detected_states[1]}. '
-                        "Probably there's a conflict. Please check your directory again.")
-
-    else:
-        # 참고: episodes_or_images의 길이가 0인 경우와 1인 경우는 이미 앞에서 다룸.
-        directory_states_concatenated = ", ".join(state_name for state_name, (bool_state, int_state)
-                                                  in directory_states_dict.items() if bool_state)
-        logging.warning(f'This directory is {directory_states_concatenated}. Please check your directory again.')
-
-    return NOT_MATCHED
-
-
 ############### RESTORE FUNCTIONALITY ###############
 
 

@@ -21,7 +21,6 @@ from WebtoonScraper.directory_merger import (
     ContainerStates,
     merge_webtoon_directory_to_directory,
     restore_webtoon_directory_to_directory,
-    detailed_check_directory_state,
     fast_check_container_state,
 )
 
@@ -188,7 +187,7 @@ CONTAINER_STATE_TO_DO_STATE: dict[ContainerStates, Literal['merge', 'restore']] 
 
 def get_state(source_directory: Path) -> ContainerStates:
     states: dict[Path, ContainerStates] = {
-        webtoon_directory: detailed_check_directory_state(webtoon_directory)
+        webtoon_directory: fast_check_container_state(webtoon_directory)
         for webtoon_directory in source_directory.iterdir()
     }
     all_unique_states = set(states.values())
@@ -244,7 +243,7 @@ def parse_merge(args: argparse.Namespace) -> None:
             args.action = get_string_todo(get_state(args.source_directory))
         else:
             args.action = get_string_todo(
-                detailed_check_directory_state(args.source_directory / args.webtoon_directory_name))
+                fast_check_container_state(args.source_directory / args.webtoon_directory_name))
 
     if args.action == 'merge' and args.merge_amount is None:
         raise ValueError('merge_amount is required. Use option `-m <int>` to specify merge amount.')
