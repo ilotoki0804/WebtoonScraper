@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-from typing import TypeAlias, Final
+from typing import Iterable, TypeAlias, Final
 
 from typing_extensions import Literal
 
@@ -339,7 +339,7 @@ def _move_folder_contents(
         shutil.move(source_image_path, target_image_path)
 
 
-def _get_merged_image_name(image_name, episode_name) -> str:
+def _get_merged_image_name(image_name: str, episode_name: str) -> str:
     """merged 상태의 image가 가져야 할 이름을 내놓습니다."""
     image_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_IMAGE].match(image_name)
     episode_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_name)
@@ -359,7 +359,7 @@ def _get_merged_image_name(image_name, episode_name) -> str:
     return f'{episode_no}.{image_no}. {episode_name}.{image_extension}'
 
 
-def _find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
+def _find_episode_nos_of_unified_images(image_names: Iterable[str]) -> set[int]:
     """Unified된 이미지들의 이름을 받아 거기 있는 episode_no를 뽑아냅니다."""
     unique_ids: set[int] = set()
     for image in image_names:
@@ -372,7 +372,7 @@ def _find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
     return unique_ids
 
 
-def _make_merged_directory_name(image_names: list[str]) -> str:
+def _make_merged_directory_name(image_names: Iterable[str]) -> str:
     """merged 상태의 directory가 가져야 할 이름을 내놓습니다."""
     episode_id = _find_episode_nos_of_unified_images(image_names)
     return f'{min(episode_id):04d}~{max(episode_id):04d}'
