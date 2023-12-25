@@ -122,7 +122,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             case "merge_webtoon_start":
                 print('Merging webtoon has started...')
             case the_others:
-                logging.info(the_others)
+                logging.info(f"WebtoonScraper status: {the_others}")
 
     def list_episodes(self) -> None:
         self.setup()
