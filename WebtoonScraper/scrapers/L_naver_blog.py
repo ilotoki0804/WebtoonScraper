@@ -74,7 +74,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         self.webtoon_thumbnail: str = fetch_result['items'][0]['thumbnailUrl'] + '?type=ffn640_640'
 
         items = fetch_result['items']
-        for i in count(1):
+        for i in count(2):
             response = self.requests.get(url.format(i=i))
 
             if current_items := response.json()['result']['items']:
