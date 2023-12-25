@@ -95,6 +95,8 @@ python -m WebtoonScraper -h
 
 이 뒤부터는 `webtoon` 명령어를 사용합니다. 만약 `'webtoon'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다.`라는 오류가 출력(윈도우 기준)된다면 모든 `webtoon`를 `python -m WebtoonScraper`로 바꿔서 진행하세요.
 
+##### download 커맨드
+
 'download' command를 이용하면 명령어를 웹툰을 다운로드할 수 있습니다.
 
 ```console
@@ -109,7 +111,7 @@ webtoon download 766648
 webtoon download "614921,19803452"   # 가능
 webtoon download "614921, 19803452"  # 가능
 webtoon download 614921,19803452     # 가능
-webtoon download 614921, 19803452    # 불가능
+webtoon download 614921, 19803452    # XXX 불가능
 ```
 
 웹툰으로 다운로드받을 플랫폼을 직접 설정할 수도 있습니다. 설정하지 않아도 정상적으로 작동되지만 플랫폼을 설정하면 더 빠르고 추가적인 상호작용 없이 다운로드받을 수 있습니다. 이는 `-p` 또는 `--platform`을 사용하시면 됩니다.
@@ -152,6 +154,58 @@ webtoon download 766648 -r 13,  # 13화부터 끝까지 다운로드
 webtoon download 766648 -m 5  # 5화씩 묶기
 webtoon download 766648 --list-episodes  # 모든 에피소드 정보 보기
 webtoon download 766648 -p naver_webtoon -r 4, -m 5 -d .  # 여러 옵션 섞기
+```
+
+##### merge 커맨드
+
+웹툰을 합치거나 되돌리고 싶을 때 merge 커맨드를 사용할 수 있습니다.
+예를 들어 다음과 같이 커맨드를 작성하면
+
+```console
+webtoon merge "킬더킹(670145)" 
+```
+
+"webtoon/킬더킹(670145)"에 있는 만화가 만약 이미 합쳐진 웹툰이라면 복구되고, 기본 상태 웹툰이라면 합쳐집니다.
+
+만약 webtoon이 아닌 다른 부모 디렉토리에 있다면(예: 웹툰이 `./hello/world/킬더킹(670145)`에 있다면) 다음과 같은 명령어를 사용할 수 있습니다.
+
+```console
+webtoon merge "킬더킹(670145)" -r hello/world
+```
+
+만약 웹툰 디렉토리가 현재 디렉토리에 있다면(예: 웹툰이 `./킬더킹(670145)`에 있다면) 다음과 같은 명령어를 사용할 수 있습니다.
+
+```console
+webtoon merge "킬더킹(670145)" -r .
+```
+
+전체 설명:
+
+```console
+usage: Download or merge webtoons in CLI merge [-h] [--all]
+                                               [-a [a]uto|[m]erge|[r]estore]
+                                               [-m merge_amount]
+                                               [-s source_parent_directory]
+                                               [-t target_parent_directory] [--list]    
+                                               [webtoon_directory_name]
+
+positional arguments:
+
+options:
+  -h, --help            show this help message and exit
+  --all                 Merge/Restore all webtoons in root directory. If state of
+                        webtoons not equal, you cannot use auto action.
+  -a [a]uto|[m]erge|[r]estore, --action [a]uto|[m]erge|[r]estore
+                        Merge/Restore. If this is auto, it'll flip state(merge >
+                        restore, restore > merge).
+  -m merge_amount, --merge-amount merge_amount
+                        Merge amount when merge.
+  -s source_parent_directory, --source-directory source_parent_directory, --source-parent-directory source_parent_directory     
+                        The directory that the folders of webtoons are located.
+  -t target_parent_directory, --target-directory target_parent_directory, --target-parent-directory target_parent_directory     
+                        The directory that the result of merge/restore will be
+                        located. Defaults to soure directory itself.
+  --list                List all directories and states.
 ```
 
 ### `WebtoonScraper.webtoon` 모듈로 웹툰 다운로드하기
@@ -338,6 +392,8 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 1. 'webtoon' 폴더에 있던 모든 웹툰이 웹툰을 처음 다운로드했던 상태로 되돌아갑니다.
 
 ## Relese Note
+
+2.3.2 (Dec 10, 2023): CLI에 merge 명령 추가, restore_webtoon_directory_to_directory 추가, pyproject.toml에 프로젝트 메타데이터 추가, Hits 추가
 
 2.3.1 (Dec 09, 2023): 네이버 포스트 & 네이버 블로그 버그 수정, resoup 사용, pyfilename 사용, best_challenge 관련 모듈 수정 및 seamless_redirect 추가, download_webtoons_getting_paid 관련 버그 수정, dm.select로 이름 변경 및 리팩토링, .gitignore 변경, 버전에 대한 경고 메시지
 
