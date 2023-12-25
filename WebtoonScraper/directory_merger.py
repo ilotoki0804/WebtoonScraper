@@ -381,6 +381,17 @@ def make_merged_directory_name(image_names: list[str]) -> str:
 ############### CHECKING FUNCTIONALITY ###############
 
 
+def _iterdir_seperating_directories_and_files(directory: PathOrStr) -> tuple[list[Path], list[Path]]:
+    directories: list[Path] = []
+    files: list[Path] = []
+    for path in Path(directory).iterdir():
+        if path.is_dir():
+            directories.append(path)
+        else:
+            files.append(path)
+    return directories, files
+
+
 def check_filename_state(file_or_directory_name: str) -> FileStates:
     """한 파일(혹은 디렉토리) 이름의 상태를 확인합니다."""
     # sourcery skip: use-next; for simplicity and extensibility, decide not to apply 'use-next'
@@ -391,44 +402,27 @@ def check_filename_state(file_or_directory_name: str) -> FileStates:
 
 
 def fast_check_container_state(directory: PathOrStr) -> ContainerStates:
-    """
-    detailed_check_directory_state는 사용자용으로, 정확한 오류 메시지와 확인을 목적으로 하지만,
-    이 함수는 프로그램 내에서 assertion과 빠른 확인을 목적으로 합니다.
-    따라서 episodes_or_images의 길이가 0이나 1일 때를 제외하고는 warning을 제공하지 않습니다.
-    주의: fast_check_directory_state를 수정할 때는 detailed_check_directory_state도 수정해야 합니다.
-    """
-    episodes_or_images: list[str] = os.listdir(directory)
+    """해당 path에 있는 디렉토리의 상태를 확인합니다."""
+    directories, _ = _iterdir_seperating_directories_and_files(directory)
 
-    if len(episodes_or_images) == 0:  # sourcery skip: simplify-len-comparison; 일관성을 위해 사용하지 않음.
+    if len(directories) == 0:  # sourcery skip: simplify-len-comparison; 일관성을 위해 사용하지 않음.
         logging.warning("It looks like the directory is empty. It cannot be something")
         return NOT_MATCHED
 
-    if len(episodes_or_images) == 1:
-        # 1개일 경우 썸네일 스킵 기능('<=1'을 사용해 NOT_MATCHED로 나옴)으로 인해 fast_check_directory_state가 제대로 동작하지 않는데,
-        # 이때 check_filename_state를 사용하면 정확한 결과를 얻을 수 있다.
-        return FILE_TO_CONTAINER[check_filename_state(episodes_or_images[0])]
-
     for state_name, regex in webtoon_regexes.items():
         # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
-        number_of_images_NOT_matched = sum(
-            0 if regex.match(episode_or_image) else 1
-            for episode_or_image in episodes_or_images
-        )
-
-        logging.debug(number_of_images_NOT_matched)
-        # 썸네일은 일반적으로 매치되지 않기 때문에 1의 여지를 둔다.
-        if number_of_images_NOT_matched <= 1:
-            return FILE_TO_CONTAINER[state_name]
+        if not sum(
+            not regex.match(episode_or_image.name)
+            for episode_or_image in directories
+        ):
+            return FILE_TO_CONTAINER.get(state_name, NOT_MATCHED)
 
     return NOT_MATCHED
 
 
 def detailed_check_directory_state(directory: PathOrStr) -> ContainerStates:
     """
-    디렉토리가 merge된 상태인지 기본 상태(default_state)인지, unified된 상태인지, 아니면 일치하는 게 없는지 확인합니다.
-    사용자용으로, 상세한 경고 메시지와 정확한 체크를 제공합니다.
-    일반적으로는 fast_check_directory_state만으로도 충분하며, 따라서 프로그램 내에서는 fast만 사용합니다.
-    주의: detailed_check_directory_state를 수정할 때는 fast_check_directory_state도 수정해야 합니다.
+    XXX 대신 fast_check_container_state를 사용하세요.
     """
     episodes_or_images: list[str] = os.listdir(directory)
 
