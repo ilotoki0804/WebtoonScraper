@@ -100,7 +100,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         이 함수를 override할 때는 super().__init__(...)을 구현 "앞에" 위치하세요.
         또한 timeout, attempts, cookie, headers중에 하나라도 정의한다면 self.update_requests()를 끝에 꼭 붙여야 합니다.
         """
-        self.attempts: int = 2 if self.IS_CONNECTION_STABLE else 4
+        self.attempts: int = 3
         self.timeout: int = 10
         self.headers: dict[str, str] = DEFAULT_HEADERS
         self.cookie: str
