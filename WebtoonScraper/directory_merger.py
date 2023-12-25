@@ -176,6 +176,83 @@ class DirectoryMerger:
                 logging.warning(f'Skip {webtoon_directory} directory. It looks not available to restore.')
 
 
+def _get_episode_no(directory_name: str) -> int:
+    directory_name_matched = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(directory_name)
+    assert directory_name_matched is not None, f"Directory state is invalid. {directory_name = }"
+    return int(directory_name_matched.group("episode_no"))
+
+
+def fast_merge_webtoon(
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path,
+    merge_amount: int,
+    manual_directory_state: ContainerStates | None = None,
+    merge_last_bundle: bool = True,
+):
+    """
+    merge_webtoon이나 merge_webtoon_directory_to_directory와 동일하지만 중요한 차이점이 몇 가지 있습니다.
+    1. 같은 폴더로 이동하는 경우와 아닌 경우를 구분하지 않습니다.
+    1. 파일을 단 한 번 이동합니다.
+    1. 폴더가 아닌 파일은 merge를 방해하지 않으며 잘 integrate됩니다.
+    
+    Args:
+        source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
+        target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다.
+        merge_amount: 한 merged episode에 들어갈 에피소드의 개수입니다.
+        manual_directory_state: \
+            디렉토리 상태는 기본적으로 자동으로 감지되도록 되어 있습니다. \
+            그러나 자동 감지 결과를 무시하고 직접 디렉토리 상태를 설정하고 싶을 경우 이 인자를 통해 \
+            자신이 원하는 디렉토리 상태를 설정할 수 있습니다. 권장되지는 않습니다.
+        merge_last_bundle: \
+            마지막 merged episode의 크기는 merge amount에 비해 작을 수 있습니다. \
+            이 인자가 참일 경우 마지막 merged episode를 그 전의 merged episode와 통합합니다.
+    """
+    directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
+    if directory_state in {MERGED_WEBTOON_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY_CONTAINER}:
+        raise DirectoryStateUnmatchedError(
+            f'State of directory is {directory_state}, which cannot be merged.'
+            + (' Maybe what you need was restore_webtoon.' if directory_state == MERGED_WEBTOON_DIRECTORY else '')
+            + f'\nsorce webtoon directory: {source_webtoon_directory}'
+        )
+
+    # source_webtoon_directory == target_webtoon_directory인 경우 때문에 exist_ok는 True여야 한다.
+    target_webtoon_directory.mkdir(parents=True, exist_ok=True)
+
+    directories, files = _iterdir_seperating_directories_and_files(source_webtoon_directory)
+
+    # 디렉토리 그룹핑
+    grouped_directories: defaultdict[int, list[Path]] = defaultdict(list)
+    for directory in directories:
+        episode_no = _get_episode_no(directory.name)
+        grouped_directories[episode_no // merge_amount].append(directory)
+
+    # 마지막 번들 묶기
+    last_bundle = max(grouped_directories)
+    if last_bundle < merge_amount and merge_last_bundle:
+        last_bundle_items = grouped_directories.pop(last_bundle)
+        grouped_directories[max(grouped_directories)] += last_bundle_items
+
+    # 그루핑 끝난 디렉토리들 실제로 옮김
+    for directories in grouped_directories.values():
+        # 디렉토리명 만듦
+        episode_no_range = {
+            _get_episode_no(directory.name) for directory in directories
+        }
+        new_directory_name = f'{min(episode_no_range):04d}~{max(episode_no_range):04d}'
+        target_episode_directory = target_webtoon_directory / new_directory_name
+        target_episode_directory.mkdir()
+
+        for directory in directories:
+            for image_name in os.listdir(directory):
+                merged_name = _get_merged_image_name(image_name, directory.name)
+                os.renames(directory / image_name, target_episode_directory / merged_name)
+
+    # 남은 폴더가 아닌 파일들 옮기기
+    if source_webtoon_directory != target_webtoon_directory and files:
+        for file in files:
+            os.renames(file, target_webtoon_directory / file.name)
+
+
 def merge_webtoon(
     webtoon_directory: Path,
     merge_amount: int,
