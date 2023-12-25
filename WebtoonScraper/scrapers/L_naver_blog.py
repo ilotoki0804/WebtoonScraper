@@ -1,8 +1,10 @@
 '''Download Webtoons from Naver Blog.'''
 
 from __future__ import annotations
+from contextlib import suppress
 from itertools import count
 import logging
+import re
 from typing import NamedTuple
 
 from .A_scraper import Scraper, reload_manager
@@ -82,6 +84,13 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             else:
                 break
 
+        image_full_name_regex = re.compile(r"/(\d+)[.]\w{3,}[?]type=w800$", re.VERBOSE)
+        def get_integer_picture_name(image_full_name: str) -> int:  # noqa: E306
+            result = image_full_name_regex.search(image_full_name)
+            if result is None:
+                raise ValueError
+            return int(result.group(1))
+
         self.episode_titles: list[str] = []
         self.episode_ids: list[int] = []
         self.episodes_image_urls: list[list[str]] = []
@@ -106,6 +115,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             #             or thumbnail['vrthumbnail']):
             #         logging.warning(f'Unexpected information detected: {thumbnail}')
             #     one_episode_image_urls.append(thumbnail['encodedThumbnailUrl'] + '?type=w800')
+
+            with suppress(ValueError):
+                one_episode_image_urls = sorted(one_episode_image_urls, key=get_integer_picture_name)
 
             self.episodes_image_urls.append(one_episode_image_urls)
 
