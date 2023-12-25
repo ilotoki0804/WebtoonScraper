@@ -194,7 +194,7 @@ def fast_merge_webtoon(
     1. 같은 폴더로 이동하는 경우와 아닌 경우를 구분하지 않습니다.
     1. 파일을 단 한 번 이동합니다.
     1. 폴더가 아닌 파일은 merge를 방해하지 않으며 잘 integrate됩니다.
-    
+
     Args:
         source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
         target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다.
