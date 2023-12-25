@@ -289,7 +289,6 @@ def main(argv=None) -> Literal[0, 1]:
             parse_merge(args)
         else:
             raise NotImplementedError(f'Subparser {args.subparser_name} is not implemented.')
-        parse_download(args)
     except Exception as e:
         if SHOW_ERROR:
             raise
