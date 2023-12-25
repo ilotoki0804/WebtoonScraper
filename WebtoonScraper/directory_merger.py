@@ -556,6 +556,46 @@ def detailed_check_directory_state(directory: PathOrStr) -> ContainerStates:
 ############### RESTORE FUNCTIONALITY ###############
 
 
+def _get_directory_and_image_name_from_merged_image_name(merged_image_name: str):
+    image_info = webtoon_regexes[MERGED_IMAGE].match(merged_image_name)
+    assert image_info, "image name is not merged image."
+    episode_no = image_info.group('episode_no')
+    image_no = image_info.group('image_no')
+    episode_name = image_info.group('episode_name')
+    image_extension = image_info.group('extension')
+
+    new_episode_directory_name = f'{episode_no}. {episode_name}'
+    new_image_name = f'{image_no}.{image_extension}'
+    return new_episode_directory_name, new_image_name
+
+
+def fast_restore_webtoon(
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path,
+    manual_directory_state: ContainerStates | None = None,
+) -> None:
+    """Merged된 웹툰 폴더의 상태를 되돌립니다."""
+    directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
+    if directory_state != MERGED_WEBTOON_DIRECTORY:
+        raise DirectoryStateUnmatchedError(
+            f'State of directory is {directory_state}, which cannot be restored.'
+            + (' Maybe what you need was merge_webtoon.' if directory_state == NORMAL_WEBTOON_DIRECTORY else '')
+            + f'\nsorce webtoon directory: {source_webtoon_directory}'
+        )
+
+    directories, files = _iterdir_seperating_directories_and_files(source_webtoon_directory)
+    for directory in directories:
+        for image_name in os.listdir(directory):
+            target_episode_directory_name, target_image_name = _get_directory_and_image_name_from_merged_image_name(image_name)
+            target_episode_directory = target_webtoon_directory / target_episode_directory_name
+            os.renames(directory / image_name, target_episode_directory / target_image_name)
+
+    # 남은 폴더가 아닌 파일들 옮기기
+    if source_webtoon_directory != target_webtoon_directory and files:
+        for file in files:
+            os.renames(file, target_webtoon_directory / file.name)
+
+
 def restore_webtoon_directory_to_directory(
     source_webtoon_directory: Path,
     target_webtoon_directory: Path,
