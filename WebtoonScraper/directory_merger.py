@@ -188,7 +188,7 @@ def fast_merge_webtoon(
     merge_amount: int,
     manual_directory_state: ContainerStates | None = None,
     merge_last_bundle: bool = True,
-):
+) -> None:
     """
     merge_webtoon이나 merge_webtoon_directory_to_directory와 동일하지만 중요한 차이점이 몇 가지 있습니다.
     1. 같은 폴더로 이동하는 경우와 아닌 경우를 구분하지 않습니다.
@@ -208,7 +208,7 @@ def fast_merge_webtoon(
             이 인자가 참일 경우 마지막 merged episode를 그 전의 merged episode와 통합합니다.
     """
     directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
-    if directory_state in {MERGED_WEBTOON_DIRECTORY, NOT_MATCHED, WEBTOON_DIRECTORY_CONTAINER}:
+    if directory_state != NORMAL_WEBTOON_DIRECTORY:
         raise DirectoryStateUnmatchedError(
             f'State of directory is {directory_state}, which cannot be merged.'
             + (' Maybe what you need was restore_webtoon.' if directory_state == MERGED_WEBTOON_DIRECTORY else '')
