@@ -43,10 +43,10 @@ def reload_manager(f):
         except AttributeError:
             self._return_cache = {}
 
-        if self._return_cache.get(f, False):
+        if f in self._return_cache:
             if not reload:
-                logging.info(f'{f} is already loaded, so skipping loading. '
-                             'In order to reload, set parameter by reload=True.')
+                logging.debug(f'{f} is already loaded, so skipping loading. '
+                              'In order to reload, set parameter by reload=True.')
                 return self._return_cache[f]
             logging.warning('Refreshing webtoon_information')
 
