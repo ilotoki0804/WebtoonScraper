@@ -231,7 +231,7 @@ def merge_webtoon_directory_to_directory(
     move_thumbnail_only(source_webtoon_directory, target_webtoon_directory)
 
     if directory_state == NORMAL_WEBTOON_DIRECTORY:
-        all_images_in_subdirectories_to_the_source_directory(source_webtoon_directory)
+        _all_images_in_subdirectories_to_the_source_directory(source_webtoon_directory)
     elif directory_state == MERGED_WEBTOON_DIRECTORY:
         logging.info('Directory seems already unified, so skipping unifing.')
 
@@ -248,7 +248,7 @@ def merge_webtoon_directory_to_directory(
     _, last_images = merged_images_name_list[-1]
     if (
         merge_last_bundle
-        and len(find_episode_nos_of_unified_images(last_images)) < merge_amount
+        and len(_find_episode_nos_of_unified_images(last_images)) < merge_amount
         and len(merged_images_name_list) >= 2
     ):
         merged_second_last_list = merged_images_name_list[-2][1]
@@ -256,7 +256,7 @@ def merge_webtoon_directory_to_directory(
 
     # 폴더에 넣는 과정
     for _, images in merged_images_name_list:
-        alt_directory_name = make_merged_directory_name(images)
+        alt_directory_name = _make_merged_directory_name(images)
         images_directory = target_webtoon_directory / alt_directory_name
         images_directory.mkdir(parents=True, exist_ok=True)
         for image in images:
@@ -311,16 +311,16 @@ def move_thumbnail_only(
                 return
 
 
-def all_images_in_subdirectories_to_the_source_directory(source_directory: Path, rename=True) -> None:
+def _all_images_in_subdirectories_to_the_source_directory(source_directory: Path, rename=True) -> None:
     """모든 하위 디렉토리에 있는 이미지를 (rename이 True라면 이름 변경과 함께) 모두 소스 디렉토리로 옮깁니다. (rename이 True이면 Unifing이라고도 부릅니다.)"""
     episodes = os.listdir(source_directory)
     for episode in episodes:
         sub_episode_directory = source_directory / episode
-        move_folder_contents(sub_episode_directory, source_directory, episode, rename=rename)
+        _move_folder_contents(sub_episode_directory, source_directory, episode, rename=rename)
         os.rmdir(sub_episode_directory)
 
 
-def move_folder_contents(
+def _move_folder_contents(
     source_directory: Path,
     target_directory: Path,
     episode_name: str | None = None,
@@ -335,11 +335,11 @@ def move_folder_contents(
     for image in images:
         source_image_path = source_directory / image
         target_image_path = target_directory / (
-            get_merged_image_name(image, episode_name) if rename else image)
+            _get_merged_image_name(image, episode_name) if rename else image)
         shutil.move(source_image_path, target_image_path)
 
 
-def get_merged_image_name(image_name, episode_name) -> str:
+def _get_merged_image_name(image_name, episode_name) -> str:
     """merged 상태의 image가 가져야 할 이름을 내놓습니다."""
     image_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_IMAGE].match(image_name)
     episode_name_processed: re.Match[str] | None = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_name)
@@ -359,7 +359,7 @@ def get_merged_image_name(image_name, episode_name) -> str:
     return f'{episode_no}.{image_no}. {episode_name}.{image_extension}'
 
 
-def find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
+def _find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
     """Unified된 이미지들의 이름을 받아 거기 있는 episode_no를 뽑아냅니다."""
     unique_ids: set[int] = set()
     for image in image_names:
@@ -372,9 +372,9 @@ def find_episode_nos_of_unified_images(image_names: list[str]) -> set[int]:
     return unique_ids
 
 
-def make_merged_directory_name(image_names: list[str]) -> str:
+def _make_merged_directory_name(image_names: list[str]) -> str:
     """merged 상태의 directory가 가져야 할 이름을 내놓습니다."""
-    episode_id = find_episode_nos_of_unified_images(image_names)
+    episode_id = _find_episode_nos_of_unified_images(image_names)
     return f'{min(episode_id):04d}~{max(episode_id):04d}'
 
 
@@ -504,7 +504,7 @@ def restore_webtoon(directory: Path, manual_directory_state: ContainerStates | N
     if manual_directory_state is None:
         directory_state = fast_check_container_state(directory)
         if directory_state == MERGED_WEBTOON_DIRECTORY:
-            all_images_in_subdirectories_to_the_source_directory(directory, rename=False)
+            _all_images_in_subdirectories_to_the_source_directory(directory, rename=False)
         elif directory_state == UNIFIED_WEBTOON_DIRECTORY:
             ...  # 나중의 코드 처리를 위한 빈칸
         else:
