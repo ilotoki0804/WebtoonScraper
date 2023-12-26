@@ -1,4 +1,4 @@
-# 특정 웹툰 다운로드하기
+# 특정 플랫폼 다운로드하기
 
 ## 버프툰 다운로드하기
 
@@ -119,9 +119,9 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
 
-authkey = ''
-scraper = LezhinComicsScraper('dr_hearthstone', authkey=authkey)
-scraper.get_paid_episode = False
+authkey = 'Bearer ...'
+scraper = LezhinComicsScraper('gahu_r', authkey=authkey)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+scraper.get_paid_episode = True
 scraper.download_webtoon()
 ```
 
