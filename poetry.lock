@@ -357,13 +357,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "resoup"
-version = "0.5.1"
+version = "0.5.2"
 description = "Various convenient features related to requests."
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "resoup-0.5.1-py3-none-any.whl", hash = "sha256:46e7d6007218f856b9e2d1ca3e46a61dba3e2674533ff9413189d82f38289721"},
-    {file = "resoup-0.5.1.tar.gz", hash = "sha256:2605602cd0c4b76a7d5223bfa1408fac316ce455b0dbb2dbc0cd06b0ae843046"},
+    {file = "resoup-0.5.2-py3-none-any.whl", hash = "sha256:e9cb4ab4161369be238f37d0f1c4d525b5c0eba47c423a573ec6166644d3dbe4"},
+    {file = "resoup-0.5.2.tar.gz", hash = "sha256:1e1c2258fe172501fae77b27557c77c8165475aa2725c94c0f73ff131c67d88a"},
 ]
 
 [package.dependencies]
@@ -434,13 +434,13 @@ telegram = ["requests"]
 
 [[package]]
 name = "typing-extensions"
-version = "4.8.0"
+version = "4.9.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.8.0-py3-none-any.whl", hash = "sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0"},
-    {file = "typing_extensions-4.8.0.tar.gz", hash = "sha256:df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef"},
+    {file = "typing_extensions-4.9.0-py3-none-any.whl", hash = "sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd"},
+    {file = "typing_extensions-4.9.0.tar.gz", hash = "sha256:23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783"},
 ]
 
 [[package]]
@@ -462,4 +462,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "29f0c10deb20916ba7eeef9e92b6266885c8881476f8a3c358348fd7d8659757"
+content-hash = "05c96d8c9a8b2e5ed7f26cd062138420a8d8809060f44675912305126b0f71bd"
