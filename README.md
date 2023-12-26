@@ -39,7 +39,7 @@
 
 ## 네이버 웹툰, 베스트 도전만화, 웹툰 오리지널, 웹툰 캔버스, 네이버 게임, 카카오페이지 다운로드하기
 
-버프툰과 네이버 포스트, 레진코믹스, 네이버 블로그는 [이 문서](docs/specific_webtoon_download.md)를 참고하세요.
+버프툰과 네이버 포스트, 레진코믹스, 네이버 블로그는 [이 문서](docs/specific_platform_download.md)를 참고하세요.
 
 ### 웹툰 ID 복사
 
@@ -289,23 +289,23 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 
 ## 버프툰 다운로드하기
 
-버프툰 다운로드 방법은 [이 문서](docs/specific_webtoon_download.md#버프툰-다운로드하기)를 참고하세요.
+버프툰 다운로드 방법은 [이 문서](docs/specific_platform_download.md#버프툰-다운로드하기)를 참고하세요.
 
 ## 네이버 포스트 다운로드하기
 
-네이버 포스트 다운로드 방법은 [이 문서](docs/specific_webtoon_download.md#네이버-포스트-다운로드하기)를 참고하세요.
+네이버 포스트 다운로드 방법은 [이 문서](docs/specific_platform_download.md#네이버-포스트-다운로드하기)를 참고하세요.
 
 ## 레진코믹스 다운로드하기
 
-레진코믹스 다운로드 방법은 [이 문서](docs/specific_webtoon_download.md#레진코믹스-다운로드하기)를 참고하세요.
+레진코믹스 다운로드 방법은 [이 문서](docs/specific_platform_download.md#레진코믹스-다운로드하기)를 참고하세요.
 
 ## 네이버 블로그 다운로드하기
 
-네이버 블로그 다운로드 방법은 [이 문서](docs/specific_webtoon_download.md#네이버-블로그-다운로드하기)를 참고하세요.
+네이버 블로그 다운로드 방법은 [이 문서](docs/specific_platform_download.md#네이버-블로그-다운로드하기)를 참고하세요.
 
 ## 티스토리 다운로드하기
 
-티스토리 다운로드 방법은 [이 문서](docs/specific_webtoon_download.md#티스토리-다운로드하기)를 참고하세요.
+티스토리 다운로드 방법은 [이 문서](docs/specific_platform_download.md#티스토리-다운로드하기)를 참고하세요.
 
 ## 이 라이브러리가 다운로드 가능한 그리고 불가능한 웹툰 회차/웹툰의 종류
 
