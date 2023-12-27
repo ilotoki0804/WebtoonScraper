@@ -393,6 +393,8 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 
 ## Relese Note
 
+2.3.3 (Dec 27, 2023): directory_merger 관련 코드 개선 및 기타 코드 개선
+
 2.3.2 (Dec 10, 2023): CLI에 merge 명령 추가, restore_webtoon_directory_to_directory 추가, pyproject.toml에 프로젝트 메타데이터 추가, Hits 추가, 네이버 블로그 관련 버그 수정, callback 추가, EpisodeNoRange에서 slice와 iterable도 받도록 허용, webtoon CLI 추가
 
 2.3.1 (Dec 09, 2023): 네이버 포스트 & 네이버 블로그 버그 수정, resoup 사용, pyfilename 사용, best_challenge 관련 모듈 수정 및 seamless_redirect 추가, download_webtoons_getting_paid 관련 버그 수정, dm.select로 이름 변경 및 리팩토링, .gitignore 변경, 버전에 대한 경고 메시지
