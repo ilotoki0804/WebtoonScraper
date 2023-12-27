@@ -47,7 +47,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 'WEBTOON': 'Naver Webtoon',
                 'BEST_CHALLENGE': 'Best Challenge',
                 'CHALLENGE': 'Challenge',
-            }.get(webtoon_type, '!!INVALID WEBTOON TYPE. PLEASE CONTACT DEVELOPER!!')
+            }.get(webtoon_type, '(Unknown)')
             raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
     @reload_manager
@@ -160,4 +160,4 @@ class NaverWebtoonScraper(NaverWebtoonSpecificScraper, BestChallengeSpecificScra
             case 'CHALLENGE':
                 return ChallengeSpecificScraper(*args, **kwargs)
             case _:
-                raise ValueError('!!INVALID WEBTOON TYPE. PLEASE CONTACT DEVELOPER!!')
+                raise ValueError('Unexpacted webtoon type. Please contect developer.')
