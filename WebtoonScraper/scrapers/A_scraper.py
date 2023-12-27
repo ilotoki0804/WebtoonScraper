@@ -125,7 +125,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                 logging.info(f"WebtoonScraper status: {the_others}")
 
     def list_episodes(self) -> None:
-        self.setup()
+        self.fetch_all()
         table = Table(show_header=True, header_style="bold blue", box=None)
         table.add_column("Episode number [dim](ID)[/dim]", width=12)
         table.add_column("Episode Title", style='bold')
@@ -296,7 +296,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                 int일 경우: 한 회차만 다운로드 받습니다.
             merge_amount: 웹툰을 모두 다운로드 받은 뒤 웹툰을 묶습니다. None(기본값)이라면 웹툰을 묶지 않습니다.
         """
-        self.setup()
+        self.fetch_all()
 
         webtoon_directory_name = self.get_webtoon_directory_name()
         webtoon_directory = self.base_directory / webtoon_directory_name
@@ -442,7 +442,7 @@ class Scraper(ABC, Generic[WebtoonId]):
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         """해당 회차를 구성하는 이미지들을 불러옵니다."""
 
-    def setup(self, reload: bool = False) -> None:
+    def fetch_all(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
         self.callback("setup_start")
         with suppress(UseFetchEpisode):
