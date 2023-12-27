@@ -82,13 +82,15 @@ def case_insensitive(string: str) -> str:
     return string.lower()
 
 
-parser = argparse.ArgumentParser(prog='WebtoonScraper', usage='Download or merge webtoons in CLI', description='Download webtoons with ease!')
+parser = argparse.ArgumentParser(
+    prog='WebtoonScraper',
+    usage='Download or merge webtoons in CLI',
+    description='Download webtoons with ease!'
+)
 parser.add_argument('--mock', action='store_true',
-                    help='No actual download.')
+                    help='No actual action.')
 parser.add_argument('--version', action='version', version=f'WebtoonScraper {__version__} of Python {sys.version}')
-subparsers = parser.add_subparsers(title='Commands',
-                                   # description='valid commands',
-                                   help='Choose command you want. Currently download is only valid option.')
+subparsers = parser.add_subparsers(title='Commands', help='Choose command you want.')
 
 # 'download' subparsers
 download_subparser = subparsers.add_parser('download', help='Download webtoons.')
@@ -100,9 +102,6 @@ download_subparser.add_argument('webtoon_id', type=str_to_webtoon_id, metavar='w
                                 )
 download_subparser.add_argument('-p', '--platform', type=str, metavar='webtoon_platform', choices=webtoon.PLATFORMS,
                                 help="Webtoon platform to download. No need to specify if you don't want to. "
-                                     # "You should not specify if you want to download webtoons from various platform. "
-                                     # "Platform name is full string. For example, Naver Webtoon is 'naver_webtoon', Lezhin is 'lezhin'. "
-                                     # "Type --help to see all of platform strings."
                                      f"All choices: {', '.join(webtoon.PLATFORMS)}"
                                 )
 download_subparser.add_argument('-m', '--merge-amount', type=int, metavar='merge_amount',
@@ -289,9 +288,9 @@ def main(argv=None) -> Literal[0, 1]:
         else:
             raise NotImplementedError(f'Subparser {args.subparser_name} is not implemented.')
     except Exception as e:
-        if SHOW_ERROR:
-            raise
         logging.error(e)
+        if SHOW_ERROR:
+            Console().print_exception()
         return 1
     else:
         return 0
