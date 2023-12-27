@@ -3,6 +3,7 @@
 from __future__ import annotations
 from itertools import count
 from json.decoder import JSONDecodeError
+from requests.exceptions import JSONDecodeError as RequestsJSONDecodeError
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 from .A_scraper import Scraper, reload_manager
@@ -21,7 +22,10 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
         url = f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}'
-        webtoon_json_info = self.requests.get(url).json()
+        try:
+            webtoon_json_info = self.requests.get(url).json()
+        except RequestsJSONDecodeError:
+            raise InvalidPlatformError(f"{self.webtoon_id} is invalid webtoon ID.") from None
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
         webtoon_thumbnail = webtoon_json_info['sharedThumbnailUrl']  # 실제로 웹툰 페이지에 사용되는 썸네일
         title = webtoon_json_info['titleName']  # 제목
