@@ -51,7 +51,10 @@ class LezhinComicsScraper(Scraper[str]):
             "X-Lz-Country": "kr",
             "X-Lz-Locale": "ko-KR",
         }
-        self.timeout = 30  # 일부 웹툰은 10초 이상이 걸릴 정도로 느리다 (gahu_r). 심지어 20초도 일부 연결은 실패할 정도로 느리다.
+        # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
+        self.timeout = 50
+        self.attempts = 4
+
         self.authkey = authkey or ''
 
         self.do_not_unshuffle = False
