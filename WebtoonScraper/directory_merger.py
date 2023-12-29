@@ -187,7 +187,7 @@ def _get_episode_no(directory_name: str) -> int:
 
 def fast_merge_webtoon(
     source_webtoon_directory: Path,
-    target_webtoon_directory: Path,
+    target_webtoon_directory: Path | None,
     merge_amount: int,
     manual_directory_state: ContainerStates | None = None,
     merge_last_bundle: bool = True,
@@ -200,7 +200,8 @@ def fast_merge_webtoon(
 
     Args:
         source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
-        target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다.
+        target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다. \
+            만약 None이면 source_webtoon_directory와 같은 경로로 지정됩니다.
         merge_amount: 한 merged episode에 들어갈 에피소드의 개수입니다.
         manual_directory_state: \
             디렉토리 상태는 기본적으로 자동으로 감지되도록 되어 있습니다. \
@@ -210,6 +211,8 @@ def fast_merge_webtoon(
             마지막 merged episode의 크기는 merge amount에 비해 작을 수 있습니다. \
             이 인자가 참일 경우 마지막 merged episode를 그 전의 merged episode와 통합합니다.
     """
+    target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
+
     directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
     if directory_state != NORMAL_WEBTOON_DIRECTORY:
         raise DirectoryStateUnmatchedError(
@@ -518,10 +521,12 @@ def _get_directory_and_image_name_from_merged_image_name(merged_image_name: str)
 
 def fast_restore_webtoon(
     source_webtoon_directory: Path,
-    target_webtoon_directory: Path,
+    target_webtoon_directory: Path | None,
     manual_directory_state: ContainerStates | None = None,
 ) -> None:
     """Merged된 웹툰 폴더의 상태를 되돌립니다."""
+    target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
+
     directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
     if directory_state != MERGED_WEBTOON_DIRECTORY:
         raise DirectoryStateUnmatchedError(
