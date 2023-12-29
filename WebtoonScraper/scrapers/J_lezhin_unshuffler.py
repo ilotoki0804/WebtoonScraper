@@ -22,6 +22,7 @@ from ..exceptions import DirectoryStateUnmatchedError
 
 
 def unshuffle_typical_webtoon_directory_and_return_target_directory(source_webtoon_directory: Path, episode_int_ids: list[int] | None = None) -> Path:
+    assert str(source_webtoon_directory).endswith(', shuffled)'), f"webtoon directory {source_webtoon_directory} is not typical, so it needs to use `unshuffle_webtoon_directory_to_directory`."
     target_webtoon_directory = Path(str(source_webtoon_directory).removesuffix(', shuffled)') + ')')
     unshuffle_webtoon_directory_to_directory(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
     return target_webtoon_directory
