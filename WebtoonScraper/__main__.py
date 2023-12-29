@@ -19,8 +19,8 @@ from WebtoonScraper.directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     MERGED_WEBTOON_DIRECTORY,
     ContainerStates,
-    merge_webtoon_directory_to_directory,
-    restore_webtoon_directory_to_directory,
+    fast_merge_webtoon,
+    fast_restore_webtoon,
     fast_check_container_state,
 )
 
@@ -247,10 +247,10 @@ def parse_merge(args: argparse.Namespace) -> None:
         raise ValueError('merge_amount is required. Use option `-m <int>` to specify merge amount.')
 
     if args.action == 'merge':
-        function_to_use = functools.partial(merge_webtoon_directory_to_directory, merge_amount=args.merge_amount)
+        function_to_use = functools.partial(fast_merge_webtoon, merge_amount=args.merge_amount)
         logging.warning("Merging...")
     elif args.action == 'restore':
-        function_to_use = restore_webtoon_directory_to_directory
+        function_to_use = fast_restore_webtoon
         logging.warning("Restoring...")
     else:
         raise NotImplementedError("Cannot reach here.")
