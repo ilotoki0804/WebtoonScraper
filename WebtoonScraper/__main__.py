@@ -259,8 +259,8 @@ def parse_merge(args: argparse.Namespace) -> None:
         for webtoon_directory in args.source_directory.iterdir():
             try:
                 function_to_use(webtoon_directory, args.target_directory / webtoon_directory.name)
-            except (DirectoryStateUnmatchedError, KeyError):
-                logging.warning(f'Skipping {webtoon_directory.name} directory.')
+            except (DirectoryStateUnmatchedError, KeyError) as e:
+                logging.warning(f'Skipping {webtoon_directory.name} directory due to error: {e}')
     else:
         function_to_use(args.source_directory / args.webtoon_directory_name,
                         args.target_directory / args.webtoon_directory_name)
