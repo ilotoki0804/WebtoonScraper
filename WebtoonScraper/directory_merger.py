@@ -106,6 +106,9 @@ class DirectoryMerger:
         """소스 디렉토리에 있는 웹툰 디렉토리 중 사용자가 선택한 웹툰을 합칩니다."""
         webtoons = os.listdir(self.source_directory)
 
+        if not webtoons:
+            raise DirectoryStateUnmatchedError(f"directory '{self.source_directory}' has no webtoon directory.")
+
         print('Select webtoon to merge or restore.')
         if len(webtoons) < 10:
             for i, webtoon in enumerate(webtoons, 1):
