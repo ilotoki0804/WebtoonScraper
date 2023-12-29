@@ -213,6 +213,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_titles = subtitles
         self.episode_ids: list[str] = episode_str_ids
         self.episode_int_ids = episode_int_ids
+        self.is_episode_free_list = is_episode_free_list
 
         # 기타 레진 한정 정보들
         self.information_chars = episode_type_chars
@@ -229,11 +230,13 @@ class LezhinComicsScraper(Scraper[str]):
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
+        is_purchased = not self.is_episode_free_list[episode_no]
+        purchased = 'true' if is_purchased else 'false'
         episode_id_str = self.episode_ids[episode_no]
         episode_id_int = self.episode_int_ids[episode_no]
 
         keygen_url = (f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
-                      f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={'false'}&q={30}&firstCheckType={'P'}")
+                      f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}")
 
         keys_response = self.requests.get(keygen_url)
         if keys_response.status_code == 403:
@@ -255,9 +258,7 @@ class LezhinComicsScraper(Scraper[str]):
                                "&type=comic_episode")
         try:
             images_data = self.requests.get(images_retrieve_url).json()
-            # return images_data # for debug purpose
         except json.JSONDecodeError:
-            # 가끔씩 실패할 때가 있다. 그냥 requests의 attempts를 올리는 것으로 해결되는지는 불명이다.
             if attempts <= 1:
                 raise
             logging.warning('Retrying json decode...')
@@ -267,7 +268,7 @@ class LezhinComicsScraper(Scraper[str]):
         image_urls: list[str] = []
         for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
             image_url = (f'https://rcdn.lezhin.com/v2{image_url_data["path"]}'
-                         f'.webp?purchased={"false"}&q={30}&updated={1587628135437}'
+                         f'.webp?purchased={purchased}&q={30}&updated={1587628135437}'
                          f'&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}')
             image_urls.append(image_url)
 
