@@ -261,11 +261,8 @@ CONTAINER_STATE_PER_ARGS: dict[str, ContainerStates] = {
 
 ABBR_TO_FULL_STATE: dict[str, Literal["merge", "restore", "auto"]] = {
     "m": "merge",
-    "merge": "merge",
     "r": "restore",
-    "restore": "restore",
     "a": "auto",
-    "auto": "auto",
 }
 
 
@@ -325,7 +322,7 @@ def parse_merge(args: argparse.Namespace) -> None:
         )
 
     args.target_directory = args.target_directory or args.source_directory
-    args.action = ABBR_TO_FULL_STATE[args.action]
+    args.action = ABBR_TO_FULL_STATE.get(args.action, args.action)
 
     if args.webtoon_directory_name is None and not args.all:
         dm = DirectoryMerger()
@@ -361,7 +358,7 @@ def parse_merge(args: argparse.Namespace) -> None:
         function_to_use = restore_webtoon
         logging.warning("Restoring...")
     else:
-        raise NotImplementedError("Cannot reach here.")
+        raise
 
     if args.all:
         for webtoon_directory in args.source_directory.iterdir():
