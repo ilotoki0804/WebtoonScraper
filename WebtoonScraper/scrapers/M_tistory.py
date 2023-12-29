@@ -1,4 +1,4 @@
-'''Download Webtoons from Kakaopage.'''
+"""Download Webtoons from Kakaopage."""
 
 from __future__ import annotations
 
@@ -16,8 +16,9 @@ class TistoryWebtoonId(NamedTuple):
 
 
 class TistoryScraper(Scraper[TistoryWebtoonId]):
-    '''Scrape webtoons from Kakaopage.'''
-    BASE_URL = 'https://tistory.com/'
+    """Scrape webtoons from Kakaopage."""
+
+    BASE_URL = "https://tistory.com/"
     IS_CONNECTION_STABLE = True
     TEST_WEBTOON_ID = ("doldistudio", "진돌만화")
     # 티스토리는 커스텀 URL을 쓰는 경우도 많기에 이 regex에 걸리지 않을 수도 있음.
@@ -27,7 +28,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         blog_id, category_no = self.webtoon_id
 
         # 만약 이 코드를 수정할 것이라면 NaverBlogScraper에 있는 정보 참고.
-        return f'{self.title}({blog_id})'
+        return f"{self.title}({blog_id})"
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -37,7 +38,9 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         # title = res.soup_select_one("span > h1", True).text  # 일반적인 티스토리
         title = unquote(category)
 
-        thumbnail_raw = res.soup_select_one("#content_search > div > div > ul > li > a > div", no_empty_result=True)["style"]
+        thumbnail_raw = res.soup_select_one(
+            "#content_search > div > div > ul > li > a > div", no_empty_result=True
+        )["style"]
         assert isinstance(thumbnail_raw, str)
         thumbnail_url = re.search("(?<=fname=).+(?=')", thumbnail_raw)
         assert thumbnail_url is not None
@@ -57,14 +60,27 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         episode_titles = []
         episode_ids = []
         for i in count(1):
-            res = self.requests.get(f"https://{blog_id}.tistory.com/category/{category}?page={i}")
+            res = self.requests.get(
+                f"https://{blog_id}.tistory.com/category/{category}?page={i}"
+            )
 
-            if not res.soup_select("#content_search > div > div > ul > li > a.link_thumb"):
+            if not res.soup_select(
+                "#content_search > div > div > ul > li > a.link_thumb"
+            ):
                 break
 
-            episode_titles += [element.text for element in
-                               res.soup_select("#content_search > div > div > ul > li > a > div > p.txt_thumb")]
-            episode_ids += [i["href"] for i in res.soup_select("#content_search > div > div > ul > li > a.link_thumb")]
+            episode_titles += [
+                element.text
+                for element in res.soup_select(
+                    "#content_search > div > div > ul > li > a > div > p.txt_thumb"
+                )
+            ]
+            episode_ids += [
+                i["href"]
+                for i in res.soup_select(
+                    "#content_search > div > div > ul > li > a.link_thumb"
+                )
+            ]
 
         self.episode_titles = episode_titles[::-1]
         self.episode_ids = episode_ids[::-1]
@@ -76,5 +92,8 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         # episode_id 자체에 /가 포함되어 있으니 /를 입력할 필요 없음.
         res = self.requests.get(f"https://{blog_id}.tistory.com{episode_id}")
 
-        return [url for i in res.soup_select("figure > span > img")
-                if isinstance(url := i['src'], str)]  # 타입을 확실하게 하기 위해 if문이 필요함.
+        return [
+            url
+            for i in res.soup_select("figure > span > img")
+            if isinstance(url := i["src"], str)
+        ]  # 타입을 확실하게 하기 위해 if문이 필요함.

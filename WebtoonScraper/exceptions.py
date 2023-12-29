@@ -26,8 +26,10 @@ class UseFetchEpisode(WebtoonScraperError):
     사용되고 있지 않고 사용될지 여부가 불확실함.
     """
 
-    def __init__(self, message: str = ''):
-        super().__init__(message or 'Use `fetch_episode_informations` for get webtoon information.')
+    def __init__(self, message: str = ""):
+        super().__init__(
+            message or "Use `fetch_episode_informations` for get webtoon information."
+        )
 
 
 class InvalidBlogIdError(InvalidWebtoonIdError):

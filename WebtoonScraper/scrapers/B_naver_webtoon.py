@@ -1,4 +1,4 @@
-'''Scrape Webtoons from Naver Webtoon.'''
+"""Scrape Webtoons from Naver Webtoon."""
 
 from __future__ import annotations
 from itertools import count
@@ -11,27 +11,36 @@ from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
-    '''Scrape webtoons from Naver Webtoon.'''
+    """Scrape webtoons from Naver Webtoon."""
+
     BASE_URL: str
     TEST_WEBTOON_ID: int
-    WEBTOON_TYPE: ClassVar[Literal['WEBTOON', 'BEST_CHALLENGE', 'CHALLENGE']]
+    WEBTOON_TYPE: ClassVar[Literal["WEBTOON", "BEST_CHALLENGE", "CHALLENGE"]]
     URL_REGEX: str
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
     IS_CONNECTION_STABLE = True
 
     @reload_manager
-    def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
-        url = f'https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}'
+    def fetch_webtoon_information(
+        self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False
+    ) -> None:
+        url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
         try:
             webtoon_json_info = self.requests.get(url).json()
         except RequestsJSONDecodeError:
-            raise InvalidPlatformError(f"{self.webtoon_id} is invalid webtoon ID.") from None
+            raise InvalidPlatformError(
+                f"{self.webtoon_id} is invalid webtoon ID."
+            ) from None
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일
-        webtoon_thumbnail = webtoon_json_info['sharedThumbnailUrl']  # 실제로 웹툰 페이지에 사용되는 썸네일
-        title = webtoon_json_info['titleName']  # 제목
-        webtoon_type = webtoon_json_info['webtoonLevelCode']  # BEST_CHALLENGE or WEBTOON
+        webtoon_thumbnail = webtoon_json_info[
+            "sharedThumbnailUrl"
+        ]  # 실제로 웹툰 페이지에 사용되는 썸네일
+        title = webtoon_json_info["titleName"]  # 제목
+        webtoon_type = webtoon_json_info[
+            "webtoonLevelCode"
+        ]  # BEST_CHALLENGE or WEBTOON
 
-        if webtoon_json_info['age']['type'] == "RATE_18":
+        if webtoon_json_info["age"]["type"] == "RATE_18":
             raise UnsupportedWebtoonRatingError(
                 f"Webtoon {title} is adult webtoon, "
                 "which is not supported in NaverWebtoonScraper. "
@@ -44,11 +53,13 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         if not no_invalid_webtoon_type_error and self.WEBTOON_TYPE != webtoon_type:
             platform_name = {
-                'WEBTOON': 'Naver Webtoon',
-                'BEST_CHALLENGE': 'Best Challenge',
-                'CHALLENGE': 'Challenge',
-            }.get(webtoon_type, '(Unknown)')
-            raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
+                "WEBTOON": "Naver Webtoon",
+                "BEST_CHALLENGE": "Best Challenge",
+                "CHALLENGE": "Challenge",
+            }.get(webtoon_type, "(Unknown)")
+            raise InvalidPlatformError(
+                f"Use {platform_name} Scraper to download {platform_name}."
+            )
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
@@ -83,24 +94,27 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     def get_episode_image_urls(self, episode_no) -> list[str]:
         # sourcery skip: de-morgan
         episode_id = self.episode_ids[episode_no]
-        url = f'{self.BASE_URL}/detail?titleId={self.webtoon_id}&no={episode_id}'
-        episode_image_urls_raw = self.requests.get(url).soup_select(self.EPISODE_IMAGES_URL_SELECTOR)
+        url = f"{self.BASE_URL}/detail?titleId={self.webtoon_id}&no={episode_id}"
+        episode_image_urls_raw = self.requests.get(url).soup_select(
+            self.EPISODE_IMAGES_URL_SELECTOR
+        )
         episode_image_urls = [
-            element['src'] for element in episode_image_urls_raw
-            if not ('agerate' in element['src'] or 'ctguide' in element['src'])
+            element["src"]
+            for element in episode_image_urls_raw
+            if not ("agerate" in element["src"] or "ctguide" in element["src"])
         ]
 
         if TYPE_CHECKING:
             episode_image_urls = [
-                url
-                for url in episode_image_urls
-                if isinstance(url, str)
+                url for url in episode_image_urls if isinstance(url, str)
             ]
 
         return episode_image_urls
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedWebtoonRatingError))
+        return super().check_if_legitimate_webtoon_id(
+            (InvalidPlatformError, UnsupportedWebtoonRatingError)
+        )
 
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
@@ -110,10 +124,11 @@ class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
     NaverWebtoonScraper를 이용하세요.
     """
-    BASE_URL = 'https://comic.naver.com/webtoon'
+
+    BASE_URL = "https://comic.naver.com/webtoon"
     TEST_WEBTOON_ID = 809590  # 이번 생
-    WEBTOON_TYPE = 'WEBTOON'
-    EPISODE_IMAGES_URL_SELECTOR = '#sectionContWide > img'
+    WEBTOON_TYPE = "WEBTOON"
+    EPISODE_IMAGES_URL_SELECTOR = "#sectionContWide > img"
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
 
@@ -124,10 +139,11 @@ class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
     NaverWebtoonScraper를 이용하세요.
     """
-    BASE_URL = 'https://comic.naver.com/bestChallenge'
+
+    BASE_URL = "https://comic.naver.com/bestChallenge"
     TEST_WEBTOON_ID = 809971  # 까마귀
-    WEBTOON_TYPE = 'BEST_CHALLENGE'
-    EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
+    WEBTOON_TYPE = "BEST_CHALLENGE"
+    EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
     URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/bestChallenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
 
@@ -138,26 +154,34 @@ class ChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     만약 자동으로 네이버 관련 플랫폼을 확인할 수 있는 스크래퍼를 사용하고 싶다면
     NaverWebtoonScraper를 이용하세요.
     """
-    BASE_URL = 'https://comic.naver.com/challenge'
+
+    BASE_URL = "https://comic.naver.com/challenge"
     TEST_WEBTOON_ID = 818058  # T/F
-    WEBTOON_TYPE = 'CHALLENGE'
-    EPISODE_IMAGES_URL_SELECTOR = '#comic_view_area > div > img'
+    WEBTOON_TYPE = "CHALLENGE"
+    EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
     URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/challenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
 
 
-class NaverWebtoonScraper(NaverWebtoonSpecificScraper, BestChallengeSpecificScraper, ChallengeSpecificScraper):
+class NaverWebtoonScraper(
+    NaverWebtoonSpecificScraper, BestChallengeSpecificScraper, ChallengeSpecificScraper
+):
     """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
+
     def __new__(
         cls, *args, **kwargs
-    ) -> NaverWebtoonSpecificScraper | BestChallengeSpecificScraper | ChallengeSpecificScraper:
+    ) -> (
+        NaverWebtoonSpecificScraper
+        | BestChallengeSpecificScraper
+        | ChallengeSpecificScraper
+    ):
         scraper = NaverWebtoonSpecificScraper(*args, **kwargs)
         scraper.fetch_webtoon_information(no_invalid_webtoon_type_error=True)
         match scraper.webtoon_type:
-            case 'WEBTOON':
+            case "WEBTOON":
                 return scraper
-            case 'BEST_CHALLENGE':
+            case "BEST_CHALLENGE":
                 return BestChallengeSpecificScraper(*args, **kwargs)
-            case 'CHALLENGE':
+            case "CHALLENGE":
                 return ChallengeSpecificScraper(*args, **kwargs)
             case _:
-                raise ValueError('Unexpacted webtoon type. Please contect developer.')
+                raise ValueError("Unexpacted webtoon type. Please contect developer.")

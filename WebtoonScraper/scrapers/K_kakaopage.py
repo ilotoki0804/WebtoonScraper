@@ -1,4 +1,4 @@
-'''Download Webtoons from Kakaopage.'''
+"""Download Webtoons from Kakaopage."""
 
 from __future__ import annotations
 
@@ -8,8 +8,9 @@ from ..exceptions import InvalidWebtoonIdError
 
 
 class KakaopageScraper(Scraper[int]):
-    '''Scrape webtoons from Kakaopage.'''
-    BASE_URL = 'https://page.kakao.com'
+    """Scrape webtoons from Kakaopage."""
+
+    BASE_URL = "https://page.kakao.com"
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
     URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
@@ -44,11 +45,17 @@ class KakaopageScraper(Scraper[int]):
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         res = self.requests.get(f"https://page.kakao.com/content/{self.webtoon_id}")
 
-        title = res.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
-        if title == '카카오페이지' or not isinstance(title, str):
-            raise InvalidWebtoonIdError("WebtoonId is invalid or that of adult webtoon.")
+        title = res.soup_select_one(
+            'meta[property="og:title"]', no_empty_result=True
+        ).get("content")
+        if title == "카카오페이지" or not isinstance(title, str):
+            raise InvalidWebtoonIdError(
+                "WebtoonId is invalid or that of adult webtoon."
+            )
 
-        thumnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
+        thumnail_url = res.soup_select_one(
+            'meta[property="og:image"]', no_empty_result=True
+        ).get("content")
         assert isinstance(thumnail_url, str)
 
         self.title = title
@@ -64,7 +71,12 @@ class KakaopageScraper(Scraper[int]):
             post_data = {
                 "operationName": "contentHomeProductList",
                 "query": WEBTOON_DATA_QUERY,
-                "variables": {"seriesId": self.webtoon_id, "after": str(curser), "boughtOnly": False, "sortType": "asc"},
+                "variables": {
+                    "seriesId": self.webtoon_id,
+                    "after": str(curser),
+                    "boughtOnly": False,
+                    "sortType": "asc",
+                },
             }
 
             res = self.requests.post(
@@ -86,17 +98,27 @@ class KakaopageScraper(Scraper[int]):
         subtitles: list[str] = []
         for webtoon_episode_data in webtoon_episodes_data:
             # urls += "https://page.kakao.com/" + raw_url.removeprefix("kakaopage://open/")
-            episode_ids.append(webtoon_episode_data["node"]["single"]["productId"])  # 에피소드 id
+            episode_ids.append(
+                webtoon_episode_data["node"]["single"]["productId"]
+            )  # 에피소드 id
             is_free.append(webtoon_episode_data["node"]["single"]["isFree"])  # 무료인지 여부
             subtitles.append(webtoon_episode_data["node"]["single"]["title"])
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    def download_image(self, episode_directory, url: str, image_no: int, file_extension: str | None = 'jpg') -> None:
+    def download_image(
+        self,
+        episode_directory,
+        url: str,
+        image_no: int,
+        file_extension: str | None = "jpg",
+    ) -> None:
         return super().download_image(episode_directory, url, image_no, file_extension)
 
-    def download_webtoon_thumbnail(self, thumbnail_directory, file_extension: str | None = 'jpg') -> None:
+    def download_webtoon_thumbnail(
+        self, thumbnail_directory, file_extension: str | None = "jpg"
+    ) -> None:
         return super().download_webtoon_thumbnail(thumbnail_directory, file_extension)
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
@@ -116,5 +138,9 @@ class KakaopageScraper(Scraper[int]):
             headers=self.graphql_headers,
         ).json()
 
-        return [i['secureUrl']
-                for i in res["data"]["viewerInfo"]["viewerData"]["imageDownloadData"]["files"]]
+        return [
+            i["secureUrl"]
+            for i in res["data"]["viewerInfo"]["viewerData"]["imageDownloadData"][
+                "files"
+            ]
+        ]

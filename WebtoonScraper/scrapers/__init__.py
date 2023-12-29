@@ -3,7 +3,7 @@ from .B_naver_webtoon import (
     NaverWebtoonScraper,
     NaverWebtoonSpecificScraper,
     BestChallengeSpecificScraper,
-    ChallengeSpecificScraper
+    ChallengeSpecificScraper,
 )
 from .D_webtoon_originals import WebtoonOriginalsScraper
 from .E_webtoon_canvas import WebtoonCanvasScraper
