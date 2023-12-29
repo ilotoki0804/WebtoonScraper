@@ -320,7 +320,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         if merge_amount is not None:
             self.callback("merge_webtoon_start")
-            merge_webtoon(webtoon_directory, 5)
+            merge_webtoon(webtoon_directory, None, merge_amount)
             self.callback("merge_webtoon_end")
 
     def get_webtoon_directory_name(self) -> str:
