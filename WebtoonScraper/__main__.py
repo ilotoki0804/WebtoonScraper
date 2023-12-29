@@ -19,9 +19,9 @@ from WebtoonScraper.directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     MERGED_WEBTOON_DIRECTORY,
     ContainerStates,
-    fast_merge_webtoon,
-    fast_restore_webtoon,
-    fast_check_container_state,
+    merge_webtoon,
+    restore_webtoon,
+    check_container_state,
 )
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
@@ -185,7 +185,7 @@ CONTAINER_STATE_TO_DO_STATE: dict[ContainerStates, Literal['merge', 'restore']] 
 
 def get_state(source_directory: Path) -> ContainerStates:
     states: dict[Path, ContainerStates] = {
-        webtoon_directory: fast_check_container_state(webtoon_directory)
+        webtoon_directory: check_container_state(webtoon_directory)
         for webtoon_directory in source_directory.iterdir()
     }
     all_unique_states = set(states.values())
@@ -213,7 +213,7 @@ def list_directories(parent_directory: Path) -> None:
     table.add_column("Directory State")
     table.add_column("Action If Auto")
     for webtoon_directory in parent_directory.iterdir():
-        directory_state = fast_check_container_state(webtoon_directory)
+        directory_state = check_container_state(webtoon_directory)
         table.add_row(webtoon_directory.name, directory_state, CONTAINER_STATE_TO_DO_STATE.get(directory_state))
     # self.rich_console.print(table)
     Console().print(table)
@@ -241,16 +241,16 @@ def parse_merge(args: argparse.Namespace) -> None:
             args.action = get_string_todo(get_state(args.source_directory))
         else:
             args.action = get_string_todo(
-                fast_check_container_state(args.source_directory / args.webtoon_directory_name))
+                check_container_state(args.source_directory / args.webtoon_directory_name))
 
     if args.action == 'merge' and args.merge_amount is None:
         raise ValueError('merge_amount is required. Use option `-m <int>` to specify merge amount.')
 
     if args.action == 'merge':
-        function_to_use = functools.partial(fast_merge_webtoon, merge_amount=args.merge_amount)
+        function_to_use = functools.partial(merge_webtoon, merge_amount=args.merge_amount)
         logging.warning("Merging...")
     elif args.action == 'restore':
-        function_to_use = fast_restore_webtoon
+        function_to_use = restore_webtoon
         logging.warning("Restoring...")
     else:
         raise NotImplementedError("Cannot reach here.")

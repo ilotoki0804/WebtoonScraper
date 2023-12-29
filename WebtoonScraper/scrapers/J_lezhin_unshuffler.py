@@ -11,7 +11,7 @@ from tqdm import tqdm
 from PIL import Image
 
 from ..directory_merger import (
-    fast_check_container_state,
+    check_container_state,
     check_filename_state,
     NORMAL_WEBTOON_DIRECTORY,
     webtoon_regexes,
@@ -46,7 +46,7 @@ def unshuffle_webtoon_directory_to_directory(
         move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
 
         if not proceed_without_checking_directory_state:
-            directory_state = fast_check_container_state(source_webtoon_directory)
+            directory_state = check_container_state(source_webtoon_directory)
             if directory_state != NORMAL_WEBTOON_DIRECTORY:
                 raise DirectoryStateUnmatchedError(f'Directory state is {directory_state}, which is not supported.')
 

@@ -123,7 +123,7 @@ class DirectoryMerger:
         selected_directory = self.source_directory / selected_webtoon_directory_name
 
         if manual_container_state is None:
-            directory_state = fast_check_container_state(selected_directory)
+            directory_state = check_container_state(selected_directory)
         else:
             directory_state = manual_container_state
 
@@ -153,9 +153,9 @@ class DirectoryMerger:
         if action == 'merge':
             if merge_amount is None:
                 merge_amount = int(input('merge amount: '))
-            fast_merge_webtoon(selected_directory, None, merge_amount)
+            merge_webtoon(selected_directory, None, merge_amount)
         else:
-            fast_restore_webtoon(selected_directory, None)
+            restore_webtoon(selected_directory, None)
         print(f'{message} webtoon has ended.')
 
     def merge_webtoons_from_source_directory(self, merge_amount: int) -> None:
@@ -164,7 +164,7 @@ class DirectoryMerger:
         for webtoon in webtoons:
             webtoon_directory = self.target_directory / webtoon
             try:
-                fast_merge_webtoon(webtoon_directory, None, merge_amount)
+                merge_webtoon(webtoon_directory, None, merge_amount)
             except DirectoryStateUnmatchedError:
                 logging.warning(f'Skip {webtoon_directory} directory. It looks not available to merge.')
 
@@ -174,7 +174,7 @@ class DirectoryMerger:
         for webtoon in webtoons:
             webtoon_directory = self.source_directory / webtoon
             try:
-                fast_restore_webtoon(webtoon_directory, None)
+                restore_webtoon(webtoon_directory, None)
             except DirectoryStateUnmatchedError:
                 logging.warning(f'Skip {webtoon_directory} directory. It looks not available to restore.')
 
@@ -185,7 +185,7 @@ def _get_episode_no(directory_name: str) -> int:
     return int(directory_name_matched.group("episode_no"))
 
 
-def fast_merge_webtoon(
+def merge_webtoon(
     source_webtoon_directory: Path,
     target_webtoon_directory: Path | None,
     merge_amount: int,
@@ -213,7 +213,7 @@ def fast_merge_webtoon(
     """
     target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
 
-    directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
+    directory_state = manual_directory_state or check_container_state(source_webtoon_directory)
     if directory_state != NORMAL_WEBTOON_DIRECTORY:
         raise DirectoryStateUnmatchedError(
             f'State of directory is {directory_state}, which cannot be merged.'
@@ -346,7 +346,7 @@ def check_filename_state(file_or_directory_name: str) -> FileStates:
     return NOT_MATCHED
 
 
-def fast_check_container_state(directory: PathOrStr) -> ContainerStates:
+def check_container_state(directory: PathOrStr) -> ContainerStates:
     """해당 path에 있는 디렉토리의 상태를 확인합니다."""
     directories, _ = _iterdir_seperating_directories_and_files(directory)
 
@@ -381,7 +381,7 @@ def _get_directory_and_image_name_from_merged_image_name(merged_image_name: str)
     return new_episode_directory_name, new_image_name
 
 
-def fast_restore_webtoon(
+def restore_webtoon(
     source_webtoon_directory: Path,
     target_webtoon_directory: Path | None,
     manual_directory_state: ContainerStates | None = None,
@@ -389,7 +389,7 @@ def fast_restore_webtoon(
     """Merged된 웹툰 폴더의 상태를 되돌립니다."""
     target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
 
-    directory_state = manual_directory_state or fast_check_container_state(source_webtoon_directory)
+    directory_state = manual_directory_state or check_container_state(source_webtoon_directory)
     if directory_state != MERGED_WEBTOON_DIRECTORY:
         raise DirectoryStateUnmatchedError(
             f'State of directory is {directory_state}, which cannot be restored.'
