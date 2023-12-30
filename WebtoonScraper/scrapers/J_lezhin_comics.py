@@ -32,15 +32,15 @@ class LezhinComicsScraper(Scraper[str]):
         r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)"
     )
 
-    def __init__(self, webtoon_id: str, authkey: str | None = None) -> None:
+    def __init__(self, webtoon_id: str, authkey: str | None = None, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
-            # "Authorization": self.AUTHORIZATION,
+            # "Authorization": "",
             "Cache-Control": "no-cache",
-            "Cookie": "x-lz-locale=ko_KR",
+            # "Cookie": "x-lz-locale=ko_KR",
             "Dnt": "1",
             "Referer": "https://www.lezhin.com/ko/comic/revatoon/x1",
             "Sec-Ch-Ua": '"Not.A/Brand";v="8", "Chromium";v="114", "Microsoft Edge";v="114"',
@@ -60,6 +60,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.timeout = 50
         self.attempts = 4
 
+        self.cookie = cookie or "x-lz-locale=ko_KR"
         self.authkey = authkey or ""
 
         self.do_not_unshuffle = False
@@ -67,7 +68,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.download_episode_id_ints_if_shuffled = True
         self.get_paid_episode = False
 
-        # self.authkey 설정에서 되기 때문에 굳이 하지는 않아도 됨.
+        # self.authkey 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
         self.update_requests()
 
     @property
@@ -78,7 +79,8 @@ class LezhinComicsScraper(Scraper[str]):
     def authkey(self, value: str) -> None:
         """구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 합니다."""
         self._authkey = value
-        self.headers["Authorization"] = value
+        if value:
+            self.headers["Authorization"] = value
         self.update_requests()
 
     def get_webtoon_directory_name(self) -> str:
