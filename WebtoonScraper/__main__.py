@@ -143,10 +143,10 @@ download_subparser.add_argument(
     help="Set cookie when you download Bufftoon.",
 )
 download_subparser.add_argument(
-    "--authkey",
+    "--bearer",
     type=str,
-    metavar="authkey",
-    help="Set authkey when you download Lezhin.",
+    metavar="bearer",
+    help="Set bearer when you download Lezhin.",
 )
 download_subparser.add_argument(
     "-r",
@@ -244,7 +244,7 @@ def parse_download(args: argparse.Namespace) -> None:
         args.platform,
         args.merge_amount,
         cookie=args.cookie,
-        authkey=args.authkey,
+        bearer=args.bearer,
         episode_no_range=args.range,
         download_directory=args.download_directory,
         is_list_episodes=args.list_episodes,

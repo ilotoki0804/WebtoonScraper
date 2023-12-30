@@ -85,7 +85,7 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
 
 ## 레진코믹스 다운로드하기
 
-로그인하지 않으면 authkey를 얻을 수 없는데, 이 경우 다운로드할 수는 있지만 약 1~2화 정도로 다운로드받을 수 있는 웹툰이 폭이 심하게 제한됩니다.
+로그인하지 않으면 bearer를 얻을 수 없는데, 이 경우 다운로드할 수는 있지만 약 1~2화 정도로 다운로드받을 수 있는 웹툰이 폭이 심하게 제한됩니다.
 
 이 과정은 PC를 기준으로 설명합니다. 만약 모바일이라면 Kiwi Browser 등을 통해 다음의 과정을 수행할 수 있습니다.
 
@@ -99,15 +99,15 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
     자세한 내용은 [여기](https://github.com/ilotoki0804/WebtoonScraper#WebtoonScraper-CLI로-웹툰-다운로드하기)를 참고하세요.
 
     ```console
-    WebtoonScraper 1007888 --authkey "Bearer ..."
+    WebtoonScraper 1007888 --bearer "Bearer ..."
     ```
 
     혹은 다음의 파이썬 코드를 웹툰이 다운로드되길 원하는 폴더 내에서 실행해 주세요.
 
     ```python
     from WebtoonScraper import Webtoon as wt
-    authkey = '두 번째로 복사했던 문자를 여기에다 붙여넣으세요.'  # Bearer ...
-    wt.download_webtoon('dr_hearthstone', wt.L, authkey=authkey)  # 첫 번째로 복사했던 수를 dr_hearthstone의 위치에 붙여넣으세요.
+    bearer = '두 번째로 복사했던 문자를 여기에다 붙여넣으세요.'  # Bearer ...
+    wt.download_webtoon('dr_hearthstone', wt.L, bearer=bearer)  # 첫 번째로 복사했던 수를 dr_hearthstone의 위치에 붙여넣으세요.
     ```
 
 1. 로그인하면 볼 수 있는 모든 에피소드가 다운로드됩니다.
@@ -119,8 +119,8 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
 
-authkey = 'Bearer ...'
-scraper = LezhinComicsScraper('gahu_r', authkey=authkey)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+bearer = 'Bearer ...'
+scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
 scraper.get_paid_episode = True
 scraper.download_webtoon()
 ```

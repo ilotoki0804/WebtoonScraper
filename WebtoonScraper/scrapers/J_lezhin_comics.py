@@ -32,7 +32,7 @@ class LezhinComicsScraper(Scraper[str]):
         r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)"
     )
 
-    def __init__(self, webtoon_id: str, authkey: str | None = None, cookie: str | None = None) -> None:
+    def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.headers = {
             "Accept": "application/json, text/plain, */*",
@@ -61,24 +61,24 @@ class LezhinComicsScraper(Scraper[str]):
         self.attempts = 4
 
         self.cookie = cookie or "x-lz-locale=ko_KR"
-        self.authkey = authkey or ""
+        self.bearer = bearer or ""
 
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
         self.download_episode_id_ints_if_shuffled = True
         self.get_paid_episode = False
 
-        # self.authkey 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
+        # self.bearer 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
         self.update_requests()
 
     @property
-    def authkey(self) -> str:
-        return self._authkey
+    def bearer(self) -> str:
+        return self._bearer
 
-    @authkey.setter
-    def authkey(self, value: str) -> None:
-        """구현상의 이유로 header는 authkey보다 더 먼저 구현되어야 합니다."""
-        self._authkey = value
+    @bearer.setter
+    def bearer(self, value: str) -> None:
+        """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
+        self._bearer = value
         if value:
             self.headers["Authorization"] = value
         self.update_requests()
@@ -92,10 +92,6 @@ class LezhinComicsScraper(Scraper[str]):
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수 있으니 주의.
-        # logging.warning('Without setting authkey extremely limiting the range of downloadable episodes. '
-        #                 'Please set authkey to valid download. '
-        #                 'The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기')
         raise UseFetchEpisode()
 
     @reload_manager
@@ -282,7 +278,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         keys_response = self.requests.get(keygen_url)
         if keys_response.status_code == 403:
-            if self.authkey:
+            if self.bearer:
                 logging.warning(
                     f"can't retrieve data from {self.episode_titles[episode_no]}. "
                     "It's probably because Episode is not available or not for free episode. "
@@ -290,7 +286,7 @@ class LezhinComicsScraper(Scraper[str]):
             else:
                 logging.warning(
                     f"can't retrieve data from {self.episode_titles[episode_no]}. "
-                    "It's almost certainly because you don't have authkey. Set authkey to get data."
+                    "It's almost certainly because you don't have bearer. Set bearer to get data."
                 )
             return None
 

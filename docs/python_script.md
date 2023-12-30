@@ -30,13 +30,13 @@ wt.download_webtoon(766648)  # 플랫폼을 입력하지 않으면 자동으로 
 # 네이버 포스트를 비롯한 몇몇 플랫폼들에서는 정수가 아닌 특이한 타입을 사용할 수 있습니다.
 # 자세한 내용은 문서를 참고하세요.
 wt.download_webtoon((597061, 19803452), wt.NAVER_POST)  # 네이버 포스트
-# 레진코믹스. 레진코믹스는 authkey를 포함해야 합니다. 자세한 사항은 문서를 확인하세요.
-wt.download_webtoon('dr_hearthstone', wt.L, authkey='...')
+# 레진코믹스. 레진코믹스는 bearer를 포함해야 합니다. 자세한 사항은 문서를 확인하세요.
+wt.download_webtoon('dr_hearthstone', wt.L, bearer='...')
 wt.download_webtoon(('dpk58172', 24), wt.B)  # 네이버 블로그
 
 # 이런 특이한 타입들도 맨 처음에 설명한 바와 같이 플랫폼을 생략할 수 있습니다.
 wt.download_webtoon((597061, 19803452))  # 네이버 포스트. 괄호(튜플)를 입력해야 한다는 점을 절대 잊지 마세요!
-wt.download_webtoon('dr_hearthstone', authkey='...')  # 레진코믹스
+wt.download_webtoon('dr_hearthstone', bearer='...')  # 레진코믹스
 wt.download_webtoon(('dpk58172', 24))  # 네이버 블로그. 괄호(튜플)를 입력해야 한다는 점을 절대 잊지 마세요!
 
 # 다음과 같은 기능들도 존재합니다.
@@ -54,10 +54,10 @@ wt.download_webtoon(766648, is_list_episodes=True)
 wt.download_webtoon(766648, episode_no_range=(2, None))
 
 # 레진코믹스는 자신이 구매한 유료 회차에 한해 다운로드 받을 수 있는 기능이 존재합니다.
-wt.download_webtoon('dr_hearthstone', wt.L, authkey='...', get_paid_episode=True)
+wt.download_webtoon('dr_hearthstone', wt.L, bearer='...', get_paid_episode=True)
 
 # 기능을 중첩해서 사용할 수도 있습니다.
-wt.download_webtoon('dr_hearthstone', wt.L, merge_amount=5, authkey='...', episode_no_range=(2, None), get_paid_episode=True)
+wt.download_webtoon('dr_hearthstone', wt.L, merge_amount=5, bearer='...', episode_no_range=(2, None), get_paid_episode=True)
 # 하지만 is_list_episodes는 예외입니다.
 # is_list_episodes는 merge_amount, episode_no_range, download_directory, get_paid_episode와 같이 사용할 수 없거나 무시됩니다.
 wt.download_webtoon('dr_hearthstone', wt.L, is_list_episodes=True)

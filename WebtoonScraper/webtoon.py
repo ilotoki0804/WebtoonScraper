@@ -153,7 +153,7 @@ def download_webtoon(
     *,
     cookie: str | None = None,
     episode_no_range: EpisodeNoRange = None,
-    authkey: str | None = None,
+    bearer: str | None = None,
     is_list_episodes: bool = False,
     download_directory: str | Path = "webtoon",
     get_paid_episode: bool = False,
@@ -161,9 +161,9 @@ def download_webtoon(
     if cookie is not None:
         webtoon_scraper = BufftoonScraper(webtoon_id)
         webtoon_scraper.cookie = cookie
-    elif authkey is not None and isinstance(webtoon_id, str):
+    elif bearer is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
-        webtoon_scraper.authkey = authkey
+        webtoon_scraper.bearer = bearer
         webtoon_scraper.get_paid_episode = get_paid_episode
     webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
     if webtoon_platform is None:
@@ -176,17 +176,17 @@ def download_webtoon(
         if webtoon_platform != BUFFTOON:
             raise ValueError(
                 "Cookie is not required unless you are downloading Bufftoon. "
-                "Use authkey if platform what you want to download is Lezhin."
+                "Use bearer if platform what you want to download is Lezhin."
             )
         webtoon_scraper = BufftoonScraper(webtoon_id, cookie=cookie)
-    elif authkey is not None:
+    elif bearer is not None:
         if webtoon_platform != LEZHIN:
             raise ValueError(
-                "Authkey is not required unless you are downloading Lezhin. "
+                "bearer is not required unless you are downloading Lezhin. "
                 "Use cookie if platform what you want to download is Bufftoon."
             )
         assert isinstance(webtoon_id, str)
-        webtoon_scraper = LezhinComicsScraper(webtoon_id, authkey=authkey)
+        webtoon_scraper = LezhinComicsScraper(webtoon_id, bearer=bearer)
     else:
         webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id)
         if isinstance(webtoon_scraper, BufftoonScraper):
@@ -195,7 +195,7 @@ def download_webtoon(
             )
         if isinstance(webtoon_scraper, LezhinComicsScraper):
             logging.warning(
-                "Proceed without authkey. It'll limit the number of episodes can be downloaded of Lezhin Comics."
+                "Proceed without bearer. It'll limit the number of episodes can be downloaded of Lezhin Comics."
             )
 
     if is_list_episodes:
