@@ -20,11 +20,12 @@ class UnsupportedWebtoonRatingError(InvalidWebtoonIdError):
     """
 
 
-class UseFetchEpisode(WebtoonScraperError):
-    """Only fetch_episode_informations exists.
+class InvalidAuthenticationError(WebtoonScraperError):
+    """Provided authentication method is invalid, expired or corrupted."""
 
-    사용되고 있지 않고 사용될지 여부가 불확실함.
-    """
+
+class UseFetchEpisode(WebtoonScraperError):
+    """`fetch_episode_informations` do all."""
 
     def __init__(self, message: str = ""):
         super().__init__(
