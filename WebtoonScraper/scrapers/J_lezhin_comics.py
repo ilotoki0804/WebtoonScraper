@@ -9,11 +9,13 @@ from json import JSONDecodeError
 import shutil
 import itertools
 
+from resoup.exceptions import EmptyResultError
+
 from .A_scraper import Scraper, reload_manager
 from .J_lezhin_unshuffler import (
     unshuffle_typical_webtoon_directory_and_return_target_directory,
 )
-from ..exceptions import UseFetchEpisode, WebtoonScraperError
+from ..exceptions import UnsupportedWebtoonRatingError, UseFetchEpisode, WebtoonScraperError
 
 TitleId = str
 
@@ -106,7 +108,22 @@ class LezhinComicsScraper(Scraper[str]):
         ):
             raise ValueError(f"Invalid {self.webtoon_id = }")
 
-        title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
+        try:
+            title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
+        except EmptyResultError:
+            if self.cookie != "x-lz-locale=ko_KR":
+                raise UnsupportedWebtoonRatingError(
+                    "Adult webtoon is not available since you don't set cookie. "
+                    "See https://github.com/ilotoki0804/WebtoonScraper/blob/master"
+                    "/docs/specific_platform_download.md#성인-웹툰-다운로드하기 "
+                    "to check how to download"
+                )
+            if "adult" in res.url:
+                raise UnsupportedWebtoonRatingError(
+                    "The account is not adult authenticated. "
+                    "Thus can not download adult webtoons."
+                )
+
         thumbnail_url = res.soup_select_one(
             'meta[property="og:image"]', no_empty_result=True
         ).get("content")
