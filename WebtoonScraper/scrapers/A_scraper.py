@@ -507,10 +507,11 @@ class Scraper(ABC, Generic[WebtoonId]):
     def fetch_all(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
         self.callback("setup_start")
+
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
-        with suppress(UseFetchEpisode):  # 현재는 필요 없지만 혹시 모를 변화를 위해 남김.
-            self.fetch_episode_informations(reload=reload)
+        self.fetch_episode_informations(reload=reload)
+
         self.callback("setup_end")
 
     @reload_manager
