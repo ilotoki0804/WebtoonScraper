@@ -16,7 +16,7 @@
 
 #### cookie 찾기
 
-**로그인을 후** f12를 누르고 네트워크 창을 연 뒤 웹툰 페이지에 들어갑니다.
+**로그인을 한 후** f12를 누르고 네트워크 창을 연 뒤 웹툰 페이지에 들어갑니다.
 
 ![겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
 
@@ -106,8 +106,10 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
 
     ```python
     from WebtoonScraper import Webtoon as wt
-    bearer = '두 번째로 복사했던 문자를 여기에다 붙여넣으세요.'  # Bearer ...
-    wt.download_webtoon('dr_hearthstone', wt.L, bearer=bearer)  # 첫 번째로 복사했던 수를 dr_hearthstone의 위치에 붙여넣으세요.
+    
+    if __name__ == "__main__":
+        bearer = '두 번째로 복사했던 문자를 여기에다 붙여넣으세요.'  # Bearer ...
+        wt.download_webtoon('dr_hearthstone', wt.L, bearer=bearer)  # 첫 번째로 복사했던 수를 dr_hearthstone의 위치에 붙여넣으세요.
     ```
 
 1. 로그인하면 볼 수 있는 모든 에피소드가 다운로드됩니다.
@@ -119,11 +121,71 @@ wt.download_webtoon((597061, 19803452), wt.P)  # 여기에 아까 복사한 seri
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
 
-bearer = 'Bearer ...'
-scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
-scraper.get_paid_episode = True
-scraper.download_webtoon()
+if __name__ == "__main__":
+    bearer = 'Bearer ...'
+    scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+    scraper.get_paid_episode = True
+    scraper.download_webtoon()
 ```
+
+### 성인 웹툰 다운로드하기
+
+모든 종류의 웹툰을 다운로드받으려면 자신의 성인이어야 합니다. 만약 아닐 경우에는 어떤 방식으로든 다운로드가 지원되지 않습니다.
+아래의 방식은 자신이 성인이고 이미 레진코믹스 웹/앱에서 성인 웹툰을 열람할 수 있다는 전제가 성립되어야 다운로드가 가능합니다.
+
+쿠키를 찾는 방법은 다음과 같습니다.
+
+1. 웹툰 페이지로 갑니다.
+1. 우선 f12를 누르고 `네트워크` 탭으로 갑니다.
+1. f5를 누릅니다.
+1. 스크롤을 맨 위로 올려서 첫 번째 request를 클릭합니다.
+1. 아래로 내려서 `요청 헤더`로 갑니다(주의: '응답 헤더'가 아닙니다!)
+1. 요청 헤더에서 아래로 스크롤하다 보면 `Cookie:`라고 되어 있는 란이 뜹니다.
+1. 쿠키를 복사합니다.
+1. 다음과 같이 코드를 짭니다.
+
+```python
+from WebtoonScraper.scrapers import LezhinComicsScraper
+
+if __name__ == "__main__":
+    bearer = "Bearer ..."  # 얻어온 bearer를 여기에 붙여넣으세요.
+    cookie = "COOKIE HERE"  # 얻어온 cookie를 여기에 붙여넣으세요.
+
+    scraper = LezhinComicsScraper("webtoon_id", bearer=bearer, cookie=cookie)  # 자신이 구매한 유료 회차가 있는 웹툰을 webtoon_id의 위치에 붙여넣으세요.
+    scraper.download_webtoon()
+```
+
+### 소장한 에피소드 고화질로 다운로드받기
+
+이 라이브러리는 소장한 유료 에피소드에 대해서는 기본적으로 고화질 다운로드를 지원합니다. `유료 회차 다운로드받기` 파트를 참고하세요.
+
+소장한 에피소드가 하나라도 있다면 웹툰 디렉토리 이름 뒤에 `HD`가 붙게 되는데, 만약 이것이 싫다면 `self.is_fhd_downloaded`을 `None`으로 설정하세요.
+
+```python
+from WebtoonScraper.scrapers import LezhinComicsScraper
+
+if __name__ == "__main__":
+    bearer = 'Bearer ...'
+    scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+    scraper.get_paid_episode = True
+    scraper.is_fhd_downloaded = None
+    scraper.download_webtoon()
+```
+
+소장한 "무료" 에피소드를 고화질로 다운로드받으려면 다운로드 전 추가적으로 `scraper.fetch_user_infos()`를 실행해야 합니다.
+
+```python
+from WebtoonScraper.scrapers import LezhinComicsScraper
+
+if __name__ == "__main__":
+    bearer = 'Bearer ...'
+    scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+    scraper.get_paid_episode = True
+    scraper.fetch_user_infos()
+    scraper.download_webtoon()
+```
+
+추후 버전에서는 무료 에피소드도 자동으로 고화질로 다운로드받을 수 있도록 변경될 예정입니다.
 
 ### 레진코믹스 다운로드 시 주의사항
 
