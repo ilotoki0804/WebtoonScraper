@@ -78,7 +78,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.delete_shuffled_file = False
         self.download_episode_id_ints_if_shuffled = True
         self.get_paid_episode = False
-        self.fhd_downloaded = False
+        self.is_fhd_downloaded = False
 
         # self.bearer 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
         self.update_requests()
@@ -100,7 +100,7 @@ class LezhinComicsScraper(Scraper[str]):
         if self.is_shuffled:
             directory_name += ", shuffled"
 
-        if self.fhd_downloaded:
+        if self.is_fhd_downloaded:
             directory_name += ", HD"
 
         directory_name += ")"
@@ -319,8 +319,8 @@ class LezhinComicsScraper(Scraper[str]):
         else:
             is_purchased = self.purchased_episodes[episode_no]
 
-        if is_purchased and self.fhd_downloaded is not None:
-            self.fhd_downloaded = True
+        if is_purchased and self.is_fhd_downloaded is not None:
+            self.is_fhd_downloaded = True
 
         purchased = "true" if is_purchased else "false"
         episode_id_str = self.episode_ids[episode_no]
