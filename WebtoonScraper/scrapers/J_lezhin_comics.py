@@ -8,6 +8,7 @@ import json
 from json import JSONDecodeError
 import shutil
 import itertools
+import random
 
 from resoup.exceptions import EmptyResultError
 
@@ -15,7 +16,12 @@ from .A_scraper import Scraper, reload_manager
 from .J_lezhin_unshuffler import (
     unshuffle_typical_webtoon_directory_and_return_target_directory,
 )
-from ..exceptions import UnsupportedWebtoonRatingError, UseFetchEpisode, WebtoonScraperError
+from ..exceptions import (
+    UnsupportedWebtoonRatingError,
+    UseFetchEpisode,
+    WebtoonScraperError,
+    InvalidAuthenticationError,
+)
 
 TitleId = str
 
@@ -35,6 +41,9 @@ class LezhinComicsScraper(Scraper[str]):
     )
 
     def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
+        """
+        self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
+        """
         super().__init__(webtoon_id)
         self.headers = {
             "Accept": "application/json, text/plain, */*",
@@ -62,13 +71,14 @@ class LezhinComicsScraper(Scraper[str]):
         self.timeout = 50
         self.attempts = 4
 
-        self.cookie = cookie or "x-lz-locale=ko_KR"
+        self.cookie = cookie or "x-lz-locale=ko_KR"  # 수정 시에는 중복된 부분도 수정하기
         self.bearer = bearer or ""
 
         self.do_not_unshuffle = False
         self.delete_shuffled_file = False
         self.download_episode_id_ints_if_shuffled = True
         self.get_paid_episode = False
+        self.fhd_downloaded = False
 
         # self.bearer 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
         self.update_requests()
@@ -86,11 +96,16 @@ class LezhinComicsScraper(Scraper[str]):
         self.update_requests()
 
     def get_webtoon_directory_name(self) -> str:
-        return (
-            f"{self.get_safe_file_name(self.title)}({self.webtoon_id}, shuffled)"
-            if self.is_shuffled
-            else f"{self.get_safe_file_name(self.title)}({self.webtoon_id})"
-        )
+        directory_name = f"{self.get_safe_file_name(self.title)}({self.webtoon_id}"
+        if self.is_shuffled:
+            directory_name += ", shuffled"
+
+        if self.fhd_downloaded:
+            directory_name += ", HD"
+
+        directory_name += ")"
+
+        return directory_name
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -171,6 +186,28 @@ class LezhinComicsScraper(Scraper[str]):
         # 기타 레진 한정 정보들
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id
+
+    @reload_manager
+    def fetch_user_infos(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
+        user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
+        self.fetch_all()
+        url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
+        data = self.requests.get(url).json()
+        if "error" in data:
+            raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
+        data = data['data']
+        view_episodes_set = {int(episode_int_id) for episode_int_id in data['history']}
+        purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased']}
+
+        self.is_subscribed = data['subscribed']
+        self.does_get_notifications = data['notification']
+        self.last_viewed_episode_int_id = data['latestViewedEpisode']
+        self.is_preferred = data['preferred']
+
+        self.purchased_episodes = [episode_id in purchased_episodes_set
+                                   for episode_id in self.episode_int_ids]
+        self.viewed_episodes = [episode_id in view_episodes_set
+                                for episode_id in self.episode_int_ids]
 
     def get_episode_informations_from_json_data(
         self,
@@ -283,7 +320,14 @@ class LezhinComicsScraper(Scraper[str]):
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
-        is_purchased = not self.is_episode_free_list[episode_no]
+        if hasattr(self, "purchased_episodes"):
+            is_purchased = not self.is_episode_free_list[episode_no]
+        else:
+            is_purchased = self.purchased_episodes[episode_no]
+
+        if is_purchased and self.fhd_downloaded is not None:
+            self.fhd_downloaded = True
+
         purchased = "true" if is_purchased else "false"
         episode_id_str = self.episode_ids[episode_no]
         episode_id_int = self.episode_int_ids[episode_no]
