@@ -185,7 +185,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.webtoon_int_id = webtoon_int_id
 
     @reload_manager
-    def fetch_user_infos(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
+    def fetch_user_informations(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
         user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
         self.fetch_all()
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
