@@ -9,7 +9,6 @@ from json import JSONDecodeError
 import shutil
 import itertools
 import random
-from typing import Literal
 
 from resoup.exceptions import EmptyResultError
 
