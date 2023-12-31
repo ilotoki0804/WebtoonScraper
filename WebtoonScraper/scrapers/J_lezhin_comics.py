@@ -179,11 +179,8 @@ class LezhinComicsScraper(Scraper[str]):
         # departure는 product['episodes']와 동일하기에 product['episodes']를 사용해도 무관하다.
         self.get_episode_informations_from_json_data(product["episodes"])
 
-        # webtoon infomation
         self.webtoon_thumbnail = thumbnail_url
         self.title = title
-
-        # 기타 레진 한정 정보들
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id
 
@@ -220,11 +217,11 @@ class LezhinComicsScraper(Scraper[str]):
         )
         episode_int_ids: list[int] = []
         episode_str_ids: list[str] = []
-        subtitles: list[str] = []
+        episode_titles: list[str] = []
         episode_type_chars: list[str] = []
         display_names: list[str] = []
-        is_episode_unusable_list: list[bool] = []
-        is_episode_free_list: list[bool] = []
+        unusable_episodes: list[bool] = []
+        free_episodes: list[bool] = []
         # for episode in reversed(departure):
         for episode in reversed(episode_informations_raw):
             is_episode_expired = episode["properties"]["expired"]
@@ -235,32 +232,32 @@ class LezhinComicsScraper(Scraper[str]):
 
             episode_int_ids.append(episode["id"])
             episode_str_ids.append(episode["name"])
-            subtitles.append(episode["display"]["title"])
+            episode_titles.append(episode["display"]["title"])
             episode_type_chars.append(episode["display"]["type"])
             # episode_id_strs와 거의 같지만 특별편인 경우 'x1' 등으로 표시되는 episode_id_strs과는 달리
             # '공지'와 같은 글자로 나타나며 에피소드 위 작은 글씨를 의미한다. 스크래핑과는 큰 관련이 없는 자료이다.
             display_names.append(episode["display"]["displayName"])
-            is_episode_unusable_list.append(is_episode_unusable)
-            is_episode_free_list.append(is_episode_free)
+            unusable_episodes.append(is_episode_unusable)
+            free_episodes.append(is_episode_free)
 
         lists_to_filter = (
             episode_int_ids,
             episode_str_ids,
-            subtitles,
+            episode_titles,
             episode_type_chars,
             display_names,
-            is_episode_unusable_list,
-            is_episode_free_list,
+            unusable_episodes,
+            free_episodes,
         )
 
         to_downloads = [
             (get_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
             for is_unusable, is_free in zip(
-                is_episode_unusable_list, is_episode_free_list
+                unusable_episodes, free_episodes
             )
         ]
 
-        if len(subtitles) - sum(to_downloads):
+        if len(episode_titles) - sum(to_downloads):
             match get_unusable_episode, get_paid_episode:
                 case False, False:
                     warning_message = (
@@ -287,7 +284,7 @@ class LezhinComicsScraper(Scraper[str]):
 
             warning_message += " Following epsodes will be skipped: " + ", ".join(
                 subtitle
-                for to_download, subtitle in zip(to_downloads, subtitles)
+                for to_download, subtitle in zip(to_downloads, episode_titles)
                 if not to_download
             )
             logging.warning(warning_message)
@@ -295,13 +292,10 @@ class LezhinComicsScraper(Scraper[str]):
         for list_to_filter in lists_to_filter:
             list_to_filter[:] = itertools.compress(list_to_filter, to_downloads)  # type: ignore
 
-        # episode infomations
-        self.episode_titles = subtitles
+        self.episode_titles = episode_titles
         self.episode_ids: list[str] = episode_str_ids
         self.episode_int_ids = episode_int_ids
-        self.is_episode_free_list = is_episode_free_list
-
-        # 기타 레진 한정 정보들
+        self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
 
     def download_webtoon_thumbnail(
@@ -321,7 +315,7 @@ class LezhinComicsScraper(Scraper[str]):
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
         if hasattr(self, "purchased_episodes"):
-            is_purchased = not self.is_episode_free_list[episode_no]
+            is_purchased = not self.free_episodes[episode_no]
         else:
             is_purchased = self.purchased_episodes[episode_no]
 
