@@ -7,9 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-from typing import Iterable, TypeAlias, Final
-
-from typing_extensions import Literal
+from typing import TypeAlias, Final, Literal
 
 from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 

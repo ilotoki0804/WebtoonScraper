@@ -29,7 +29,6 @@ webtoon = "WebtoonScraper.__main__:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 tqdm = "^4.66.1"
-typing-extensions = "^4.8.0"
 rich = "^13.6.0"
 demjson3 = "^3.0.6"
 Pillow = "^10.0.1"
