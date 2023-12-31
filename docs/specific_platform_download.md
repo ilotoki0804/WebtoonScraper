@@ -179,7 +179,7 @@ from WebtoonScraper.scrapers import LezhinComicsScraper
 
 if __name__ == "__main__":
     bearer = 'Bearer ...'
-    scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 자신이 구매한 유료 회차가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
+    scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 소장한 무료 에피소드가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
     scraper.get_paid_episode = True
     scraper.fetch_user_infos()
     scraper.download_webtoon()
