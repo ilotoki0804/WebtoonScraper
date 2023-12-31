@@ -393,9 +393,11 @@ wt.download_webtoon(5, wt.G, merge_amount=5)  # 1~5화, 6~10화 이런 식으로
 
 ## Relese Note
 
-2.3.4 (Dec 30, 2023): fast_merge_webtoon이 기본값이 되고 기존 방식은 제거됨. setup이 fetch_all로 이름이 바뀜. 레진코믹스 구매한 회차 1080p 지원 및 모든 rating 지원 및 기본 timeout 늘림. 버그 개선 및 코드 개선, 문서 보강
+2.3.5 (Dec 31, 2023): 레진코믹스 구매한 무료 회차 1080p 지원(#3) 및 코드 및 문서 개선.
 
-2.3.3 (Dec 27, 2023): directory_merger 관련 코드 개선 및 기타 코드 개선
+2.3.4 (Dec 30, 2023): fast_merge_webtoon이 기본값이 되고 기존 방식은 제거됨. setup이 fetch_all로 이름이 바뀜. 레진코믹스 구매한 회차 1080p 지원 및 모든 rating 지원(#3) 및 기본 timeout 늘림. 버그 개선 및 코드 개선, 문서 보강
+
+2.3.3 (Dec 27, 2023): directory_merger 관련 코드 개선 및 기타 코드 개선(#2)
 
 2.3.2 (Dec 10, 2023): CLI에 merge 명령 추가, restore_webtoon_directory_to_directory 추가, pyproject.toml에 프로젝트 메타데이터 추가, Hits 추가, 네이버 블로그 관련 버그 수정, callback 추가, EpisodeNoRange에서 slice와 iterable도 받도록 허용, webtoon CLI 추가
 
