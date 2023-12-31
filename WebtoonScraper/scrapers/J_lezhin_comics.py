@@ -9,6 +9,7 @@ from json import JSONDecodeError
 import shutil
 import itertools
 import random
+from typing import Literal
 
 from resoup.exceptions import EmptyResultError
 
@@ -192,14 +193,16 @@ class LezhinComicsScraper(Scraper[str]):
         data = self.requests.get(url).json()
         if "error" in data:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
-        data = data['data']
+        data: dict = data['data']
         view_episodes_set = {int(episode_int_id) for episode_int_id in data['history']}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased'] or []}
 
         self.is_subscribed = data['subscribed']
         self.does_get_notifications = data['notification']
-        self.last_viewed_episode_int_id = data['latestViewedEpisode']
-        self.is_preferred = data['preferred']
+        self.last_viewed_episode_int_id: int | None = int(data.get('latestViewedEpisode', 0)) or None
+        self.is_preferred: bool | None = (
+            data['preferred'] if data['preferred'] != 'none' else None
+        )
 
         self.purchased_episodes = [episode_id in purchased_episodes_set
                                    for episode_id in self.episode_int_ids]
