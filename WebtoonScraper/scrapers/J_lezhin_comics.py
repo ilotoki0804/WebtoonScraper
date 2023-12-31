@@ -194,7 +194,7 @@ class LezhinComicsScraper(Scraper[str]):
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
         data = data['data']
         view_episodes_set = {int(episode_int_id) for episode_int_id in data['history']}
-        purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased']}
+        purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased'] or []}
 
         self.is_subscribed = data['subscribed']
         self.does_get_notifications = data['notification']
