@@ -24,6 +24,9 @@ __github_user_name__ = __author__
 __github_project_name__ = __title__
 
 import sys as _sys
+import nest_asyncio as _nest_asyncio
+
+_nest_asyncio.apply()
 
 if _sys.version_info < (3, 11, 0):
     import logging
