@@ -181,7 +181,7 @@ if __name__ == "__main__":
     bearer = 'Bearer ...'
     scraper = LezhinComicsScraper('gahu_r', bearer=bearer)  # 소장한 무료 에피소드가 있는 웹툰을 gahu_r의 위치에 붙여넣으세요.
     scraper.get_paid_episode = True
-    scraper.fetch_user_infos()
+    scraper.fetch_user_informations()
     scraper.download_webtoon()
 ```
 
