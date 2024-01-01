@@ -172,7 +172,7 @@ if __name__ == "__main__":
     scraper.download_webtoon()
 ```
 
-소장한 "무료" 에피소드를 고화질로 다운로드받으려면 다운로드 전 추가적으로 `scraper.fetch_user_infos()`를 실행해야 합니다.
+소장한 "무료" 에피소드를 고화질로 다운로드받으려면 다운로드 전 추가적으로 `scraper.fetch_user_informations()`를 실행해야 합니다.
 
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
