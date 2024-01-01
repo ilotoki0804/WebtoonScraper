@@ -193,12 +193,14 @@ class LezhinComicsScraper(Scraper[str]):
         if "error" in data:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
         data: dict = data['data']
-        view_episodes_set = {int(episode_int_id) for episode_int_id in data['history']}
+        view_episodes_set = {int(episode_int_id) for episode_int_id in data['history'] or []}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased'] or []}
+
+        raw_last_viewed_episode = data.get('latestViewedEpisode', 0)
+        self.last_viewed_episode_int_id: int | None = int(raw_last_viewed_episode) if raw_last_viewed_episode else None
 
         self.is_subscribed = data['subscribed']
         self.does_get_notifications = data['notification']
-        self.last_viewed_episode_int_id: int | None = int(data.get('latestViewedEpisode', 0)) or None
         self.is_preferred: bool | None = (
             data['preferred'] if data['preferred'] != 'none' else None
         )
@@ -317,9 +319,9 @@ class LezhinComicsScraper(Scraper[str]):
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
         if hasattr(self, "purchased_episodes"):
-            is_purchased = not self.free_episodes[episode_no]
-        else:
             is_purchased = self.purchased_episodes[episode_no]
+        else:
+            is_purchased = not self.free_episodes[episode_no]
 
         if is_purchased and self.is_fhd_downloaded is not None:
             self.is_fhd_downloaded = True
