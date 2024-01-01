@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 from multiprocessing import pool
-from resoup import requests, SoupTools
+import hxsoup
 
 from .scrapers import (
     Scraper,
@@ -210,12 +210,12 @@ def download_webtoons_getting_paid(
     noticeid: int,
     merge_amount: int | None = 5,
 ) -> None:
-    res = requests.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}", headers={})  # type: ignore
+    res = hxsoup.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}")
     raw_html = res.json().get("notice").get("content")
 
     titleids = (
         int(tag.get("href").removeprefix("https://comic.naver.com/webtoon/list?titleId=").partition("&")[0])  # type: ignore
-        for tag in SoupTools(raw_html).soup_select("a")
+        for tag in hxsoup.SoupTools(raw_html).soup_select("a")
     )
 
     for titleid in titleids:
