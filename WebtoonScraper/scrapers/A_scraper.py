@@ -360,11 +360,11 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     def make_directory_or_check_if_directory_is_valid(
         self, episode_directory: Path, image_urls: list, subtitle: str
-    ) -> None | bool:
+    ) -> bool:
         """episode_directory를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사합니다.
         episode_no는 사용되지 않지만 혹시 모를 경우를 위해 남겨져 있습니다. 필요한 경우 제거하셔도 됩니다.
 
-        None를 return한다면 회차를 다운로드해야 한다는 의미입니다.
+        False를 return한다면 회차를 다운로드해야 한다는 의미입니다.
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
         """
 
@@ -390,6 +390,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             )
             shutil.rmtree(episode_directory)
             episode_directory.mkdir()
+            return False
         else:
             self.set_progress_indication(f"skipping {subtitle}")
             return True
