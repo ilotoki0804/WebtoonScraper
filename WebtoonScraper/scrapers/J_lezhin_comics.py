@@ -17,6 +17,7 @@ from .J_lezhin_unshuffler import (
     unshuffle_typical_webtoon_directory_and_return_target_directory,
 )
 from ..exceptions import (
+    InvalidWebtoonIdError,
     UnsupportedWebtoonRatingError,
     UseFetchEpisode,
     WebtoonScraperError,
@@ -114,14 +115,9 @@ class LezhinComicsScraper(Scraper[str]):
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-        res = self.requests.get(f"{self.BASE_URL}/{self.webtoon_id}")
-        if (
-            res.soup_select_one(
-                'meta[property="og:title"]', no_empty_result=True
-            ).content
-            == "404 - 레진코믹스"
-        ):
-            raise ValueError(f"Invalid {self.webtoon_id = }")
+        res = self.hxoptions.get(f"{self.BASE_URL}/{self.webtoon_id}")
+        if res.status_code == 404:
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
 
         try:
             title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text

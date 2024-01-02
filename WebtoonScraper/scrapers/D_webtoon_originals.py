@@ -36,7 +36,7 @@ class WebtoonsEnglishScraper(Scraper[int]):
 
         if response.status_code == 404:
             del self.is_original
-            raise InvalidWebtoonIdError(f"webtoon_id {self.webtoon_id} is invalid. Webtoon it may be adult-only.")
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self), rating_notice=True)
 
         title = response.soup_select_one(
             'meta[property="og:title"]', no_empty_result=True

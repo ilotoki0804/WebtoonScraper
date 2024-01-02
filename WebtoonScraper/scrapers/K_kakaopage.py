@@ -49,9 +49,7 @@ class KakaopageScraper(Scraper[int]):
             'meta[property="og:title"]', no_empty_result=True
         ).get("content")
         if title == "카카오페이지" or not isinstance(title, str):
-            raise InvalidWebtoonIdError(
-                f"webtoon_id {self.webtoon_id} is invalid. Webtoon it may be adult-only."
-            )
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self), rating_notice=True)
 
         thumnail_url = res.soup_select_one(
             'meta[property="og:image"]', no_empty_result=True
