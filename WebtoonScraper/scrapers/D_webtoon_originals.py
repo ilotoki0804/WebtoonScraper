@@ -1,30 +1,43 @@
-"""Download Webtoons from Webtoon Originals."""
+"""Download Webtoons from `webtoons.com/en`."""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .A_scraper import Scraper, reload_manager
+from ..exceptions import InvalidWebtoonIdError
 
 
-class WebtoonOriginalsScraper(Scraper[int]):
+class WebtoonsEnglishScraper(Scraper[int]):
     """Scrape webtoons from Webtoon Originals."""
-
-    BASE_URL = "https://www.webtoons.com/en/fantasy/watermelon"
+    BASE_URL = "https://www.webtoons.com/en/action/jungle-juice"
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 5291  # Wumpus
+    TEST_WEBTOON_IDS = (
+        5291,  # Wumpus
+        263735,  # Spook
+    )
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
+    base_url: str
 
     def __init__(self, titleid) -> None:
         super().__init__(titleid)
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
-            "Referer": "http://www.webtoons.com",
-        }
-        self.update_requests()
+        self.headers.update(Referer="http://www.webtoons.com")
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        response = self.requests.get(f"{self.BASE_URL}/list?title_no={self.webtoon_id}")
+        self.base_url = "https://www.webtoons.com/en/action/jungle-juice"
+        self.is_original = True
+        response = self.hxoptions.get(f"{self.base_url}/list?title_no={self.webtoon_id}")
+
+        if response.status_code == 404:
+            self.base_url = "https://www.webtoons.com/en/challenge/meme-girls"
+            self.is_original = False
+            response = self.hxoptions.get(f"{self.base_url}/list?title_no={self.webtoon_id}")
+
+        if response.status_code == 404:
+            del self.is_original
+            raise InvalidWebtoonIdError(f"webtoon_id {self.webtoon_id} is invalid. Webtoon it may be adult-only.")
+
         title = response.soup_select_one(
             'meta[property="og:title"]', no_empty_result=True
         ).get("content")
@@ -49,9 +62,9 @@ class WebtoonOriginalsScraper(Scraper[int]):
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         # getting title_no
-        url = f"{self.BASE_URL}/list?title_no={self.webtoon_id}"
+        url = f"{self.base_url}/list?title_no={self.webtoon_id}"
         title_no_str = (
-            self.requests.get(url)
+            self.hxoptions.get(url)
             .soup_select_one("#_listUl > li", no_empty_result=True)
             .get("data-episode-no")
         )
@@ -60,8 +73,8 @@ class WebtoonOriginalsScraper(Scraper[int]):
 
         # getting list of titles
         selector = "#_bottomEpisodeList > div.episode_cont > ul > li"
-        url = f"{self.BASE_URL}/prologue/viewer?title_no={self.webtoon_id}&episode_no={title_no}"
-        selected = self.requests.get(url).soup_select(selector)
+        url = f"{self.base_url}/prologue/viewer?title_no={self.webtoon_id}&episode_no={title_no}"
+        selected = self.hxoptions.get(url).soup_select(selector)
 
         subtitles = []
         episode_ids = []
@@ -77,8 +90,8 @@ class WebtoonOriginalsScraper(Scraper[int]):
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
-        url = f"{self.BASE_URL}/prologue/viewer?title_no={self.webtoon_id}&episode_no={episode_id}"
-        episode_images_url = self.requests.get(url).soup_select("#_imageList > img")
+        url = f"{self.base_url}/prologue/viewer?title_no={self.webtoon_id}&episode_no={episode_id}"
+        episode_images_url = self.hxoptions.get(url).soup_select("#_imageList > img")
         episode_image_urls = [element["data-url"] for element in episode_images_url]
         if TYPE_CHECKING:
             episode_image_urls = [
