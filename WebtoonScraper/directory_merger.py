@@ -285,10 +285,10 @@ def merge_webtoon(
     # 그루핑 끝난 디렉토리들 실제로 옮김
     for directories in grouped_directories.values():
         # 디렉토리명 만듦
-        episode_no_range = {
+        episode_no_range = sorted(
             _get_episode_no(directory.name) for directory in directories
-        }
-        new_directory_name = f"{min(episode_no_range):04d}~{max(episode_no_range):04d}"
+        )
+        new_directory_name = f"{episode_no_range[0]:04d}~{episode_no_range[-1]:04d}"
         target_episode_directory = target_webtoon_directory / new_directory_name
         target_episode_directory.mkdir()
 
