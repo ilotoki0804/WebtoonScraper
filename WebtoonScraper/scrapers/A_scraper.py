@@ -1,6 +1,7 @@
 """Abstract Class of all scrapers."""
 
 from __future__ import annotations
+import asyncio
 from dataclasses import dataclass
 import functools
 import re
@@ -9,13 +10,14 @@ import sys
 import shutil
 from pathlib import Path
 import time
-from typing import Generic, Iterable, TypeVar
+from tokenize import cookie_re
+from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
 from typing import ClassVar
 import logging
 import threading
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from enum import Enum
 
 from tqdm import tqdm
@@ -24,6 +26,7 @@ from resoup.api_with_tools import DEFAULT_HEADERS
 from rich.table import Table
 from rich.console import Console
 import pyfilename as pf
+import hxsoup
 
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
@@ -108,12 +111,12 @@ class Scraper(ABC, Generic[WebtoonId]):
         이 함수를 override할 때는 super().__init__(...)을 구현 "앞에" 위치하세요.
         또한 timeout, attempts, cookie, headers중에 하나라도 정의한다면 self.update_requests()를 끝에 꼭 붙여야 합니다.
         """
-        self.attempts: int = 3
-        self.timeout: int = 10
-        self.headers: dict[str, str] = DEFAULT_HEADERS
-        self.cookie: str
-        self.rich_console = Console()
-        self.update_requests()
+        self.hxoptions = hxsoup.MutableClientKeywordOptions(
+            attempts=3,
+            timeout=10,
+            headers=dict(hxsoup.DEV_HEADERS),
+            follow_redirects=True,
+        )
 
         self.webtoon_id = webtoon_id
         self.base_directory = "webtoon"
@@ -147,43 +150,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                 f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
                 str(episode_title),
             )
-        self.rich_console.print(table)
-
-    def update_requests(self) -> None:
-        """
-        timeout, attempts, cookie, headers 중 하나라도 수정했을 때 self.reqeusts에 반영하기 위해서는
-        이 함수를 이용해야 합니다.
-        참고: 이 함수는 자동으로 self.headers에 self.cookie를 반영시킵니다. 따라서 self.cookie를 제작한 뒤
-        이 함수를 호출하면 자동으로 self.headers에 self.cookie가 반영됩니다.
-        """
-        names_can_be_applied = (
-            "attempts",
-            "raise_for_status",
-            "avoid_sslerror",
-            "params",
-            "data",
-            "cookies",
-            "files",
-            "auth",
-            "timeout",
-            "allow_redirects",
-            "proxies",
-            "hooks",
-            "stream",
-            "verify",
-            "cert",
-            "json",
-        )
-
-        to_apply = {
-            name: getattr(self, name)
-            for name in names_can_be_applied
-            if hasattr(self, name)
-        }
-        if (headers := self.build_headers()) is not None:
-            to_apply.update(headers=headers)
-
-        self.requests = CustomDefaults(**to_apply)
+        Console().print(table)
 
     def set_progress_indication(self, description: str) -> None:
         """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
@@ -230,8 +197,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     def check_if_legitimate_webtoon_id(
         self,
-        exception_type: type[BaseException]
-        | tuple[type[BaseException], ...] = Exception,
+        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
     ) -> str | None:
         """If webtoon_id is legitimate, return title. Otherwise, return None"""
         try:
@@ -255,14 +221,27 @@ class Scraper(ABC, Generic[WebtoonId]):
         """
         self._base_directory = Path(base_directory)
 
-    def build_headers(self) -> dict | None:
-        if not hasattr(self, "headers"):
-            return None
+    @property
+    def cookie(self):
+        return self._cookie
 
-        if hasattr(self, "cookie"):
-            return self.headers | {"Cookie": self.cookie}
-        else:
-            return self.headers
+    @cookie.setter
+    def cookie(self, value: str):
+        self._cookie = value
+        self.headers.update(Cookie=value)
+
+    @property
+    def headers(self):
+        headers = self.hxoptions.headers
+        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
+        if TYPE_CHECKING:
+            headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
+        return headers
+
+    @headers.setter
+    def headers(self, value) -> None:
+        self.headers.clear()
+        self.headers.update(value)
 
     ################################## MAIN ACTION ##################################
 
@@ -305,6 +284,14 @@ class Scraper(ABC, Generic[WebtoonId]):
         episode_no_range: EpisodeNoRange = None,
         merge_amount: int | None = None,
     ) -> None:
+        asyncio.run(self.async_download_webtoon(
+            episode_no_range=episode_no_range, merge_amount=merge_amount))
+
+    async def async_download_webtoon(
+        self,
+        episode_no_range: EpisodeNoRange = None,
+        merge_amount: int | None = None,
+    ) -> None:
         """웹툰 다운로드의 주축이 되는 함수. 이 함수를 통해 웹툰을 다운로드합니다.
 
         주의: 유료 회차나 성인 웹툰은 기본적으로는 다운로드받을 수 없습니다.
@@ -332,11 +319,14 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         self.callback("download_episode_start")
         self.pbar = tqdm(episode_no_list)
-        for episode_no in self.pbar:
-            # if를 붙이는 게 self.INTERVAL~이 0인 경우 빨라짐.
-            if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
-                time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
-            self.download_episode(episode_no, webtoon_directory)
+        loop = asyncio.get_running_loop()
+        async with self.hxoptions.build_async_client() as client:
+            for episode_no in self.pbar:
+                if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
+                    # if를 붙이는 게 interval이 0인 경우 빨라짐.
+                    time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
+
+                loop.run_until_complete(self.download_episode(episode_no, webtoon_directory, client))
         self.callback("download_episode_end")
 
         webtoon_directory = self.unshuffle_lezhin_webtoon(webtoon_directory)
@@ -398,7 +388,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             self.set_progress_indication(f"skipping {subtitle}")
             return True
 
-    def download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
+    async def download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> None:
         """한 회차를 다운로드받는다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
         safe_episode_title = self.get_safe_file_name(self.episode_titles[episode_no])
 
@@ -428,20 +418,16 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         self.set_progress_indication(f"downloading {safe_episode_title}")
 
-        threads = [
-            threading.Thread(
-                target=self.download_image, args=(episode_directory, element, i)
-            )
-            for i, element in enumerate(episode_images_url)
-        ]
-        [thread.start() for thread in threads]
-        [thread.join() for thread in threads]
+        await asyncio.gather(*(self.download_image(episode_directory, element, i, client)
+                               for i, element in enumerate(episode_images_url)))
 
-    def download_image(
+    async def download_image(
         self,
         episode_directory: Path,
         url: str,
         image_no: int,
+        client: hxsoup.AsyncClient,
+        *,
         file_extension: str | None = None,
     ) -> None:
         """
@@ -461,7 +447,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         file_name = f"{image_no:03d}.{image_extension}"
 
-        image_raw: bytes = self.requests.get(url).content
+        image_raw: bytes = (await client.get(url)).content
 
         file_directory = episode_directory / file_name
         file_directory.write_bytes(image_raw)
@@ -487,7 +473,7 @@ class Scraper(ABC, Generic[WebtoonId]):
                         f"File extension not detected. thumbnail_data: {thumbnail_data}"
                     )
 
-            image_raw = self.requests.get(thumbnail_data).content
+            image_raw = self.hxoptions.get(thumbnail_data).content
         elif isinstance(
             thumbnail_data, tuple
         ):  # It means thumnail_data is raw image data
