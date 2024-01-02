@@ -49,6 +49,16 @@ class BufftoonScraper(Scraper[int]):
         self.avoid_sslerror = True
         self.update_requests()
 
+    async def async_download_webtoon(self, episode_no_range: EpisodeNoRange = None, merge_amount: int | None = None) -> None:
+        if not self.cookie:
+            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수도 있음.
+            logging.warning(
+                "Without setting cookie extremely limiting the range of downloadable episodes. "
+                "Please set cookie to valid download. "
+                "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
+            )
+        return await super().async_download_webtoon(episode_no_range, merge_amount)
+
     @reload_manager
     def fetch_episode_informations(
         self,
@@ -58,14 +68,6 @@ class BufftoonScraper(Scraper[int]):
         *,
         reload: bool = False,
     ) -> None:
-        if not self.cookie:
-            # 웹툰에 대한 정보를 알고 싶을 때도 호출되어서 성가실 수도 있음.
-            logging.warning(
-                "Without setting cookie extremely limiting the range of downloadable episodes. "
-                "Please set cookie to valid download. "
-                "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
-            )
-
         url = f"https://api-bufftoon.plaync.com/v2/series/{self.webtoon_id}/episodes?sortType=2&offset=0&limit={limit}"
         raw_data = self.requests.get(url).json()
         subtitles = []
