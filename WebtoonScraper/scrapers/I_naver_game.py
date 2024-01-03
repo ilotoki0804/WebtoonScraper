@@ -19,7 +19,7 @@ class NaverGameScraper(Scraper[int]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         url = f"https://apis.naver.com/nng_main/nng_main/original/series/{self.webtoon_id}"
-        webtoon_data = self.requests.get(url).json()["content"]
+        webtoon_data = self.hxoptions.get(url).json()["content"]
         title = webtoon_data["seriesName"]
         thumbnail = webtoon_data["seriesImage"]["verticalLogoImageUrl"]
 
@@ -37,7 +37,7 @@ class NaverGameScraper(Scraper[int]):
                 f"https://apis.naver.com/nng_main/nng_main/original/series/{self.webtoon_id}/seasons/{season}/contents"
                 f"?direction=NEXT&pagingType=CURSOR&sort=FIRST&limit={episode_max_limit}"
             )
-            res = self.requests.get(url)
+            res = self.hxoptions.get(url)
             res = res.json()
             if not res["content"]:
                 break
