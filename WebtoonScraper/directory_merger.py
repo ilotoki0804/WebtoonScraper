@@ -402,11 +402,16 @@ def _get_merged_image_name(image_name: str, episode_name: str) -> str:
 
 def _iterdir_seperating_directories_and_files(
     directory: PathOrStr,
+    treat_underscored_directories_as_file: bool = True,
 ) -> tuple[list[Path], list[Path]]:
     directories: list[Path] = []
     files: list[Path] = []
     for path in Path(directory).iterdir():
-        if path.is_dir():
+        if path.is_dir() and not (
+            treat_underscored_directories_as_file
+            and path.name.startswith("_")
+            and not path.name.startswith("__")
+        ):
             directories.append(path)
         else:
             files.append(path)
