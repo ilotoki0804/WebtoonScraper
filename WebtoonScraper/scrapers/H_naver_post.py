@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
 from itertools import count
 import logging
 import time
@@ -61,11 +61,11 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
 
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
         self.pbar = tqdm(total=len(episode_no_list))
-        episode_ids_to_try: set[int] = set(range(len(episode_no_list)))
+        episode_ids_to_try: deque[int] = deque(range(len(episode_no_list)))
         try_counts = defaultdict(int)
         async with self.hxoptions.build_async_client() as client:
             while True:
-                episode_no = episode_ids_to_try.pop()
+                episode_no = episode_ids_to_try.popleft()
                 time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
                 try:
@@ -87,7 +87,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                         )
                         return
 
-                    episode_ids_to_try.add(episode_no)
+                    episode_ids_to_try.append(episode_no)
                 else:
                     self.pbar.update(1)
                     if not episode_ids_to_try:
