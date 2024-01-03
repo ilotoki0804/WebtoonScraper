@@ -1,12 +1,19 @@
 """Download Webtoons from Naver Post."""
 
 from __future__ import annotations
+import asyncio
+from collections import defaultdict
 from itertools import count
 import logging
+import time
 from typing import NamedTuple, TYPE_CHECKING
 
 import demjson3
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+
+from ..miscs import EpisodeNoRange
+from ..exceptions import InvalidFetchResultError
 
 from .A_scraper import Scraper, reload_manager
 
@@ -26,6 +33,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
         r"\?(?:.*&)*seriesNo=(?P<webtoon_id>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
@@ -46,11 +54,44 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             "Sec-Gpc": "1",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69",
         }
-        self.update_requests()
 
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return f"{self.title}{tuple(self.webtoon_id)}"
+
+    async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
+        self.pbar = tqdm(total=len(episode_no_list))
+        episode_ids_to_try: set[int] = set(range(len(episode_no_list)))
+        try_counts = defaultdict(int)
+        async with self.hxoptions.build_async_client() as client:
+            while True:
+                episode_no = episode_ids_to_try.pop()
+                time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
+
+                try:
+                    await self.download_episode(episode_no, webtoon_directory, client)
+                except InvalidFetchResultError:
+                    attempts = self.hxoptions.attempts
+                    if attempts is None:
+                        logging.warning(
+                            "Failed to download following episodes: "
+                            + ", ".join(str(i + 1) for i in sorted(episode_ids_to_try))
+                        )
+                        return
+
+                    try_counts[episode_no] += 1
+                    if attempts <= try_counts[episode_no]:
+                        logging.warning(
+                            "Failed to download following episodes: "
+                            + ", ".join(str(i + 1) for i in sorted(episode_ids_to_try))
+                        )
+                        return
+
+                    episode_ids_to_try.add(episode_no)
+                else:
+                    self.pbar.update(1)
+                    if not episode_ids_to_try:
+                        return
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
@@ -65,7 +106,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                 f"?memberNo={member_no}&seriesNo={series_no}&lastSortOrder=49"
                 f"&prevVolumeNo=&fromNo={i}&totalCount=68"
             )
-            response_text: str = self.requests.get(url).text
+            response_text: str = self.hxoptions.get(url).text
 
             # 네이버는 기본적으로 json이 망가져 있기에 json이 망가져 있어도 parse를 해주는 demjson이 필요
             # demjson3.decode()의 결과값은 dict임. 하지만 어째선지 타입 체커가 오작동하니 type: ignore가 필요.
@@ -91,7 +132,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
-        response = self.requests.get(
+        response = self.hxoptions.get(
             f"https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}"
         )
         title: str = response.soup_select_one(
@@ -106,32 +147,14 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.title = title
         self.webtoon_thumbnail = image_url
 
-    def get_episode_image_urls(self, episode_no, attempts: int = 3):
+    def get_episode_image_urls(self, episode_no):
         series_no, member_no = self.webtoon_id
         episode_id = self.episode_ids[episode_no]
-        url = f"https://post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}&navigationType=push"
-        for _ in range(attempts):
-            response = self.requests.get(url)
-            content = response.soup_select_one("#__clipContent")
-            if content is None:
-                # '존재하지 않는 포스트입니다'하는 경고가 뜬 후 사이트가 받아지지 않는 오류
-                # 아마 episode_id에 webtoon_id가 잘못 들어가면 생기는 오류로 추정하지만
-                # 정확한 이유는 불명, 가끔씩 생기는 문제.
-                # 제시도로 상황이 그리 나아지지는 않음.
-                logging.warning(
-                    f"Data got from episode {episode_id} is invalid. retrying..."
-                )
-            else:
-                break
-        else:
-            raise ConnectionError(
-                "Unknown error occurred. Just trying again will solve issue."
-            )
-
-            # # 가끔씩 너무 자주 오류가 발생할 때가 있음.
-            # # 그럴 때는 ConnectionError 대신 이 코드를 이용해서 해당 회차를 스킵하도록 하는 조금 더 온건한 방식을 사용할 것.
-            # logging.warning(f"Unknown error occurred at {episode_id}. Try again later.")
-            # return None
+        url = f"https://m.post.naver.com/viewer/postView.naver?volumeNo={episode_id}&memberNo={member_no}"
+        response = self.hxoptions.get(url)
+        content = response.soup_select_one("#__clipContent")
+        if content is None:
+            raise InvalidFetchResultError
 
         content = content.text
         soup_content = BeautifulSoup(content, "html.parser")

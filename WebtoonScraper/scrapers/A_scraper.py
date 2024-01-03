@@ -273,7 +273,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             return (i - 1 for i in range(1, episode_length + 1)[episode_no_range])
 
         if isinstance(episode_no_range, Iterable):
-            return sorted(i - 1 for i in set(episode_no_range))
+            return sorted(i - 1 for i in episode_no_range if i < episode_length)
 
         raise TypeError(
             f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again."
@@ -318,15 +318,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         episode_no_list = self.episode_no_range_to_real_range(episode_no_range)
 
         self.callback("download_episode_start")
-        self.pbar = tqdm(episode_no_list)
-        loop = asyncio.get_running_loop()
-        async with self.hxoptions.build_async_client() as client:
-            for episode_no in self.pbar:
-                if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
-                    # if를 붙이는 게 interval이 0인 경우 빨라짐.
-                    time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
-
-                loop.run_until_complete(self.download_episode(episode_no, webtoon_directory, client))
+        await self._download_episodes(episode_no_list, webtoon_directory)
         self.callback("download_episode_end")
 
         webtoon_directory = self.unshuffle_lezhin_webtoon(webtoon_directory)
@@ -335,6 +327,16 @@ class Scraper(ABC, Generic[WebtoonId]):
             self.callback("merge_webtoon_start")
             merge_webtoon(webtoon_directory, None, merge_amount)
             self.callback("merge_webtoon_end")
+
+    async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
+        self.pbar = tqdm(episode_no_list)
+        async with self.hxoptions.build_async_client() as client:
+            for episode_no in self.pbar:
+                if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
+                    # if를 붙이는 게 interval이 0인 경우 빨라짐.
+                    time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
+
+                await self.download_episode(episode_no, webtoon_directory, client)
 
     def get_webtoon_directory_name(self) -> str:
         """

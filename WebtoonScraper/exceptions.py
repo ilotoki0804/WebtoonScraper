@@ -71,3 +71,7 @@ class InvalidPlatformError(WebtoonScraperError):
 
 class UserCanceledError(WebtoonScraperError):
     """User revoked process."""
+
+
+class InvalidFetchResultError(WebtoonScraperError):
+    """Fetch result was invalid."""
