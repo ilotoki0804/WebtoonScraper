@@ -72,18 +72,11 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                     await self.download_episode(episode_no, webtoon_directory, client)
                 except InvalidFetchResultError:
                     attempts = self.hxoptions.attempts
-                    if attempts is None:
-                        logging.warning(
-                            "Failed to download following episodes: "
-                            + ", ".join(str(i + 1) for i in sorted(episode_ids_to_try))
-                        )
-                        return
-
                     try_counts[episode_no] += 1
-                    if attempts <= try_counts[episode_no]:
+                    if attempts is None or attempts <= try_counts[episode_no]:
                         logging.warning(
                             "Failed to download following episodes: "
-                            + ", ".join(str(i + 1) for i in sorted(episode_ids_to_try))
+                            + ", ".join(f"{self.episode_titles[i]}(tried {try_counts[i]} time(s))" for i in sorted(episode_ids_to_try))
                         )
                         return
 
