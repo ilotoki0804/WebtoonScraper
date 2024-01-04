@@ -33,7 +33,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         blog_id, category = self.webtoon_id
-        res = self.requests.get(f"https://{blog_id}.tistory.com/category/{category}")
+        res = self.hxoptions.get(f"https://{blog_id}.tistory.com/category/{category}")
         # title = res.soup_select_one("span.txt_section", True).text  # 돌디스튜디오 한정
         # title = res.soup_select_one("span > h1", True).text  # 일반적인 티스토리
         title = unquote(category)
@@ -60,7 +60,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         episode_titles = []
         episode_ids = []
         for i in count(1):
-            res = self.requests.get(
+            res = self.hxoptions.get(
                 f"https://{blog_id}.tistory.com/category/{category}?page={i}"
             )
 
@@ -90,7 +90,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         episode_id = self.episode_ids[episode_no]
 
         # episode_id 자체에 /가 포함되어 있으니 /를 입력할 필요 없음.
-        res = self.requests.get(f"https://{blog_id}.tistory.com{episode_id}")
+        res = self.hxoptions.get(f"https://{blog_id}.tistory.com{episode_id}")
 
         return [
             url

@@ -1,6 +1,9 @@
 """Download Webtoons from Kakaopage."""
 
 from __future__ import annotations
+from pathlib import Path
+
+from hxsoup.client import AsyncClient
 
 from .A_scraper import Scraper, reload_manager
 from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
@@ -39,11 +42,10 @@ class KakaopageScraper(Scraper[int]):
             "Sec-Gpc": "1",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
         }
-        self.update_requests()
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        res = self.requests.get(f"https://page.kakao.com/content/{self.webtoon_id}")
+        res = self.hxoptions.get(f"https://page.kakao.com/content/{self.webtoon_id}")
 
         title = res.soup_select_one(
             'meta[property="og:title"]', no_empty_result=True
@@ -77,7 +79,7 @@ class KakaopageScraper(Scraper[int]):
                 },
             }
 
-            res = self.requests.post(
+            res = self.hxoptions.post(
                 "https://page.kakao.com/graphql",
                 json=post_data,
                 headers=self.graphql_headers,
@@ -105,14 +107,17 @@ class KakaopageScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    def download_image(
+    async def download_image(
         self,
-        episode_directory,
+        episode_directory: Path,
         url: str,
         image_no: int,
+        client: AsyncClient,
+        *,
         file_extension: str | None = "jpg",
     ) -> None:
-        return super().download_image(episode_directory, url, image_no, file_extension)
+        return await super().download_image(episode_directory, url, image_no,
+                                            client, file_extension=file_extension)
 
     def download_webtoon_thumbnail(
         self, thumbnail_directory, file_extension: str | None = "jpg"
@@ -122,23 +127,19 @@ class KakaopageScraper(Scraper[int]):
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
 
-        query = EPISODE_IMAGES_QUERY
-
         post_data = {
             "operationName": "viewerInfo",
-            "query": query,
+            "query": EPISODE_IMAGES_QUERY,
             "variables": {"seriesId": self.webtoon_id, "productId": episode_id},
         }
 
-        res = self.requests.post(
+        res = self.hxoptions.post(
             "https://page.kakao.com/graphql",
             json=post_data,
             headers=self.graphql_headers,
-        ).json()
+        ).json()["data"]
 
         return [
             i["secureUrl"]
-            for i in res["data"]["viewerInfo"]["viewerData"]["imageDownloadData"][
-                "files"
-            ]
+            for i in res["viewerInfo"]["viewerData"]["imageDownloadData"]["files"]
         ]

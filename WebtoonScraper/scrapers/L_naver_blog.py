@@ -12,6 +12,7 @@ from ..exceptions import (
     InvalidWebtoonIdError,
     InvalidBlogIdError,
     InvalidCategoryNoError,
+    UseFetchEpisode,
 )
 
 
@@ -22,11 +23,6 @@ class NaverBlogWebtoonId(NamedTuple):
 
 class NaverBlogScraper(Scraper[tuple[str, int]]):
     """Scrape webtoons from Naver Blog."""
-
-    # __slots__ = 'title', 'webtoon_id', 'headers', 'webtoon_thumbnail', 'subtitle_list', 'episode_id_list'
-    # __slots__ 구현하면 _return_cache같은 것들이 구현될 수 없을 수 있음(실제 그런지는 직접 확인하기.).
-    # 따라서 만약 구현해야 할 경우 주의 요함.
-
     TEST_WEBTOON_ID = NaverBlogWebtoonId("bkid4", 55)  # 상덕
     IS_CONNECTION_STABLE = True
     BASE_URL = "https://m.blog.naver.com"
@@ -50,7 +46,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             "Sec-Fetch-Site": "same-origin",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.47",
         }
-        self.update_requests()
 
     def get_webtoon_directory_name(self) -> str:
         blog_id, category_no = self.webtoon_id
@@ -65,12 +60,10 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         url = f"{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount=24&page={{i}}"
 
-        response = self.requests.get(url.format(i=1)).json()
+        response = self.hxoptions.get(url.format(i=1)).json()
         if response["isSuccess"] is False:
-            raise InvalidBlogIdError(
-                "Invalid blog id. Maybe there's a typo or blog is closed."
-            )
-        if response["result"]["categoryName"] == "전체글":
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
+        if response["result"]["categoryName"] == "전체글" and category_no != 0:
             raise InvalidCategoryNoError(
                 "Invalid category number. Maybe there's a typo or category is deleted."
             )
@@ -90,7 +83,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         items = fetch_result["items"]
         for i in count(2):
-            response = self.requests.get(url.format(i=i))
+            response = self.hxoptions.get(url.format(i=i))
 
             if current_items := response.json()["result"]["items"]:
                 items += current_items
@@ -141,8 +134,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        # raise UseFetchEpisode()
-        self.fetch_episode_informations()
+        raise UseFetchEpisode()
 
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
