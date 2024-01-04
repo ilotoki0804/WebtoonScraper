@@ -83,16 +83,6 @@ class LezhinComicsScraper(Scraper[str]):
         self.get_paid_episode = False
         self.is_fhd_downloaded = False
 
-    @property
-    def bearer(self) -> str:
-        return self._bearer
-
-    @bearer.setter
-    def bearer(self, value: str) -> None:
-        """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
-        self._bearer = value
-        self.headers.update(Authorization=value)
-
     def get_webtoon_directory_name(self) -> str:
         directory_name = f"{self._get_safe_file_name(self.title)}({self.webtoon_id}"
         if self.is_shuffled:
@@ -199,6 +189,92 @@ class LezhinComicsScraper(Scraper[str]):
         self.viewed_episodes = [episode_id in view_episodes_set
                                 for episode_id in self.episode_int_ids]
 
+    def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
+        # sourcery skip: simplify-fstring-formatting
+        if hasattr(self, "purchased_episodes"):
+            is_purchased = self.purchased_episodes[episode_no]
+        else:
+            is_purchased = not self.free_episodes[episode_no]
+
+        if is_purchased and self.is_fhd_downloaded is not None:
+            self.is_fhd_downloaded = True
+
+        purchased = "true" if is_purchased else "false"
+        episode_id_str = self.episode_ids[episode_no]
+        episode_id_int = self.episode_int_ids[episode_no]
+
+        keygen_url = (
+            f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
+            f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
+        )
+
+        keys_response = self.hxoptions.get(keygen_url)
+        if keys_response.status_code == 403:
+            if self.bearer:
+                logging.warning(
+                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
+                    "It's probably because Episode is not available or not for free episode. "
+                )
+            else:
+                logging.warning(
+                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
+                    "It's almost certainly because you don't have bearer. Set bearer to get data."
+                )
+            return None
+
+        response_data = keys_response.json()["data"]
+        policy = response_data["Policy"]
+        signature = response_data["Signature"]
+        key_pair_id = response_data["Key-Pair-Id"]
+
+        images_retrieve_url = (
+            "https://www.lezhin.com/lz-api/v2/inventory_groups/comic_viewer_k?"
+            f"platform=web&store=web&alias={self.webtoon_id}&name={episode_id_str}&preload=false"
+            "&type=comic_episode"
+        )
+        try:
+            images_data = self.hxoptions.get(images_retrieve_url).json()
+        except json.JSONDecodeError:
+            if attempts <= 1:
+                raise
+            logging.warning("Retrying json decode...")
+            return self.get_episode_image_urls(episode_no, attempts=attempts - 1)
+
+        # created_at = images_data["data"]["createdAt"]
+        image_urls: list[str] = []
+        for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
+            image_url = (
+                f'https://rcdn.lezhin.com/v2{image_url_data["path"]}'
+                f".webp?purchased={purchased}&q={30}&updated={1587628135437}"
+                f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
+            )
+            image_urls.append(image_url)
+
+        return image_urls
+
+    def check_if_legitimate_webtoon_id(self) -> str | None:
+        try:
+            title = self.hxoptions.get(
+                f"https://www.lezhin.com/ko/comic/{self.webtoon_id}"
+            ).soup_select_one("h2.comicInfo__title")
+        except Exception:
+            return None
+        return title.text if title else None
+
+    # PROPERTIES
+
+    @property
+    def bearer(self) -> str:
+        return self._bearer
+
+    @bearer.setter
+    def bearer(self, value: str) -> None:
+        """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
+        self._bearer = value
+        self.headers.update(Authorization=value)
+
+    # PRIVATE METHODS
+
     def _get_episode_informations_from_json_data(
         self,
         episode_informations_raw: list[dict],
@@ -282,74 +358,6 @@ class LezhinComicsScraper(Scraper[str]):
         self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
 
-    def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
-        file_content = "\n".join(map(str, self.episode_int_ids))
-        file_path = webtoon_directory / f"{self.webtoon_id}_ids.txt"
-        file_path.write_text(file_content, encoding="utf-8")
-
-    def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
-        # sourcery skip: simplify-fstring-formatting
-        if hasattr(self, "purchased_episodes"):
-            is_purchased = self.purchased_episodes[episode_no]
-        else:
-            is_purchased = not self.free_episodes[episode_no]
-
-        if is_purchased and self.is_fhd_downloaded is not None:
-            self.is_fhd_downloaded = True
-
-        purchased = "true" if is_purchased else "false"
-        episode_id_str = self.episode_ids[episode_no]
-        episode_id_int = self.episode_int_ids[episode_no]
-
-        keygen_url = (
-            f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
-            f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
-        )
-
-        keys_response = self.hxoptions.get(keygen_url)
-        if keys_response.status_code == 403:
-            if self.bearer:
-                logging.warning(
-                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
-                    "It's probably because Episode is not available or not for free episode. "
-                )
-            else:
-                logging.warning(
-                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
-                    "It's almost certainly because you don't have bearer. Set bearer to get data."
-                )
-            return None
-
-        response_data = keys_response.json()["data"]
-        policy = response_data["Policy"]
-        signature = response_data["Signature"]
-        key_pair_id = response_data["Key-Pair-Id"]
-
-        images_retrieve_url = (
-            "https://www.lezhin.com/lz-api/v2/inventory_groups/comic_viewer_k?"
-            f"platform=web&store=web&alias={self.webtoon_id}&name={episode_id_str}&preload=false"
-            "&type=comic_episode"
-        )
-        try:
-            images_data = self.hxoptions.get(images_retrieve_url).json()
-        except json.JSONDecodeError:
-            if attempts <= 1:
-                raise
-            logging.warning("Retrying json decode...")
-            return self.get_episode_image_urls(episode_no, attempts=attempts - 1)
-
-        # created_at = images_data["data"]["createdAt"]
-        image_urls: list[str] = []
-        for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
-            image_url = (
-                f'https://rcdn.lezhin.com/v2{image_url_data["path"]}'
-                f".webp?purchased={purchased}&q={30}&updated={1587628135437}"
-                f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
-            )
-            image_urls.append(image_url)
-
-        return image_urls
-
     def _unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
@@ -369,11 +377,7 @@ class LezhinComicsScraper(Scraper[str]):
             print("Shuffled webtoon directory is deleted.")
         return target_webtoon_directory
 
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        try:
-            title = self.hxoptions.get(
-                f"https://www.lezhin.com/ko/comic/{self.webtoon_id}"
-            ).soup_select_one("h2.comicInfo__title")
-        except Exception:
-            return None
-        return title.text if title else None
+    def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
+        file_content = "\n".join(map(str, self.episode_int_ids))
+        file_path = webtoon_directory / f"{self.webtoon_id}_ids.txt"
+        file_path.write_text(file_content, encoding="utf-8")

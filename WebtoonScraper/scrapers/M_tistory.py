@@ -25,6 +25,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
     URL_REGEX = r"(?:https?:\/\/)?(?P<blog_id>.*?)[.]tistory[.]com\/category\/(?P<category>[^?]*)"
 
     def get_webtoon_directory_name(self) -> str:
+        # category_no는 거의 대부분 title과 같기 때문에 사용하지 않음.
         blog_id, category_no = self.webtoon_id
 
         # 만약 이 코드를 수정할 것이라면 NaverBlogScraper에 있는 정보 참고.

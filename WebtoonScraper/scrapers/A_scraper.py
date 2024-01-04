@@ -118,162 +118,46 @@ class Scraper(ABC, Generic[WebtoonId]):
         self.base_directory = "webtoon"
         self.use_tqdm_while_download = True
 
-    # MISCS
+    # PUBLIC METHODS
 
-    def callback(self, situation: str, context=None):
-        match situation:
-            case "download_episode_end":
-                print(f"A webtoon {self.title} download ended.")
-            case "merge_webtoon_end":
-                print("Merging webtoon ended.")
-            case "merge_webtoon_start":
-                print("Merging webtoon has started...")
-            case the_others:
-                if context is None:
-                    logging.info(f"WebtoonScraper status: {the_others}")
-                else:
-                    logging.info(f"WebtoonScraper status: {the_others}, context: {context}")
+    @abstractmethod
+    def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
+        """해당 회차를 구성하는 이미지들을 불러옵니다."""
 
-    def list_episodes(self) -> None:
-        self.fetch_all()
-        table = Table(show_header=True, header_style="bold blue", box=None)
-        table.add_column("Episode number [dim](ID)[/dim]", width=12)
-        table.add_column("Episode Title", style="bold")
-        for i, (episode_id, episode_title) in enumerate(
-            zip(self.episode_ids, self.episode_titles), 1
-        ):
-            table.add_row(
-                f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
-                str(episode_title),
-            )
-        Console().print(table)
-
-    def _set_progress_indication(self, description: str) -> None:
-        """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
-
-        self.use_tqdm_while_download가 False라면 print를 사용하고, True라면 pbar를 이용합니다.
-        이는 self.use_tqdm_while_download 설정을 변경해 사용할 수 있습니다. 기본값은 True입니다.
-        만약 사용자에게 꼭 알려야 하는 중요한 것이 있다면 이 함수가 아닌 직접 print나 logging을 사용하는 것을 권장합니다.
-        단, 만약 self.pbar가 없어 AttributeError가 난다면 무조건 print를 사용합니다.
-
-        Args:
-            description: 에피소드를 다운로드할 때 내보낼 메시지.
+    @reload_manager
+    @abstractmethod
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         """
-        if self.use_tqdm_while_download:
-            with suppress(AttributeError):
-                self.pbar.set_description(description)
-                return
-
-        self.callback("downloading", description)
-
-    @classmethod
-    def _get_file_extension(cls, filename_or_url: str) -> str | None:
-        """Get file extionsion from filename or URL.
-
-        Args:
-            filename_or_url: 파일 확장자가 궁금한 파일명이나 URL. 이때 URL 쿼리는 무시됩니다.
-
-        Returns:
-            파일 확장자를 반환합니다.
+        웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
         """
-        url_path = parse.urlparse(
-            filename_or_url
-        ).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
-        extension_name = re.search(r"(?<=[.])\w+?$", url_path)
-        return cls.DEFAULT_IMAGE_FILE_EXTENSION if extension_name is None else extension_name.group(0)
+        self.webtoon_thumbnail: str | tuple[bytes, str]
+        self.title: str
 
-    @staticmethod
-    def _get_safe_file_name(file_or_diretory_name: str) -> str:
-        """Convert file or diretory name to accaptable name.
-
-        Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
-        Otherwise it will smash slashes and backslashes.
+    @reload_manager
+    @abstractmethod
+    def fetch_episode_informations(self, *, reload: bool = False) -> None:
         """
-        return pf.to_safe_name(file_or_diretory_name)
-
-    def check_if_legitimate_webtoon_id(
-        self,
-        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
-    ) -> str | None:
-        """If webtoon_id is legitimate, return title. Otherwise, return None"""
-        try:
-            self.fetch_webtoon_information()
-            return self.title
-        except exception_type:
-            return None
-
-    @property
-    def base_directory(self) -> Path:
-        return self._base_directory
-
-    @base_directory.setter
-    def base_directory(self, base_directory: str | Path) -> None:
+        웹툰의 에피소드 정보를 불러옵니다. 웹툰에 대한 정보는 포함하지 않습니다.
         """
-        웹툰을 다운로드할 디렉토리입니다. str이나 Path로 값을 받습니다.
+        self.episode_titles: list[str]
+        self.episode_ids: list[int]
 
-        많은 이 변수의 사용처에서는 pathlib.Path를 필요로 합니다.
-        이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
-        이것을 이용하기 전에 안전한 파일명으로 바꾸는 것을 잊지 마세요!
+    def get_webtoon_directory_name(self) -> str:
         """
-        self._base_directory = Path(base_directory)
+        웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다.
+        네이버 포스트나 레진같이 일반적이지 않은 방식으로 웹툰을 다운로드하는 경우에 사용됩니다.
+        """
+        return f"{self._get_safe_file_name(self.title)}({self.webtoon_id})"
 
-    @property
-    def cookie(self):
-        return self._cookie
+    def fetch_all(self, reload: bool = False) -> None:
+        """웹툰에 관련한 정보를 불러옵니다."""
+        self.callback("setup_start")
 
-    @cookie.setter
-    def cookie(self, value: str):
-        self._cookie = value
-        self.headers.update(Cookie=value)
+        with suppress(UseFetchEpisode):
+            self.fetch_webtoon_information(reload=reload)
+        self.fetch_episode_informations(reload=reload)
 
-    @property
-    def headers(self):
-        headers = self.hxoptions.headers
-        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
-        if TYPE_CHECKING:
-            headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
-        return headers
-
-    @headers.setter
-    def headers(self, value) -> None:
-        self.headers.clear()
-        self.headers.update(value)
-
-    ################################## MAIN ACTION ##################################
-
-    def _episode_no_range_to_real_range(
-        self, episode_no_range: EpisodeNoRange
-    ) -> Iterable[int]:
-        # 주의 episode_no_list는 0부터 시작합니다.
-        episode_length = len(self.episode_ids)
-
-        if episode_no_range is None:
-            return range(episode_length)
-
-        if isinstance(episode_no_range, int):
-            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            return (episode_no_range - 1,)
-
-        if isinstance(episode_no_range, tuple):
-            start, end = episode_no_range
-
-            if start is None:
-                start = 1
-            if end is None:
-                end = episode_length
-
-            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            return range(start - 1, end)
-
-        if isinstance(episode_no_range, slice):
-            return (i - 1 for i in range(1, episode_length + 1)[episode_no_range])
-
-        if isinstance(episode_no_range, Iterable):
-            return sorted(i - 1 for i in episode_no_range if i < episode_length)
-
-        raise TypeError(
-            f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again."
-        )
+        self.callback("setup_end")
 
     def download_webtoon(
         self,
@@ -324,6 +208,120 @@ class Scraper(ABC, Generic[WebtoonId]):
             merge_webtoon(webtoon_directory, None, merge_amount)
             self.callback("merge_webtoon_end")
 
+    def list_episodes(self) -> None:
+        self.fetch_all()
+        table = Table(show_header=True, header_style="bold blue", box=None)
+        table.add_column("Episode number [dim](ID)[/dim]", width=12)
+        table.add_column("Episode Title", style="bold")
+        for i, (episode_id, episode_title) in enumerate(
+            zip(self.episode_ids, self.episode_titles), 1
+        ):
+            table.add_row(
+                f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
+                str(episode_title),
+            )
+        Console().print(table)
+
+    def check_if_legitimate_webtoon_id(
+        self,
+        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
+    ) -> str | None:
+        """If webtoon_id is legitimate, return title. Otherwise, return None"""
+        try:
+            self.fetch_webtoon_information()
+            return self.title
+        except exception_type:
+            return None
+
+    def callback(self, situation: str, context=None):
+        match situation:
+            case "download_episode_end":
+                print(f"A webtoon {self.title} download ended.")
+            case "merge_webtoon_end":
+                print("Merging webtoon ended.")
+            case "merge_webtoon_start":
+                print("Merging webtoon has started...")
+            case the_others:
+                if context is None:
+                    logging.info(f"WebtoonScraper status: {the_others}")
+                else:
+                    logging.info(f"WebtoonScraper status: {the_others}, context: {context}")
+
+    # PROPERTIES
+
+    @property
+    def base_directory(self) -> Path:
+        return self._base_directory
+
+    @base_directory.setter
+    def base_directory(self, base_directory: str | Path) -> None:
+        """
+        웹툰을 다운로드할 디렉토리입니다. str이나 Path로 값을 받습니다.
+
+        많은 이 변수의 사용처에서는 pathlib.Path를 필요로 합니다.
+        이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
+        이것을 이용하기 전에 안전한 파일명으로 바꾸는 것을 잊지 마세요!
+        """
+        self._base_directory = Path(base_directory)
+
+    @property
+    def cookie(self):
+        return self._cookie
+
+    @cookie.setter
+    def cookie(self, value: str):
+        self._cookie = value
+        self.headers.update(Cookie=value)
+
+    @property
+    def headers(self):
+        headers = self.hxoptions.headers
+        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
+        if TYPE_CHECKING:
+            headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
+        return headers
+
+    @headers.setter
+    def headers(self, value) -> None:
+        self.headers.clear()
+        self.headers.update(value)
+
+    # PRIVATE METHODS
+
+    def _episode_no_range_to_real_range(
+        self, episode_no_range: EpisodeNoRange
+    ) -> Iterable[int]:
+        # 주의 episode_no_list는 0부터 시작합니다.
+        episode_length = len(self.episode_ids)
+
+        if episode_no_range is None:
+            return range(episode_length)
+
+        if isinstance(episode_no_range, int):
+            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            return (episode_no_range - 1,)
+
+        if isinstance(episode_no_range, tuple):
+            start, end = episode_no_range
+
+            if start is None:
+                start = 1
+            if end is None:
+                end = episode_length
+
+            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
+            return range(start - 1, end)
+
+        if isinstance(episode_no_range, slice):
+            return (i - 1 for i in range(1, episode_length + 1)[episode_no_range])
+
+        if isinstance(episode_no_range, Iterable):
+            return sorted(i - 1 for i in episode_no_range if i < episode_length)
+
+        raise TypeError(
+            f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again."
+        )
+
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
         self.pbar = tqdm(episode_no_list)
         async with self.hxoptions.build_async_client() as client:
@@ -333,13 +331,6 @@ class Scraper(ABC, Generic[WebtoonId]):
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
                 await self._download_episode(episode_no, webtoon_directory, client)
-
-    def get_webtoon_directory_name(self) -> str:
-        """
-        웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다.
-        네이버 포스트나 레진같이 일반적이지 않은 방식으로 웹툰을 다운로드하는 경우에 사용됩니다.
-        """
-        return f"{self._get_safe_file_name(self.title)}({self.webtoon_id})"
 
     def _unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path):
         """
@@ -484,34 +475,45 @@ class Scraper(ABC, Generic[WebtoonId]):
         image_path.write_bytes(image_raw)
         self.callback("download_thubnail_end")
 
-    @abstractmethod
-    def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
-        """해당 회차를 구성하는 이미지들을 불러옵니다."""
+    def _set_progress_indication(self, description: str) -> None:
+        """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
 
-    def fetch_all(self, reload: bool = False) -> None:
-        """웹툰에 관련한 정보를 불러옵니다."""
-        self.callback("setup_start")
+        self.use_tqdm_while_download가 False라면 print를 사용하고, True라면 pbar를 이용합니다.
+        이는 self.use_tqdm_while_download 설정을 변경해 사용할 수 있습니다. 기본값은 True입니다.
+        만약 사용자에게 꼭 알려야 하는 중요한 것이 있다면 이 함수가 아닌 직접 print나 logging을 사용하는 것을 권장합니다.
+        단, 만약 self.pbar가 없어 AttributeError가 난다면 무조건 print를 사용합니다.
 
-        with suppress(UseFetchEpisode):
-            self.fetch_webtoon_information(reload=reload)
-        self.fetch_episode_informations(reload=reload)
-
-        self.callback("setup_end")
-
-    @reload_manager
-    @abstractmethod
-    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
+        Args:
+            description: 에피소드를 다운로드할 때 내보낼 메시지.
         """
-        웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
-        """
-        self.webtoon_thumbnail: str | tuple[bytes, str]
-        self.title: str
+        if self.use_tqdm_while_download:
+            with suppress(AttributeError):
+                self.pbar.set_description(description)
+                return
 
-    @reload_manager
-    @abstractmethod
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+        self.callback("downloading", description)
+
+    @classmethod
+    def _get_file_extension(cls, filename_or_url: str) -> str | None:
+        """Get file extionsion from filename or URL.
+
+        Args:
+            filename_or_url: 파일 확장자가 궁금한 파일명이나 URL. 이때 URL 쿼리는 무시됩니다.
+
+        Returns:
+            파일 확장자를 반환합니다.
         """
-        웹툰의 에피소드 정보를 불러옵니다. 웹툰에 대한 정보는 포함하지 않습니다.
+        url_path = parse.urlparse(
+            filename_or_url
+        ).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
+        extension_name = re.search(r"(?<=[.])\w+?$", url_path)
+        return cls.DEFAULT_IMAGE_FILE_EXTENSION if extension_name is None else extension_name.group(0)
+
+    @staticmethod
+    def _get_safe_file_name(file_or_diretory_name: str) -> str:
+        """Convert file or diretory name to accaptable name.
+
+        Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
+        Otherwise it will smash slashes and backslashes.
         """
-        self.episode_titles: list[str]
-        self.episode_ids: list[int]
+        return pf.to_safe_name(file_or_diretory_name)

@@ -41,6 +41,26 @@ class BufftoonScraper(Scraper[int]):
         return await super().async_download_webtoon(episode_no_range, merge_amount)
 
     @reload_manager
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
+        response = self.hxoptions.get(f"{self.BASE_URL}/series/{self.webtoon_id}")
+        selector = "#content > div > div > div.series-info > div.cont > div.title"
+        title = response.soup_select_one(selector, no_empty_result=True).text.strip()
+
+        image_url_original = response.soup_select_one(
+            "#content > div > div > div.series-info > div.img", no_empty_result=True
+        )
+        image_url_original = image_url_original["style"]
+        assert isinstance(image_url_original, str)
+        image_url_processed = re.search(
+            r"background-image:url[(](.+)[)];", image_url_original
+        )
+        assert isinstance(image_url_processed, re.Match)
+        image_url = image_url_processed.group(1)
+
+        self.title = title
+        self.webtoon_thumbnail = image_url
+
+    @reload_manager
     def fetch_episode_informations(
         self,
         get_payment_required_episode: bool = False,
@@ -78,26 +98,6 @@ class BufftoonScraper(Scraper[int]):
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
-
-    @reload_manager
-    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        response = self.hxoptions.get(f"{self.BASE_URL}/series/{self.webtoon_id}")
-        selector = "#content > div > div > div.series-info > div.cont > div.title"
-        title = response.soup_select_one(selector, no_empty_result=True).text.strip()
-
-        image_url_original = response.soup_select_one(
-            "#content > div > div > div.series-info > div.img", no_empty_result=True
-        )
-        image_url_original = image_url_original["style"]
-        assert isinstance(image_url_original, str)
-        image_url_processed = re.search(
-            r"background-image:url[(](.+)[)];", image_url_original
-        )
-        assert isinstance(image_url_processed, re.Match)
-        image_url = image_url_processed.group(1)
-
-        self.title = title
-        self.webtoon_thumbnail = image_url
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
