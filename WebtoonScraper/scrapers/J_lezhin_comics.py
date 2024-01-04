@@ -158,7 +158,7 @@ class LezhinComicsScraper(Scraper[str]):
         # departure는 product['episodes']와 동일하기에 product['episodes']를 사용해도 무관하다.
         self._get_episode_informations_from_json_data(product["episodes"])
 
-        self.webtoon_thumbnail = thumbnail_url
+        self.webtoon_thumbnail_url = thumbnail_url
         self.title = title
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id

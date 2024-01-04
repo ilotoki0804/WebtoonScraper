@@ -58,7 +58,7 @@ class BufftoonScraper(Scraper[int]):
         image_url = image_url_processed.group(1)
 
         self.title = title
-        self.webtoon_thumbnail = image_url
+        self.webtoon_thumbnail_url = image_url
 
     @reload_manager
     def fetch_episode_informations(

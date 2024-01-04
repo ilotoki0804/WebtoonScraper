@@ -71,7 +71,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         image_url: str = image_url_original["content"]  # type: ignore
 
         self.title = title
-        self.webtoon_thumbnail = image_url
+        self.webtoon_thumbnail_url = image_url
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:

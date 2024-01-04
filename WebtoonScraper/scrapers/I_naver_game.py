@@ -24,7 +24,7 @@ class NaverGameScraper(Scraper[int]):
         thumbnail = webtoon_data["seriesImage"]["verticalLogoImageUrl"]
 
         self.title = title
-        self.webtoon_thumbnail = thumbnail
+        self.webtoon_thumbnail_url = thumbnail
 
     @reload_manager
     def fetch_episode_informations(

@@ -46,7 +46,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 f"Thus cannot download {title}."
             )
 
-        self.webtoon_thumbnail = webtoon_thumbnail
+        self.webtoon_thumbnail_url = webtoon_thumbnail
         self.title = title
         self.webtoon_type = webtoon_type
 

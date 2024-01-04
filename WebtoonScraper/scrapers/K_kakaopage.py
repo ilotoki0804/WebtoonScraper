@@ -60,7 +60,7 @@ class KakaopageScraper(Scraper[int]):
         assert isinstance(thumnail_url, str)
 
         self.title = title
-        self.webtoon_thumbnail = thumnail_url
+        self.webtoon_thumbnail_url = thumnail_url
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:

@@ -52,7 +52,7 @@ class TistoryScraper(Scraper[TistoryWebtoonId]):
         # thumbnail_url = "https://" + thumbnail_url.group(0)
 
         self.title = title
-        self.webtoon_thumbnail = thumbnail_url
+        self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:

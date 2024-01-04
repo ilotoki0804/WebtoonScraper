@@ -57,7 +57,7 @@ class WebtoonsEnglishScraper(Scraper[int]):
         ), f"""Cannot get webtoon thumbnail. "og:image": {response.soup_select_one('meta[property="og:image"]')}"""
 
         self.title = title
-        self.webtoon_thumbnail = webtoon_thumbnail
+        self.webtoon_thumbnail_url = webtoon_thumbnail
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:

@@ -130,7 +130,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         """
         웹툰 정보를 불러옵니다. 각각의 에피소드에 대한 정보는 포함되지 않습니다.
         """
-        self.webtoon_thumbnail: str | tuple[bytes, str]
+        self.webtoon_thumbnail_url: str
         self.title: str
 
     @reload_manager
@@ -447,32 +447,9 @@ class Scraper(ABC, Generic[WebtoonId]):
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
         self.callback("download_thubnail_start")
-        thumbnail_data: str | tuple[bytes, str] = self.webtoon_thumbnail
-        if isinstance(thumbnail_data, str):  # It means thumnail_data is URL
-            if file_extension:
-                image_extension = file_extension
-            else:
-                image_extension = self._get_file_extension(thumbnail_data)
-                if image_extension is None:
-                    raise ValueError(
-                        f"File extension not detected. thumbnail_data: {thumbnail_data}"
-                    )
-
-            image_raw = self.hxoptions.get(thumbnail_data).content
-        elif isinstance(
-            thumbnail_data, tuple
-        ):  # It means thumnail_data is raw image data
-            image_raw, image_extension = thumbnail_data
-        else:
-            raise TypeError(
-                "Type of thumbnail_data(or self.webtoon_thumbnail) is invalid; It must be string or bytes."
-            )
-
-        image_path = (
-            webtoon_directory
-            / f"{self._get_safe_file_name(self.title)}.{image_extension}"
-        )
-        image_path.write_bytes(image_raw)
+        image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
+        image_name = f"{self._get_safe_file_name(self.title)}.{file_extension}"
+        (webtoon_directory / image_name).write_bytes(image_raw)
         self.callback("download_thubnail_end")
 
     def _set_progress_indication(self, description: str) -> None:
