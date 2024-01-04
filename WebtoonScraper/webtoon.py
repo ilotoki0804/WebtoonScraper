@@ -166,13 +166,15 @@ def download_webtoon(
     download_directory: str | Path = "webtoon",
     get_paid_episode: bool = False,
 ) -> None:
-    if cookie is not None:
-        webtoon_scraper = BufftoonScraper(webtoon_id)
-        webtoon_scraper.cookie = cookie
-    elif bearer is not None and isinstance(webtoon_id, str):
+    if bearer is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
         webtoon_scraper.bearer = bearer
+        if cookie is not None:
+            webtoon_scraper.cookie = cookie
         webtoon_scraper.get_paid_episode = get_paid_episode
+    elif cookie is not None:
+        webtoon_scraper = BufftoonScraper(webtoon_id)
+        webtoon_scraper.cookie = cookie
     webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
     if webtoon_platform is None:
         raise ValueError(
