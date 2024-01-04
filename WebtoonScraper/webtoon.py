@@ -25,15 +25,15 @@ from .scrapers import (
 from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
-N = NAVER_WEBTOON = "naver_webtoon"
-WE = WEBTOONS_ENGLISH = "originals"
-BF = BUFFTOON = "bufftoon"
-P = NAVER_POST = "naver_post"
-G = NAVER_GAME = "naver_game"
-L = LEZHIN = "lezhin"
-KP = KAKAOPAGE = "kakaopage"
-NB = NAVER_BLOG = "naver_blog"
-T = TISTORY = "tistory"
+NAVER_WEBTOON = "naver_webtoon"
+WEBTOONS_ENGLISH = "originals"
+BUFFTOON = "bufftoon"
+NAVER_POST = "naver_post"
+NAVER_GAME = "naver_game"
+LEZHIN = "lezhin"
+KAKAOPAGE = "kakaopage"
+NAVER_BLOG = "naver_blog"
+TISTORY = "tistory"
 
 WebtoonPlatforms = Literal[
     "naver_webtoon",
@@ -47,6 +47,18 @@ WebtoonPlatforms = Literal[
     "naver_blog",
     "tistory",
 ]
+
+SHORT_NAMES: dict[str, WebtoonPlatforms] = {
+    "nw": "naver_webtoon",
+    "or": "originals",
+    "bf": "bufftoon",
+    "np": "naver_post",
+    "ng": "naver_game",
+    "lz": "lezhin",
+    "kp": "kakaopage",
+    "nb": "naver_blog",
+    "ti": "tistory",
+}
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
