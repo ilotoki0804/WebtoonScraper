@@ -10,7 +10,7 @@ import shutil
 import itertools
 import random
 
-from resoup.exceptions import EmptyResultError
+from hxsoup.exceptions import EmptyResultError
 
 from .A_scraper import Scraper, reload_manager
 from .J_lezhin_unshuffler import (

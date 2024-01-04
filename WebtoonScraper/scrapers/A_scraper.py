@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import asyncio
-from dataclasses import dataclass
 import functools
 import re
 import os
@@ -10,19 +9,15 @@ import sys
 import shutil
 from pathlib import Path
 import time
-from tokenize import cookie_re
 from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod, ABC
 from typing import ClassVar
 import logging
-import threading
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from enum import Enum
 
 from tqdm import tqdm
-from resoup import CustomDefaults
-from resoup.api_with_tools import DEFAULT_HEADERS
 from rich.table import Table
 from rich.console import Console
 import pyfilename as pf
