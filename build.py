@@ -1,6 +1,6 @@
 """Automate build.
 
-v.2023-12-30(3)
+v.2023-01-04(4)
 """
 import os
 import shutil
@@ -12,6 +12,9 @@ from WebtoonScraper import __version__, __url__, __github_user_name__, __github_
 
 LEAVE_README_BUILD_VERSION = False
 PUBLISH = True
+
+# LEAVE_README_BUILD_VERSION = True
+# PUBLISH = False
 
 github_project_url = f"https://github.com/{__github_user_name__}/{__github_project_name__}"
 
