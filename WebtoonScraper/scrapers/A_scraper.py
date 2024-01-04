@@ -425,10 +425,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         Args:
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
-        if file_extension is None:
-            file_extension = self._get_file_extension(url)
-        if file_extension is None:
-            raise ValueError("File extension not detected.")
+        file_extension = file_extension or self._get_file_extension(url)
 
         file_name = f"{image_no:03d}.{file_extension}"
 
@@ -447,6 +444,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
         self.callback("download_thubnail_start")
+        file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
         image_name = f"{self._get_safe_file_name(self.title)}.{file_extension}"
         (webtoon_directory / image_name).write_bytes(image_raw)
@@ -471,7 +469,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         self.callback("downloading", description)
 
     @classmethod
-    def _get_file_extension(cls, filename_or_url: str) -> str | None:
+    def _get_file_extension(cls, filename_or_url: str) -> str:
         """Get file extionsion from filename or URL.
 
         Args:
@@ -484,7 +482,13 @@ class Scraper(ABC, Generic[WebtoonId]):
             filename_or_url
         ).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
         extension_name = re.search(r"(?<=[.])\w+?$", url_path)
-        return cls.DEFAULT_IMAGE_FILE_EXTENSION if extension_name is None else extension_name.group(0)
+        if extension_name is not None:
+            return extension_name.group(0)
+
+        if cls.DEFAULT_IMAGE_FILE_EXTENSION is not None:
+            return cls.DEFAULT_IMAGE_FILE_EXTENSION
+
+        raise ValueError(f"File extension not detected of {filename_or_url}(path: {url_path}).")
 
     @staticmethod
     def _get_safe_file_name(file_or_diretory_name: str) -> str:
