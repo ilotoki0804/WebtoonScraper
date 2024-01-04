@@ -112,7 +112,7 @@ class BufftoonScraper(Scraper[int]):
 
         return episode_images_url
 
-    async def download_image(
+    async def _download_image(
         self,
         episode_directory: Path,
         url: str,
@@ -121,7 +121,7 @@ class BufftoonScraper(Scraper[int]):
         *,
         file_extension: str | None = "png",
     ) -> None:
-        return await super().download_image(
+        return await super()._download_image(
             episode_directory,
             url,
             image_no,

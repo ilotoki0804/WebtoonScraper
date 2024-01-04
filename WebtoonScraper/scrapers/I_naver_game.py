@@ -29,7 +29,7 @@ class NaverGameScraper(Scraper[int]):
     @reload_manager
     def fetch_episode_informations(
         self, episode_max_limit=500, *, reload: bool = False
-    ):
+    ) -> None:
         # 여러 시즌을 하나로 통합
         content_raw_data = []
         for season in count(1):

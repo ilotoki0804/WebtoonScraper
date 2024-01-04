@@ -69,7 +69,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                 time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
                 try:
-                    await self.download_episode(episode_no, webtoon_directory, client)
+                    await self._download_episode(episode_no, webtoon_directory, client)
                 except InvalidFetchResultError:
                     attempts = self.hxoptions.attempts
                     try_counts[episode_no] += 1

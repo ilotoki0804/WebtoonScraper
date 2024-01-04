@@ -147,7 +147,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             )
         Console().print(table)
 
-    def set_progress_indication(self, description: str) -> None:
+    def _set_progress_indication(self, description: str) -> None:
         """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
 
         self.use_tqdm_while_download가 False라면 print를 사용하고, True라면 pbar를 이용합니다.
@@ -166,7 +166,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         self.callback("downloading", description)
 
     @staticmethod
-    def get_file_extension(filename_or_url: str) -> str | None:
+    def _get_file_extension(filename_or_url: str) -> str | None:
         """Get file extionsion from filename or URL.
 
         Args:
@@ -182,7 +182,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         return None if extension_name is None else extension_name.group(0)
 
     @staticmethod
-    def get_safe_file_name(file_or_diretory_name: str) -> str:
+    def _get_safe_file_name(file_or_diretory_name: str) -> str:
         """Convert file or diretory name to accaptable name.
 
         Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
@@ -240,7 +240,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
     ################################## MAIN ACTION ##################################
 
-    def episode_no_range_to_real_range(
+    def _episode_no_range_to_real_range(
         self, episode_no_range: EpisodeNoRange
     ) -> Iterable[int]:
         # 주의 episode_no_list는 0부터 시작합니다.
@@ -308,15 +308,15 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         webtoon_directory.mkdir(parents=True, exist_ok=True)
 
-        self.download_webtoon_thumbnail(webtoon_directory)
+        self._download_webtoon_thumbnail(webtoon_directory)
 
-        episode_no_list = self.episode_no_range_to_real_range(episode_no_range)
+        episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
 
         self.callback("download_episode_start")
         await self._download_episodes(episode_no_list, webtoon_directory)
         self.callback("download_episode_end")
 
-        webtoon_directory = self.unshuffle_lezhin_webtoon(webtoon_directory)
+        webtoon_directory = self._unshuffle_lezhin_webtoon(webtoon_directory)
 
         if merge_amount is not None:
             self.callback("merge_webtoon_start")
@@ -331,16 +331,16 @@ class Scraper(ABC, Generic[WebtoonId]):
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
-                await self.download_episode(episode_no, webtoon_directory, client)
+                await self._download_episode(episode_no, webtoon_directory, client)
 
     def get_webtoon_directory_name(self) -> str:
         """
         웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다.
         네이버 포스트나 레진같이 일반적이지 않은 방식으로 웹툰을 다운로드하는 경우에 사용됩니다.
         """
-        return f"{self.get_safe_file_name(self.title)}({self.webtoon_id})"
+        return f"{self._get_safe_file_name(self.title)}({self.webtoon_id})"
 
-    def unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path):
+    def _unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path):
         """
         For lezhin's shuffle process.
         This function changes webtoon_directory to unshuffled webtoon's directory (if exist).
@@ -348,7 +348,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         """
         return base_webtoon_directory
 
-    def make_directory_or_check_if_directory_is_valid(
+    def _check_directory(
         self, episode_directory: Path, image_urls: list, subtitle: str
     ) -> bool:
         """episode_directory를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사합니다.
@@ -366,7 +366,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         if not episode_directory.is_dir():
             episode_directory.mkdir()
 
-        self.set_progress_indication(f"checking integrity of {subtitle}")
+        self._set_progress_indication(f"checking integrity of {subtitle}")
 
         is_filename_appropriate = all(
             webtoon_regexes[NORMAL_IMAGE].match(file)
@@ -375,25 +375,25 @@ class Scraper(ABC, Generic[WebtoonId]):
         if not is_filename_appropriate or len(image_urls) != len(
             os.listdir(episode_directory)
         ):
-            self.set_progress_indication(
+            self._set_progress_indication(
                 f"{subtitle} is not vaild. Automatically restore files."
             )
             shutil.rmtree(episode_directory)
             episode_directory.mkdir()
             return False
         else:
-            self.set_progress_indication(f"skipping {subtitle}")
+            self._set_progress_indication(f"skipping {subtitle}")
             return True
 
-    async def download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> None:
+    async def _download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> None:
         """한 회차를 다운로드받는다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
-        safe_episode_title = self.get_safe_file_name(self.episode_titles[episode_no])
+        safe_episode_title = self._get_safe_file_name(self.episode_titles[episode_no])
 
         if not safe_episode_title:
             logging.warning(
                 f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
             )
-            self.set_progress_indication("unknown episode")
+            self._set_progress_indication("unknown episode")
             return
 
         episode_images_url = self.get_episode_image_urls(episode_no)
@@ -402,23 +402,23 @@ class Scraper(ABC, Generic[WebtoonId]):
             logging.warning(
                 f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
             )
-            self.set_progress_indication("unknown episode")
+            self._set_progress_indication("unknown episode")
             return
 
         episode_directory = (
             webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
         )
-        if self.make_directory_or_check_if_directory_is_valid(
+        if self._check_directory(
             episode_directory, episode_images_url, safe_episode_title
         ):
             return
 
-        self.set_progress_indication(f"downloading {safe_episode_title}")
+        self._set_progress_indication(f"downloading {safe_episode_title}")
 
-        await asyncio.gather(*(self.download_image(episode_directory, element, i, client)
+        await asyncio.gather(*(self._download_image(episode_directory, element, i, client)
                                for i, element in enumerate(episode_images_url)))
 
-    async def download_image(
+    async def _download_image(
         self,
         episode_directory: Path,
         url: str,
@@ -434,7 +434,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
         if file_extension is None:
-            image_extension = self.get_file_extension(url)
+            image_extension = self._get_file_extension(url)
             if image_extension is None:
                 raise ValueError(
                     "File extension not detected. Use default_file_extension or check your code."
@@ -449,7 +449,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         file_directory = episode_directory / file_name
         file_directory.write_bytes(image_raw)
 
-    def download_webtoon_thumbnail(
+    def _download_webtoon_thumbnail(
         self, webtoon_directory: Path, file_extension: str | None = None
     ) -> None:
         """
@@ -464,7 +464,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             if file_extension:
                 image_extension = file_extension
             else:
-                image_extension = self.get_file_extension(thumbnail_data)
+                image_extension = self._get_file_extension(thumbnail_data)
                 if image_extension is None:
                     raise ValueError(
                         f"File extension not detected. thumbnail_data: {thumbnail_data}"
@@ -482,7 +482,7 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         image_path = (
             webtoon_directory
-            / f"{self.get_safe_file_name(self.title)}.{image_extension}"
+            / f"{self._get_safe_file_name(self.title)}.{image_extension}"
         )
         image_path.write_bytes(image_raw)
         self.callback("download_thubnail_end")

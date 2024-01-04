@@ -107,7 +107,7 @@ class KakaopageScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    async def download_image(
+    async def _download_image(
         self,
         episode_directory: Path,
         url: str,
@@ -116,13 +116,13 @@ class KakaopageScraper(Scraper[int]):
         *,
         file_extension: str | None = "jpg",
     ) -> None:
-        return await super().download_image(episode_directory, url, image_no,
-                                            client, file_extension=file_extension)
+        return await super()._download_image(episode_directory, url, image_no,
+                                             client, file_extension=file_extension)
 
-    def download_webtoon_thumbnail(
+    def _download_webtoon_thumbnail(
         self, thumbnail_directory, file_extension: str | None = "jpg"
     ) -> None:
-        return super().download_webtoon_thumbnail(thumbnail_directory, file_extension)
+        return super()._download_webtoon_thumbnail(thumbnail_directory, file_extension)
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]

@@ -93,7 +93,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.headers.update(Authorization=value)
 
     def get_webtoon_directory_name(self) -> str:
-        directory_name = f"{self.get_safe_file_name(self.title)}({self.webtoon_id}"
+        directory_name = f"{self._get_safe_file_name(self.title)}({self.webtoon_id}"
         if self.is_shuffled:
             directory_name += ", shuffled"
 
@@ -125,7 +125,7 @@ class LezhinComicsScraper(Scraper[str]):
                     "/docs/specific_platform_download.md#성인-웹툰-다운로드하기 "
                     "to check how to download"
                 )
-            if "adult" in res.url:
+            if "adult" in res.url.path:
                 raise UnsupportedWebtoonRatingError(
                     "The account is not adult authenticated. "
                     "Thus can not download adult webtoons."
@@ -134,10 +134,10 @@ class LezhinComicsScraper(Scraper[str]):
         thumbnail_url = res.soup_select_one(
             'meta[property="og:image"]', no_empty_result=True
         ).get("content")
-        assert isinstance(thumbnail_url, str), f"Invalid {thumbnail_url = }."
+        assert isinstance(thumbnail_url, str), f"Invalid {thumbnail_url=}."
 
         webtoon_raw_data = res.soup_select("script")[5]
-        assert "src" not in webtoon_raw_data.attrs, f"Invalid {self.webtoon_id = }."
+        assert "src" not in webtoon_raw_data.attrs, f"Invalid {self.webtoon_id=}."
 
         try:
             product_start = re.search(r"__LZ_PRODUCT__ *= *{\n *productType: *'comic',\n *product: *", webtoon_raw_data.text).end()  # type: ignore
@@ -165,7 +165,7 @@ class LezhinComicsScraper(Scraper[str]):
             is_shuffled = False
 
         # departure는 product['episodes']와 동일하기에 product['episodes']를 사용해도 무관하다.
-        self.get_episode_informations_from_json_data(product["episodes"])
+        self._get_episode_informations_from_json_data(product["episodes"])
 
         self.webtoon_thumbnail = thumbnail_url
         self.title = title
@@ -198,7 +198,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.viewed_episodes = [episode_id in view_episodes_set
                                 for episode_id in self.episode_int_ids]
 
-    def get_episode_informations_from_json_data(
+    def _get_episode_informations_from_json_data(
         self,
         episode_informations_raw: list[dict],
         get_paid_episode: bool | None = None,
@@ -281,16 +281,16 @@ class LezhinComicsScraper(Scraper[str]):
         self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
 
-    def download_webtoon_thumbnail(
+    def _download_webtoon_thumbnail(
         self, webtoon_directory, file_extension: str | None = "jpg"
     ) -> None:
-        super().download_webtoon_thumbnail(
+        super()._download_webtoon_thumbnail(
             webtoon_directory, file_extension=file_extension
         )
         if self.is_shuffled and self.download_episode_id_ints_if_shuffled:
-            self.download_episode_int_ids_as_file(webtoon_directory)
+            self._download_episode_int_ids_as_file(webtoon_directory)
 
-    def download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
+    def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
         file_content = "\n".join(map(str, self.episode_int_ids))
         file_path = webtoon_directory / f"{self.webtoon_id}_ids.txt"
         file_path.write_text(file_content, encoding="utf-8")
@@ -358,7 +358,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         return image_urls
 
-    def unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path) -> Path:
+    def _unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
             if self.is_shuffled:
