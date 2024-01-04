@@ -17,6 +17,7 @@ from .J_lezhin_unshuffler import (
     unshuffle_typical_webtoon_directory_and_return_target_directory,
 )
 from ..exceptions import (
+    InvalidWebtoonIdError,
     UnsupportedWebtoonRatingError,
     UseFetchEpisode,
     WebtoonScraperError,
@@ -68,9 +69,10 @@ class LezhinComicsScraper(Scraper[str]):
             "X-Lz-Locale": "ko-KR",
         }
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
-        self.timeout = 50
-        self.attempts = 4
-
+        self.hxoptions.update(
+            timeout=50,
+            attempts=3,
+        )
         self.cookie = cookie or "x-lz-locale=ko_KR"  # 수정 시에는 중복된 부분도 수정하기
         self.bearer = bearer or ""
 
@@ -80,9 +82,6 @@ class LezhinComicsScraper(Scraper[str]):
         self.get_paid_episode = False
         self.is_fhd_downloaded = False
 
-        # self.bearer 설정에서 되기 때문에 굳이 하지는 않아도 되지만 만약을 위해 업데이트함.
-        self.update_requests()
-
     @property
     def bearer(self) -> str:
         return self._bearer
@@ -91,9 +90,7 @@ class LezhinComicsScraper(Scraper[str]):
     def bearer(self, value: str) -> None:
         """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
         self._bearer = value
-        if value:
-            self.headers["Authorization"] = value
-        self.update_requests()
+        self.headers.update(Authorization=value)
 
     def get_webtoon_directory_name(self) -> str:
         directory_name = f"{self.get_safe_file_name(self.title)}({self.webtoon_id}"
@@ -114,14 +111,9 @@ class LezhinComicsScraper(Scraper[str]):
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
-        res = self.requests.get(f"{self.BASE_URL}/{self.webtoon_id}")
-        if (
-            res.soup_select_one(
-                'meta[property="og:title"]', no_empty_result=True
-            ).content
-            == "404 - 레진코믹스"
-        ):
-            raise ValueError(f"Invalid {self.webtoon_id = }")
+        res = self.hxoptions.get(f"{self.BASE_URL}/{self.webtoon_id}")
+        if res.status_code == 404:
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
 
         try:
             title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
@@ -157,11 +149,7 @@ class LezhinComicsScraper(Scraper[str]):
             # # departure는 product["episodes"]와 완전히 같기 때문에 굳이 사용할 이유가 없다.
             # departure = json.loads(webtoon_raw_data.text[departure_start:departure_end])
         except (AttributeError, JSONDecodeError) as e:
-            raise ValueError(
-                "JavaScript cannot be parsed with regex; because it's not regular language. "
-                "But sometimes, people have to compromise with effeciency and hope it does not break. "
-                "That's why this failed. call developer to fix this problem."
-            ) from e
+            raise ValueError("Parsing error. Contect developer.") from e
 
         # webtoon 정보를 받아옴.
         title = product["display"]["title"]
@@ -189,7 +177,7 @@ class LezhinComicsScraper(Scraper[str]):
         user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
         self.fetch_all()
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
-        data = self.requests.get(url).json()
+        data = self.hxoptions.get(url).json()
         if "error" in data:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
         data: dict = data['data']
@@ -273,20 +261,11 @@ class LezhinComicsScraper(Scraper[str]):
                     warning_message = "Not for free episode will be skipped."
                 case _:
                     raise WebtoonScraperError(
-                        "get_unusable_episode=False, get_paid_episode=False should never pass here. "
-                        "Call developer if this error is presented. This is clearly developer's mistake."
+                        "Contect developer if this error is presented."
                     )
 
-            # # 3.10 미만에서는 다음과 같이 작성 가능
-            # warning_messages: dict[tuple[bool, bool], str] = {
-            #     (False, False): "Unusable or not for free episode will be skipped."
-            #     (True, False): "Unusable episode will be skipped.",
-            #     (False, True): "Not for free episode will be skipped.",
-            #     (True, True): "Call developer if this message presents. This is clearly a bug.",
-            # }
-            # warning_message = warning_messages[get_unusable_episode, get_paid_episode]
-
-            warning_message += " Following epsodes will be skipped: " + ", ".join(
+            warning_message += " Following epsodes will be skipped: "
+            warning_message += ", ".join(
                 subtitle
                 for to_download, subtitle in zip(to_downloads, episode_titles)
                 if not to_download
@@ -335,7 +314,7 @@ class LezhinComicsScraper(Scraper[str]):
             f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
         )
 
-        keys_response = self.requests.get(keygen_url)
+        keys_response = self.hxoptions.get(keygen_url)
         if keys_response.status_code == 403:
             if self.bearer:
                 logging.warning(
@@ -360,7 +339,7 @@ class LezhinComicsScraper(Scraper[str]):
             "&type=comic_episode"
         )
         try:
-            images_data = self.requests.get(images_retrieve_url).json()
+            images_data = self.hxoptions.get(images_retrieve_url).json()
         except json.JSONDecodeError:
             if attempts <= 1:
                 raise
@@ -400,7 +379,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
         try:
-            title = self.requests.get(
+            title = self.hxoptions.get(
                 f"https://www.lezhin.com/ko/comic/{self.webtoon_id}"
             ).soup_select_one("h2.comicInfo__title")
         except Exception:

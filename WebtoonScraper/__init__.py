@@ -24,6 +24,9 @@ __github_user_name__ = __author__
 __github_project_name__ = __title__
 
 import sys as _sys
+import nest_asyncio as _nest_asyncio
+
+_nest_asyncio.apply()
 
 if _sys.version_info < (3, 11, 0):
     import logging
@@ -31,12 +34,4 @@ if _sys.version_info < (3, 11, 0):
     logging.warning(
         f"Python version ({_sys.version}) is too low. Program may be run but not tested. "
         "Upgrade Python if program not works well."
-    )
-if _sys.version_info >= (3, 11, 5):
-    import logging
-
-    logging.warning(
-        "Since Python 3.11.5 and later (including 3.12) uses OpenSSL 3, "
-        "siginificant performace damage is occured. "
-        "Use Python 3.11.4 or lower to use this program without performace damage."
     )

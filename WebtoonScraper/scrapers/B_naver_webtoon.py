@@ -26,7 +26,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     ) -> None:
         url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
         try:
-            webtoon_json_info = self.requests.get(url).json()
+            webtoon_json_info = self.hxoptions.get(url).json()
         except RequestsJSONDecodeError:
             raise InvalidPlatformError(
                 f"{self.webtoon_id} is invalid webtoon ID."
@@ -69,7 +69,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         for i in count(1):
             url = f"https://comic.naver.com/api/article/list?titleId={self.webtoon_id}&page={i}&sort=ASC"
             try:
-                res = self.requests.get(url).json()
+                res = self.hxoptions.get(url).json()
             except JSONDecodeError:
                 # fetch_webtoon_information은 지원하지 않는 rating일 때 오류를 낸다.
                 # 만약 fetch_webtoon_information보다 fetch_episode_informations가 먼저
@@ -95,7 +95,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         # sourcery skip: de-morgan
         episode_id = self.episode_ids[episode_no]
         url = f"{self.BASE_URL}/detail?titleId={self.webtoon_id}&no={episode_id}"
-        episode_image_urls_raw = self.requests.get(url).soup_select(
+        episode_image_urls_raw = self.hxoptions.get(url).soup_select(
             self.EPISODE_IMAGES_URL_SELECTOR
         )
         episode_image_urls = [
@@ -166,6 +166,11 @@ class NaverWebtoonScraper(
     NaverWebtoonSpecificScraper, BestChallengeSpecificScraper, ChallengeSpecificScraper
 ):
     """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
+    TEST_WEBTOON_IDS = (
+        NaverWebtoonSpecificScraper.TEST_WEBTOON_ID,
+        BestChallengeSpecificScraper.TEST_WEBTOON_ID,
+        ChallengeSpecificScraper.TEST_WEBTOON_ID,
+    )
 
     def __new__(
         cls, *args, **kwargs

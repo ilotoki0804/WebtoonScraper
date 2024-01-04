@@ -121,9 +121,7 @@ def search_episode_int_ids_exclude_if_from_directory(
     source_webtoon_directory: Path,
 ) -> tuple[list[int], Path, Path] | None:
     for episode_int_ids_or_not in os.listdir(source_webtoon_directory):
-        if episode_int_ids_or_not.endswith(
-            "_ids.txt"
-        ):  # f'{webtoon_id}_ids.txt'도 고려할 만 함.
+        if episode_int_ids_or_not.endswith("_ids.txt"):
             text_file_name = episode_int_ids_or_not
             id_text_file_source_path = source_webtoon_directory / text_file_name
             id_text_file_target_path = source_webtoon_directory.parent / text_file_name
@@ -250,8 +248,7 @@ def unshuffle_image_and_save(base_image_path, alt_image_path, image_order) -> No
             image_y -= margin
             return index_x * image_x, index_y * image_y
 
-        # assambled_image = im  # 덮어씌우든 새로 만들든 속도차는 크게 없다 (26.71(새로 만듦) > 26.54(덮어씀), 오차 있음.)
-        assambled_image = Image.new("RGB", im.size, (256, 0, 0))
+        assambled_image = im  # 덮어씌우든 새로 만들든 속도차는 크게 없다  # 작동 테스트하기!
         for i, cropped_image in enumerate(cropped_images):
             assambled_image.paste(
                 cropped_image,

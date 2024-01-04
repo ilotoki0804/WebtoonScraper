@@ -5,13 +5,12 @@ import logging
 from pathlib import Path
 from typing import Literal
 from multiprocessing import pool
-from resoup import requests, SoupTools
+import hxsoup
 
 from .scrapers import (
     Scraper,
     NaverWebtoonScraper,
-    WebtoonOriginalsScraper,
-    WebtoonCanvasScraper,
+    WebtoonsEnglishScraper,
     BufftoonScraper,
     NaverPostScraper,
     NaverPostWebtoonId,
@@ -27,8 +26,7 @@ from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
 N = NAVER_WEBTOON = "naver_webtoon"
-OR = ORIGINALS = "originals"
-C = CANVAS = "canvas"
+WE = WEBTOONS_ENGLISH = "originals"
 BF = BUFFTOON = "bufftoon"
 P = NAVER_POST = "naver_post"
 G = NAVER_GAME = "naver_game"
@@ -52,8 +50,7 @@ WebtoonPlatforms = Literal[
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
-    ORIGINALS: WebtoonOriginalsScraper,
-    CANVAS: WebtoonCanvasScraper,
+    WEBTOONS_ENGLISH: WebtoonsEnglishScraper,
     BUFFTOON: BufftoonScraper,
     NAVER_POST: NaverPostScraper,
     NAVER_GAME: NaverGameScraper,
@@ -89,8 +86,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     elif isinstance(webtoon_id, int):
         test_queue = (
             NAVER_WEBTOON,
-            ORIGINALS,
-            CANVAS,
+            WEBTOONS_ENGLISH,
             BUFFTOON,
             NAVER_GAME,
             KAKAOPAGE,
@@ -210,12 +206,12 @@ def download_webtoons_getting_paid(
     noticeid: int,
     merge_amount: int | None = 5,
 ) -> None:
-    res = requests.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}", headers={})  # type: ignore
+    res = hxsoup.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}")
     raw_html = res.json().get("notice").get("content")
 
     titleids = (
         int(tag.get("href").removeprefix("https://comic.naver.com/webtoon/list?titleId=").partition("&")[0])  # type: ignore
-        for tag in SoupTools(raw_html).soup_select("a")
+        for tag in hxsoup.SoupTools(raw_html).soup_select("a")
     )
 
     for titleid in titleids:

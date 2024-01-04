@@ -34,6 +34,8 @@ demjson3 = "^3.0.6"
 Pillow = "^10.0.1"
 pyfilename = "^0.4.0"
 resoup = "==0.5.2"
+hxsoup = "^0.2.0"
+nest-asyncio = "^1.5.8"
 
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
