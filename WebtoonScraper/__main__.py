@@ -123,11 +123,11 @@ download_subparser.add_argument(
 download_subparser.add_argument(
     "-p",
     "--platform",
-    type=str,
+    type=lambda x: str(x).lower(),
     metavar="webtoon_platform",
-    choices=webtoon.PLATFORMS,
+    choices=set(webtoon.PLATFORMS) | set(webtoon.SHORT_NAMES),
     help="Webtoon platform to download. No need to specify if you don't want to. "
-    f"All choices: {', '.join(webtoon.PLATFORMS)}",
+    f"All choices: {', '.join(f"{webtoon.SHORT_NAMES[short_name]}({short_name})" for short_name in webtoon.SHORT_NAMES)}",
 )
 download_subparser.add_argument(
     "-m",
@@ -231,6 +231,8 @@ merge_subparser.add_argument(
 
 
 def parse_download(args: argparse.Namespace) -> None:
+    args.platform = webtoon.SHORT_NAMES.get(args.platform, args.platform)
+
     # 만약 다른 타입의 튜플인데 NAVER_BLOG라면 자동으로 (str, int)로 변환한다.
     if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
         args.webtoon_id = str(args.webtoon_id[0]), int(args.webtoon_id[1])
