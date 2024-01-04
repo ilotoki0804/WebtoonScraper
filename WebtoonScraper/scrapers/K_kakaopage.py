@@ -17,6 +17,7 @@ class KakaopageScraper(Scraper[int]):
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
     URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
+    DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
@@ -106,23 +107,6 @@ class KakaopageScraper(Scraper[int]):
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
-
-    async def _download_image(
-        self,
-        episode_directory: Path,
-        url: str,
-        image_no: int,
-        client: AsyncClient,
-        *,
-        file_extension: str | None = "jpg",
-    ) -> None:
-        return await super()._download_image(episode_directory, url, image_no,
-                                             client, file_extension=file_extension)
-
-    def _download_webtoon_thumbnail(
-        self, thumbnail_directory, file_extension: str | None = "jpg"
-    ) -> None:
-        return super()._download_webtoon_thumbnail(thumbnail_directory, file_extension)
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]

@@ -24,6 +24,7 @@ class BufftoonScraper(Scraper[int]):
     TEST_WEBTOON_ID = 1001216  # 비트
     IS_CONNECTION_STABLE = True
     URL_REGEX = r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)"
+    DEFAULT_IMAGE_FILE_EXTENSION = "png"
 
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
@@ -111,20 +112,3 @@ class BufftoonScraper(Scraper[int]):
             ]
 
         return episode_images_url
-
-    async def _download_image(
-        self,
-        episode_directory: Path,
-        url: str,
-        image_no: int,
-        client: hxsoup.AsyncClient,
-        *,
-        file_extension: str | None = "png",
-    ) -> None:
-        return await super()._download_image(
-            episode_directory,
-            url,
-            image_no,
-            client,
-            file_extension=file_extension
-        )

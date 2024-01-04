@@ -99,6 +99,7 @@ class Scraper(ABC, Generic[WebtoonId]):
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int] = 0
     URL_REGEX: ClassVar[str]
     EXISTING_EPISODE_POLICY: ExistingEpisodeCheckMode
+    DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """시작에 필요한 여러가지를 관여합니다.
@@ -165,8 +166,8 @@ class Scraper(ABC, Generic[WebtoonId]):
 
         self.callback("downloading", description)
 
-    @staticmethod
-    def _get_file_extension(filename_or_url: str) -> str | None:
+    @classmethod
+    def _get_file_extension(cls, filename_or_url: str) -> str | None:
         """Get file extionsion from filename or URL.
 
         Args:
@@ -179,7 +180,7 @@ class Scraper(ABC, Generic[WebtoonId]):
             filename_or_url
         ).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
         extension_name = re.search(r"(?<=[.])\w+?$", url_path)
-        return None if extension_name is None else extension_name.group(0)
+        return cls.DEFAULT_IMAGE_FILE_EXTENSION if extension_name is None else extension_name.group(0)
 
     @staticmethod
     def _get_safe_file_name(file_or_diretory_name: str) -> str:
@@ -434,15 +435,11 @@ class Scraper(ABC, Generic[WebtoonId]):
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
         if file_extension is None:
-            image_extension = self._get_file_extension(url)
-            if image_extension is None:
-                raise ValueError(
-                    "File extension not detected. Use default_file_extension or check your code."
-                )
-        else:
-            image_extension = file_extension
+            file_extension = self._get_file_extension(url)
+        if file_extension is None:
+            raise ValueError("File extension not detected.")
 
-        file_name = f"{image_no:03d}.{image_extension}"
+        file_name = f"{image_no:03d}.{file_extension}"
 
         image_raw: bytes = (await client.get(url)).content
 

@@ -40,6 +40,7 @@ class LezhinComicsScraper(Scraper[str]):
     URL_REGEX = (
         r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)"
     )
+    DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
 
     def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
         """
@@ -280,15 +281,6 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_int_ids = episode_int_ids
         self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
-
-    def _download_webtoon_thumbnail(
-        self, webtoon_directory, file_extension: str | None = "jpg"
-    ) -> None:
-        super()._download_webtoon_thumbnail(
-            webtoon_directory, file_extension=file_extension
-        )
-        if self.is_shuffled and self.download_episode_id_ints_if_shuffled:
-            self._download_episode_int_ids_as_file(webtoon_directory)
 
     def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
         file_content = "\n".join(map(str, self.episode_int_ids))
