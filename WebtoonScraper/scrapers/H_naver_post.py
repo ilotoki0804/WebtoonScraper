@@ -139,7 +139,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
 
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
-        return f"{self.title}{tuple(self.webtoon_id)}"
+        return self._get_safe_file_name(f"{self.title}{tuple(self.webtoon_id)}")
 
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
         self.pbar = tqdm(total=len(episode_no_list))

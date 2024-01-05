@@ -84,7 +84,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.is_fhd_downloaded = False
 
     def get_webtoon_directory_name(self) -> str:
-        directory_name = f"{self._get_safe_file_name(self.title)}({self.webtoon_id}"
+        directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
         if self.is_shuffled:
             directory_name += ", shuffled"
 

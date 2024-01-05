@@ -147,7 +147,7 @@ class Scraper(ABC, Generic[WebtoonId]):
         웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다.
         네이버 포스트나 레진같이 일반적이지 않은 방식으로 웹툰을 다운로드하는 경우에 사용됩니다.
         """
-        return f"{self._get_safe_file_name(self.title)}({self.webtoon_id})"
+        return self._get_safe_file_name(f"{self.title}({self.webtoon_id})")
 
     def fetch_all(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
