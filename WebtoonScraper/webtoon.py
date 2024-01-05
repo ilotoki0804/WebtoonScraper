@@ -26,23 +26,22 @@ from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
 NAVER_WEBTOON = "naver_webtoon"
-WEBTOONS_ENGLISH = "originals"
+WEBTOONS_ENGLISH = "webtoons_english"
 BUFFTOON = "bufftoon"
 NAVER_POST = "naver_post"
 NAVER_GAME = "naver_game"
-LEZHIN = "lezhin"
+LEZHIN_COMICS = "lezhin_comics"
 KAKAOPAGE = "kakaopage"
 NAVER_BLOG = "naver_blog"
 TISTORY = "tistory"
 
 WebtoonPlatforms = Literal[
     "naver_webtoon",
-    "originals",
-    "canvas",
+    "webtoons_english",
     "bufftoon",
     "naver_post",
     "naver_game",
-    "lezhin",
+    "lezhin_comics",
     "kakaopage",
     "naver_blog",
     "tistory",
@@ -50,11 +49,11 @@ WebtoonPlatforms = Literal[
 
 SHORT_NAMES: dict[str, WebtoonPlatforms] = {
     "nw": "naver_webtoon",
-    "or": "originals",
-    "bf": "bufftoon",
+    "we": "webtoons_english",
+    "bu": "bufftoon",
     "np": "naver_post",
     "ng": "naver_game",
-    "lz": "lezhin",
+    "lc": "lezhin_comics",
     "kp": "kakaopage",
     "nb": "naver_blog",
     "ti": "tistory",
@@ -66,7 +65,7 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     BUFFTOON: BufftoonScraper,
     NAVER_POST: NaverPostScraper,
     NAVER_GAME: NaverGameScraper,
-    LEZHIN: LezhinComicsScraper,
+    LEZHIN_COMICS: LezhinComicsScraper,
     KAKAOPAGE: KakaopageScraper,
     NAVER_BLOG: NaverBlogScraper,
     TISTORY: TistoryScraper,
@@ -94,7 +93,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         else:
             test_queue = (TISTORY,)
     elif isinstance(webtoon_id, str):
-        test_queue = (LEZHIN,)
+        test_queue = (LEZHIN_COMICS,)
     elif isinstance(webtoon_id, int):
         test_queue = (
             NAVER_WEBTOON,
@@ -186,13 +185,13 @@ def download_webtoon(
         if webtoon_platform != BUFFTOON:
             raise ValueError(
                 "Cookie is not required unless you are downloading Bufftoon. "
-                "Use bearer if platform what you want to download is Lezhin."
+                "Use bearer if platform what you want to download is Lezhin Comics."
             )
         webtoon_scraper = BufftoonScraper(webtoon_id, cookie=cookie)
     elif bearer is not None:
-        if webtoon_platform != LEZHIN:
+        if webtoon_platform != LEZHIN_COMICS:
             raise ValueError(
-                "bearer is not required unless you are downloading Lezhin. "
+                "bearer is not required unless you are downloading Lezhin Comics. "
                 "Use cookie if platform what you want to download is Bufftoon."
             )
         assert isinstance(webtoon_id, str)
