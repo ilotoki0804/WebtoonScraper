@@ -15,12 +15,12 @@ class TistoryWebtoonId(NamedTuple):
     category: str
 
 
-class TistoryScraper(Scraper[TistoryWebtoonId]):
+class TistoryScraper(Scraper[tuple[str, str]]):
     """Scrape webtoons from Kakaopage."""
 
     BASE_URL = "https://tistory.com/"
     IS_CONNECTION_STABLE = True
-    TEST_WEBTOON_ID = ("doldistudio", "진돌만화")
+    TEST_WEBTOON_ID = TistoryWebtoonId("doldistudio", "진돌만화")
     # 티스토리는 커스텀 URL을 쓰는 경우도 많기에 이 regex에 걸리지 않을 수도 있음.
     URL_REGEX = r"(?:https?:\/\/)?(?P<blog_id>.*?)[.]tistory[.]com\/category\/(?P<category>[^?]*)"
 
