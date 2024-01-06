@@ -127,7 +127,7 @@ download_subparser.add_argument(
     metavar="webtoon_platform",
     choices=set(webtoon.PLATFORMS) | set(webtoon.SHORT_NAMES),
     help="Webtoon platform to download. No need to specify if you don't want to. "
-    f"All choices: {', '.join(f"{webtoon.SHORT_NAMES[short_name]}({short_name})" for short_name in webtoon.SHORT_NAMES)}",
+    f"All choices: {', '.join(f'{webtoon.SHORT_NAMES[short_name]}({short_name})' for short_name in webtoon.SHORT_NAMES)}",
 )
 download_subparser.add_argument(
     "-m",
