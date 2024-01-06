@@ -142,6 +142,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         return self._get_safe_file_name(f"{self.title}{tuple(self.webtoon_id)}")
 
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
+        episode_no_list = list(episode_no_list)
         self.pbar = tqdm(total=len(episode_no_list))
         episode_ids_to_try: deque[int] = deque(range(len(episode_no_list)))
         try_counts = defaultdict(int)
