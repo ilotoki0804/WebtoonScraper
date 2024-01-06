@@ -3,16 +3,16 @@ name = "WebtoonScraper"
 version = "2.3.6"  # This version will be matched when build.py is run.
 description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
-license = "MIT"
+license = "Apache-2.0"
 readme = "README_build.md"
 keywords = ["Webtoon", "Webtoon Scraper", "Naver Webtoon", "Webtoon Downloader", "Download Webtoon"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    # "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [tool.poetry.urls]
