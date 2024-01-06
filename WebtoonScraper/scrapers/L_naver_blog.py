@@ -55,6 +55,10 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         return self._get_safe_file_name(f"{self.title}({blog_id}, {category_no})")
 
     @reload_manager
+    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
+        raise UseFetchEpisode()
+
+    @reload_manager
     def fetch_episode_informations(self, limit: int = 1000, *, reload: bool = False):
         blog_id, category_no = self.webtoon_id
 
@@ -131,10 +135,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
                 )
 
             self.episodes_image_urls.append(one_episode_image_urls)
-
-    @reload_manager
-    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        raise UseFetchEpisode()
 
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
