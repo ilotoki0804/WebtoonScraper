@@ -366,15 +366,12 @@ class Scraper(Generic[WebtoonId]):
 
                 await self._download_episode(episode_no, webtoon_directory, client)
 
-    def _set_directory_to_merge(self, base_webtoon_directory: Path) -> Path:
+    def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
         """다운로드할 디렉토리를 재안내합니다.
 
         레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
-
-        Args:
-            base_webtoon_directory: 
         """
-        return base_webtoon_directory
+        return webtoon_directory
 
     def _check_directory(
         self, episode_directory: Path, image_urls: list, subtitle: str
