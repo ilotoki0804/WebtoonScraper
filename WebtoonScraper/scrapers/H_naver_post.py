@@ -37,23 +37,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
-        self.headers = {
-            "Accept": "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
-            "Cache-Control": "no-cache",
-            "Dnt": "1",
-            "Pragma": "no-cache",
-            "Referer": "https://m.post.naver.com/",
-            "Sec-Ch-Ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Microsoft Edge";v="116"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "image",
-            "Sec-Fetch-Mode": "no-cors",
-            "Sec-Fetch-Site": "cross-site",
-            "Sec-Gpc": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69",
-        }
+        self.headers.update(Referer="https://m.post.naver.com/")
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:

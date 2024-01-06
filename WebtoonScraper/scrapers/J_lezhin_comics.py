@@ -47,28 +47,13 @@ class LezhinComicsScraper(Scraper[str]):
         self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
         """
         super().__init__(webtoon_id)
-        self.headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
-            # "Authorization": "",
-            "Cache-Control": "no-cache",
-            # "Cookie": "x-lz-locale=ko_KR",
-            "Dnt": "1",
-            "Referer": "https://www.lezhin.com/ko/comic/revatoon/x1",
-            "Sec-Ch-Ua": '"Not.A/Brand";v="8", "Chromium";v="114", "Microsoft Edge";v="114"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "Sec-Gpc": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82",
+        self.headers.update({
+            "Referer": "https://www.lezhin.com/ko/comic/dr_hearthstone/1",
             "X-Lz-Adult": "0",
             "X-Lz-Allowadult": "false",
             "X-Lz-Country": "kr",
             "X-Lz-Locale": "ko-KR",
-        }
+        })
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
         self.hxoptions.update(
             timeout=50,

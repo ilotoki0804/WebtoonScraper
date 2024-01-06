@@ -30,22 +30,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
-        self.headers = {
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "ko",
-            "Cache-Control": "no-cache",
-            "Dnt": "1",
-            "Pragma": "no-cache",
-            "Referer": "https://m.blog.naver.com/",
-            "Sec-Ch-Ua": '"Microsoft Edge";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.47",
-        }
+        self.headers.update(Referer="https://m.blog.naver.com/")
 
     def get_webtoon_directory_name(self) -> str:
         blog_id, category_no = self.webtoon_id
@@ -81,7 +66,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             return self.fetch_episode_informations(limit * 2)
 
         self.title: str = fetch_result["categoryName"]
-        self.webtoon_thumbnail: str = (
+        self.webtoon_thumbnail_url: str = (
             fetch_result["items"][0]["thumbnailUrl"] + "?type=ffn640_640"
         )
 
