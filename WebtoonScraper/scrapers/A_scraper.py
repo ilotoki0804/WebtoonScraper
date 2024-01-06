@@ -86,7 +86,7 @@ class ExistingEpisodeCheckMode(Enum):  # TODO
 
 
 class Scraper(Generic[WebtoonId]):
-    """Abstract class of all scrapers.
+    """Abstract base class of all scrapers.
 
     전반적인 로직은 모두 이 페이지에서 관리하고, 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 방식은
     각자 scraper들에 구현합니다.
@@ -146,7 +146,11 @@ class Scraper(Generic[WebtoonId]):
         return self._get_safe_file_name(f"{self.title}({self.webtoon_id})")
 
     def fetch_all(self, reload: bool = False) -> None:
-        """웹툰에 관련한 정보를 불러옵니다."""
+        """웹툰에 관련한 정보를 불러옵니다.
+
+        Args:
+            reload (bool, False): 만약 참이라면 기존에 이미 불러와진 값을 무시하고 다시 값을 불러옵니다.
+        """
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_informations(reload=reload)
