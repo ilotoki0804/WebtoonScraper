@@ -11,7 +11,7 @@ import contextlib
 
 WebtoonId: TypeAlias = "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]"  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
 EpisodeNoRange: TypeAlias = (
-    "tuple[int | None, int | None] | int | None | Iterable | slice"
+    "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
 )
 
 
