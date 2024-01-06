@@ -332,11 +332,13 @@ class Scraper(ABC, Generic[WebtoonId]):
 
                 await self._download_episode(episode_no, webtoon_directory, client)
 
-    def _unshuffle_lezhin_webtoon(self, base_webtoon_directory: Path):
-        """
-        For lezhin's shuffle process.
-        This function changes webtoon_directory to unshuffled webtoon's directory (if exist).
-        레진을 제외하면 unshuffler가 필요한 경우가 없기 때문에 레진 외의 웹툰들은 그대로 놔두시면 됩니다.
+    def _set_directory_to_merge(self, base_webtoon_directory: Path) -> Path:
+        """다운로드할 디렉토리를 재안내합니다.
+
+        레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
+
+        Args:
+            base_webtoon_directory: 
         """
         return base_webtoon_directory
 
