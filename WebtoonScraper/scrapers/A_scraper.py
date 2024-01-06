@@ -236,8 +236,8 @@ class Scraper(Generic[WebtoonId]):
                 print("Merging webtoon ended.")
             case "merge_webtoon_start":
                 print("Merging webtoon has started...")
-            case "setup_start" | "setup_end":
-                print(situation)
+            case "setup_end":
+                print("Webtoon data are fetched. Download has been started...")
             case the_others:
                 if contexts:
                     logging.info(f"WebtoonScraper status: {the_others}, context: {contexts}")
