@@ -147,10 +147,9 @@ class Scraper(Generic[WebtoonId]):
 
     def fetch_all(self, reload: bool = False) -> None:
         """웹툰에 관련한 정보를 불러옵니다."""
-        with self._send_callback_message("setup"):
-            with suppress(UseFetchEpisode):
-                self.fetch_webtoon_information(reload=reload)
-            self.fetch_episode_informations(reload=reload)
+        with suppress(UseFetchEpisode):
+            self.fetch_webtoon_information(reload=reload)
+        self.fetch_episode_informations(reload=reload)
 
     def download_webtoon(
         self,
@@ -176,7 +175,8 @@ class Scraper(Generic[WebtoonId]):
         merge_amount: int | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
-        self.fetch_all()
+        with self._send_callback_message("setup"):
+            self.fetch_all()
 
         webtoon_directory_name = self.get_webtoon_directory_name()
         webtoon_directory = self.base_directory / webtoon_directory_name
