@@ -117,7 +117,7 @@ class DirectoryMerger:
 
     def select(
         self,
-        merge_amount: int | None = None,
+        merge_number: int | None = None,
         manual_container_state: ContainerStates | None = None,
         ask: bool = False,
     ) -> None:
@@ -179,20 +179,20 @@ class DirectoryMerger:
             f"{selected_webtoon_directory_name} is selected. {message} webtoon has started."
         )
         if action == "merge":
-            if merge_amount is None:
-                merge_amount = int(input("merge amount: "))
-            merge_webtoon(selected_directory, None, merge_amount)
+            if merge_number is None:
+                merge_number = int(input("merge number: "))
+            merge_webtoon(selected_directory, None, merge_number)
         else:
             restore_webtoon(selected_directory, None)
         print(f"{message} webtoon has ended.")
 
-    def merge_webtoons_from_source_directory(self, merge_amount: int) -> None:
+    def merge_webtoons_from_source_directory(self, merge_number: int) -> None:
         """소스 디렉토리에 있는 모든 웹툰 디렉토리들을 합쳐 다시 소스 디렉토리에 놓습니다."""
         webtoons = os.listdir(self.source_directory)
         for webtoon in webtoons:
             webtoon_directory = self.target_directory / webtoon
             try:
-                merge_webtoon(webtoon_directory, None, merge_amount)
+                merge_webtoon(webtoon_directory, None, merge_number)
             except DirectoryStateUnmatchedError:
                 logging.warning(
                     f"Skip {webtoon_directory} directory. It looks not available to merge."
@@ -224,7 +224,7 @@ def _get_episode_no(directory_name: str) -> int:
 def merge_webtoon(
     source_webtoon_directory: Path,
     target_webtoon_directory: Path | None,
-    merge_amount: int,
+    merge_number: int,
     manual_directory_state: ContainerStates | None = None,
     merge_last_bundle: bool = True,
 ) -> None:
@@ -238,13 +238,13 @@ def merge_webtoon(
         source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
         target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다. \
             만약 None이면 source_webtoon_directory와 같은 경로로 지정됩니다.
-        merge_amount: 한 merged episode에 들어갈 에피소드의 개수입니다.
+        merge_number: 한 merged episode에 들어갈 에피소드의 개수입니다.
         manual_directory_state: \
             디렉토리 상태는 기본적으로 자동으로 감지되도록 되어 있습니다. \
             그러나 자동 감지 결과를 무시하고 직접 디렉토리 상태를 설정하고 싶을 경우 이 인자를 통해 \
             자신이 원하는 디렉토리 상태를 설정할 수 있습니다. 권장되지는 않습니다.
         merge_last_bundle: \
-            마지막 merged episode의 크기는 merge amount에 비해 작을 수 있습니다. \
+            마지막 merged episode의 크기는 merge number에 비해 작을 수 있습니다. \
             이 인자가 참일 경우 마지막 merged episode를 그 전의 merged episode와 통합합니다.
     """
     target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
@@ -274,11 +274,11 @@ def merge_webtoon(
     grouped_directories: defaultdict[int, list[Path]] = defaultdict(list)
     for directory in directories:
         episode_no = _get_episode_no(directory.name)
-        grouped_directories[episode_no // merge_amount].append(directory)
+        grouped_directories[episode_no // merge_number].append(directory)
 
     # 마지막 번들 묶기
     last_bundle = max(grouped_directories)
-    if last_bundle < merge_amount and merge_last_bundle:
+    if last_bundle < merge_number and merge_last_bundle:
         last_bundle_items = grouped_directories.pop(last_bundle)
         grouped_directories[max(grouped_directories)] += last_bundle_items
 

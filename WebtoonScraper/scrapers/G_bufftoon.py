@@ -31,14 +31,18 @@ class BufftoonScraper(Scraper[int]):
         self.cookie = "" if cookie is None else cookie
         self.avoid_sslerror = True
 
-    async def async_download_webtoon(self, episode_no_range: EpisodeNoRange = None, merge_amount: int | None = None) -> None:
+    async def async_download_webtoon(
+        self,
+        episode_no_range: EpisodeNoRange = None,
+        merge_number: int | None = None
+    ) -> None:
         if not self.cookie:
             logging.warning(
                 "Without setting cookie extremely limiting the range of downloadable episodes. "
                 "Please set cookie to valid download. "
                 "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
             )
-        return await super().async_download_webtoon(episode_no_range, merge_amount)
+        return await super().async_download_webtoon(episode_no_range, merge_number)
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:

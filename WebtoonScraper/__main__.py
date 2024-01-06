@@ -131,10 +131,10 @@ download_subparser.add_argument(
 )
 download_subparser.add_argument(
     "-m",
-    "--merge-amount",
+    "--merge-number",
     type=int,
-    metavar="merge_amount",
-    help="Merge amount when you want to merge directories. Don't specify if you don't want to merge.",
+    metavar="merge_number",
+    help="Merge number when you want to merge directories. Don't specify if you don't want to merge.",
 )
 download_subparser.add_argument(
     "--cookie",
@@ -201,11 +201,11 @@ merge_subparser.add_argument(
 )
 merge_subparser.add_argument(
     "-m",
-    "--merge-amount",
+    "--merge-number",
     type=int,
-    metavar="merge_amount",
+    metavar="merge_number",
     default=None,
-    help="Merge amount when merge.",
+    help="Merge number when merge.",
 )
 merge_subparser.add_argument(
     "-s",
@@ -244,7 +244,7 @@ def parse_download(args: argparse.Namespace) -> None:
     webtoon.download_webtoon(
         args.webtoon_id,
         args.platform,
-        args.merge_amount,
+        args.merge_number,
         cookie=args.cookie,
         bearer=args.bearer,
         episode_no_range=args.range,
@@ -331,7 +331,7 @@ def parse_merge(args: argparse.Namespace) -> None:
         dm.source_directory = args.source_directory
         dm.target_directory = args.target_directory or args.source_directory
         dm.select(
-            args.merge_amount,
+            args.merge_number,
             manual_container_state=CONTAINER_STATE_PER_ARGS.get(args.action),
         )
         return
@@ -346,14 +346,14 @@ def parse_merge(args: argparse.Namespace) -> None:
                 )
             )
 
-    if args.action == "merge" and args.merge_amount is None:
+    if args.action == "merge" and args.merge_number is None:
         raise ValueError(
-            "merge_amount is required. Use option `-m <int>` to specify merge amount."
+            "merge_number is required. Use option `-m <int>` to specify merge number."
         )
 
     if args.action == "merge":
         function_to_use = functools.partial(
-            merge_webtoon, merge_amount=args.merge_amount
+            merge_webtoon, merge_number=args.merge_number
         )
         logging.warning("Merging...")
     elif args.action == "restore":

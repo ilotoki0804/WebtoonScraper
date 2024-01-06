@@ -156,7 +156,7 @@ def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]
 def download_webtoon(
     webtoon_id: WebtoonId,
     webtoon_platform: WebtoonPlatforms | None = None,
-    merge_amount: int | None = None,
+    merge_number: int | None = None,
     *,
     cookie: str | None = None,
     episode_no_range: EpisodeNoRange = None,
@@ -212,12 +212,12 @@ def download_webtoon(
         return
 
     webtoon_scraper.base_directory = download_directory
-    webtoon_scraper.download_webtoon(episode_no_range, merge_amount=merge_amount)
+    webtoon_scraper.download_webtoon(episode_no_range, merge_number=merge_number)
 
 
 def download_webtoons_getting_paid(
     noticeid: int,
-    merge_amount: int | None = 5,
+    merge_number: int | None = 5,
 ) -> None:
     res = hxsoup.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}")
     raw_html = res.json().get("notice").get("content")
@@ -229,6 +229,6 @@ def download_webtoons_getting_paid(
 
     for titleid in titleids:
         try:
-            download_webtoon(titleid, NAVER_WEBTOON, merge_amount=merge_amount)
+            download_webtoon(titleid, NAVER_WEBTOON, merge_number=merge_number)
         except UnsupportedWebtoonRatingError as e:
             print(e)
