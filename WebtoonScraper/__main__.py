@@ -10,7 +10,9 @@ import re
 from typing import Literal
 from rich.table import Table
 from rich.console import Console
+from importlib.resources import files
 
+import WebtoonScraper
 from WebtoonScraper import webtoon, __version__
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
 from WebtoonScraper.miscs import WebtoonId, EpisodeNoRange
@@ -102,7 +104,7 @@ parser.add_argument("--mock", action="store_true", help="No actual action.")
 parser.add_argument(
     "--version",
     action="version",
-    version=f"WebtoonScraper {__version__} of Python {sys.version}",
+    version=f"WebtoonScraper {__version__} of Python {sys.version} from {str(files(WebtoonScraper))}",
 )
 parser.add_argument(
     "--show-detailed-error", action="store_true", help="Show detailed error."
