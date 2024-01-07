@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-from typing import TypeAlias, Final, Literal
+from typing import Sequence, TypeAlias, Final, Literal, TypeVar
 
 from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 
@@ -86,6 +86,22 @@ webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
     ),  # webtoon_name(titleid)[(merged)]
 }
 
+T = TypeVar("T")
+
+
+def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) -> T:
+    if message is not None:
+        print(message)
+    if len(sequence_to_select) < 10:
+        for i, item in enumerate(sequence_to_select, 1):
+            print(f"{i}. {item}")
+    else:
+        for i, item in enumerate(sequence_to_select, 1):
+            print(f"{i:02d}. {item}")
+
+    user_answer = int(input("Enter number: "))
+    return sequence_to_select[user_answer - 1]
+
 
 class DirectoryMerger:
     """웹툰 뷰어 앱에서 정주행하기 좋도록 회차들을 단위에 따라 묶습니다."""
@@ -129,16 +145,7 @@ class DirectoryMerger:
                 f"directory '{self.source_directory}' has no webtoon directory."
             )
 
-        print("Select webtoon to merge or restore.")
-        if len(webtoons) < 10:
-            for i, webtoon in enumerate(webtoons, 1):
-                print(f"{i}. {webtoon}")
-        else:
-            for i, webtoon in enumerate(webtoons, 1):
-                print(f"{i:02d}. {webtoon}")
-
-        user_answer = int(input("Enter number: "))
-        selected_webtoon_directory_name = webtoons[user_answer - 1]
+        selected_webtoon_directory_name = _select_from_sequence(webtoons, "Please select webtoon to merge or restore.")
 
         selected_directory = self.source_directory / selected_webtoon_directory_name
 
