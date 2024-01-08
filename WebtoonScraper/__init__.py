@@ -10,6 +10,7 @@ Scrape webtoons with ease.
 """  # noqa
 
 from .directory_merger import DirectoryMerger
+from .add_webtoon_viewer import add_html_webtoon_viewer
 
 __title__ = "WebtoonScraper"
 __description__ = "Scraping webtoons with ease."

@@ -25,6 +25,7 @@ import hxsoup
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
 from ..miscs import EpisodeNoRange
+from ..add_webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(
     "WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str]
@@ -159,6 +160,7 @@ class Scraper(Generic[WebtoonId]):
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
+        add_webtoon_viewer: bool | None = None,
     ) -> None:
         """웹툰 전체를 다운로드합니다.
         기본적으로는 별다른 인자를 필요로 하지 않으며 다운로드받을 범위와 웹툰 모아서 보기를 할 때는
@@ -171,12 +173,16 @@ class Scraper(Generic[WebtoonId]):
                 None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
         """
         asyncio.run(self.async_download_webtoon(
-            episode_no_range=episode_no_range, merge_number=merge_number))
+            episode_no_range=episode_no_range,
+            merge_number=merge_number,
+            add_webtoon_viewer=add_webtoon_viewer,
+        ))
 
     async def async_download_webtoon(
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
+        add_webtoon_viewer: bool | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
         with self._send_callback_message("setup"):
@@ -200,6 +206,9 @@ class Scraper(Generic[WebtoonId]):
         if merge_number is not None:
             with self._send_callback_message("merge_webtoon", merge_number, webtoon_directory):
                 merge_webtoon(webtoon_directory, None, merge_number)
+
+        if add_webtoon_viewer:
+            add_html_webtoon_viewer(webtoon_directory)
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""
