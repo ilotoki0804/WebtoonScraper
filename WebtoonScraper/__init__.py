@@ -11,18 +11,18 @@ Scrape webtoons with ease.
 
 from .directory_merger import DirectoryMerger
 from .add_webtoon_viewer import add_html_webtoon_viewer
-
-__title__ = "WebtoonScraper"
-__description__ = "Scraping webtoons with ease."
-__url__ = "https://github.com/ilotoki0804/WebtoonScraper"
-__version_info__ = (2, 3, 6)
-__version__ = str.join(".", map(str, __version_info__))
-__author__ = "ilotoki0804"
-__author_email__ = "ilotoki0804@gmail.com"
-__license__ = "MIT License"
-
-__github_user_name__ = __author__
-__github_project_name__ = __title__
+from .miscs import (
+    __title__,
+    __description__,
+    __url__,
+    __version_info__,
+    __version__,
+    __author__,
+    __author_email__,
+    __license__,
+    __github_user_name__,
+    __github_project_name__,
+)
 
 import sys as _sys
 import nest_asyncio as _nest_asyncio
