@@ -15,20 +15,17 @@ from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 # container에 들어가는 file이 directory일 수 있기 때문에
 # directory라는 말을 사용할 경우 오해가 생길 수 있어 container라는 유사어로 대체하여 표현합니다.
 # episode directory 같은 경우엔 image의 container이면서도 webtoon directory의 content입니다.
-NORMAL_WEBTOON_DIRECTORY: Final = "normal_webtoon_directory"
-NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"
 NORMAL_IMAGE: Final = "normal_image"
+NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"
+NORMAL_WEBTOON_DIRECTORY: Final = "normal_webtoon_directory"
 
-MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
-MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
-# merged episode directory와 unified webtoon directory는 본질적으로 같으며,
-# 의미를 확실하게 하기 위해 동일한 값의 다른 변수를 만듦.
-UNIFIED_WEBTOON_DIRECTORY: Final = MERGED_EPISODE_DIRECTORY
 MERGED_IMAGE: Final = "merged_image"
+MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
+MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
 
 # 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 굳이 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용합니다.
-WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 WEBTOON_DIRECTORY: Final = "webtoon_directory"
+WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 
 NOT_MATCHED: Final = "not_matched"
 
@@ -41,10 +38,10 @@ ContainerStates = Literal[
     "not_matched",
 ]
 FileStates = Literal[
-    "normal_episode_directory",
     "normal_image",
-    "merged_episode_directory",
+    "normal_episode_directory",
     "merged_image",
+    "merged_episode_directory",
     "webtoon_directory",
     "not_matched",
 ]
@@ -52,10 +49,10 @@ PathOrStr: TypeAlias = "str | Path"
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
 FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
-    NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
     NORMAL_IMAGE: NORMAL_EPISODE_DIRECTORY,
-    MERGED_EPISODE_DIRECTORY: MERGED_WEBTOON_DIRECTORY,
+    NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
     MERGED_IMAGE: MERGED_EPISODE_DIRECTORY,
+    MERGED_EPISODE_DIRECTORY: MERGED_WEBTOON_DIRECTORY,
     WEBTOON_DIRECTORY: WEBTOON_DIRECTORY_CONTAINER,
 }
 
@@ -66,21 +63,21 @@ CONTAINER_TO_FILE: Final[dict[str, str]] = {
 
 # 각 라인 끝 주석 처리된 부분: 덜 예민한 버전(거의 대부분 매치 개수 관련임)의 regex; 만약 현재 regex가 잘 작동하지 않을 경우 사용할 것. 없을 수도 있음.
 webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
-    NORMAL_EPISODE_DIRECTORY: re.compile(
-        r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"
-    ),  # 0001. episode_name
     NORMAL_IMAGE: re.compile(
         r"^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$"
     ),  # 023.jpg
     # ^(?P<image_no>\d+)[.](?P<extension>[a-zA-Z0-9]+)$
-    MERGED_EPISODE_DIRECTORY: re.compile(
-        r"^(?P<from>\d{4})~(?P<to>\d{4})$"
-    ),  # 0001~0005
-    # ^(?P<from>\d+)~(?P<to>\d+)$
+    NORMAL_EPISODE_DIRECTORY: re.compile(
+        r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"
+    ),  # 0001. episode_name
     MERGED_IMAGE: re.compile(
         r"^(?P<episode_no>\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$"
     ),  # 0001.001. episode_name.jpg
     # ^(?P<episode_no>\d+)[.](?P<image_no>\d+)[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]+)$
+    MERGED_EPISODE_DIRECTORY: re.compile(
+        r"^(?P<from>\d{4})~(?P<to>\d{4})$"
+    ),  # 0001~0005
+    # ^(?P<from>\d+)~(?P<to>\d+)$
     WEBTOON_DIRECTORY: re.compile(
         r"^(?P<webtoon_name>.+)[(](?P<titleid>(?!merged).+?)[)](?:[(]merged[)])?$"
     ),  # webtoon_name(titleid)[(merged)]
