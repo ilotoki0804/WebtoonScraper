@@ -3,6 +3,7 @@
 from __future__ import annotations
 import asyncio
 import functools
+import json
 import re
 import os
 import shutil
@@ -24,7 +25,7 @@ import hxsoup
 
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
-from ..miscs import EpisodeNoRange
+from ..miscs import EpisodeNoRange, __version__ as version
 from ..add_webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(
@@ -118,6 +119,7 @@ class Scraper(Generic[WebtoonId]):
         self.webtoon_id = webtoon_id
         self.base_directory = "webtoon"
         self.use_tqdm_while_download = True
+        self.does_store_informations = True
 
     # PUBLIC METHODS
 
@@ -210,6 +212,16 @@ class Scraper(Generic[WebtoonId]):
         if add_webtoon_viewer:
             add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
 
+        if self.does_store_informations:
+            informations = self.get_informations()
+            informations.update(
+                thumbnail_name=thumbnail_name,
+                webtoon_viewer_name="webtoon.html",
+                information_name="information.json",
+                original_webtoon_directory_name=webtoon_directory_name,
+                merge_number=merge_number,
+            )
+            (webtoon_directory / "information.json").write_text(json.dumps(informations, ensure_ascii=False, indent=2), encoding='utf-8')
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""
@@ -257,6 +269,17 @@ class Scraper(Generic[WebtoonId]):
                     logging.info(f"WebtoonScraper status: {the_others}, context: {contexts}")
                 else:
                     logging.info(f"WebtoonScraper status: {the_others}")
+
+    def get_informations(self, fetch: bool = False):
+        if fetch:
+            self.fetch_all()
+        return {
+            "version": version,
+            "title": self.title,
+            "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
+            "episode_ids": self.episode_ids,
+            "episode_titles": self.episode_titles,
+        }
 
     # PROPERTIES
 
@@ -483,7 +506,7 @@ class Scraper(Generic[WebtoonId]):
 
     def _download_webtoon_thumbnail(
         self, webtoon_directory: Path, file_extension: str | None = None
-    ) -> None:
+    ) -> str:
         """
         웹툰의 썸네일을 불러오고 thumbnail_directory에 저장합니다.
         Args:
@@ -492,8 +515,9 @@ class Scraper(Generic[WebtoonId]):
         """
         file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
-        image_name = f"{self._get_safe_file_name(self.title)}.{file_extension}"
-        (webtoon_directory / image_name).write_bytes(image_raw)
+        thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
+        (webtoon_directory / thumbnail_name).write_bytes(image_raw)
+        return thumbnail_name
 
     def _set_progress_indication(self, description: str) -> None:
         """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
