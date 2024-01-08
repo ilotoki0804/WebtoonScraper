@@ -194,7 +194,7 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory.mkdir(parents=True, exist_ok=True)
 
         with self._send_callback_message("download_thubnail"):
-            self._download_webtoon_thumbnail(webtoon_directory)
+            thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
 
@@ -208,7 +208,8 @@ class Scraper(Generic[WebtoonId]):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if add_webtoon_viewer:
-            add_html_webtoon_viewer(webtoon_directory)
+            add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
+
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""

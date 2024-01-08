@@ -1,4 +1,5 @@
 from contextlib import suppress
+from html import escape
 import json
 import os
 from pathlib import Path
@@ -46,7 +47,7 @@ HTML_TEMPLATE = """\
         <br>
         <button class="prev-episode">이전 에피소드</button>
         <select class="episode-selector-dropdown"></select>
-        <!-- <input type="number" class="episode-redirect" name="name" min="1" /> -->
+        <button id="delete-history">조회 기록 지우기</button>
         <button class="next-episode">다음 에피소드</button>
     </div>
     <div id="image-container"></div>
@@ -55,20 +56,39 @@ HTML_TEMPLATE = """\
         <br>
         <button class="prev-episode">이전 에피소드</button>
         <select class="episode-selector-dropdown"></select>
-        <!-- <input type="number" class="episode-redirect" name="name" min="1" /> -->
         <br>
         <span class="title-bar"></span>
     </div>
     <script>
-        let episodeNo = 0;
         const webtoonTitle = {webtoon_title_repr};
         const episodeDirectories = {episode_directories};
         const webtoonImagesOfDirectories = {images_of_episode_directories};
+        const localStorageName = `viewedEpisode(${webtoonTitle})`
         const prevEpisodeButtons = Array.from(document.getElementsByClassName("prev-episode"));
         const nextEpisodeButtons = Array.from(document.getElementsByClassName("next-episode"));
-        // const episodeNumberInput = Array.from(document.getElementsByClassName('episode-redirect'));
         const titleBars = Array.from(document.getElementsByClassName("title-bar"));
         const episodeSelectors = Array.from(document.getElementsByClassName("episode-selector-dropdown"));
+        const viewedEpisodesLocalStorageName = `viewedEpisodes(${webtoonTitle})`;
+        const lastViewedEpisodeLocalStorageName = `lastViewedEpisode(${webtoonTitle})`;
+        const episodeNoRaw = window.localStorage.getItem(lastViewedEpisodeLocalStorageName)
+        const resetButton = document.getElementById("delete-history")
+        let episodeNo = 0
+        if (episodeNoRaw !== null) {
+            episodeNo = parseInt(episodeNoRaw)
+        }
+        let viewedEpisodes = []
+
+        loadViewedEpisodes()
+        function loadViewedEpisodes() {
+            let viewedEpisodesRaw = window.localStorage.getItem(viewedEpisodesLocalStorageName);
+            if (viewedEpisodesRaw == null) {
+                viewedEpisodes = [];
+                episodeDirectories.forEach(() => viewedEpisodes.push(false))
+                window.localStorage.setItem(viewedEpisodesLocalStorageName, JSON.stringify(viewedEpisodes));
+            } else {
+                viewedEpisodes = Array.from(JSON.parse(viewedEpisodesRaw));
+            }
+        }
 
         (function renderDropdown() {
             episodeSelectors.forEach((selector) => {
@@ -89,10 +109,10 @@ HTML_TEMPLATE = """\
             });
         })();
 
-
         drawImage(episodeNo)
         function drawImage(index) {
             episodeNo = index
+            window.localStorage.setItem(lastViewedEpisodeLocalStorageName, episodeNo)
             const imageContainer = document.getElementById('image-container');
 
             const directoryName = episodeDirectories[index];
@@ -108,20 +128,32 @@ HTML_TEMPLATE = """\
             while (imageContainer.firstChild) {
                 imageContainer.removeChild(imageContainer.firstChild);
             }
+
             webtoonImages.forEach((webtoonImageSrc, index) => {
                 const image = document.createElement("img");
                 image.src = webtoonImageSrc;
                 image.alt = imagesName[index];
                 imageContainer.appendChild(image);
             });
+
+            viewedEpisodes[index] = true;
+            window.localStorage.setItem(viewedEpisodesLocalStorageName, JSON.stringify(viewedEpisodes));
+
             episodeSelectors.forEach((selector) => {
                 selector.childNodes.forEach((option, optionIndex) => {
-                    option.selected = optionIndex == episodeNo
+                    if (viewedEpisodes[optionIndex]) {
+                        option.innerHTML = "☑ " + episodeDirectories[optionIndex];
+                    } else {
+                        option.innerHTML = "☐ " + episodeDirectories[optionIndex];
+                    }
+                    option.selected = optionIndex == episodeNo;
                 })
             });
+
             window.scrollTo(0, 0);
             updateButton();
         }
+
 
         function updateButton() {
             if (episodeNo == 0) {
@@ -167,37 +199,42 @@ HTML_TEMPLATE = """\
             });
         });
 
-        // episodeNumberInput.forEach((input) => {
-        //     input.addEventListener('keydown', function(event) {
-        //         if (event.key === 'Enter') {
-        //             const value = parseInt(event.target.value) - 1
-        //             drawImage(value)
-        //         }
-        //     });
-        // });
+        resetButton.addEventListener("click", function() {
+            console.log("reset")
+            window.localStorage.removeItem(viewedEpisodesLocalStorageName)
+            loadViewedEpisodes()
+            drawImage(episodeNo)
+        })
     </script>
 </body>
-</html>
+</html>\
 """
 
 
-def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
+def add_html_webtoon_viewer(
+    webtoon_directory: Path,
+    webtoon_title: str | None = None,
+    thumbnail_name: str | None = None,
+) -> None:
     directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
-    with suppress(ValueError):
-        files.remove(webtoon_directory / "webtoon.html")
-    if len(files) == 1:
-        thumbnail_name = files[0]
-    else:
-        for file in files:
-            if file.name.startswith(webtoon_directory.name):
-                thumbnail_name = file
-                break
+    if thumbnail_name is None:
+        with suppress(ValueError):
+            files.remove(webtoon_directory / "webtoon.html")
+        if len(files) == 1:
+            thumbnail_path = files[0]
         else:
-            thumbnail_name = _select_from_sequence(files, "Please select thumbnail in this list.")
+            for file in files:
+                if file.name.startswith(webtoon_directory.name):
+                    thumbnail_path = file
+                    break
+            else:
+                thumbnail_path = _select_from_sequence(files, "Please select thumbnail in this list.")
+        thumbnail_name = thumbnail_path.name
 
-    webtoon_title = re.search("^.+(?=[.])", thumbnail_name.name)
-    assert webtoon_title is not None
-    webtoon_title = webtoon_title.group(0)
+    if webtoon_title is None:
+        webtoon_title_re = re.search("^.+(?=[.])", thumbnail_name)
+        assert webtoon_title_re is not None
+        webtoon_title = webtoon_title_re.group(0)
 
     episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
     images_of_episode_directories = json.dumps([
@@ -207,8 +244,8 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
 
     html = (
         HTML_TEMPLATE
-        .replace(r"{webtoon_thumbnail_name_repr}", json.dumps(thumbnail_name.name, ensure_ascii=False))
-        .replace(r"{webtoon_title}", webtoon_title)
+        .replace(r"{webtoon_thumbnail_name_repr}", json.dumps(thumbnail_name, ensure_ascii=False))
+        .replace(r"{webtoon_title}", escape(webtoon_title))
         .replace(r"{webtoon_title_repr}", json.dumps(webtoon_title, ensure_ascii=False))
         .replace(r"{episode_directories}", episode_directories)
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
