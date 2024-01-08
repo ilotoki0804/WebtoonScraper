@@ -5,9 +5,10 @@ from pathlib import Path
 import re
 
 from .directory_merger import _iterdir_seperating_directories_and_files, _select_from_sequence
+from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
-<!-- WITH VERSION 3.0.0 -->
+<!-- WITH VERSION {version} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -211,5 +212,6 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{webtoon_title_repr}", json.dumps(webtoon_title, ensure_ascii=False))
         .replace(r"{episode_directories}", episode_directories)
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
+        .replace(r"{version}", version)
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding='utf-8')
