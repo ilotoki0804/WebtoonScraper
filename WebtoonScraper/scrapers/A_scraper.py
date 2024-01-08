@@ -26,7 +26,7 @@ import hxsoup
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
 from ..miscs import EpisodeNoRange, __version__ as version
-from ..add_webtoon_viewer import add_html_webtoon_viewer
+from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(
     "WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str]

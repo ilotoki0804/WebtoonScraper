@@ -10,7 +10,7 @@ Scrape webtoons with ease.
 """  # noqa
 
 from .directory_merger import DirectoryMerger
-from .add_webtoon_viewer import add_html_webtoon_viewer
+from .webtoon_viewer import add_html_webtoon_viewer
 from .miscs import (
     __title__,
     __description__,
