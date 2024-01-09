@@ -162,7 +162,7 @@ class Scraper(Generic[WebtoonId]):
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
-        add_webtoon_viewer: bool | None = None,
+        add_viewer: bool | None = None,
     ) -> None:
         """웹툰 전체를 다운로드합니다.
         기본적으로는 별다른 인자를 필요로 하지 않으며 다운로드받을 범위와 웹툰 모아서 보기를 할 때는
@@ -178,7 +178,7 @@ class Scraper(Generic[WebtoonId]):
             self.async_download_webtoon(
                 episode_no_range=episode_no_range,
                 merge_number=merge_number,
-                add_webtoon_viewer=add_webtoon_viewer,
+                add_viewer=add_viewer,
             )
         )
 
@@ -186,7 +186,7 @@ class Scraper(Generic[WebtoonId]):
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
-        add_webtoon_viewer: bool | None = None,
+        add_viewer: bool | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
         with self._send_callback_message("setup"):
@@ -213,7 +213,7 @@ class Scraper(Generic[WebtoonId]):
             ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
-        if add_webtoon_viewer:
+        if add_viewer:
             add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
 
         if self.does_store_informations:
@@ -225,7 +225,7 @@ class Scraper(Generic[WebtoonId]):
                 merge_number=merge_number,
                 contents=["thumbnail", "information"],
             )
-            if add_webtoon_viewer:
+            if add_viewer:
                 informations.update(
                     webtoon_viewer_name="webtoon.html",
                 )

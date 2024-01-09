@@ -213,7 +213,7 @@ def download_webtoon(
         return
 
     webtoon_scraper.base_directory = download_directory
-    webtoon_scraper.download_webtoon(episode_no_range, merge_number=merge_number, add_webtoon_viewer=add_viewer)
+    webtoon_scraper.download_webtoon(episode_no_range, merge_number=merge_number, add_viewer=add_viewer)
 
 
 def download_webtoons_getting_paid(
