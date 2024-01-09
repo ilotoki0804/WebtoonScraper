@@ -99,7 +99,7 @@ class Scraper(Generic[WebtoonId]):
     IS_CONNECTION_STABLE: ClassVar[bool]
     TEST_WEBTOON_ID: ClassVar
     TEST_WEBTOON_IDS: ClassVar[tuple] = ()
-    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int] = 0
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int | float] = 0
     URL_REGEX: ClassVar[str]
     EXISTING_EPISODE_POLICY: ExistingEpisodeCheckMode
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
