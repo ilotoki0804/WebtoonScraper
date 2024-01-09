@@ -560,6 +560,8 @@ class Scraper(Generic[WebtoonId]):
                 self.pbar.set_description(description)
                 return
 
+        print(description)
+
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
         """Get file extionsion from filename or URL.
