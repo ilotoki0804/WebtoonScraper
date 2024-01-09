@@ -130,6 +130,10 @@ Downloading has started(mock=False, show_detailed_error=False, webtoon_id=809590
 
 레진코믹스에서 유료 회차를 다운로드받는 옵션입니다. 이때 다량의 경고가 나타날 수 있는데, 정상 과정이니 신경쓰지 않으셔도 됩니다.
 
+#### --add-viewer 옵션
+
+이 옵션을 추가하면 웹툰을 볼 수 있는 HTML 페이지인 `webtoon.html`이 웹툰 디렉토리에 추가됩니다. 컴퓨터에서 이를 이용해 쉽게 웹툰을 볼 수 있습니다.
+
 ### `merge` 커맨드
 
 merge 커맨드는 웹툰 모아서 보기를 지원하기 위한 기능입니다.
@@ -283,13 +287,11 @@ asyncio.run(scraper.async_download_webtoon())
 * tuple이 아닌 iterable: tuple이 아닌 iterable이라면 해당 iterable의 값에 맞추어 다운로드됩니다. 예를 들어 `[3, 4, 6, 8]`을 다운로드하면 3, 4, 6, 8화를 다운로드합니다. 이때 회차에서 벗어나는 값은 제외됩니다.
 
 ```python
-import asyncio
-
 from WebtoonScraper.scrapers import NaverWebtoonScraper
 
 # 예시 웹툰 URL: https://comic.naver.com/webtoon/list?titleId=819217
 scraper = NaverWebtoonScraper(819217)
-scraper.download_webtoon(merge_number=(2, None))  # 2화부터 끝까지 다운로드함.
+scraper.download_webtoon(episode_no_range=(2, None))  # 2화부터 끝까지 다운로드함.
 ```
 
 #### 웹툰 모아서 보기 설정하기
@@ -399,6 +401,18 @@ Situation: download_thubnail_end
 Situation: download_episode_start
 downloading 21화. ㅅㄱㅂㅉ: 100%|██████████| 22/22 [00:02<00:00,  7.69it/s]                               
 Situation: download_episode_end
+```
+
+### 웹툰 뷰어 추가하기
+
+이 옵션을 추가하면 웹툰을 볼 수 있는 HTML 페이지인 `webtoon.html`이 웹툰 디렉토리에 추가됩니다. 컴퓨터에서 이를 이용해 쉽게 웹툰을 볼 수 있습니다.
+
+```python
+from WebtoonScraper.scrapers import NaverWebtoonScraper
+
+# 예시 웹툰 URL: https://comic.naver.com/webtoon/list?titleId=819217
+scraper = NaverWebtoonScraper(819217)
+scraper.download_webtoon(add_webtoon_viewer=True)
 ```
 
 ## 파이썬으로 모아서 보기

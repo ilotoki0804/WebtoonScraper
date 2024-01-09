@@ -164,6 +164,7 @@ def download_webtoon(
     is_list_episodes: bool = False,
     download_directory: str | Path = "webtoon",
     get_paid_episode: bool = False,
+    add_viewer: bool = False,
 ) -> None:
     if bearer is not None and isinstance(webtoon_id, str):
         webtoon_scraper = LezhinComicsScraper(webtoon_id)
@@ -212,7 +213,7 @@ def download_webtoon(
         return
 
     webtoon_scraper.base_directory = download_directory
-    webtoon_scraper.download_webtoon(episode_no_range, merge_number=merge_number)
+    webtoon_scraper.download_webtoon(episode_no_range, merge_number=merge_number, add_webtoon_viewer=add_viewer)
 
 
 def download_webtoons_getting_paid(
