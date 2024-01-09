@@ -71,7 +71,7 @@ def reload_manager(f):
     return wrapper
 
 
-class ExistingEpisodeCheckMode(Enum):  # TODO
+class ExistingEpisodePolicy(Enum):
     """다운로드받을 에피소드와 이름이 같은 폴더가 존재할 때의 대처법입니다."""
 
     HARD_CHECK = "hard_check"
@@ -101,7 +101,6 @@ class Scraper(Generic[WebtoonId]):
     TEST_WEBTOON_IDS: ClassVar[tuple] = ()
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int | float] = 0
     URL_REGEX: ClassVar[str]
-    EXISTING_EPISODE_POLICY: ExistingEpisodeCheckMode
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
@@ -120,6 +119,7 @@ class Scraper(Generic[WebtoonId]):
         self.base_directory = "webtoon"
         self.use_tqdm_while_download = True
         self.does_store_informations = True
+        self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
 
     # PUBLIC METHODS
 
@@ -427,8 +427,10 @@ class Scraper(Generic[WebtoonId]):
         """
         return webtoon_directory
 
-    def _check_directory(
-        self, episode_directory: Path, image_urls: list, subtitle: str
+    def _check_directory_integrity(
+        self,
+        episode_directory: Path,
+        image_urls: list,
     ) -> bool:
         """episode_directory를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사합니다.
         episode_no는 사용되지 않지만 혹시 모를 경우를 위해 남겨져 있습니다. 필요한 경우 제거하셔도 됩니다.
@@ -437,45 +439,46 @@ class Scraper(Generic[WebtoonId]):
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
         """
 
-        if episode_directory.is_file():
-            raise FileExistsError(
-                f"File at {episode_directory} already exists. Please delete the file."
-            )
-
-        if not episode_directory.is_dir():
-            episode_directory.mkdir()
-
-        self._set_progress_indication(f"checking integrity of {subtitle}")
-
-        is_filename_appropriate = all(
-            webtoon_regexes[NORMAL_IMAGE].match(file)
+        does_filename_inappropriate = any(
+            not webtoon_regexes[NORMAL_IMAGE].match(file)
             for file in os.listdir(episode_directory)
         )
-        if not is_filename_appropriate or len(image_urls) != len(
+        does_file_count_inappropriate = len(image_urls) != len(
             os.listdir(episode_directory)
-        ):
-            self._set_progress_indication(
-                f"{subtitle} is not vaild. Automatically restore files."
-            )
-            shutil.rmtree(episode_directory)
-            episode_directory.mkdir()
-            return False
-        else:
-            self._set_progress_indication(f"skipping {subtitle}")
-            return True
+        )
+        return does_filename_inappropriate or does_file_count_inappropriate
 
     async def _download_episode(
         self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient
     ) -> None:
         """한 회차를 다운로드받습니다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
-        safe_episode_title = self._get_safe_file_name(self.episode_titles[episode_no])
+        episode_title = self.episode_titles[episode_no]
+        safe_episode_title = self._get_safe_file_name(episode_title)
+        episode_directory = (
+            webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}")
 
-        if not safe_episode_title:
-            logging.warning(
-                f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
+        if episode_directory.is_file():
+            raise FileExistsError(
+                f"File at {episode_directory} already exists. Please delete the file."
             )
-            self._set_progress_indication("unknown episode")
-            return
+
+        if episode_directory.is_dir():
+            match self.existing_episode_policy:
+                case ExistingEpisodePolicy.SKIP:
+                    self._set_progress_indication(f"Skipping download {episode_title}.")
+                    return
+                case ExistingEpisodePolicy.INTERRUPT:
+                    raise FileExistsError(
+                        f"Directory at {episode_directory} already exists. "
+                        "Please delete the directory."
+                    )
+                case ExistingEpisodePolicy.REDOWNLOAD:
+                    check_integrity = False
+                case ExistingEpisodePolicy.HARD_CHECK:
+                    check_integrity = True
+        else:
+            episode_directory.mkdir()
+            check_integrity = False
 
         episode_images_url = self.get_episode_image_urls(episode_no)
 
@@ -483,25 +486,30 @@ class Scraper(Generic[WebtoonId]):
             logging.warning(
                 f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
             )
-            self._set_progress_indication("unknown episode")
+            self._set_progress_indication(f"Failed to download '{episode_title}'.")
             return
 
-        episode_directory = (
-            webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
-        )
-        if self._check_directory(
-            episode_directory, episode_images_url, safe_episode_title
-        ):
-            return
+        if check_integrity:
+            if not self._check_directory_integrity(
+                    episode_directory, episode_images_url):
+                self._set_progress_indication(f"Skipping downloading {episode_title} after integrity check.")
+                return
+
+            shutil.rmtree(episode_directory)
+            episode_directory.mkdir()
 
         self._set_progress_indication(f"downloading {safe_episode_title}")
 
-        await asyncio.gather(
-            *(
-                self._download_image(episode_directory, element, i, client)
-                for i, element in enumerate(episode_images_url)
+        try:
+            await asyncio.gather(
+                *(
+                    self._download_image(episode_directory, element, i, client)
+                    for i, element in enumerate(episode_images_url)
+                )
             )
-        )
+        except BaseException:  # KeyboardInterrupt 등 원초적 오류들도 잡아야 해서 필요.
+            shutil.rmtree(episode_directory)
+            raise
 
     async def _download_image(
         self,
