@@ -18,30 +18,30 @@ class KakaopageScraper(Scraper[int]):
     TEST_WEBTOON_ID = 53397318  # 부기영화
     URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
         self.headers = {}
         self.graphql_headers = {
-            "Accept": "application/graphql+json, application/json",
+            "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "ko,en-US;q=0.9,en;q=0.8",
             "Cache-Control": "no-cache",
-            "Content-Length": "4371",
             "Content-Type": "application/json",
             # "Cookie": self.cookie,
             "Dnt": "1",
             "Origin": "https://page.kakao.com",
             "Pragma": "no-cache",
-            "Referer": "https://page.kakao.com/content/53397318/viewer/53486401",
-            "Sec-Ch-Ua": '"Not/A)Brand";v="99", "Microsoft Edge";v="115", "Chromium";v="115"',
+            "Referer": "https://page.kakao.com/content/53397318",
+            "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
             "Sec-Ch-Ua-Mobile": "?0",
             "Sec-Ch-Ua-Platform": '"Windows"',
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
             "Sec-Gpc": "1",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         }
 
     @reload_manager
@@ -52,7 +52,9 @@ class KakaopageScraper(Scraper[int]):
             'meta[property="og:title"]', no_empty_result=True
         ).get("content")
         if title == "카카오페이지" or not isinstance(title, str):
-            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self), rating_notice=True)
+            raise InvalidWebtoonIdError.from_webtoon_id(
+                self.webtoon_id, type(self), rating_notice=True
+            )
 
         thumnail_url = res.soup_select_one(
             'meta[property="og:image"]', no_empty_result=True
@@ -64,18 +66,17 @@ class KakaopageScraper(Scraper[int]):
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
-        curser = 0
+        curser = "0"
         # episode_length: int = 0
         has_next_page: bool = True
         webtoon_episodes_data = []
         while has_next_page:
             post_data = {
-                "operationName": "contentHomeProductList",
                 "query": WEBTOON_DATA_QUERY,
                 "variables": {
-                    "seriesId": self.webtoon_id,
-                    "after": str(curser),
                     "boughtOnly": False,
+                    "after": curser,
+                    "seriesId": self.webtoon_id,
                     "sortType": "asc",
                 },
             }
