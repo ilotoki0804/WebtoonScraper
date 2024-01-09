@@ -51,6 +51,41 @@
     from WebtoonScraper import webtoon as wt
     ```
 
+## Build from source
+
+우선 git과 python을 설치하고 레포지토리를 클론하세요.
+
+```console
+git clone https://github.com/ilotoki0804/WebtoonScraper.git
+```
+
+그런 다음 가상 환경을 생성하고 활성화하세요.
+
+```console
+echo 윈도우의 경우
+py -3.12 -m venv .venv
+.venv\Scripts\activate
+
+echo UNIX인 경우
+python3.12 -m venv .venv
+.venv/Scripts/activate
+```
+
+poetry를 설치하고 의존성을 설치하세요.
+
+```console
+pip install poetry
+poetry install --no-root
+```
+
+`build.py`를 실행하세요.
+
+```console
+python build.py
+```
+
+이제 `dist`에 빌드된 `whl` 파일과 `tar.gz` 파일이 나타납니다.
+
 ## How to use
 
 사용 방법은 [`사용 방법` 문서](docs/how_to_use.md)를 참고해 주세요.
