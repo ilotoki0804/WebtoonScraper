@@ -7,7 +7,7 @@ from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidWebtoonIdError
 
 
-class WebtoonsEnglishScraper(Scraper[int]):
+class WebtoonsDotcomScraper(Scraper[int]):
     """Scrape webtoons from Webtoon Originals."""
 
     BASE_URL = "https://www.webtoons.com/en/action/jungle-juice"

@@ -5,7 +5,7 @@ from .B_naver_webtoon import (
     BestChallengeSpecificScraper,
     ChallengeSpecificScraper,
 )
-from .D_webtoon_originals import WebtoonsEnglishScraper
+from .D_webtoon_originals import WebtoonsDotcomScraper
 from .G_bufftoon import BufftoonScraper
 from .H_naver_post import NaverPostScraper, NaverPostWebtoonId
 from .I_naver_game import NaverGameScraper

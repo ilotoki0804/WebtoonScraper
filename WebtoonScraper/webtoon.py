@@ -10,7 +10,7 @@ import hxsoup
 from .scrapers import (
     Scraper,
     NaverWebtoonScraper,
-    WebtoonsEnglishScraper,
+    WebtoonsDotcomScraper,
     BufftoonScraper,
     NaverPostScraper,
     NaverPostWebtoonId,
@@ -26,7 +26,7 @@ from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange
 
 NAVER_WEBTOON = "naver_webtoon"
-WEBTOONS_ENGLISH = "webtoons_english"
+WEBTOONS_DOTCOM = "webtoons_dotcom"
 BUFFTOON = "bufftoon"
 NAVER_POST = "naver_post"
 NAVER_GAME = "naver_game"
@@ -37,7 +37,7 @@ TISTORY = "tistory"
 
 WebtoonPlatforms = Literal[
     "naver_webtoon",
-    "webtoons_english",
+    "webtoons_dotcom",
     "bufftoon",
     "naver_post",
     "naver_game",
@@ -49,7 +49,7 @@ WebtoonPlatforms = Literal[
 
 SHORT_NAMES: dict[str, WebtoonPlatforms] = {
     "nw": "naver_webtoon",
-    "we": "webtoons_english",
+    "we": "webtoons_dotcom",
     "bu": "bufftoon",
     "np": "naver_post",
     "ng": "naver_game",
@@ -61,7 +61,7 @@ SHORT_NAMES: dict[str, WebtoonPlatforms] = {
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
-    WEBTOONS_ENGLISH: WebtoonsEnglishScraper,
+    WEBTOONS_DOTCOM: WebtoonsDotcomScraper,
     BUFFTOON: BufftoonScraper,
     NAVER_POST: NaverPostScraper,
     NAVER_GAME: NaverGameScraper,
@@ -97,7 +97,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     elif isinstance(webtoon_id, int):
         test_queue = (
             NAVER_WEBTOON,
-            WEBTOONS_ENGLISH,
+            WEBTOONS_DOTCOM,
             BUFFTOON,
             NAVER_GAME,
             KAKAOPAGE,
