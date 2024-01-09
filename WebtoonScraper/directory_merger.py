@@ -438,9 +438,7 @@ def check_container_state(directory: PathOrStr) -> ContainerStates:
     """해당 path에 있는 디렉토리의 상태를 확인합니다."""
     directories, _ = _iterdir_seperating_directories_and_files(directory)
 
-    if (
-        len(directories) == 0
-    ):  # sourcery skip: simplify-len-comparison; 일관성을 위해 사용하지 않음.
+    if not directories:
         logging.warning("It looks like the directory is empty. It cannot be something")
         return NOT_MATCHED
 

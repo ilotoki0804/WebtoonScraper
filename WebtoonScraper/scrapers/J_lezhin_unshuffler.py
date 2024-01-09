@@ -171,7 +171,7 @@ def unshuffle_episode(
                 f"Skipping {target_episode_directory.name}, because there are items in the directory and the number of contents in each directory is the same."
             )
             return None
-        elif len(os.listdir(target_episode_directory)) != 0:
+        elif os.listdir(target_episode_directory):
             logging.warning(
                 f"{target_episode_directory.name} has the invalid number of images. Delete items and continue."
             )
