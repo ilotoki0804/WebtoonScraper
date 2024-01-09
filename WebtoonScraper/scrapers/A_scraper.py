@@ -470,7 +470,7 @@ class Scraper(Generic[WebtoonId]):
         if episode_directory.is_dir():
             match self.existing_episode_policy:
                 case ExistingEpisodePolicy.SKIP:
-                    self._set_progress_indication(f"Skipping download {episode_title}.")
+                    self._set_progress_indication(f"downloading {episode_title} skipped")
                     return
                 case ExistingEpisodePolicy.INTERRUPT:
                     raise FileExistsError(
@@ -491,13 +491,13 @@ class Scraper(Generic[WebtoonId]):
             logging.warning(
                 f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
             )
-            self._set_progress_indication(f"Failed to download '{episode_title}'.")
+            self._set_progress_indication(f"Failed to download {episode_title}")
             return
 
         if check_integrity:
             if not self._check_directory_integrity(
                     episode_directory, episode_images_url):
-                self._set_progress_indication(f"Skipping downloading {episode_title} after integrity check.")
+                self._set_progress_indication(f"Downloading {episode_title} skipped after integrity check")
                 return
 
             shutil.rmtree(episode_directory)
