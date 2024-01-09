@@ -8,11 +8,12 @@
 * 3.11.5 이상 파이썬 버전에 대한 경고 제거: 이제 드디어 파이썬 윗 버전에서도 불편함 없이 WebtoonScraper를 사용할 수 있게 되었습니다. 더 이상 WebtoonScraper는 3.11.5 이상의 버전에 대한 성능 저하가 일어나지 않습니다.
 * 속도 개선: async 사용, httpx 사용, 더 빠른 다운로드 사용 등 다양한 이유로 속도가 더욱 개선되었습니다.
 * webtoon.py 더이상 사용하지 않도록 권장: `WebtoonScraper.webtoon` 모듈은 초창기에 CLI가 없을 때 간단한 사용을 위해 만들어졌고 이제는 CLI로 대체되었습니다. 만약 파이썬 스크립트로 WebtoonScraper를 사용하고 싶다면 `WebtoonScraper.scrapers`를 사용하세요.
-* webtoon viewer 추가: 다운로드받은 웹툰을 간단하게 확인할 수 있는 
+* webtoon viewer 추가: 다운로드받은 웹툰을 볼 수 있는 webtoon.html을 추가하는 add_webtoon_viewer(cli로는 --add-viewer)를 추가하였습니다.
 * information.json 추가
-* ExistingEpisodePolicy 추가: ExistingEpisodePolicy를 통해 다운로드 시 
+* ExistingEpisodePolicy 추가: ExistingEpisodePolicy를 통해 다운로드 시 이미 다운로드된 에피소드 디렉토리를 봤을 때 어떻게 할 지를 설정할 수 있습니다.
 * 버프툰 버그 수정
 * 카카오페이지 버그 수정
+* WebtoonsOriginals에서 WebtoonsDotcom으로 이름 변경
 * Apache License 2.0 사용.
 * 그 외 다양한 코드 개선 및 리팩토링, 버그 수정.
 
