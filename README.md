@@ -36,7 +36,7 @@
     webtoon --version
     ```
 
-    >[!NOTE]
+    > [!NOTE]
     > 만약 `webtoon` 명령어가 잘 실행되지 않는다면 다음의 코드를 사용해 보세요.
     >
     > ```console
