@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 import logging
-from typing import TypeAlias, Final, Literal
+from typing import Sequence, TypeAlias, Final, Literal, TypeVar
 
 from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 
@@ -15,20 +15,17 @@ from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
 # container에 들어가는 file이 directory일 수 있기 때문에
 # directory라는 말을 사용할 경우 오해가 생길 수 있어 container라는 유사어로 대체하여 표현합니다.
 # episode directory 같은 경우엔 image의 container이면서도 webtoon directory의 content입니다.
-NORMAL_WEBTOON_DIRECTORY: Final = "normal_webtoon_directory"
-NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"
 NORMAL_IMAGE: Final = "normal_image"
+NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"
+NORMAL_WEBTOON_DIRECTORY: Final = "normal_webtoon_directory"
 
-MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
-MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
-# merged episode directory와 unified webtoon directory는 본질적으로 같으며,
-# 의미를 확실하게 하기 위해 동일한 값의 다른 변수를 만듦.
-UNIFIED_WEBTOON_DIRECTORY: Final = MERGED_EPISODE_DIRECTORY
 MERGED_IMAGE: Final = "merged_image"
+MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
+MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
 
 # 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 굳이 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용합니다.
-WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 WEBTOON_DIRECTORY: Final = "webtoon_directory"
+WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 
 NOT_MATCHED: Final = "not_matched"
 
@@ -41,10 +38,10 @@ ContainerStates = Literal[
     "not_matched",
 ]
 FileStates = Literal[
-    "normal_episode_directory",
     "normal_image",
-    "merged_episode_directory",
+    "normal_episode_directory",
     "merged_image",
+    "merged_episode_directory",
     "webtoon_directory",
     "not_matched",
 ]
@@ -52,10 +49,10 @@ PathOrStr: TypeAlias = "str | Path"
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
 FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
-    NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
     NORMAL_IMAGE: NORMAL_EPISODE_DIRECTORY,
-    MERGED_EPISODE_DIRECTORY: MERGED_WEBTOON_DIRECTORY,
+    NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
     MERGED_IMAGE: MERGED_EPISODE_DIRECTORY,
+    MERGED_EPISODE_DIRECTORY: MERGED_WEBTOON_DIRECTORY,
     WEBTOON_DIRECTORY: WEBTOON_DIRECTORY_CONTAINER,
 }
 
@@ -66,25 +63,41 @@ CONTAINER_TO_FILE: Final[dict[str, str]] = {
 
 # 각 라인 끝 주석 처리된 부분: 덜 예민한 버전(거의 대부분 매치 개수 관련임)의 regex; 만약 현재 regex가 잘 작동하지 않을 경우 사용할 것. 없을 수도 있음.
 webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
-    NORMAL_EPISODE_DIRECTORY: re.compile(
-        r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"
-    ),  # 0001. episode_name
     NORMAL_IMAGE: re.compile(
         r"^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$"
     ),  # 023.jpg
     # ^(?P<image_no>\d+)[.](?P<extension>[a-zA-Z0-9]+)$
-    MERGED_EPISODE_DIRECTORY: re.compile(
-        r"^(?P<from>\d{4})~(?P<to>\d{4})$"
-    ),  # 0001~0005
-    # ^(?P<from>\d+)~(?P<to>\d+)$
+    NORMAL_EPISODE_DIRECTORY: re.compile(
+        r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"
+    ),  # 0001. episode_name
     MERGED_IMAGE: re.compile(
         r"^(?P<episode_no>\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$"
     ),  # 0001.001. episode_name.jpg
     # ^(?P<episode_no>\d+)[.](?P<image_no>\d+)[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]+)$
+    MERGED_EPISODE_DIRECTORY: re.compile(
+        r"^(?P<from>\d{4})~(?P<to>\d{4})$"
+    ),  # 0001~0005
+    # ^(?P<from>\d+)~(?P<to>\d+)$
     WEBTOON_DIRECTORY: re.compile(
         r"^(?P<webtoon_name>.+)[(](?P<titleid>(?!merged).+?)[)](?:[(]merged[)])?$"
     ),  # webtoon_name(titleid)[(merged)]
 }
+
+T = TypeVar("T")
+
+
+def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) -> T:
+    if message is not None:
+        print(message)
+    if len(sequence_to_select) < 10:
+        for i, item in enumerate(sequence_to_select, 1):
+            print(f"{i}. {item}")
+    else:
+        for i, item in enumerate(sequence_to_select, 1):
+            print(f"{i:02d}. {item}")
+
+    user_answer = int(input("Enter number: "))
+    return sequence_to_select[user_answer - 1]
 
 
 class DirectoryMerger:
@@ -117,7 +130,7 @@ class DirectoryMerger:
 
     def select(
         self,
-        merge_amount: int | None = None,
+        merge_number: int | None = None,
         manual_container_state: ContainerStates | None = None,
         ask: bool = False,
     ) -> None:
@@ -129,16 +142,7 @@ class DirectoryMerger:
                 f"directory '{self.source_directory}' has no webtoon directory."
             )
 
-        print("Select webtoon to merge or restore.")
-        if len(webtoons) < 10:
-            for i, webtoon in enumerate(webtoons, 1):
-                print(f"{i}. {webtoon}")
-        else:
-            for i, webtoon in enumerate(webtoons, 1):
-                print(f"{i:02d}. {webtoon}")
-
-        user_answer = int(input("Enter number: "))
-        selected_webtoon_directory_name = webtoons[user_answer - 1]
+        selected_webtoon_directory_name = _select_from_sequence(webtoons, "Please select webtoon to merge or restore.")
 
         selected_directory = self.source_directory / selected_webtoon_directory_name
 
@@ -179,20 +183,20 @@ class DirectoryMerger:
             f"{selected_webtoon_directory_name} is selected. {message} webtoon has started."
         )
         if action == "merge":
-            if merge_amount is None:
-                merge_amount = int(input("merge amount: "))
-            merge_webtoon(selected_directory, None, merge_amount)
+            if merge_number is None:
+                merge_number = int(input("merge number: "))
+            merge_webtoon(selected_directory, None, merge_number)
         else:
             restore_webtoon(selected_directory, None)
         print(f"{message} webtoon has ended.")
 
-    def merge_webtoons_from_source_directory(self, merge_amount: int) -> None:
+    def merge_webtoons_from_source_directory(self, merge_number: int) -> None:
         """소스 디렉토리에 있는 모든 웹툰 디렉토리들을 합쳐 다시 소스 디렉토리에 놓습니다."""
         webtoons = os.listdir(self.source_directory)
         for webtoon in webtoons:
             webtoon_directory = self.target_directory / webtoon
             try:
-                merge_webtoon(webtoon_directory, None, merge_amount)
+                merge_webtoon(webtoon_directory, None, merge_number)
             except DirectoryStateUnmatchedError:
                 logging.warning(
                     f"Skip {webtoon_directory} directory. It looks not available to merge."
@@ -224,7 +228,7 @@ def _get_episode_no(directory_name: str) -> int:
 def merge_webtoon(
     source_webtoon_directory: Path,
     target_webtoon_directory: Path | None,
-    merge_amount: int,
+    merge_number: int,
     manual_directory_state: ContainerStates | None = None,
     merge_last_bundle: bool = True,
 ) -> None:
@@ -238,13 +242,13 @@ def merge_webtoon(
         source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
         target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다. \
             만약 None이면 source_webtoon_directory와 같은 경로로 지정됩니다.
-        merge_amount: 한 merged episode에 들어갈 에피소드의 개수입니다.
+        merge_number: 한 merged episode에 들어갈 에피소드의 개수입니다.
         manual_directory_state: \
             디렉토리 상태는 기본적으로 자동으로 감지되도록 되어 있습니다. \
             그러나 자동 감지 결과를 무시하고 직접 디렉토리 상태를 설정하고 싶을 경우 이 인자를 통해 \
             자신이 원하는 디렉토리 상태를 설정할 수 있습니다. 권장되지는 않습니다.
         merge_last_bundle: \
-            마지막 merged episode의 크기는 merge amount에 비해 작을 수 있습니다. \
+            마지막 merged episode의 크기는 merge number에 비해 작을 수 있습니다. \
             이 인자가 참일 경우 마지막 merged episode를 그 전의 merged episode와 통합합니다.
     """
     target_webtoon_directory = target_webtoon_directory or source_webtoon_directory
@@ -274,11 +278,11 @@ def merge_webtoon(
     grouped_directories: defaultdict[int, list[Path]] = defaultdict(list)
     for directory in directories:
         episode_no = _get_episode_no(directory.name)
-        grouped_directories[episode_no // merge_amount].append(directory)
+        grouped_directories[episode_no // merge_number].append(directory)
 
     # 마지막 번들 묶기
     last_bundle = max(grouped_directories)
-    if last_bundle < merge_amount and merge_last_bundle:
+    if last_bundle < merge_number and merge_last_bundle:
         last_bundle_items = grouped_directories.pop(last_bundle)
         grouped_directories[max(grouped_directories)] += last_bundle_items
 

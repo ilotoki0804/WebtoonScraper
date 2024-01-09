@@ -3,6 +3,7 @@
 from __future__ import annotations
 import asyncio
 import functools
+import json
 import re
 import os
 import shutil
@@ -24,7 +25,8 @@ import hxsoup
 
 from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
 from ..exceptions import UseFetchEpisode
-from ..miscs import EpisodeNoRange
+from ..miscs import EpisodeNoRange, __version__ as version
+from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(
     "WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str]
@@ -86,7 +88,7 @@ class ExistingEpisodeCheckMode(Enum):  # TODO
 
 
 class Scraper(Generic[WebtoonId]):
-    """Abstract class of all scrapers.
+    """Abstract base class of all scrapers.
 
     전반적인 로직은 모두 이 페이지에서 관리하고, 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 방식은
     각자 scraper들에 구현합니다.
@@ -117,6 +119,7 @@ class Scraper(Generic[WebtoonId]):
         self.webtoon_id = webtoon_id
         self.base_directory = "webtoon"
         self.use_tqdm_while_download = True
+        self.does_store_informations = True
 
     # PUBLIC METHODS
 
@@ -146,7 +149,11 @@ class Scraper(Generic[WebtoonId]):
         return self._get_safe_file_name(f"{self.title}({self.webtoon_id})")
 
     def fetch_all(self, reload: bool = False) -> None:
-        """웹툰에 관련한 정보를 불러옵니다."""
+        """웹툰에 관련한 정보를 불러옵니다.
+
+        Args:
+            reload (bool, False): 만약 참이라면 기존에 이미 불러와진 값을 무시하고 다시 값을 불러옵니다.
+        """
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_informations(reload=reload)
@@ -154,7 +161,8 @@ class Scraper(Generic[WebtoonId]):
     def download_webtoon(
         self,
         episode_no_range: EpisodeNoRange = None,
-        merge_amount: int | None = None,
+        merge_number: int | None = None,
+        add_webtoon_viewer: bool | None = None,
     ) -> None:
         """웹툰 전체를 다운로드합니다.
         기본적으로는 별다른 인자를 필요로 하지 않으며 다운로드받을 범위와 웹툰 모아서 보기를 할 때는
@@ -163,16 +171,20 @@ class Scraper(Generic[WebtoonId]):
         Args:
             episode_no_range: 다운로드할 회차의 범위를 정합니다.
                 Scraper._episode_no_range_to_real_range의 문서를 참고하세요.
-            merge_amount: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
+            merge_number: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
                 None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
         """
         asyncio.run(self.async_download_webtoon(
-            episode_no_range=episode_no_range, merge_amount=merge_amount))
+            episode_no_range=episode_no_range,
+            merge_number=merge_number,
+            add_webtoon_viewer=add_webtoon_viewer,
+        ))
 
     async def async_download_webtoon(
         self,
         episode_no_range: EpisodeNoRange = None,
-        merge_amount: int | None = None,
+        merge_number: int | None = None,
+        add_webtoon_viewer: bool | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
         with self._send_callback_message("setup"):
@@ -184,7 +196,7 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory.mkdir(parents=True, exist_ok=True)
 
         with self._send_callback_message("download_thubnail"):
-            self._download_webtoon_thumbnail(webtoon_directory)
+            thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
 
@@ -193,9 +205,23 @@ class Scraper(Generic[WebtoonId]):
 
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
-        if merge_amount is not None:
-            with self._send_callback_message("merge_webtoon", merge_amount, webtoon_directory):
-                merge_webtoon(webtoon_directory, None, merge_amount)
+        if merge_number is not None:
+            with self._send_callback_message("merge_webtoon", merge_number, webtoon_directory):
+                merge_webtoon(webtoon_directory, None, merge_number)
+
+        if add_webtoon_viewer:
+            add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
+
+        if self.does_store_informations:
+            informations = self.get_informations()
+            informations.update(
+                thumbnail_name=thumbnail_name,
+                webtoon_viewer_name="webtoon.html",
+                information_name="information.json",
+                original_webtoon_directory_name=webtoon_directory_name,
+                merge_number=merge_number,
+            )
+            (webtoon_directory / "information.json").write_text(json.dumps(informations, ensure_ascii=False, indent=2), encoding='utf-8')
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""
@@ -243,6 +269,17 @@ class Scraper(Generic[WebtoonId]):
                     logging.info(f"WebtoonScraper status: {the_others}, context: {contexts}")
                 else:
                     logging.info(f"WebtoonScraper status: {the_others}")
+
+    def get_informations(self, fetch: bool = False):
+        if fetch:
+            self.fetch_all()
+        return {
+            "version": version,
+            "title": self.title,
+            "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
+            "episode_ids": self.episode_ids,
+            "episode_titles": self.episode_titles,
+        }
 
     # PROPERTIES
 
@@ -469,7 +506,7 @@ class Scraper(Generic[WebtoonId]):
 
     def _download_webtoon_thumbnail(
         self, webtoon_directory: Path, file_extension: str | None = None
-    ) -> None:
+    ) -> str:
         """
         웹툰의 썸네일을 불러오고 thumbnail_directory에 저장합니다.
         Args:
@@ -478,8 +515,9 @@ class Scraper(Generic[WebtoonId]):
         """
         file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
-        image_name = f"{self._get_safe_file_name(self.title)}.{file_extension}"
-        (webtoon_directory / image_name).write_bytes(image_raw)
+        thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
+        (webtoon_directory / thumbnail_name).write_bytes(image_raw)
+        return thumbnail_name
 
     def _set_progress_indication(self, description: str) -> None:
         """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.

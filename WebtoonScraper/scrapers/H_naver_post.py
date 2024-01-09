@@ -116,8 +116,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             ]
 
         return [
-            url
-            for url in episode_images_url
+            url for url in episode_images_url
             if not url.startswith("https://mail.naver.com/read/image/")
         ]
 
