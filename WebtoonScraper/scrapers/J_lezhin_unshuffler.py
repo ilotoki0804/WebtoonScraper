@@ -26,9 +26,13 @@ def unshuffle_typical_webtoon_directory_and_return_target_directory(
 ) -> Path:
     str_source_webtoon_directory = str(source_webtoon_directory)
     if str_source_webtoon_directory.endswith(", shuffled)"):
-        str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled)") + ")"
+        str_target_webtoon_directory = (
+            str_source_webtoon_directory.removesuffix(", shuffled)") + ")"
+        )
     elif str_source_webtoon_directory.endswith(", shuffled, HD)"):
-        str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
+        str_target_webtoon_directory = (
+            str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
+        )
     else:
         raise ValueError(
             f"webtoon directory {source_webtoon_directory} is not typical. "

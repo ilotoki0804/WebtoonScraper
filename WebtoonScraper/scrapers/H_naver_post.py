@@ -116,7 +116,8 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             ]
 
         return [
-            url for url in episode_images_url
+            url
+            for url in episode_images_url
             if not url.startswith("https://mail.naver.com/read/image/")
         ]
 
@@ -142,7 +143,10 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                     if attempts is None or attempts <= try_counts[episode_no]:
                         logging.warning(
                             "Failed to download following episodes: "
-                            + ", ".join(f"{self.episode_titles[i]}(tried {try_counts[i]} time(s))" for i in sorted(episode_ids_to_try))
+                            + ", ".join(
+                                f"{self.episode_titles[i]}(tried {try_counts[i]} time(s))"
+                                for i in sorted(episode_ids_to_try)
+                            )
                         )
                         return
 

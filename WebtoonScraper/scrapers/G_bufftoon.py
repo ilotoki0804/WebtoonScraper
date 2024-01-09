@@ -32,9 +32,7 @@ class BufftoonScraper(Scraper[int]):
         self.avoid_sslerror = True
 
     async def async_download_webtoon(
-        self,
-        episode_no_range: EpisodeNoRange = None,
-        merge_number: int | None = None
+        self, episode_no_range: EpisodeNoRange = None, merge_number: int | None = None
     ) -> None:
         if not self.cookie:
             logging.warning(

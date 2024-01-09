@@ -167,6 +167,7 @@ class NaverWebtoonScraper(
     ChallengeSpecificScraper,
 ):
     """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
+
     URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/(?:webtoon|bestChallenge|challenge)\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
     TEST_WEBTOON_IDS = (
         NaverWebtoonSpecificScraper.TEST_WEBTOON_ID,
@@ -191,4 +192,6 @@ class NaverWebtoonScraper(
             case "CHALLENGE":
                 return ChallengeSpecificScraper(*args, **kwargs)
             case webtoon_type:
-                raise ValueError(f"Unexpacted webtoon type {webtoon_type}. Please contect developer.")
+                raise ValueError(
+                    f"Unexpacted webtoon type {webtoon_type}. Please contect developer."
+                )

@@ -9,6 +9,7 @@ from ..exceptions import InvalidWebtoonIdError
 
 class WebtoonsEnglishScraper(Scraper[int]):
     """Scrape webtoons from Webtoon Originals."""
+
     BASE_URL = "https://www.webtoons.com/en/action/jungle-juice"
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 5291  # Wumpus
@@ -27,16 +28,22 @@ class WebtoonsEnglishScraper(Scraper[int]):
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         self.base_url = "https://www.webtoons.com/en/action/jungle-juice"
         self.is_original = True
-        response = self.hxoptions.get(f"{self.base_url}/list?title_no={self.webtoon_id}")
+        response = self.hxoptions.get(
+            f"{self.base_url}/list?title_no={self.webtoon_id}"
+        )
 
         if response.status_code == 404:
             self.base_url = "https://www.webtoons.com/en/challenge/meme-girls"
             self.is_original = False
-            response = self.hxoptions.get(f"{self.base_url}/list?title_no={self.webtoon_id}")
+            response = self.hxoptions.get(
+                f"{self.base_url}/list?title_no={self.webtoon_id}"
+            )
 
         if response.status_code == 404:
             del self.is_original
-            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self), rating_notice=True)
+            raise InvalidWebtoonIdError.from_webtoon_id(
+                self.webtoon_id, type(self), rating_notice=True
+            )
 
         title = response.soup_select_one(
             'meta[property="og:title"]', no_empty_result=True

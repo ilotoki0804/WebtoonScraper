@@ -5,7 +5,10 @@ import os
 from pathlib import Path
 import re
 
-from .directory_merger import _iterdir_seperating_directories_and_files, _select_from_sequence
+from .directory_merger import (
+    _iterdir_seperating_directories_and_files,
+    _select_from_sequence,
+)
 from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
@@ -228,7 +231,9 @@ def add_html_webtoon_viewer(
                     thumbnail_path = file
                     break
             else:
-                thumbnail_path = _select_from_sequence(files, "Please select thumbnail in this list.")
+                thumbnail_path = _select_from_sequence(
+                    files, "Please select thumbnail in this list."
+                )
         thumbnail_name = thumbnail_path.name
 
     if webtoon_title is None:
@@ -236,19 +241,23 @@ def add_html_webtoon_viewer(
         assert webtoon_title_re is not None
         webtoon_title = webtoon_title_re.group(0)
 
-    episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
-    images_of_episode_directories = json.dumps([
-        os.listdir(episode_directory_name)
-        for episode_directory_name in directories
-    ], ensure_ascii=False)
+    episode_directories = json.dumps(
+        [directory.name for directory in directories], ensure_ascii=False
+    )
+    images_of_episode_directories = json.dumps(
+        [os.listdir(episode_directory_name) for episode_directory_name in directories],
+        ensure_ascii=False,
+    )
 
     html = (
-        HTML_TEMPLATE
-        .replace(r"{webtoon_thumbnail_name_repr}", json.dumps(thumbnail_name, ensure_ascii=False))
+        HTML_TEMPLATE.replace(
+            r"{webtoon_thumbnail_name_repr}",
+            json.dumps(thumbnail_name, ensure_ascii=False),
+        )
         .replace(r"{webtoon_title}", escape(webtoon_title))
         .replace(r"{webtoon_title_repr}", json.dumps(webtoon_title, ensure_ascii=False))
         .replace(r"{episode_directories}", episode_directories)
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
         .replace(r"{version}", version)
     )
-    (webtoon_directory / "webtoon.html").write_text(html, encoding='utf-8')
+    (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")

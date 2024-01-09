@@ -15,15 +15,21 @@ class InvalidWebtoonIdError(WebtoonScraperError):
     """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported."""
 
     @classmethod
-    def from_webtoon_id(cls, webtoon_id, scraper=None, rating_notice: bool = False) -> InvalidWebtoonIdError:
+    def from_webtoon_id(
+        cls, webtoon_id, scraper=None, rating_notice: bool = False
+    ) -> InvalidWebtoonIdError:
         rating_message = (
             " It might be because rating of the webtoon is not supported. "
             "Check if the webtoon is adult-only."
-            if rating_notice else ""
+            if rating_notice
+            else ""
         )
         assert isinstance(scraper, type)
         if scraper:
-            return cls(f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}." + rating_message)
+            return cls(
+                f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}."
+                + rating_message
+            )
         else:
             return cls(f"Invalid webtoon ID: {webtoon_id}." + rating_message)
 

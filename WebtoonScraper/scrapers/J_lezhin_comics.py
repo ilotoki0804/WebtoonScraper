@@ -42,18 +42,22 @@ class LezhinComicsScraper(Scraper[str]):
     )
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
 
-    def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
+    def __init__(
+        self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None
+    ) -> None:
         """
         self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
         """
         super().__init__(webtoon_id)
-        self.headers.update({
-            "Referer": "https://www.lezhin.com/ko/comic/dr_hearthstone/1",
-            "X-Lz-Adult": "0",
-            "X-Lz-Allowadult": "false",
-            "X-Lz-Country": "kr",
-            "X-Lz-Locale": "ko-KR",
-        })
+        self.headers.update(
+            {
+                "Referer": "https://www.lezhin.com/ko/comic/dr_hearthstone/1",
+                "X-Lz-Adult": "0",
+                "X-Lz-Allowadult": "false",
+                "X-Lz-Country": "kr",
+                "X-Lz-Locale": "ko-KR",
+            }
+        )
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
         self.hxoptions.update(
             timeout=50,
@@ -92,7 +96,9 @@ class LezhinComicsScraper(Scraper[str]):
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
 
         try:
-            title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
+            title = res.soup_select_one(
+                "h2.comicInfo__title", no_empty_result=True
+            ).text
         except EmptyResultError:
             if self.cookie != "x-lz-locale=ko_KR":
                 raise UnsupportedWebtoonRatingError(
@@ -149,30 +155,44 @@ class LezhinComicsScraper(Scraper[str]):
         self.webtoon_int_id = webtoon_int_id
 
     @reload_manager
-    def fetch_user_informations(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
-        user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
+    def fetch_user_informations(
+        self, user_int_id: int | None = None, *, reload: bool = False
+    ) -> None:
+        user_int_id = user_int_id or random.randrange(
+            5000000000000000, 6000000000000000
+        )
         self.fetch_all()
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         data = self.hxoptions.get(url).json()
         if "error" in data:
-            raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
-        data: dict = data['data']
-        view_episodes_set = {int(episode_int_id) for episode_int_id in data['history'] or []}
-        purchased_episodes_set = {int(episode_int_id) for episode_int_id in data['purchased'] or []}
+            raise InvalidAuthenticationError(
+                "Bearer is invalid. Failed to `fetch_user_infos`."
+            )
+        data: dict = data["data"]
+        view_episodes_set = {
+            int(episode_int_id) for episode_int_id in data["history"] or []
+        }
+        purchased_episodes_set = {
+            int(episode_int_id) for episode_int_id in data["purchased"] or []
+        }
 
-        raw_last_viewed_episode = data.get('latestViewedEpisode', 0)
-        self.last_viewed_episode_int_id: int | None = int(raw_last_viewed_episode) if raw_last_viewed_episode else None
-
-        self.is_subscribed = data['subscribed']
-        self.does_get_notifications = data['notification']
-        self.is_preferred: bool | None = (
-            data['preferred'] if data['preferred'] != 'none' else None
+        raw_last_viewed_episode = data.get("latestViewedEpisode", 0)
+        self.last_viewed_episode_int_id: int | None = (
+            int(raw_last_viewed_episode) if raw_last_viewed_episode else None
         )
 
-        self.purchased_episodes = [episode_id in purchased_episodes_set
-                                   for episode_id in self.episode_int_ids]
-        self.viewed_episodes = [episode_id in view_episodes_set
-                                for episode_id in self.episode_int_ids]
+        self.is_subscribed = data["subscribed"]
+        self.does_get_notifications = data["notification"]
+        self.is_preferred: bool | None = (
+            data["preferred"] if data["preferred"] != "none" else None
+        )
+
+        self.purchased_episodes = [
+            episode_id in purchased_episodes_set for episode_id in self.episode_int_ids
+        ]
+        self.viewed_episodes = [
+            episode_id in view_episodes_set for episode_id in self.episode_int_ids
+        ]
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
@@ -306,9 +326,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         to_downloads = [
             (get_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
-            for is_unusable, is_free in zip(
-                unusable_episodes, free_episodes
-            )
+            for is_unusable, is_free in zip(unusable_episodes, free_episodes)
         ]
 
         if len(episode_titles) - sum(to_downloads):

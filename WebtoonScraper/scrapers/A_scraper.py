@@ -174,11 +174,13 @@ class Scraper(Generic[WebtoonId]):
             merge_number: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
                 None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
         """
-        asyncio.run(self.async_download_webtoon(
-            episode_no_range=episode_no_range,
-            merge_number=merge_number,
-            add_webtoon_viewer=add_webtoon_viewer,
-        ))
+        asyncio.run(
+            self.async_download_webtoon(
+                episode_no_range=episode_no_range,
+                merge_number=merge_number,
+                add_webtoon_viewer=add_webtoon_viewer,
+            )
+        )
 
     async def async_download_webtoon(
         self,
@@ -206,7 +208,9 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
         if merge_number is not None:
-            with self._send_callback_message("merge_webtoon", merge_number, webtoon_directory):
+            with self._send_callback_message(
+                "merge_webtoon", merge_number, webtoon_directory
+            ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if add_webtoon_viewer:
@@ -221,7 +225,9 @@ class Scraper(Generic[WebtoonId]):
                 original_webtoon_directory_name=webtoon_directory_name,
                 merge_number=merge_number,
             )
-            (webtoon_directory / "information.json").write_text(json.dumps(informations, ensure_ascii=False, indent=2), encoding='utf-8')
+            (webtoon_directory / "information.json").write_text(
+                json.dumps(informations, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""
@@ -240,7 +246,8 @@ class Scraper(Generic[WebtoonId]):
 
     def check_if_legitimate_webtoon_id(
         self,
-        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
+        exception_type: type[BaseException]
+        | tuple[type[BaseException], ...] = Exception,
     ) -> str | None:
         """webtoon_id가 플랫폼에서 적합하다면 제목을 반환하고 아니라면 None을 반환합니다."""
         try:
@@ -266,7 +273,9 @@ class Scraper(Generic[WebtoonId]):
                 print("Webtoon data are fetched. Download has been started...")
             case the_others:
                 if contexts:
-                    logging.info(f"WebtoonScraper status: {the_others}, context: {contexts}")
+                    logging.info(
+                        f"WebtoonScraper status: {the_others}, context: {contexts}"
+                    )
                 else:
                     logging.info(f"WebtoonScraper status: {the_others}")
 
@@ -312,9 +321,15 @@ class Scraper(Generic[WebtoonId]):
     def headers(self) -> dict[str, str]:
         """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
         headers = self.hxoptions.headers
-        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
+        assert isinstance(
+            headers, dict
+        ), "Invalid subclassing could cause this error. Content developer."
         if TYPE_CHECKING:
-            headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
+            headers = {
+                k: v
+                for k, v in headers.items()
+                if isinstance(k, str) and isinstance(v, str)
+            }
         return headers
 
     @headers.setter
@@ -386,7 +401,9 @@ class Scraper(Generic[WebtoonId]):
             f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again."
         )
 
-    async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
+    async def _download_episodes(
+        self, episode_no_list: Iterable[int], webtoon_directory: Path
+    ) -> None:
         """에피소드를 반복적으로 다운로드합니다.
 
         Args:
@@ -447,7 +464,9 @@ class Scraper(Generic[WebtoonId]):
             self._set_progress_indication(f"skipping {subtitle}")
             return True
 
-    async def _download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> None:
+    async def _download_episode(
+        self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient
+    ) -> None:
         """한 회차를 다운로드받습니다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
         safe_episode_title = self._get_safe_file_name(self.episode_titles[episode_no])
 
@@ -477,8 +496,12 @@ class Scraper(Generic[WebtoonId]):
 
         self._set_progress_indication(f"downloading {safe_episode_title}")
 
-        await asyncio.gather(*(self._download_image(episode_directory, element, i, client)
-                               for i, element in enumerate(episode_images_url)))
+        await asyncio.gather(
+            *(
+                self._download_image(episode_directory, element, i, client)
+                for i, element in enumerate(episode_images_url)
+            )
+        )
 
     async def _download_image(
         self,
@@ -513,7 +536,9 @@ class Scraper(Generic[WebtoonId]):
             webtoon_directory (Path): 썸네일을 저장할 디렉토리입니다.
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
-        file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
+        file_extension = file_extension or self._get_file_extension(
+            self.webtoon_thumbnail_url
+        )
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
         thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
         (webtoon_directory / thumbnail_name).write_bytes(image_raw)
@@ -555,7 +580,9 @@ class Scraper(Generic[WebtoonId]):
         if cls.DEFAULT_IMAGE_FILE_EXTENSION is not None:
             return cls.DEFAULT_IMAGE_FILE_EXTENSION
 
-        raise ValueError(f"File extension not detected of {filename_or_url}(path: {url_path}).")
+        raise ValueError(
+            f"File extension not detected of {filename_or_url}(path: {url_path})."
+        )
 
     @staticmethod
     def _get_safe_file_name(file_or_diretory_name: str) -> str:

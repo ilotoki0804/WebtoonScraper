@@ -142,7 +142,10 @@ class DirectoryMerger:
                 f"directory '{self.source_directory}' has no webtoon directory."
             )
 
-        selected_webtoon_directory_name = _select_from_sequence(webtoons, "Please select webtoon to merge or restore.")
+        selected_webtoon_directory_name = _select_from_sequence(
+            webtoons,
+            "Please select webtoon to merge or restore.",
+        )
 
         selected_directory = self.source_directory / selected_webtoon_directory_name
 
