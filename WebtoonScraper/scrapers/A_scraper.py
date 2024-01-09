@@ -220,11 +220,16 @@ class Scraper(Generic[WebtoonId]):
             informations = self.get_informations()
             informations.update(
                 thumbnail_name=thumbnail_name,
-                webtoon_viewer_name="webtoon.html",
                 information_name="information.json",
                 original_webtoon_directory_name=webtoon_directory_name,
                 merge_number=merge_number,
+                contents=["thumbnail", "information"],
             )
+            if add_webtoon_viewer:
+                informations.update(
+                    webtoon_viewer_name="webtoon.html",
+                )
+                informations['contents'].append("webtoon_viewer")
             (webtoon_directory / "information.json").write_text(
                 json.dumps(informations, ensure_ascii=False, indent=2), encoding="utf-8"
             )
