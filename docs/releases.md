@@ -1,6 +1,22 @@
 # Relese Note
 
-3.0.0 (2024-01-07): 문서 대폭 개선. hxsoup 및 nest-asyncio 사용(의존성 증가), resoup 의존성 제거. 3.11.5 이상 파이썬 버전에 대한 경고 제거. 속도 개선. 버프툰 버그 수정 및 다양한 버그 수정. webtoon.py 더이상 사용하지 않도록 권장. Apache License 2.0 사용. 그 외 다양한 코드 개선 및 리팩토링.
+## 3.0.0 (2024-01-07)
+
+* 문서 대폭 개선: 기존에 읽기 힘들었던 문서를 대폭 개선하였습니다.
+* hxsoup 사용, resoup 의존성 제거: resoup와 requests 대신 httpx와 hxsoup를 이용하는 것으로 변경되었습니다. 이 변화로 더욱 빠르고 Pythonic한 코드를 짤 수 있게 되었습니다. 더욱이 파이썬 버전 제한이 사라졌습니다.
+* nest-asyncio 사용: async를 이용한 코드를 짜면서 생기는 불편한 오류들을 없애기 위해 nest-asyncio를 사용합니다.
+* 3.11.5 이상 파이썬 버전에 대한 경고 제거: 이제 드디어 파이썬 윗 버전에서도 불편함 없이 WebtoonScraper를 사용할 수 있게 되었습니다. 더 이상 WebtoonScraper는 3.11.5 이상의 버전에 대한 성능 저하가 일어나지 않습니다.
+* 속도 개선: async 사용, httpx 사용, 더 빠른 다운로드 사용 등 다양한 이유로 속도가 더욱 개선되었습니다.
+* webtoon.py 더이상 사용하지 않도록 권장: `WebtoonScraper.webtoon` 모듈은 초창기에 CLI가 없을 때 간단한 사용을 위해 만들어졌고 이제는 CLI로 대체되었습니다. 만약 파이썬 스크립트로 WebtoonScraper를 사용하고 싶다면 `WebtoonScraper.scrapers`를 사용하세요.
+* webtoon viewer 추가: 다운로드받은 웹툰을 간단하게 확인할 수 있는 
+* information.json 추가
+* ExistingEpisodePolicy 추가: ExistingEpisodePolicy를 통해 다운로드 시 
+* 버프툰 버그 수정
+* 카카오페이지 버그 수정
+* Apache License 2.0 사용.
+* 그 외 다양한 코드 개선 및 리팩토링, 버그 수정.
+
+## 3.0.0 이전
 
 2.3.6 (2024-01-01): 레진코믹스 소장한 무료 회차 1080p 관련 버그 수정(#3), typing_extensions 의존성 제거, 문서 및 코드 개선.
 
