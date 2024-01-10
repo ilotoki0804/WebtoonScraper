@@ -66,11 +66,11 @@ class LezhinComicsScraper(Scraper[str]):
         self.cookie = cookie or "x-lz-locale=ko_KR"  # 수정 시에는 중복된 부분도 수정하기
         self.bearer = bearer or ""
 
-        self.do_not_unshuffle = False
-        self.delete_shuffled_file = False
-        self.download_episode_id_ints_if_shuffled = True
-        self.get_paid_episode = False
-        self.is_fhd_downloaded = False
+        self.do_not_unshuffle: bool = False
+        self.delete_shuffled_file: bool = False
+        self.download_episode_id_ints_if_shuffled: bool = True
+        self.get_paid_episode: bool = False
+        self.is_fhd_downloaded: bool | None = False
 
     def get_webtoon_directory_name(self) -> str:
         directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
