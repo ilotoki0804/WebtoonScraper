@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
+from datetime import datetime
 
 from .directory_merger import (
     _iterdir_seperating_directories_and_files,
@@ -12,7 +13,7 @@ from .directory_merger import (
 from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
-<!-- WITH VERSION {version} -->
+<!-- WITH VERSION {version} at {created_time} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,13 +67,14 @@ HTML_TEMPLATE = """\
         const webtoonTitle = {webtoon_title_repr};
         const episodeDirectories = {episode_directories};
         const webtoonImagesOfDirectories = {images_of_episode_directories};
+        const createdTime = {created_time}
         const localStorageName = `viewedEpisode(${webtoonTitle})`
         const prevEpisodeButtons = Array.from(document.getElementsByClassName("prev-episode"));
         const nextEpisodeButtons = Array.from(document.getElementsByClassName("next-episode"));
         const titleBars = Array.from(document.getElementsByClassName("title-bar"));
         const episodeSelectors = Array.from(document.getElementsByClassName("episode-selector-dropdown"));
-        const viewedEpisodesLocalStorageName = `viewedEpisodes(${webtoonTitle})`;
-        const lastViewedEpisodeLocalStorageName = `lastViewedEpisode(${webtoonTitle})`;
+        const viewedEpisodesLocalStorageName = `viewedEpisodes@${webtoonTitle}(${createdTime})`;
+        const lastViewedEpisodeLocalStorageName = `lastViewedEpisode@${webtoonTitle}(${createdTime})`;
         const episodeNoRaw = window.localStorage.getItem(lastViewedEpisodeLocalStorageName)
         const resetButton = document.getElementById("delete-history")
         let episodeNo = 0
@@ -259,5 +261,6 @@ def add_html_webtoon_viewer(
         .replace(r"{episode_directories}", episode_directories)
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
         .replace(r"{version}", version)
+        .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
