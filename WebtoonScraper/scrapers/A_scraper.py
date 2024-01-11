@@ -467,43 +467,50 @@ class Scraper(Generic[WebtoonId]):
                 f"File at {episode_directory} already exists. Please delete the file."
             )
 
-        if episode_directory.is_dir():
-            match self.existing_episode_policy:
-                case ExistingEpisodePolicy.SKIP:
-                    self._set_progress_indication(f"downloading {episode_title} skipped")
-                    return
-                case ExistingEpisodePolicy.INTERRUPT:
-                    raise FileExistsError(
-                        f"Directory at {episode_directory} already exists. "
-                        "Please delete the directory."
-                    )
-                case ExistingEpisodePolicy.REDOWNLOAD:
-                    check_integrity = False
-                case ExistingEpisodePolicy.HARD_CHECK:
-                    check_integrity = True
-        else:
-            episode_directory.mkdir()
-            check_integrity = False
+        try:
+            if episode_directory.is_dir():
+                match self.existing_episode_policy:
+                    case ExistingEpisodePolicy.SKIP:
+                        self._set_progress_indication(f"downloading {episode_title} is skipped")
+                        return
+                    case ExistingEpisodePolicy.INTERRUPT:
+                        raise FileExistsError(
+                            f"Directory at {episode_directory} already exists. "
+                            "Please delete the directory."
+                        )
+                    case ExistingEpisodePolicy.REDOWNLOAD:
+                        check_integrity = False
+                    case ExistingEpisodePolicy.HARD_CHECK:
+                        check_integrity = True
+            else:
+                episode_directory.mkdir()
+                check_integrity = False
 
-        episode_images_url = self.get_episode_image_urls(episode_no)
+            episode_images_url = self.get_episode_image_urls(episode_no)
 
-        if episode_images_url is None:
-            logging.warning(
-                f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
-            )
-            self._set_progress_indication(f"Failed to download {episode_title}")
-            return
-
-        if check_integrity:
-            if not self._check_directory_integrity(
-                    episode_directory, episode_images_url):
-                self._set_progress_indication(f"Downloading {episode_title} skipped after integrity check")
+            if episode_images_url is None:
+                logging.warning(
+                    f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
+                )
+                self._set_progress_indication(f"Failed to download {episode_title}")
+                if not os.listdir(episode_directory):
+                    episode_directory.rmdir()
                 return
 
-            shutil.rmtree(episode_directory)
-            episode_directory.mkdir()
+            if check_integrity:
+                if not self._check_directory_integrity(
+                        episode_directory, episode_images_url):
+                    self._set_progress_indication(f"Downloading {episode_title} is skipped after integrity check")
+                    return
 
-        self._set_progress_indication(f"downloading {safe_episode_title}")
+                shutil.rmtree(episode_directory)
+                episode_directory.mkdir()
+
+            self._set_progress_indication(f"downloading {safe_episode_title}")
+        except BaseException:
+            if not os.listdir(episode_directory):
+                episode_directory.rmdir()
+            raise
 
         try:
             await asyncio.gather(
