@@ -267,7 +267,7 @@ def merge_webtoon(
                 if directory_state == MERGED_WEBTOON_DIRECTORY
                 else ""
             )
-            + f"\nsorce webtoon directory: {source_webtoon_directory}"
+            + f"\nsource webtoon directory: {source_webtoon_directory}"
         )
 
     # source_webtoon_directory == target_webtoon_directory인 경우 때문에 exist_ok는 True여야 한다.
@@ -281,11 +281,11 @@ def merge_webtoon(
     grouped_directories: defaultdict[int, list[Path]] = defaultdict(list)
     for directory in directories:
         episode_no = _get_episode_no(directory.name)
-        grouped_directories[episode_no // merge_number].append(directory)
+        grouped_directories[(episode_no - 1) // merge_number].append(directory)
 
     # 마지막 번들 묶기
     last_bundle = max(grouped_directories)
-    if last_bundle < merge_number and merge_last_bundle:
+    if merge_last_bundle and len(grouped_directories[last_bundle]) < merge_number:
         last_bundle_items = grouped_directories.pop(last_bundle)
         grouped_directories[max(grouped_directories)] += last_bundle_items
 
