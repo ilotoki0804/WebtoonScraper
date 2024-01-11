@@ -302,14 +302,17 @@ def merge_webtoon(
         for directory in directories:
             for image_name in os.listdir(directory):
                 merged_name = _get_merged_image_name(image_name, directory.name)
-                os.renames(
+                os.rename(
                     directory / image_name, target_episode_directory / merged_name
                 )
+            directory.rmdir()
 
     # 남은 폴더가 아닌 파일들 옮기기
     if source_webtoon_directory != target_webtoon_directory and files:
         for file in files:
-            os.renames(file, target_webtoon_directory / file.name)
+            os.rename(file, target_webtoon_directory / file.name)
+        if not os.listdir(source_webtoon_directory):
+            source_webtoon_directory.rmdir()
 
 
 def move_thumbnail_only(
@@ -502,11 +505,15 @@ def restore_webtoon(
             target_episode_directory = (
                 target_webtoon_directory / target_episode_directory_name
             )
-            os.renames(
+            target_episode_directory.mkdir(exist_ok=True)
+            os.rename(
                 directory / image_name, target_episode_directory / target_image_name
             )
+        directory.rmdir()
 
     # 남은 폴더가 아닌 파일들 옮기기
     if source_webtoon_directory != target_webtoon_directory and files:
         for file in files:
-            os.renames(file, target_webtoon_directory / file.name)
+            os.rename(file, target_webtoon_directory / file.name)
+        if not os.listdir(source_webtoon_directory):
+            source_webtoon_directory.rmdir()
