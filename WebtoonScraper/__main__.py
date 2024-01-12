@@ -396,11 +396,6 @@ def main(argv=None) -> Literal[0, 1]:
     if not hasattr(args, "subparser_name"):
         return main(argv=["--help"])
 
-    print(
-        f'{"Downloading" if args.subparser_name == "download" else "Merging"} has started'
-        f'{str(args).removeprefix("Namespace")}.'
-    )
-
     try:
         if args.subparser_name == "download":
             parse_download(args)
