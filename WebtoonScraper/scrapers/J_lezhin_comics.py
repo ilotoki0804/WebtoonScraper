@@ -28,7 +28,10 @@ TitleId = str
 
 
 class LezhinComicsScraper(Scraper[str]):
-    """Scrape webtoons from Lezhin Comics."""
+    """Scrape webtoons from Lezhin Comics.
+
+    self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
+    """
 
     BASE_URL = "https://www.lezhin.com/ko/comic"
     TEST_WEBTOON_ID = "noway"
@@ -46,7 +49,12 @@ class LezhinComicsScraper(Scraper[str]):
         self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None
     ) -> None:
         """
-        self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
+        * 에피소드를 리스팅만 하고 싶은 경우: webtoon_id만 필요
+        * 웹툰을 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요
+        * 사용자 정보를 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요
+        * 성인 웹툰을 리스팅/다운로드/웹툰의 사용자 정보를 다운로드하고 싶은 경우: 각자 필요한 값에 cookie가 추가로 필요
+
+        bearer와 cookie를 어떻게 얻는지는 [이 문서](https://github.com/ilotoki0804/WebtoonScraper/blob/master/docs/how_to_use.md#레진코믹스-다운로드)를 참고하세요.
         """
         super().__init__(webtoon_id)
         self.headers.update(
