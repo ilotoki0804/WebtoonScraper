@@ -23,8 +23,17 @@ from rich.console import Console
 import pyfilename as pf
 import hxsoup
 
-from ..directory_merger import merge_webtoon, webtoon_regexes, NORMAL_IMAGE
-from ..exceptions import UseFetchEpisode
+from ..directory_merger import (
+    ContainerStates,
+    merge_webtoon,
+    webtoon_regexes,
+    NORMAL_IMAGE,
+    restore_webtoon,
+    check_container_state,
+    MERGED_WEBTOON_DIRECTORY,
+    NORMAL_WEBTOON_DIRECTORY,
+)
+from ..exceptions import DirectoryStateUnmatchedError, UseFetchEpisode
 from ..miscs import EpisodeNoRange, __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
@@ -187,6 +196,7 @@ class Scraper(Generic[WebtoonId]):
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
         add_viewer: bool | None = None,
+        manual_container_state: ContainerStates | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
         with self._send_callback_message("setup"):
@@ -195,7 +205,20 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory_name = self.get_webtoon_directory_name()
         webtoon_directory = self.base_directory / webtoon_directory_name
 
-        webtoon_directory.mkdir(parents=True, exist_ok=True)
+        if webtoon_directory.exists() and os.listdir(webtoon_directory):
+            if manual_container_state is None:
+                container_state = check_container_state(webtoon_directory)
+            else:
+                container_state = manual_container_state
+
+            if container_state == MERGED_WEBTOON_DIRECTORY:
+                logging.warning("Webtoon directory was merged. Restoring...")
+                restore_webtoon(webtoon_directory, None)
+            elif container_state != NORMAL_WEBTOON_DIRECTORY:
+                raise DirectoryStateUnmatchedError(
+                    f"State of directory is {container_state}, which cannot be downloaded.")
+        else:
+            webtoon_directory.mkdir(parents=True, exist_ok=True)
 
         with self._send_callback_message("download_thubnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
