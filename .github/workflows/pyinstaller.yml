@@ -21,13 +21,12 @@ jobs:
     - name: Build PyInstaller
       run: |
         python3.11 -m pip install pyinstaller WebtoonScraper
-        pyinstaller -c pyinstaller_build/pyinstaller.py
-        tar czf linux-portable.tar.gz dist/pyinstaller
+        pyinstaller -c pyinstaller.py
 
     - uses: actions/upload-artifact@v2
       with:
         name: linux-portable
-        path: linux-portable.tar.gz
+        path: dist/pyinstaller
 
   windows-pyinstaller-build:
     runs-on: windows-latest
@@ -43,10 +42,30 @@ jobs:
     - name: Build PyInstaller
       run: |
         py -3.11 -m pip install pyinstaller WebtoonScraper
-        pyinstaller -c pyinstaller_build/pyinstaller.py
-        powershell Compress-Archive dist/pyinstaller windows-portable.zip
+        pyinstaller -c pyinstaller.py
 
     - uses: actions/upload-artifact@v2
       with:
         name: windows-portable
-        path: windows-portable.zip
+        path: dist/pyinstaller
+
+  macos-pyinstaller-build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Build PyInstaller
+      run: |
+        python3.11 -m pip install pyinstaller WebtoonScraper
+        pyinstaller -c pyinstaller.py
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: macos-portable
+        path: dist/pyinstaller
