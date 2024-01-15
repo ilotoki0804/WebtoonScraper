@@ -437,12 +437,30 @@ def check_filename_state(file_or_directory_name: str) -> FileStates:
     return NOT_MATCHED
 
 
-def check_container_state(directory: PathOrStr) -> ContainerStates:
+def check_container_state(directory: PathOrStr, *, warn: bool = True) -> ContainerStates:
     """해당 path에 있는 디렉토리의 상태를 확인합니다."""
+    directory = Path(directory)
+    if not directory.exists():
+        if warn:
+            logging.warning(
+                f"It looks like the directory({directory}) doesn't exist."
+            )
+        return NOT_MATCHED
+
+    if directory.is_file():
+        if warn:
+            logging.warning(
+                f"It looks like the file({directory}) is not a directory."
+            )
+        return NOT_MATCHED
+
     directories, _ = _iterdir_seperating_directories_and_files(directory)
 
     if not directories:
-        logging.warning("It looks like the directory is empty. It cannot be something")
+        if warn:
+            logging.warning(
+                f"It looks like the directory({directory}) is empty. It cannot be something"
+            )
         return NOT_MATCHED
 
     for state_name, regex in webtoon_regexes.items():
