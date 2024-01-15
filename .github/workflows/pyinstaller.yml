@@ -19,9 +19,12 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Build PyInstaller
+    - name: install dependencies
       run: |
         python3.11 -m pip install pyinstaller WebtoonScraper
+
+    - name: Build PyInstaller
+      run: |
         pyinstaller -c pyinstaller.py
 
     - uses: actions/upload-artifact@v2
@@ -41,9 +44,12 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: install dependencies
+      run: |
+        python3.11 -m pip install pyinstaller WebtoonScraper
+
     - name: Build PyInstaller
       run: |
-        py -3.11 -m pip install pyinstaller WebtoonScraper
         pyinstaller -c pyinstaller.py
 
     - uses: actions/upload-artifact@v2
@@ -63,9 +69,12 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Build PyInstaller
+    - name: install dependencies
       run: |
         python3.11 -m pip install pyinstaller WebtoonScraper
+  
+    - name: Build PyInstaller
+      run: |
         pyinstaller -c pyinstaller.py
 
     - uses: actions/upload-artifact@v2
