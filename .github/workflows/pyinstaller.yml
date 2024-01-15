@@ -9,6 +9,7 @@ on:
 jobs:
   linux-pyinstaller-build:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.head_commit.message, 'release:') || startsWith(github.event.head_commit.message, 'build:')
 
     steps:
     - uses: actions/checkout@v3
@@ -30,6 +31,7 @@ jobs:
 
   windows-pyinstaller-build:
     runs-on: windows-latest
+    if: startsWith(github.event.head_commit.message, 'release:') || startsWith(github.event.head_commit.message, 'build:')
 
     steps:
     - uses: actions/checkout@v3
@@ -51,6 +53,7 @@ jobs:
 
   macos-pyinstaller-build:
     runs-on: macos-latest
+    if: startsWith(github.event.head_commit.message, 'release:') || startsWith(github.event.head_commit.message, 'build:')
 
     steps:
     - uses: actions/checkout@v3
