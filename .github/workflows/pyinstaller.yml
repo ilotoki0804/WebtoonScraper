@@ -49,4 +49,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: windows-portable
-        path: windows-portable.tar.gz
+        path: windows-portable.zip
