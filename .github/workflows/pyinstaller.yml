@@ -7,8 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  linux-pyinstaller-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,9 +22,31 @@ jobs:
       run: |
         python3.11 -m pip install pyinstaller WebtoonScraper
         pyinstaller -c pyinstaller_build/pyinstaller.py
-        tar czf portable.tar.gz dist/pyinstaller
+        tar czf linux-portable.tar.gz dist/pyinstaller
 
     - uses: actions/upload-artifact@v2
       with:
-        name: webtoonscraper-exe
-        path: portable.tar.gz
+        name: linux-portable
+        path: linux-portable.tar.gz
+
+  windows-pyinstaller-build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Build PyInstaller
+      run: |
+        py -3.11 -m pip install pyinstaller WebtoonScraper
+        pyinstaller -c pyinstaller_build/pyinstaller.py
+        powershell Compress-Archive dist/pyinstaller windows-portable.zip
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: windows-portable
+        path: windows-portable.tar.gz
