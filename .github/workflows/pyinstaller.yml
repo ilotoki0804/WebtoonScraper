@@ -46,7 +46,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        python3.11 -m pip install pyinstaller WebtoonScraper
+        py -3.11 -m pip install pyinstaller WebtoonScraper
 
     - name: Build PyInstaller
       run: |
