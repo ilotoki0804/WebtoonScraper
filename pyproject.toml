@@ -28,7 +28,7 @@ WebtoonScraper = "WebtoonScraper:__main__.main"
 webtoon = "WebtoonScraper.__main__:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 tqdm = "^4.66.1"
 rich = "^13.6.0"
 demjson3 = "^3.0.6"
@@ -40,6 +40,7 @@ nest-asyncio = "^1.5.8"
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
 ipykernel = "^6.28.0"
+pyinstaller = "^6.3.0"
 
 [build-system]
 requires = ["poetry-core"]
