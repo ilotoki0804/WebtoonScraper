@@ -13,6 +13,21 @@
 
 저작권과 책임에 대한 내용을 더욱 자세히 알고 싶다면 [이 문서](docs/copyright.md)를 참고해 주세요.
 
+## 실행 파일로 이용하기(베타)
+
+이 패키지는 Windows, macOS, Linux에서 실행 파일 형태로 사용할 수 있습니다.
+
+1. [릴리즈 페이지](https://github.com/ilotoki0804/WebtoonScraper/releases)로 가세요.
+1. 최신 릴리즈 아래에서 자신의 운영 체제와 일치하는 이름이 적힌 zip 파일을 클릭해 다운로드하세요.
+1. zip파일을 풀고 사용하세요.
+
+> [!WARNING]
+> 실행 파일은 한 폴더 내에 들어 있는데, 다운로드되는 웹툰들은 기본적으로 해당 폴더 내 `webtoon` 디렉토리에 다운로드되도록 되어 있습니다. 이 기본값은 `-d` 플래그로 변경 가능합니다. 자세한 내용은 [사용법](docs/how_to_use.md#d-directory---download-directory-directory-옵션)을 참고하세요.
+>
+> ```console
+> webtoon download 809590 -p naver_webtoon -d ..
+> ```
+
 ## Installation
 
 1. 파이썬(3.10 이상, 최신 버전 권장)을 설치합니다. 꼭 Path에 파이썬이 포함되도록 설치하세요.
