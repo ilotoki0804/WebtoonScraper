@@ -1,4 +1,4 @@
-name: Package exe with PyInstaller - Windows
+name: PyInstaller build
 
 on:
   push:
