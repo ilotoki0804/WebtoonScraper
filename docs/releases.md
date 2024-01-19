@@ -1,5 +1,12 @@
 # Relese Note
 
+## 3.0.1 (2024-01-19)
+
+* pyinstaller 빌드 포함 및 Github Actions로 자동화: 이제 파이썬 설치 없이 pyinstaller로 만들어진 빌드 파일을 이용해 사용할 수 있습니다.
+* 다운로드 시작 시 인자 표시 제거
+* 문서 개선
+* 웹툰 다운로드 시 container 상태 확인 추가
+
 ## 3.0.0 (2024-01-07)
 
 * 문서 대폭 개선: 기존에 읽기 힘들었던 문서를 대폭 개선하였습니다.
@@ -43,7 +50,7 @@
 
 2.0.0 (2023-09-10): (버그 있음 -- 사용하지 말 것을 권장함.) pyjsparser, async_lru 의존성 제거, 대규모 리팩토링(scraper 폴더 생성, directory_merger 리팩토링, exceptions 추가, py.typed 추가, 독스 추가, 그 외 버그 수정 등.), 레진 unshuffler 분리 및 unshuffler 버그 수정, Scraper 완전 변경, 만화경 지원 제거, async 로직에서 제거
 
-1.3.0 (2023-08-27): 카카오페이지 추가, 의존성 증가([requests-utils](https://github.com/ilotoki0804/resoup))
+1.3.0 (2023-08-27): 카카오페이지 추가, 의존성 증가(~~[requests-utils](https://github.com/ilotoki0804/resoup)~~(3.0.0 버전에서 의존성에서 제거됨))
 
 1.2.0 (2023-07-27): 레진코믹스 추가, 의존성 증가(~~pyjsparser~~(2.0.0 버전에서 의존성에서 제거됨), Pillow)
 
