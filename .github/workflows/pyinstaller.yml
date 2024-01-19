@@ -27,7 +27,7 @@ jobs:
       run: |
         pyinstaller -c pyinstaller.py
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: linux-portable
         path: dist/pyinstaller
@@ -52,7 +52,7 @@ jobs:
       run: |
         pyinstaller -c pyinstaller.py
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: windows-portable
         path: dist/pyinstaller
@@ -77,7 +77,7 @@ jobs:
       run: |
         pyinstaller -c pyinstaller.py
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: macos-portable
         path: dist/pyinstaller
