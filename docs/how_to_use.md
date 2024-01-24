@@ -69,7 +69,7 @@ echo 5화씩 모아서 보기
 webtoon download 809590 -p naver_webtoon -m 5
 ```
 
-#### --cookie cookie / --bearer bearer 옵션
+#### --cookie cookie, --bearer bearer 옵션
 
 일부 플랫폼은 다운로드를 위해 로그인을 필요로 하기도 합니다. 이럴 경우 적절한 값을 웹 브라우저에서 찾아서 보내야 합니다. 각각의 플랫폼 다운로드에서 더욱 자세히 설명합니다.
 
@@ -179,6 +179,34 @@ webtoon merge
 ```
 
 이렇게 하면 `webtoon` 디렉토리에 있는 웹툰들이 모두 리스팅되고 그중에서 번호를 선택해 고르면 merge가 진행됩니다.
+
+## 실행 파일 다운로드
+
+실행 파일로 사용 시에는 CLI와 같은 명령어를 사용합니다.
+
+[설치 가이드](../README.md#실행-파일로-이용하기베타)에 설명된 방식으로 설치 후 실행한 뒤 `CLI 사용 방법` 가이드에 나와 있는 데로 사용하면 됩니다.
+
+```console
+usage: Download or merge webtoons in CLI
+
+Download webtoons with ease!
+
+options:
+  -h, --help            show this help message and exit
+  --mock                No actual action.
+  --version             show program's version number and exit
+  --show-detailed-error
+                        Show detailed error.
+
+Commands:
+  {download,merge}      Choose command you want.
+    download            Download webtoons.
+    merge               Merge/Restore webtoon directory.
+
+Welcome to WebtoonScraper shell!
+Type 'exit' to quit
+>>> (여기에 CLI 명령어를 입력하세요)
+```
 
 ## 파이썬으로 다운로드
 
