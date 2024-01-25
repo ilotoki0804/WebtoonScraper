@@ -18,6 +18,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     URL_REGEX: str
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
     IS_CONNECTION_STABLE = True
+    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
 
     @reload_manager
     def fetch_webtoon_information(
