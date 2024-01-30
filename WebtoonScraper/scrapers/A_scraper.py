@@ -129,6 +129,7 @@ class Scraper(Generic[WebtoonId]):
         self.use_tqdm_while_download = True
         self.does_store_informations = True
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
+        self._end_downloading_when_error_occured = False
 
     # PUBLIC METHODS
 
@@ -446,7 +447,12 @@ class Scraper(Generic[WebtoonId]):
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
-                await self._download_episode(episode_no, webtoon_directory, client)
+                is_download_sucessful = await self._download_episode(episode_no, webtoon_directory, client)
+                if not is_download_sucessful and self._end_downloading_when_error_occured:
+                    logging.warning("Downloading is stopped since downloading prevous episode was unsuccessful. "
+                                    "Set `self.end_downloading_when_error_occured` to False if you want to "
+                                    "proceed download.")
+                    break
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
         """다운로드할 디렉토리를 재안내합니다.
@@ -478,7 +484,7 @@ class Scraper(Generic[WebtoonId]):
 
     async def _download_episode(
         self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient
-    ) -> None:
+    ) -> bool:
         """한 회차를 다운로드받습니다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
         episode_title = self.episode_titles[episode_no]
         safe_episode_title = self._get_safe_file_name(episode_title)
@@ -495,7 +501,7 @@ class Scraper(Generic[WebtoonId]):
                 match self.existing_episode_policy:
                     case ExistingEpisodePolicy.SKIP:
                         self._set_progress_indication(f"downloading {episode_title} is skipped")
-                        return
+                        return True
                     case ExistingEpisodePolicy.INTERRUPT:
                         raise FileExistsError(
                             f"Directory at {episode_directory} already exists. "
@@ -518,13 +524,13 @@ class Scraper(Generic[WebtoonId]):
                 self._set_progress_indication(f"Failed to download {episode_title}")
                 if not os.listdir(episode_directory):
                     episode_directory.rmdir()
-                return
+                return False
 
             if check_integrity:
                 if not self._check_directory_integrity(
                         episode_directory, episode_images_url):
                     self._set_progress_indication(f"Downloading {episode_title} is skipped after integrity check")
-                    return
+                    return True
 
                 shutil.rmtree(episode_directory)
                 episode_directory.mkdir()
@@ -545,6 +551,8 @@ class Scraper(Generic[WebtoonId]):
         except BaseException:  # KeyboardInterrupt 등 원초적 오류들도 잡아야 해서 필요.
             shutil.rmtree(episode_directory)
             raise
+
+        return True
 
     async def _download_image(
         self,

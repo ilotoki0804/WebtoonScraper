@@ -3,6 +3,7 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
+import time
 from typing import Literal
 from multiprocessing import pool
 import hxsoup
@@ -233,3 +234,4 @@ def download_webtoons_getting_paid(
             download_webtoon(titleid, NAVER_WEBTOON, merge_number=merge_number)
         except UnsupportedWebtoonRatingError as e:
             print(e)
+        time.sleep(10)
