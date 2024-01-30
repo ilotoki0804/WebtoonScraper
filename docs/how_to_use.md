@@ -4,6 +4,8 @@
 
 WebtoonScraper는 CLI로도, 파이썬으로도 사용할 수 있습니다. 만약 자신이 간단한 사용을 원하는 것이라면 CLI를, 고급 기능을 사용하고 싶다면 파이썬을 사용하는 것을 추천합니다.
 
+간단하게 각 플랫폼별 다운로드 예시를 알고 싶다면 아래의 [플랫폼별 다운로드 방법 및 예시](how_to_use.md#플랫폼별-다운로드-방법-및-예시) 항목을 참고하세요.
+
 ## 웹툰 플랫폼
 
 웹툰 플랫폼은 다시 말해 웹툰 제공처입니다. 네이버 웹툰, 레진코믹스같이 웹툰 플랫폼으로 나온 플랫폼이 있는가 하면 네이버 블로그나 티스토리처럼 웹툰만은 위한 플랫폼은 아니지만 일부 사용자들이 웹툰도 올리는 식으로 사용되는 플랫폼들도 있습니다.
@@ -482,9 +484,21 @@ restore_webtoon(source_webtoon_directory)
 | MERGED_EPISODE_DIRECTORY | MERGED_WEBTOON_DIRECTORY |
 | WEBTOON_DIRECTORY | WEBTOON_DIRECTORY_CONTAINER |
 
-## 플랫폼별 다운로드 방법
+## 플랫폼별 다운로드 방법 및 예시
 
-### 네이버 웹툰 다운로드
+### 네이버 웹툰
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download 819217 -p naver_webtoon
+```
+
+```console
+webtoon download 819217 -p nw
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import NaverWebtoonScraper
@@ -494,7 +508,19 @@ scraper = NaverWebtoonScraper(819217)
 scraper.download_webtoon()
 ```
 
-### webtoons.com 다운로드
+### webtoons.com
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download 5656 -p webtoons_dotcom
+```
+
+```console
+webtoon download 5656 -p wd
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import WebtoonsDotcomScraper
@@ -504,7 +530,19 @@ scraper = WebtoonsDotcomScraper(5656)
 scraper.download_webtoon()
 ```
 
-### 버프툰 다운로드
+### 버프툰
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download 1001216 -p bufftoon
+```
+
+```console
+webtoon download 1001216 -p bt
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import BufftoonScraper
@@ -547,7 +585,19 @@ scraper.download_webtoon()
 * download_webtoon에서 cookie를 입력하면 자동으로 버프툰으로 인식합니다.
 * favicon.ico가 요청에 뜨지 않는다면 ctrl+R을 해보고, 그래도 없다면 `필터`에서 `모두`로 설정되어 있는지 다시 확인하세요.
 
-### 네이버 포스트 다운로드
+### 네이버 포스트
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download 648552,3395565 -p naver_post
+```
+
+```console
+webtoon download 648552,3395565 -p np
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import NaverPostScraper
@@ -557,16 +607,12 @@ scraper = NaverPostScraper((648552, 3395565))
 scraper.download_webtoon()
 ```
 
-```console
-webtoon 597061,19803452 -p naver_post
-```
-
 #### 네이버 포스트 다운로드 시 주의사항
 
 * 네이버 포스트에는 글과 그림이 같이 있을 수 있지만 이 라이브러리는 사진만들 다운로드받습니다.
 * exception이 없었더라도 일부 회차는 다운로드되지 않을 수 있습니다. 자세한 내용은 출력 메시지를 확인해 보세요.
 
-### 네이버 게임 다운로드
+### 네이버 게임
 
 ```python
 from WebtoonScraper.scrapers import NaverGameScraper
@@ -576,7 +622,19 @@ scraper = NaverGameScraper(5)
 scraper.download_webtoon()
 ```
 
-### 레진코믹스 다운로드
+### 레진코믹스
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download dr_hearthstone -p lezhin_comics
+```
+
+```console
+webtoon download dr_hearthstone -p lc
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
@@ -696,7 +754,19 @@ if __name__ == "__main__":
 * 일부 웹툰은 셔플링이 되어 있습니다. 따라서 웹툰을 다 다운로드받은 후 언셔플링을 하는 과정이 필요하며, 이 과정에 상당히 많은 시간과 컴퓨터 연산이 필요하다는 점 참고 바랍니다.
 * get_paid_episode를 True로 했을 때는 다량의 경고 메시지가 뜰 수 있습니다. 정상 과정이므로 신경쓰지 않아도 됩니다.
 
-### 카카오페이지 다운로드
+### 카카오페이지
+
+콘솔 및 실행 파일:
+
+```console
+webtoon download 53397318 -p kakaopage
+```
+
+```console
+webtoon download 53397318 -p kp
+```
+
+파이썬:
 
 ```python
 from WebtoonScraper.scrapers import KakaopageScraper
@@ -706,7 +776,7 @@ scraper = KakaopageScraper(53397318)
 scraper.download_webtoon()
 ```
 
-### 네이버 블로그 다운로드
+### 네이버 블로그
 
 네이버 블로그에서 한 카테고리를 특정지으려면 blogId(영어+숫자 혼합 문자열)와 categoryNo(수)가 필요합니다.
 
@@ -739,7 +809,7 @@ scraper = NaverBlogScraper(("bkid4", 55))
 scraper.download_webtoon()
 ```
 
-### 티스토리 다운로드
+### 티스토리
 
 주의: 특정 티스토리 사이트는 다운로드가 되지 않을 수 있습니다. 만약 어떤 티스토리 사이트를 다운로드받는 데에 실패했다면 이슈를 열거나 이메일로 알려주세요.
 
