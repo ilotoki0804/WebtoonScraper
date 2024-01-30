@@ -49,8 +49,8 @@ WebtoonPlatforms = Literal[
 
 SHORT_NAMES: dict[str, WebtoonPlatforms] = {
     "nw": "naver_webtoon",
-    "we": "webtoons_dotcom",
-    "bu": "bufftoon",
+    "wd": "webtoons_dotcom",
+    "bt": "bufftoon",
     "np": "naver_post",
     "ng": "naver_game",
     "lc": "lezhin_comics",
