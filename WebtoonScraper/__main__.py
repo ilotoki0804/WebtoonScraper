@@ -169,11 +169,6 @@ download_subparser.add_argument(
     action="store_true",
     help="Get paid episode. Lezhin Comics only.",
 )
-download_subparser.add_argument(
-    "--add-viewer",
-    action="store_true",
-    help="Add HTML webtoon viewer at webtoon directory.",
-)
 
 merge_subparser = subparsers.add_parser(
     "merge", help="Merge/Restore webtoon directory."
@@ -253,7 +248,6 @@ def parse_download(args: argparse.Namespace) -> None:
         download_directory=args.download_directory,
         is_list_episodes=args.list_episodes,
         get_paid_episode=args.get_paid_episode,
-        add_viewer=args.add_viewer,
     )
 
 
