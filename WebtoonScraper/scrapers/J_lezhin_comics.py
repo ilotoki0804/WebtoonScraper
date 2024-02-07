@@ -80,6 +80,10 @@ class LezhinComicsScraper(Scraper[str]):
         self.get_paid_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
 
+    def fetch_all(self, reload: bool = False) -> None:
+        super().fetch_all(reload)
+        self.fetch_user_informations(reload=reload)
+
     def get_webtoon_directory_name(self) -> str:
         directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
         if self.is_shuffled:
@@ -169,7 +173,6 @@ class LezhinComicsScraper(Scraper[str]):
         user_int_id = user_int_id or random.randrange(
             5000000000000000, 6000000000000000
         )
-        self.fetch_all()
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         data = self.hxoptions.get(url).json()
         if "error" in data:
@@ -204,10 +207,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
-        if hasattr(self, "purchased_episodes"):
-            is_purchased = self.purchased_episodes[episode_no]
-        else:
-            is_purchased = not self.free_episodes[episode_no]
+        is_purchased = self.purchased_episodes[episode_no]
 
         if is_purchased and self.is_fhd_downloaded is not None:
             self.is_fhd_downloaded = True
