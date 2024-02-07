@@ -24,8 +24,6 @@ from ..exceptions import (
     InvalidAuthenticationError,
 )
 
-TitleId = str
-
 
 class LezhinComicsScraper(Scraper[str]):
     """Scrape webtoons from Lezhin Comics.
@@ -72,6 +70,8 @@ class LezhinComicsScraper(Scraper[str]):
             attempts=3,
         )
         self.cookie = cookie or "x-lz-locale=ko_KR"  # 수정 시에는 중복된 부분도 수정하기
+        if bearer and bearer.startswith("Bearer"):
+            raise InvalidAuthenticationError("Invalid bearer. Please type valid bearer.")
         self.bearer = bearer or ""
 
         self.do_not_unshuffle: bool = False
