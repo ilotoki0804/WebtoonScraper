@@ -13,7 +13,7 @@ from .directory_merger import (
 from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
-<!-- WITH VERSION {version} at {created_time} -->
+<!-- With WebtoonScraper {version} at {created_time} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,28 +67,28 @@ HTML_TEMPLATE = """\
         const webtoonTitle = {webtoon_title_repr};
         const episodeDirectories = {episode_directories};
         const webtoonImagesOfDirectories = {images_of_episode_directories};
-        const createdTime = {created_time}
-        const localStorageName = `viewedEpisode(${webtoonTitle})`
+        const createdTime = {created_time};
+        const localStorageName = `viewedEpisode(${webtoonTitle})`;
         const prevEpisodeButtons = Array.from(document.getElementsByClassName("prev-episode"));
         const nextEpisodeButtons = Array.from(document.getElementsByClassName("next-episode"));
         const titleBars = Array.from(document.getElementsByClassName("title-bar"));
         const episodeSelectors = Array.from(document.getElementsByClassName("episode-selector-dropdown"));
         const viewedEpisodesLocalStorageName = `viewedEpisodes@${webtoonTitle}(${createdTime})`;
         const lastViewedEpisodeLocalStorageName = `lastViewedEpisode@${webtoonTitle}(${createdTime})`;
-        const episodeNoRaw = window.localStorage.getItem(lastViewedEpisodeLocalStorageName)
-        const resetButton = document.getElementById("delete-history")
-        let episodeNo = 0
+        const episodeNoRaw = window.localStorage.getItem(lastViewedEpisodeLocalStorageName);
+        const resetButton = document.getElementById("delete-history");
+        let episodeNo = 0;
         if (episodeNoRaw !== null) {
-            episodeNo = parseInt(episodeNoRaw)
+            episodeNo = parseInt(episodeNoRaw);
         }
-        let viewedEpisodes = []
+        let viewedEpisodes = [];
 
-        loadViewedEpisodes()
+        loadViewedEpisodes();
         function loadViewedEpisodes() {
             let viewedEpisodesRaw = window.localStorage.getItem(viewedEpisodesLocalStorageName);
             if (viewedEpisodesRaw == null) {
                 viewedEpisodes = [];
-                episodeDirectories.forEach(() => viewedEpisodes.push(false))
+                episodeDirectories.forEach(() => viewedEpisodes.push(false));
                 window.localStorage.setItem(viewedEpisodesLocalStorageName, JSON.stringify(viewedEpisodes));
             } else {
                 viewedEpisodes = Array.from(JSON.parse(viewedEpisodesRaw));
@@ -98,26 +98,26 @@ HTML_TEMPLATE = """\
         (function renderDropdown() {
             episodeSelectors.forEach((selector) => {
                 episodeDirectories.forEach((episodeDirectory, index) => {
-                    const option = document.createElement("option")
-                    option.value = index
-                    option.innerHTML = episodeDirectory
-                    option.selected = index == episodeNo
-                    selector.appendChild(option)
+                    const option = document.createElement("option");
+                    option.value = index;
+                    option.innerHTML = episodeDirectory;
+                    option.selected = index == episodeNo;
+                    selector.appendChild(option);
                 });
                 selector.addEventListener("input", function(event) {
                     selector.childNodes.forEach((options, index) => {
                         if (options.selected) {
-                            drawImage(index)
+                            drawImage(index);
                         }
                     })
                 });
             });
         })();
 
-        drawImage(episodeNo)
+        drawImage(episodeNo);
         function drawImage(index) {
-            episodeNo = index
-            window.localStorage.setItem(lastViewedEpisodeLocalStorageName, episodeNo)
+            episodeNo = index;
+            window.localStorage.setItem(lastViewedEpisodeLocalStorageName, episodeNo);
             const imageContainer = document.getElementById('image-container');
 
             const directoryName = episodeDirectories[index];
@@ -205,10 +205,10 @@ HTML_TEMPLATE = """\
         });
 
         resetButton.addEventListener("click", function() {
-            console.log("reset")
-            window.localStorage.removeItem(viewedEpisodesLocalStorageName)
-            loadViewedEpisodes()
-            drawImage(episodeNo)
+            console.log("reset");
+            window.localStorage.removeItem(viewedEpisodesLocalStorageName);
+            loadViewedEpisodes();
+            drawImage(episodeNo);
         })
     </script>
 </body>
