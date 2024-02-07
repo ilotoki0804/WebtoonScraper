@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import functools
 import logging
 from pathlib import Path
@@ -31,9 +32,9 @@ acceptable_chars = set(
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 )
 
-remove_space_and_parentheses = (
-    lambda value: value.replace(" ", "").removeprefix("(").removesuffix(")")
-)  # noqa
+
+def remove_space_and_parentheses(value):
+    return value.replace(" ", "").removeprefix("(").removesuffix(")")  # noqa
 
 
 def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
@@ -72,20 +73,15 @@ def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
 
 
 def str_to_episode_no_range(episode_no_range: str) -> EpisodeNoRange:
-    if "," not in episode_no_range:
-        try:
-            return int(episode_no_range)
-        except ValueError:
-            logging.warning("Failed to convert range statement; Download all episodes.")
-            return None
+    with contextlib.suppress(ValueError):
+        return int(episode_no_range)
 
-    make_none_if_value_is_none_or_make_int = (
-        lambda value: int(value) if value and value.lower() != "none" else None
-    )  # noqa
+    def make_none_if_value_is_none_or_make_int(value):
+        return int(value) if value and value.lower() != "none" else None
 
     start, end = (
         make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i))
-        for i in episode_no_range.split(",")
+        for i in episode_no_range.split("~")
     )
 
     return start, end
@@ -154,7 +150,7 @@ download_subparser.add_argument(
     "-r",
     "--range",
     type=str_to_episode_no_range,
-    metavar="[start],[end]",
+    metavar="[start]~[end]",
     help="Episode number range you want to download.",
 )
 download_subparser.add_argument(
