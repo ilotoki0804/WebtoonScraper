@@ -86,20 +86,6 @@ webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
 T = TypeVar("T")
 
 
-def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) -> T:
-    if message is not None:
-        print(message)
-    if len(sequence_to_select) < 10:
-        for i, item in enumerate(sequence_to_select, 1):
-            print(f"{i}. {item}")
-    else:
-        for i, item in enumerate(sequence_to_select, 1):
-            print(f"{i:02d}. {item}")
-
-    user_answer = int(input("Enter number: "))
-    return sequence_to_select[user_answer - 1]
-
-
 def select_from_directory(
     source_parent_directory: Path,
     target_parent_directory: Path | None,
