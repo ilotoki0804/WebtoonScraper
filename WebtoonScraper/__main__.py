@@ -18,7 +18,7 @@ from WebtoonScraper import webtoon, __version__
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
 from WebtoonScraper.miscs import WebtoonId, EpisodeNoRange
 from WebtoonScraper.directory_merger import (
-    DirectoryMerger,
+    select_from_directory,
     NORMAL_WEBTOON_DIRECTORY,
     MERGED_WEBTOON_DIRECTORY,
     ContainerStates,
@@ -175,26 +175,10 @@ merge_subparser = subparsers.add_parser(
 )
 merge_subparser.set_defaults(subparser_name="merge")
 merge_subparser.add_argument(
-    "webtoon_directory_name",
-    nargs="?",
+    "webtoons_directory_name",
     type=str,
-    metavar="webtoon_directory_name",
-    default=None,
-    help="The name of webtoon folder to merge or restore.",
-)
-merge_subparser.add_argument(
-    "--all",
-    action="store_true",
-    help="Merge/Restore all webtoons in root directory. If state of webtoons not equal, you cannot use auto action.",
-)
-merge_subparser.add_argument(
-    "-a",
-    "--action",
-    type=case_insensitive,
-    metavar="[a]uto|[m]erge|[r]estore",
-    default="auto",
-    choices=["m", "merge", "r", "restore", "a", "auto"],
-    help="Merge/Restore. If this is auto, it'll flip state(merge > restore, restore > merge).",
+    metavar="webtoons_directory_name",
+    help="The name of folder that contains webtoon folders to merge or restore.",
 )
 merge_subparser.add_argument(
     "-m",
@@ -205,25 +189,12 @@ merge_subparser.add_argument(
     help="Merge number when merge.",
 )
 merge_subparser.add_argument(
-    "-s",
-    "--source-directory",
-    "--source-parent-directory",
-    type=Path,
-    metavar="source_parent_directory",
-    default=Path("webtoon"),
-    help="The directory that the folders of webtoons are located.",
-)
-merge_subparser.add_argument(
     "-t",
-    "--target-directory",
     "--target-parent-directory",
     type=Path,
     metavar="target_parent_directory",
     default=None,
-    help="The directory that the result of merge/restore will be located. Defaults to soure directory itself.",
-)
-merge_subparser.add_argument(
-    "--list", action="store_true", help="List all directories and states."
+    help="The directory that the result of merge/restore will be located. Defaults to source directory itself.",
 )
 
 
@@ -312,68 +283,7 @@ def list_directories(parent_directory: Path) -> None:
 
 
 def parse_merge(args: argparse.Namespace) -> None:
-    if args.list:
-        return list_directories(args.source_directory)
-
-    if args.webtoon_directory_name is not None and args.all:
-        raise ValueError(
-            "--all option and webtoon_directory_name cannot coexist. Did you mean --root-directory?"
-        )
-
-    args.target_directory = args.target_directory or args.source_directory
-    args.action = ABBR_TO_FULL_STATE.get(args.action, args.action)
-
-    if args.webtoon_directory_name is None and not args.all:
-        dm = DirectoryMerger()
-        dm.source_directory = args.source_directory
-        dm.target_directory = args.target_directory or args.source_directory
-        dm.select(
-            args.merge_number,
-            manual_container_state=CONTAINER_STATE_PER_ARGS.get(args.action),
-        )
-        return
-
-    if args.action == "auto":
-        if args.all:
-            args.action = get_string_todo(get_state(args.source_directory))
-        else:
-            args.action = get_string_todo(
-                check_container_state(
-                    args.source_directory / args.webtoon_directory_name
-                )
-            )
-
-    if args.action == "merge" and args.merge_number is None:
-        raise ValueError(
-            "merge_number is required. Use option `-m <int>` to specify merge number."
-        )
-
-    if args.action == "merge":
-        function_to_use = functools.partial(
-            merge_webtoon, merge_number=args.merge_number
-        )
-        logging.warning("Merging...")
-    elif args.action == "restore":
-        function_to_use = restore_webtoon
-        logging.warning("Restoring...")
-    else:
-        raise
-
-    if args.all:
-        for webtoon_directory in args.source_directory.iterdir():
-            try:
-                function_to_use(
-                    webtoon_directory, args.target_directory / webtoon_directory.name
-                )
-            except (DirectoryStateUnmatchedError, KeyError) as e:
-                logging.warning(
-                    f"Skipping {webtoon_directory.name} directory due to error: {e}"
-                )
-    else:
-        function_to_use(
-            args.source_directory / args.webtoon_directory_name,
-            args.target_directory / args.webtoon_directory_name,
-        )
+    select_from_directory(args.webtoons_directory_name, args.target_parent_directory, args.merge_number)
 
 
 def main(argv=None) -> Literal[0, 1]:
