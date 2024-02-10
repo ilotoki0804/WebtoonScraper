@@ -81,3 +81,12 @@ class UserCanceledError(WebtoonScraperError):
 
 class InvalidFetchResultError(WebtoonScraperError):
     """Fetch result was invalid."""
+
+
+class Unreachable(WebtoonScraperError):
+    """This code is unreachable."""
+
+    def __init__(self, message: str | None = None):
+        super().__init__("This code is meant to be unreachable. If you saw this message, it's clearly error. "
+                         "Please contect developer or make a issue for this."
+                         + ("\n" + message if message else ""))

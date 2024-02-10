@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 from typing import Sequence, TypeAlias, Final, Literal, TypeVar
 
-from .exceptions import DirectoryStateUnmatchedError, UserCanceledError
+from .exceptions import DirectoryStateUnmatchedError, UserCanceledError, Unreachable
 
 # container는 file을 담고 있는 것을 의미합니다.
 # container에 들어가는 file이 directory일 수 있기 때문에
@@ -98,6 +98,113 @@ def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) 
 
     user_answer = int(input("Enter number: "))
     return sequence_to_select[user_answer - 1]
+
+
+def select_from_directory(
+    source_parent_directory: Path,
+    target_parent_directory: Path | None,
+    merge_number: int | None = None
+):
+    directories, files = _iterdir_seperating_directories_and_files(
+        source_parent_directory,
+        treat_underscored_directories_as_file=False
+    )
+
+    not_webtoon_directories: list[Path] = []
+    normal_webtoon_directories: list[Path] = []
+    merged_webtoon_directories: list[Path] = []
+    for directory in directories:
+        container_state = check_container_state(directory)
+        if container_state == NORMAL_WEBTOON_DIRECTORY:
+            normal_webtoon_directories.append(directory)
+        elif container_state == MERGED_WEBTOON_DIRECTORY:
+            merged_webtoon_directories.append(directory)
+        else:
+            not_webtoon_directories.append(directory)
+
+    number_length = len(
+        str(
+            (len(normal_webtoon_directories) > 1)
+            + (len(merged_webtoon_directories) > 1)
+            + len(merged_webtoon_directories)
+            + len(normal_webtoon_directories)
+        )
+    )
+
+    options: dict[int, str | Path] = {}
+
+    if not normal_webtoon_directories and not merged_webtoon_directories:
+        print("There's no webtoon directories.")
+        return
+
+    i = 1
+    if len(normal_webtoon_directories) > 1:
+        print(f"{i:0{number_length}}. Merge every {len(normal_webtoon_directories)} normal webtoons.")
+        options[i] = "merge_all"
+        i += 1
+    for normal_webtoon_directory in normal_webtoon_directories:
+        print(f"{i:0{number_length}}. Merge {normal_webtoon_directory.name}")
+        options[i] = normal_webtoon_directory
+        i += 1
+    if len(normal_webtoon_directories) > 1 and len(merged_webtoon_directories) > 1:
+        print("=" * 20)
+    if len(merged_webtoon_directories) > 1:
+        print(f"{i:0{number_length}}. Restore every {len(merged_webtoon_directories)} merged webtoons.")
+        options[i] = "restore_all"
+        i += 1
+    for merged_webtoon_directory in merged_webtoon_directories:
+        print(f"{i:0{number_length}}. Restore {merged_webtoon_directory.name}")
+        options[i] = merged_webtoon_directory
+        i += 1
+    match len(not_webtoon_directories):
+        case 0:
+            pass
+        case 1:
+            print(f"(Directory {not_webtoon_directories[0].name} is hidden because it's not a webtoon directory.)")
+        case _:
+            print(f"({len(not_webtoon_directories)} directories are hidden because they are not webtoon directories.)")
+    result = input("Enter number: ")
+    try:
+        selected = options[int(result)]
+    except (IndexError, ValueError) as e:
+        raise ValueError("User input is invalid.") from e
+
+    def get_merge_number():
+        # 혹시 merge_number가 0일 경우를 대비함.
+        return int(input("merge number: ")) if merge_number is None else merge_number
+
+    match selected:
+        case "merge_all":
+            for merged_webtoon_directory in merged_webtoon_directories:
+                merge_webtoon(
+                    merged_webtoon_directory,
+                    target_parent_directory and target_parent_directory / merged_webtoon_directory.name,
+                    get_merge_number()
+                )
+        case "restore_all":
+            for normal_webtoon_directory in normal_webtoon_directories:
+                restore_webtoon(
+                    normal_webtoon_directory,
+                    target_parent_directory and target_parent_directory / normal_webtoon_directory.name,
+                )
+        case path:
+            assert not isinstance(path, str)
+            # check_container_state를 두 번 하는 게 비효율적일 수 있음.
+            container_state = check_container_state(path)
+
+            if container_state == NORMAL_WEBTOON_DIRECTORY:
+                merge_webtoon(
+                    path,
+                    target_parent_directory and target_parent_directory / path.name,
+                    get_merge_number()
+                )
+            elif container_state == MERGED_WEBTOON_DIRECTORY:
+                restore_webtoon(
+                    path,
+                    target_parent_directory and target_parent_directory / path.name,
+                )
+            else:
+                raise Unreachable()
 
 
 class DirectoryMerger:
@@ -236,11 +343,6 @@ def merge_webtoon(
     merge_last_bundle: bool = True,
 ) -> None:
     """
-    merge_webtoon이나 merge_webtoon_directory_to_directory와 동일하지만 중요한 차이점이 몇 가지 있습니다.
-    1. 같은 폴더로 이동하는 경우와 아닌 경우를 구분하지 않습니다.
-    1. 파일을 단 한 번 이동합니다.
-    1. 폴더가 아닌 파일은 merge를 방해하지 않으며 잘 integrate됩니다.
-
     Args:
         source_webtoon_directory: 소스가 되는 웹툰이 들어있는 디렉토리입니다.
         target_webtoon_directory: 웹툰은 merge한 결과가 있을 디렉토리입니다. \
