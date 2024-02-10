@@ -273,7 +273,11 @@ def merge_webtoon(
 
     # 마지막 번들 묶기
     last_bundle = max(grouped_directories)
-    if merge_last_bundle and len(grouped_directories[last_bundle]) < merge_number:
+    if (
+        merge_last_bundle
+        and len(grouped_directories[last_bundle]) < merge_number
+        and len(grouped_directories) > 1
+    ):
         last_bundle_items = grouped_directories.pop(last_bundle)
         grouped_directories[max(grouped_directories)] += last_bundle_items
 
