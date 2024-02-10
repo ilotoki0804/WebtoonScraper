@@ -217,7 +217,8 @@ class Scraper(Generic[WebtoonId]):
                 restore_webtoon(webtoon_directory, None)
             elif container_state != NORMAL_WEBTOON_DIRECTORY:
                 raise DirectoryStateUnmatchedError(
-                    f"State of directory is {container_state}, which cannot be downloaded.")
+                    f"State of directory is {container_state}, which cannot be downloaded."
+                )
         else:
             webtoon_directory.mkdir(parents=True, exist_ok=True)
 
@@ -253,7 +254,7 @@ class Scraper(Generic[WebtoonId]):
                 informations.update(
                     webtoon_viewer_name="webtoon.html",
                 )
-                informations['contents'].append("webtoon_viewer")
+                informations["contents"].append("webtoon_viewer")
             (webtoon_directory / "information.json").write_text(
                 json.dumps(informations, ensure_ascii=False, indent=2), encoding="utf-8"
             )
@@ -447,11 +448,18 @@ class Scraper(Generic[WebtoonId]):
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
-                is_download_sucessful = await self._download_episode(episode_no, webtoon_directory, client)
-                if not is_download_sucessful and self._end_downloading_when_error_occured:
-                    logging.warning("Downloading is stopped since downloading prevous episode was unsuccessful. "
-                                    "Set `self.end_downloading_when_error_occured` to False if you want to "
-                                    "proceed download.")
+                is_download_sucessful = await self._download_episode(
+                    episode_no, webtoon_directory, client
+                )
+                if (
+                    not is_download_sucessful
+                    and self._end_downloading_when_error_occured
+                ):
+                    logging.warning(
+                        "Downloading is stopped since downloading prevous episode was unsuccessful. "
+                        "Set `self.end_downloading_when_error_occured` to False if you want to "
+                        "proceed download."
+                    )
                     break
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
@@ -489,7 +497,8 @@ class Scraper(Generic[WebtoonId]):
         episode_title = self.episode_titles[episode_no]
         safe_episode_title = self._get_safe_file_name(episode_title)
         episode_directory = (
-            webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}")
+            webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
+        )
 
         if episode_directory.is_file():
             raise FileExistsError(
@@ -500,7 +509,9 @@ class Scraper(Generic[WebtoonId]):
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
                     case ExistingEpisodePolicy.SKIP:
-                        self._set_progress_indication(f"downloading {episode_title} is skipped")
+                        self._set_progress_indication(
+                            f"downloading {episode_title} is skipped"
+                        )
                         return True
                     case ExistingEpisodePolicy.INTERRUPT:
                         raise FileExistsError(
@@ -528,8 +539,11 @@ class Scraper(Generic[WebtoonId]):
 
             if check_integrity:
                 if not self._check_directory_integrity(
-                        episode_directory, episode_images_url):
-                    self._set_progress_indication(f"Downloading {episode_title} is skipped after integrity check")
+                    episode_directory, episode_images_url
+                ):
+                    self._set_progress_indication(
+                        f"Downloading {episode_title} is skipped after integrity check"
+                    )
                     return True
 
                 shutil.rmtree(episode_directory)
