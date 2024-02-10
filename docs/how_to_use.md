@@ -145,47 +145,15 @@ C:\Users>webtoon download 809590 -p naver_webtoon --list-episodes
 
 merge 커맨드는 웹툰 모아서 보기를 지원하기 위한 기능입니다.
 
-예를 들어 다음과 같이 커맨드를 작성하면
+다음과 같은 커맨드는 `webtoon` 디렉토리에 있는 웹툰 디렉토리들이 모두 리스팅되고 그중에서 번호를 선택해 고르면 merge가 진행됩니다.
 
 ```console
-webtoon merge "킬더킹(670145)"
+webtoon merge webtoon
 ```
 
-"webtoon/킬더킹(670145)"에 있는 만화가 만약 이미 합쳐진 웹툰이라면 복구되고, 기본 상태 웹툰이라면 합쳐집니다.
+선택된 웹툰이 일반 웹툰 디렉토리라면 묶어지고, 이미 묶인 디렉토리라면 원래 상태로 복구됩니다.
 
-만약 이런 동작이 싫다면 직접 어떤 동작이 일어날지를 선택할 수 있습니다.
-
-```console
-webtoon merge "킬더킹(670145)" -a merge
-```
-
-동작은 `a`/`auto`/`m`/`merge`/`r`/`restore` 중 선택할 수 있습니다.
-
-만약 webtoon이 아닌 다른 부모 디렉토리에 있다면(예: 웹툰이 ./path/to/webtoon/킬더킹(670145)에 있다면) 다음과 같은 명령어를 사용할 수 있습니다.
-
-```console
-webtoon merge "킬더킹(670145)" -s "path/to/webtoon"
-```
-
-만약 웹툰 merge의 결과를 해당 부모 디렉토리 말고 다른 디렉토리로 선택하고 싶다면 `-t`를 조절할 수 있습니다.
-
-```console
-webtoon merge "킬더킹(670145)" -t "path/to/result"
-```
-
-선택한 부모 디렉토리에 어떤 웹툰들이 있는지 확인하려면 `--list`를 이용하세요.
-
-```
-webtoon merge --list
-```
-
-만약 전체 웹툰 디렉토리 이름을 치기 귀찮다면 디렉토리명을 생략하세요
-
-```console
-webtoon merge
-```
-
-이렇게 하면 `webtoon` 디렉토리에 있는 웹툰들이 모두 리스팅되고 그중에서 번호를 선택해 고르면 merge가 진행됩니다.
+이 과정에서 `webtoon.html`이 다시 제작됩니다.
 
 ## 실행 파일 다운로드
 
