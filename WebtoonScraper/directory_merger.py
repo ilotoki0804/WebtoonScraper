@@ -183,19 +183,22 @@ def select_from_directory(
 
     match selected:
         case "merge_all":
-            for merged_webtoon_directory in merged_webtoon_directories:
-                merge_webtoon(
-                    merged_webtoon_directory,
-                    target_parent_directory
-                    and target_parent_directory / merged_webtoon_directory.name,
-                    get_merge_number(),
-                )
-        case "restore_all":
+            merge_number = get_merge_number()
             for normal_webtoon_directory in normal_webtoon_directories:
-                restore_webtoon(
+                print(f"Merging {normal_webtoon_directory.name}...")
+                merge_webtoon(
                     normal_webtoon_directory,
                     target_parent_directory
                     and target_parent_directory / normal_webtoon_directory.name,
+                    merge_number,
+                )
+        case "restore_all":
+            for merged_webtoon_directory in merged_webtoon_directories:
+                print(f"Restoring {merged_webtoon_directory.name}...")
+                restore_webtoon(
+                    merged_webtoon_directory,
+                    target_parent_directory
+                    and target_parent_directory / merged_webtoon_directory.name,
                 )
         case path:
             assert not isinstance(path, str)
@@ -203,12 +206,15 @@ def select_from_directory(
             container_state = check_container_state(path)
 
             if container_state == NORMAL_WEBTOON_DIRECTORY:
+                merge_number = get_merge_number()
+                print(f"Merging {path.name}...")
                 merge_webtoon(
                     path,
                     target_parent_directory and target_parent_directory / path.name,
-                    get_merge_number(),
+                    merge_number,
                 )
             elif container_state == MERGED_WEBTOON_DIRECTORY:
+                print(f"Restoring {path.name}...")
                 restore_webtoon(
                     path,
                     target_parent_directory and target_parent_directory / path.name,
