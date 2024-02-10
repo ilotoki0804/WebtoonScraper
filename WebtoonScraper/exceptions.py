@@ -12,7 +12,7 @@ class DirectoryStateUnmatchedError(WebtoonScraperError):
 
 
 class InvalidWebtoonIdError(WebtoonScraperError):
-    """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported."""
+    """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported in most platform."""
 
     @classmethod
     def from_webtoon_id(
@@ -35,10 +35,7 @@ class InvalidWebtoonIdError(WebtoonScraperError):
 
 
 class UnsupportedWebtoonRatingError(InvalidWebtoonIdError):
-    """The weboon is not supported to download due to rating.
-
-    WebtoonScraper does not support adult webtoon officially.
-    """
+    """The weboon is not supported to download due to rating."""
 
 
 class InvalidAuthenticationError(WebtoonScraperError):
@@ -57,21 +54,24 @@ class UseFetchEpisode(WebtoonScraperError):
 class InvalidBlogIdError(InvalidWebtoonIdError):
     """Invalid blog id. Maybe there's a typo or blog is closed.
 
-    네이버 블로그의 경우 일반적인 웹툰 플렛폼들과는 다르게 blog id와 category number로
+    네이버 블로그의 경우 일반적인 웹툰 플랫폼들과는 다르게 blog id와 category number로
     분리되어 있고 처리 과정 중에 blog id가 잘못됐는지 category number가 잘못됐는지 확인할 수 있는
     로직이 있어서 따로 분리됨.
     """
 
 
 class InvalidCategoryNoError(InvalidWebtoonIdError):
-    """Invalid category number. Maybe there's a typo or category is deleted. Check docs of InvalidBlogId for full description."""
+    """Invalid category number.
+
+    Maybe there's a typo or category is deleted.
+    Check docs of InvalidBlogId for full description.
+    """
 
 
 class InvalidPlatformError(WebtoonScraperError):
     """Invalid platfrom error.
 
     Maybe you didn't select platform or typed invalid parameter.
-    Or you misuse naver webtoon and best challenge.
     """
 
 

@@ -118,7 +118,7 @@ class LezhinComicsScraper(Scraper[str]):
                 raise UnsupportedWebtoonRatingError(
                     "Adult webtoon is not available since you don't set cookie. "
                     "See https://github.com/ilotoki0804/WebtoonScraper/blob/master"
-                    "/docs/specific_platform_download.md#성인-웹툰-다운로드하기 "
+                    "/docs/how_to_use.md#성인-웹툰-다운로드하기 "
                     "to check how to download"
                 )
             if "adult" in res.url.path:
