@@ -4,7 +4,9 @@ import json
 import os
 from pathlib import Path
 import re
+from typing import Sequence, TypeVar
 from datetime import datetime
+from turtle import title
 
 from .directory_merger import (
     _iterdir_seperating_directories_and_files,
@@ -214,6 +216,8 @@ HTML_TEMPLATE = """\
 </html>\
 """
 
+T = TypeVar("T")
+
 
 def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) -> T:
     if message is not None:
@@ -234,27 +238,22 @@ def add_html_webtoon_viewer(
     webtoon_title: str | None = None,
     thumbnail_name: str | None = None,
 ) -> None:
+    """information.json의 데이터보다 인자로 주어진 데이터를 더 우선 순위로 잡습니다."""
     directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
-    if thumbnail_name is None:
-        with suppress(ValueError):
-            files.remove(webtoon_directory / "webtoon.html")
-        if len(files) == 1:
-            thumbnail_path = files[0]
+    if webtoon_title is None or thumbnail_name is None:
+        for file in files:
+            if file.name == "information.json":
+                with file.open("r", encoding="utf-8") as f:
+                    information = json.load(f)
+                if webtoon_title is None:
+                    webtoon_title = information["title"]
+                    assert isinstance(webtoon_title, str)
+                if thumbnail_name is None:
+                    thumbnail_name = information["thumbnail_name"]
+                    assert isinstance(thumbnail_name, str)
+                break
         else:
-            for file in files:
-                if file.name.startswith(webtoon_directory.name):
-                    thumbnail_path = file
-                    break
-            else:
-                thumbnail_path = _select_from_sequence(
-                    files, "Please select thumbnail in this list."
-                )
-        thumbnail_name = thumbnail_path.name
-
-    if webtoon_title is None:
-        webtoon_title_re = re.search("^.+(?=[.])", thumbnail_name)
-        assert webtoon_title_re is not None
-        webtoon_title = webtoon_title_re.group(0)
+            webtoon_title, thumbnail_name = infer_webtoon_infomations(webtoon_directory, webtoon_title, thumbnail_name)
 
     episode_directories = json.dumps(
         [directory.name for directory in directories], ensure_ascii=False
@@ -277,3 +276,36 @@ def add_html_webtoon_viewer(
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
+
+
+def infer_webtoon_infomations(
+    webtoon_directory: Path,
+    webtoon_title: str | None = None,
+    thumbnail_name: str | None = None,
+) -> tuple[str, str]:
+    """webtoon_title이나 thumbnail_name에 None이 아닌 것이 오면 그대로 패스합니다."""
+    directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
+    if thumbnail_name is None:
+        with suppress(ValueError):
+            files.remove(webtoon_directory / "webtoon.html")
+        with suppress(ValueError):
+            files.remove(webtoon_directory / "information.json")
+        if len(files) == 1:
+            thumbnail_path = files[0]
+        else:
+            for file in files:
+                if file.name.startswith(webtoon_directory.name):
+                    thumbnail_path = file
+                    break
+            else:
+                thumbnail_path = _select_from_sequence(
+                    files, "Please select thumbnail in this list."
+                )
+        thumbnail_name = thumbnail_path.name
+
+    if webtoon_title is None:
+        webtoon_title_re = re.search("^.+(?=[.])", thumbnail_name)
+        assert webtoon_title_re is not None
+        webtoon_title = webtoon_title_re.group(0)
+
+    return webtoon_title, thumbnail_name

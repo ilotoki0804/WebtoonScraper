@@ -83,12 +83,11 @@ webtoon_regexes: dict[FileStates, re.Pattern[str]] = {
     ),  # webtoon_name(titleid)[(merged)]
 }
 
-T = TypeVar("T")
-
 
 def select_from_directory(
     source_parent_directory: Path,
     target_parent_directory: Path | None,
+    rebuild_webtoon_viewer: bool,
     merge_number: int | None = None,
 ):
     directories, files = _iterdir_seperating_directories_and_files(
@@ -167,11 +166,13 @@ def select_from_directory(
         # 혹시 merge_number가 0일 경우를 대비해 is None 사용.
         return int(input("merge number: ")) if merge_number is None else merge_number
 
+    operated_paths: list[Path] = []
     match selected:
         case "merge_all":
             merge_number = get_merge_number()
             for normal_webtoon_directory in normal_webtoon_directories:
                 print(f"Merging {normal_webtoon_directory.name}...")
+                operated_paths.append(normal_webtoon_directory)
                 merge_webtoon(
                     normal_webtoon_directory,
                     target_parent_directory
@@ -181,6 +182,7 @@ def select_from_directory(
         case "restore_all":
             for merged_webtoon_directory in merged_webtoon_directories:
                 print(f"Restoring {merged_webtoon_directory.name}...")
+                operated_paths.append(merged_webtoon_directory)
                 restore_webtoon(
                     merged_webtoon_directory,
                     target_parent_directory
@@ -190,6 +192,7 @@ def select_from_directory(
             assert not isinstance(path, str)
             # check_container_state를 두 번 하는 게 비효율적일 수 있음.
             container_state = check_container_state(path)
+            operated_paths.append(path)
 
             if container_state == NORMAL_WEBTOON_DIRECTORY:
                 merge_number = get_merge_number()
@@ -209,6 +212,14 @@ def select_from_directory(
                 # container_state는 기존에 다 확인하고 저 두 상태 중 하나가 보장된 상태이기에
                 # 여기에 걸릴 확률은 없음.
                 raise Unreachable()
+
+    if rebuild_webtoon_viewer:
+        # webtoon_viewer이 이 모듈을 의존하고 있기에 시작 시 import가 불가함.
+        from .webtoon_viewer import add_html_webtoon_viewer
+
+        for operated_path in operated_paths:
+            if (operated_path / "webtoon.html").exists():
+                add_html_webtoon_viewer(operated_path)
 
 
 def _get_episode_no(directory_name: str) -> int:
