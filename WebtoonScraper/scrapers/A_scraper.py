@@ -172,7 +172,7 @@ class Scraper(Generic[WebtoonId]):
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
-        add_viewer: bool | None = None,
+        add_viewer: bool = True,
     ) -> None:
         """웹툰 전체를 다운로드합니다.
         기본적으로는 별다른 인자를 필요로 하지 않으며 다운로드받을 범위와 웹툰 모아서 보기를 할 때는
@@ -196,7 +196,7 @@ class Scraper(Generic[WebtoonId]):
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
-        add_viewer: bool | None = None,
+        add_viewer: bool = True,
         manual_container_state: ContainerStates | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
