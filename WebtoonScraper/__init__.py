@@ -23,9 +23,6 @@ from .miscs import (
 )
 
 import sys as _sys
-import nest_asyncio as _nest_asyncio
-
-_nest_asyncio.apply()
 
 if _sys.version_info < (3, 11, 0):
     import logging

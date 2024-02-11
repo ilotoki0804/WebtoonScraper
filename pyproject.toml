@@ -35,12 +35,12 @@ demjson3 = "^3.0.6"
 Pillow = "^10.0.1"
 pyfilename = "^0.4.0"
 hxsoup = "==0.3.0"
-nest-asyncio = "^1.5.8"
 
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
 ipykernel = "^6.28.0"
 pyinstaller = "^6.3.0"
+nest-asyncio = "^1.5.8"
 
 [build-system]
 requires = ["poetry-core"]

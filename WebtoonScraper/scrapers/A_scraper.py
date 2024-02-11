@@ -184,13 +184,20 @@ class Scraper(Generic[WebtoonId]):
             merge_number: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
                 None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
         """
-        asyncio.run(
-            self.async_download_webtoon(
-                episode_no_range=episode_no_range,
-                merge_number=merge_number,
-                add_viewer=add_viewer,
+        try:
+            asyncio.run(
+                self.async_download_webtoon(
+                    episode_no_range=episode_no_range,
+                    merge_number=merge_number,
+                    add_viewer=add_viewer,
+                )
             )
-        )
+        except RuntimeError as e:
+            try:
+                e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+            except AttributeError:
+                logging.warning("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+            raise e
 
     async def async_download_webtoon(
         self,
