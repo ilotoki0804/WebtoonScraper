@@ -6,9 +6,9 @@ import shutil
 import re
 from collections import defaultdict
 from pathlib import Path
-import logging
 from typing import Sequence, TypeAlias, Final, Literal, TypeVar
 
+from .miscs import logger
 from .exceptions import DirectoryStateUnmatchedError, UserCanceledError, Unreachable
 
 # container는 file을 담고 있는 것을 의미합니다.
@@ -336,7 +336,7 @@ def move_thumbnail_only(
         if processed_webtoon_directory_name is not None:
             webtoon_name = processed_webtoon_directory_name.group("webtoon_name")
         else:
-            logging.warning(
+            logger.warning(
                 "Directory seems not following general rule. Use normal way to move thumbnail instead."
             )
             move_thumbnail_only(
@@ -447,19 +447,19 @@ def check_container_state(
     directory = Path(directory)
     if not directory.exists():
         if warn:
-            logging.warning(f"It looks like the directory({directory}) doesn't exist.")
+            logger.warning(f"It looks like the directory({directory}) doesn't exist.")
         return NOT_MATCHED
 
     if directory.is_file():
         if warn:
-            logging.warning(f"It looks like the file({directory}) is not a directory.")
+            logger.warning(f"It looks like the file({directory}) is not a directory.")
         return NOT_MATCHED
 
     directories, _ = _iterdir_seperating_directories_and_files(directory)
 
     if not directories:
         if warn:
-            logging.warning(
+            logger.warning(
                 f"It looks like the directory({directory}) is empty. It cannot be something"
             )
         return NOT_MATCHED

@@ -1,7 +1,6 @@
 """Download Webtoons from Lezhin Comics."""
 
 from __future__ import annotations
-import logging
 from pathlib import Path
 import re
 import json
@@ -12,6 +11,7 @@ import random
 
 from hxsoup.exceptions import EmptyResultError
 
+from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 from .J_lezhin_unshuffler import (
     unshuffle_typical_webtoon_directory_and_return_target_directory,
@@ -226,12 +226,12 @@ class LezhinComicsScraper(Scraper[str]):
         keys_response = self.hxoptions.get(keygen_url)
         if keys_response.status_code == 403:
             if self.bearer:
-                logging.warning(
+                logger.warning(
                     f"can't retrieve data from {self.episode_titles[episode_no]}. "
                     "It's probably because Episode is not available or not for free episode. "
                 )
             else:
-                logging.warning(
+                logger.warning(
                     f"can't retrieve data from {self.episode_titles[episode_no]}. "
                     "It's almost certainly because you don't have bearer. Set bearer to get data."
                 )
@@ -252,7 +252,7 @@ class LezhinComicsScraper(Scraper[str]):
         except json.JSONDecodeError:
             if attempts <= 1:
                 raise
-            logging.warning("Retrying json decode...")
+            logger.warning("Retrying json decode...")
             return self.get_episode_image_urls(episode_no, attempts=attempts - 1)
 
         # created_at = images_data["data"]["createdAt"]
@@ -360,7 +360,7 @@ class LezhinComicsScraper(Scraper[str]):
                 for to_download, subtitle in zip(to_downloads, episode_titles)
                 if not to_download
             )
-            logging.warning(warning_message)
+            logger.warning(warning_message)
 
         for list_to_filter in lists_to_filter:
             list_to_filter[:] = itertools.compress(list_to_filter, to_downloads)  # type: ignore
@@ -375,7 +375,7 @@ class LezhinComicsScraper(Scraper[str]):
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         if not self.is_shuffled or self.do_not_unshuffle:
             if self.is_shuffled:
-                logging.warning(
+                logger.warning(
                     "This webtoon is shuffled, but because self.do_not_unshuffle is set to True, webtoon won't be shuffled."
                 )
             return base_webtoon_directory

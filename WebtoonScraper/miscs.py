@@ -26,6 +26,8 @@ EpisodeNoRange: TypeAlias = (
     "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
 )
 
+logger = logging.getLogger("webtoonscraper_logger")
+
 
 # CHANGE REPORTER
 
@@ -73,7 +75,7 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
         try:
             setattr(instance, f"_{self.name}_value", value)
         except AttributeError:
-            logging.warning(
+            logger.warning(
                 "Failed to set value to instance. Instance may be defined __slots__. "
                 f"Please delete it or add '_{self.name}_value' to your __slots__."
             )

@@ -1,7 +1,6 @@
 """Download webtoons automatiallly or easily"""
 
 from __future__ import annotations
-import logging
 from pathlib import Path
 import time
 from typing import Literal
@@ -24,7 +23,7 @@ from .scrapers import (
     TistoryWebtoonId,
 )
 from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
-from .miscs import WebtoonId, EpisodeNoRange
+from .miscs import WebtoonId, EpisodeNoRange, logger
 
 NAVER_WEBTOON = "naver_webtoon"
 WEBTOONS_DOTCOM = "webtoons_dotcom"
@@ -143,7 +142,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         raise ValueError(
             f"Exceeded the range of webtoons(length of results was {results})."
         ) from None
-    logging.info(f"Webtoon {selected_webtoon} is selected.")
+    logger.info(f"Webtoon {selected_webtoon} is selected.")
     return selected_platform
 
 
@@ -200,11 +199,11 @@ def download_webtoon(
     else:
         webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id)
         if isinstance(webtoon_scraper, BufftoonScraper):
-            logging.warning(
+            logger.warning(
                 "Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon."
             )
         if isinstance(webtoon_scraper, LezhinComicsScraper):
-            logging.warning(
+            logger.warning(
                 "Proceed without bearer. It'll limit the number of episodes can be downloaded of Lezhin Comics."
             )
 

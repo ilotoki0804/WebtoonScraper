@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import functools
-import logging
 from pathlib import Path
 import sys
 import os
@@ -16,7 +15,7 @@ from importlib.resources import files
 import WebtoonScraper
 from WebtoonScraper import webtoon, __version__
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
-from WebtoonScraper.miscs import WebtoonId, EpisodeNoRange
+from WebtoonScraper.miscs import WebtoonId, EpisodeNoRange, logger
 from WebtoonScraper.directory_merger import (
     select_from_directory,
     NORMAL_WEBTOON_DIRECTORY,
@@ -306,7 +305,7 @@ def main(argv=None) -> Literal[0, 1]:
                 f"Subparser {args.subparser_name} is not implemented."
             )
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         if args.show_detailed_error:
             Console().print_exception()
         return 1

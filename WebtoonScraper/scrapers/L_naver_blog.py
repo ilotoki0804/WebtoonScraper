@@ -3,7 +3,6 @@
 from __future__ import annotations
 from contextlib import suppress
 from itertools import count
-import logging
 import re
 from typing import NamedTuple
 
@@ -14,6 +13,7 @@ from ..exceptions import (
     InvalidCategoryNoError,
     UseFetchEpisode,
 )
+from ..miscs import logger
 
 
 class NaverBlogWebtoonId(NamedTuple):
@@ -61,7 +61,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         fetch_result = response["result"]
 
         if len(fetch_result["items"]) == limit:
-            logging.warning(
+            logger.warning(
                 "It seems to go beyond limit. automatically increase limit."
             )
             return self.fetch_episode_informations(limit * 2)
@@ -107,12 +107,12 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             # one_episode_image_urls = []
             # for thumbnail in episode['thumbnailList']:
             #     if thumbnail['type'] != 'P':
-            #         logging.warning(f'Unknown type {thumbnail["type"]}')
+            #         logger.warning(f'Unknown type {thumbnail["type"]}')
             #     if (thumbnail['videoAniThumbnailUrl']
             #             or thumbnail['videoPlayTime']
             #             or thumbnail['videoThumbnail']
             #             or thumbnail['vrthumbnail']):
-            #         logging.warning(f'Unexpected information detected: {thumbnail}')
+            #         logger.warning(f'Unexpected information detected: {thumbnail}')
             #     one_episode_image_urls.append(thumbnail['encodedThumbnailUrl'] + '?type=w800')
 
             with suppress(ValueError):

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict, deque
 from itertools import count
-import logging
 import time
 from typing import NamedTuple, TYPE_CHECKING
 
@@ -12,7 +11,7 @@ import demjson3
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ..miscs import EpisodeNoRange
+from ..miscs import logger
 from ..exceptions import InvalidFetchResultError
 
 from .A_scraper import Scraper, reload_manager
@@ -141,7 +140,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                     attempts = self.hxoptions.attempts
                     try_counts[episode_no] += 1
                     if attempts is None or attempts <= try_counts[episode_no]:
-                        logging.warning(
+                        logger.warning(
                             "Failed to download following episodes: "
                             + ", ".join(
                                 f"{self.episode_titles[i]}(tried {try_counts[i]} time(s))"

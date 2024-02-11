@@ -1,6 +1,5 @@
 """Unshuffles Lezhin Comics Webtoon."""
 from __future__ import annotations
-import logging
 from pathlib import Path
 import os
 import re
@@ -10,6 +9,7 @@ import multiprocessing
 from tqdm import tqdm
 from PIL import Image
 
+from ..miscs import logger
 from ..directory_merger import (
     check_container_state,
     check_filename_state,
@@ -86,7 +86,7 @@ def unshuffle_webtoon_directory_to_directory(
                 episode_directory_name
             )
             if processed_directory_name is None:
-                logging.debug(
+                logger.debug(
                     f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored."
                 )
                 continue
@@ -118,7 +118,7 @@ def unshuffle_webtoon_directory_to_directory(
             ) = ids_file_search_result
             os.rename(id_text_file_target_path, id_text_file_source_path)
 
-    logging.info("Unshuffling ended successfully.")
+    logger.info("Unshuffling ended successfully.")
 
 
 def search_episode_int_ids_exclude_if_from_directory(
@@ -161,18 +161,18 @@ def unshuffle_episode(
             check_filename_state(target_episode_directory.name)
             != NORMAL_WEBTOON_DIRECTORY
         ):
-            logging.warning(
+            logger.warning(
                 f"{target_episode_directory.name} is not valid container state. Delete items and continue."
             )
         elif len(os.listdir(target_episode_directory)) == len(
             os.listdir(source_episode_directory)
         ):
-            logging.warning(
+            logger.warning(
                 f"Skipping {target_episode_directory.name}, because there are items in the directory and the number of contents in each directory is the same."
             )
             return None
         elif os.listdir(target_episode_directory):
-            logging.warning(
+            logger.warning(
                 f"{target_episode_directory.name} has the invalid number of images. Delete items and continue."
             )
 

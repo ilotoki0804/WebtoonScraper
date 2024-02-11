@@ -20,14 +20,13 @@ from .miscs import (
     __license__,
     __github_user_name__,
     __github_project_name__,
+    logger as _logger,
 )
 
 import sys as _sys
 
 if _sys.version_info < (3, 11, 0):
-    import logging
-
-    logging.warning(
+    _logger.warning(
         f"Python version ({_sys.version}) is too low. Program may be run but not tested. "
         "Upgrade Python if program not works well."
     )

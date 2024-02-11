@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
 from urllib import parse
 from abc import abstractmethod
 from typing import ClassVar
-import logging
 from contextlib import suppress, contextmanager
 from enum import Enum
 
@@ -34,7 +33,7 @@ from ..directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
 )
 from ..exceptions import DirectoryStateUnmatchedError, UseFetchEpisode
-from ..miscs import EpisodeNoRange, __version__ as version
+from ..miscs import EpisodeNoRange, __version__ as version, logger
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(
@@ -58,17 +57,17 @@ def reload_manager(f):
 
         if f in self._return_cache:
             if not reload:
-                logging.debug(
+                logger.debug(
                     f"{f} is already loaded, so skipping loading. "
                     "In order to reload, set parameter by reload=True."
                 )
                 return self._return_cache[f]
-            logging.warning("Refreshing webtoon_information")
+            logger.warning("Refreshing webtoon_information")
 
         try:
             return_value = f(self, *args, reload=reload, **kwargs)
         except Exception:
-            logging.info(
+            logger.info(
                 "Exception is occured while function is executed. "
                 "So function is not marked as loaded."
             )
@@ -196,7 +195,7 @@ class Scraper(Generic[WebtoonId]):
             try:
                 e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             except AttributeError:
-                logging.warning("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+                logger.warning("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             raise e
 
     async def async_download_webtoon(
@@ -220,7 +219,7 @@ class Scraper(Generic[WebtoonId]):
                 container_state = manual_container_state
 
             if container_state == MERGED_WEBTOON_DIRECTORY:
-                logging.warning("Webtoon directory was merged. Restoring...")
+                logger.warning("Webtoon directory was merged. Restoring...")
                 restore_webtoon(webtoon_directory, None)
             elif container_state != NORMAL_WEBTOON_DIRECTORY:
                 raise DirectoryStateUnmatchedError(
@@ -310,11 +309,11 @@ class Scraper(Generic[WebtoonId]):
                 print("Webtoon data are fetched. Download has been started...")
             case the_others:
                 if contexts:
-                    logging.info(
+                    logger.info(
                         f"WebtoonScraper status: {the_others}, context: {contexts}"
                     )
                 else:
-                    logging.info(f"WebtoonScraper status: {the_others}")
+                    logger.info(f"WebtoonScraper status: {the_others}")
 
     def get_informations(self, fetch: bool = False):
         if fetch:
@@ -462,7 +461,7 @@ class Scraper(Generic[WebtoonId]):
                     not is_download_sucessful
                     and self._end_downloading_when_error_occured
                 ):
-                    logging.warning(
+                    logger.warning(
                         "Downloading is stopped since downloading prevous episode was unsuccessful. "
                         "Set `self.end_downloading_when_error_occured` to False if you want to "
                         "proceed download."
@@ -536,7 +535,7 @@ class Scraper(Generic[WebtoonId]):
             episode_images_url = self.get_episode_image_urls(episode_no)
 
             if episode_images_url is None:
-                logging.warning(
+                logger.warning(
                     f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
                 )
                 self._set_progress_indication(f"Failed to download {episode_title}")

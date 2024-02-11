@@ -4,7 +4,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 import time
-import logging
 from typing import TYPE_CHECKING
 
 import hxsoup
@@ -12,6 +11,7 @@ import hxsoup
 from WebtoonScraper.miscs import EpisodeNoRange
 
 from .A_scraper import Scraper, reload_manager
+from ..miscs import logger
 
 TitleId = int
 
@@ -35,7 +35,7 @@ class BufftoonScraper(Scraper[int]):
         self, episode_no_range: EpisodeNoRange = None, merge_number: int | None = None
     ) -> None:
         if not self.cookie:
-            logging.warning(
+            logger.warning(
                 "Without setting cookie extremely limiting the range of downloadable episodes. "
                 "Please set cookie to valid download. "
                 "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
@@ -79,12 +79,12 @@ class BufftoonScraper(Scraper[int]):
             get_login_requiered_episode = bool(self.cookie)
         for raw_episode in raw_data["result"]["episodes"]:
             if not get_payment_required_episode and raw_episode["isPaymentEpisode"]:
-                logging.warning(
+                logger.warning(
                     f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded."
                 )
                 continue
             if not get_login_requiered_episode and not raw_episode["isOpenFreeEpisode"]:
-                logging.warning(
+                logger.warning(
                     f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded."
                 )
                 continue
