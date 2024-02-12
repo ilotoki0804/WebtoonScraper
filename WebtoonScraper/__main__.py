@@ -3,28 +3,26 @@ from __future__ import annotations
 import argparse
 import contextlib
 import functools
-from pathlib import Path
-import sys
 import os
 import re
-from typing import Literal
-from rich.table import Table
-from rich.console import Console
+import sys
 from importlib.resources import files
+from pathlib import Path
+from typing import Literal
+
+from rich.console import Console
+from rich.table import Table
 
 import WebtoonScraper
-from WebtoonScraper import webtoon, __version__
+from WebtoonScraper import __version__, webtoon
+from WebtoonScraper.directory_merger import (MERGED_WEBTOON_DIRECTORY,
+                                             NORMAL_WEBTOON_DIRECTORY,
+                                             ContainerStates,
+                                             check_container_state,
+                                             merge_webtoon, restore_webtoon,
+                                             select_from_directory)
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
-from WebtoonScraper.miscs import WebtoonId, EpisodeNoRange, logger
-from WebtoonScraper.directory_merger import (
-    select_from_directory,
-    NORMAL_WEBTOON_DIRECTORY,
-    MERGED_WEBTOON_DIRECTORY,
-    ContainerStates,
-    merge_webtoon,
-    restore_webtoon,
-    check_container_state,
-)
+from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
 acceptable_chars = set(

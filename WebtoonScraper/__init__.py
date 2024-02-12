@@ -9,21 +9,12 @@
 Scrape webtoons with ease.
 """  # noqa
 
-from .miscs import (
-    __title__,
-    __description__,
-    __url__,
-    __version_info__,
-    __version__,
-    __author__,
-    __author_email__,
-    __license__,
-    __github_user_name__,
-    __github_project_name__,
-    logger as _logger,
-)
-
 import sys as _sys
+
+from .miscs import (__author__, __author_email__, __description__,
+                    __github_project_name__, __github_user_name__, __license__,
+                    __title__, __url__, __version__, __version_info__)
+from .miscs import logger as _logger
 
 if _sys.version_info < (3, 11, 0):
     _logger.warning(

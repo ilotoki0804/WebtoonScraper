@@ -1,13 +1,6 @@
-import logging
-from typing import (
-    TypeAlias,
-    Any,
-    Callable,
-    TypeVar,
-    Generic,
-    Iterable,
-)
 import contextlib
+import logging
+from typing import Any, Callable, Generic, Iterable, TypeAlias, TypeVar
 
 __title__ = "WebtoonScraper"
 __description__ = "Scraping webtoons with ease."

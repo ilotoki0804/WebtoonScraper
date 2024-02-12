@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from itertools import count
 from typing import NamedTuple
 from urllib.parse import unquote
-import re
 
 from .A_scraper import Scraper, reload_manager
 

@@ -1,10 +1,7 @@
-from .A_scraper import Scraper, ExistingEpisodePolicy
-from .B_naver_webtoon import (
-    NaverWebtoonScraper,
-    NaverWebtoonSpecificScraper,
-    BestChallengeSpecificScraper,
-    ChallengeSpecificScraper,
-)
+from .A_scraper import ExistingEpisodePolicy, Scraper
+from .B_naver_webtoon import (BestChallengeSpecificScraper,
+                              ChallengeSpecificScraper, NaverWebtoonScraper,
+                              NaverWebtoonSpecificScraper)
 from .D_webtoon_originals import WebtoonsDotcomScraper
 from .G_bufftoon import BufftoonScraper
 from .H_naver_post import NaverPostScraper, NaverPostWebtoonId

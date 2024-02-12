@@ -1,19 +1,19 @@
 """Download Webtoons from Naver Post."""
 
 from __future__ import annotations
+
 import asyncio
+import time
 from collections import defaultdict, deque
 from itertools import count
-import time
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import demjson3
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ..miscs import logger
 from ..exceptions import InvalidFetchResultError
-
+from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 
 

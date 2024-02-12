@@ -1,15 +1,17 @@
 """This module provides FolderMerger class."""
 # 디렉토리 복구 함수 제작
 from __future__ import annotations
+
 import os
-import shutil
 import re
+import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Sequence, TypeAlias, Final, Literal, TypeVar
+from typing import Final, Literal, Sequence, TypeAlias, TypeVar
 
+from .exceptions import (DirectoryStateUnmatchedError, Unreachable,
+                         UserCanceledError)
 from .miscs import logger
-from .exceptions import DirectoryStateUnmatchedError, UserCanceledError, Unreachable
 
 # container는 file을 담고 있는 것을 의미합니다.
 # container에 들어가는 file이 directory일 수 있기 때문에

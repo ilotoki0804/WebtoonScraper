@@ -1,13 +1,14 @@
 """Download Webtoons from Kakaopage."""
 
 from __future__ import annotations
+
 from pathlib import Path
 
 from hxsoup.client import AsyncClient
 
-from .A_scraper import Scraper, reload_manager
-from .K_kakaopage_queries import WEBTOON_DATA_QUERY, EPISODE_IMAGES_QUERY
 from ..exceptions import InvalidWebtoonIdError
+from .A_scraper import Scraper, reload_manager
+from .K_kakaopage_queries import EPISODE_IMAGES_QUERY, WEBTOON_DATA_QUERY
 
 
 class KakaopageScraper(Scraper[int]):

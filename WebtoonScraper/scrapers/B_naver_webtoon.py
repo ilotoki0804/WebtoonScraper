@@ -1,12 +1,13 @@
 """Scrape Webtoons from Naver Webtoon."""
 
 from __future__ import annotations
+
 from itertools import count
 from json.decoder import JSONDecodeError
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
+from .A_scraper import Scraper, reload_manager
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):

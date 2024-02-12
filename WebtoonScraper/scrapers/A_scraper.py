@@ -1,39 +1,35 @@
 """Abstract Class of all scrapers."""
 
 from __future__ import annotations
+
 import asyncio
 import functools
 import json
-import re
 import os
+import re
 import shutil
-from pathlib import Path
 import time
-from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
-from urllib import parse
 from abc import abstractmethod
-from typing import ClassVar
-from contextlib import suppress, contextmanager
+from contextlib import contextmanager, suppress
 from enum import Enum
+from pathlib import Path
+from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, TypeVar
+from urllib import parse
 
-from tqdm import tqdm
-from rich.table import Table
-from rich.console import Console
-import pyfilename as pf
 import hxsoup
+import pyfilename as pf
+from rich.console import Console
+from rich.table import Table
+from tqdm import tqdm
 
-from ..directory_merger import (
-    ContainerStates,
-    merge_webtoon,
-    webtoon_regexes,
-    NORMAL_IMAGE,
-    restore_webtoon,
-    check_container_state,
-    MERGED_WEBTOON_DIRECTORY,
-    NORMAL_WEBTOON_DIRECTORY,
-)
+from ..directory_merger import (MERGED_WEBTOON_DIRECTORY, NORMAL_IMAGE,
+                                NORMAL_WEBTOON_DIRECTORY, ContainerStates,
+                                check_container_state, merge_webtoon,
+                                restore_webtoon, webtoon_regexes)
 from ..exceptions import DirectoryStateUnmatchedError, UseFetchEpisode
-from ..miscs import EpisodeNoRange, __version__ as version, logger
+from ..miscs import EpisodeNoRange
+from ..miscs import __version__ as version
+from ..miscs import logger
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar(

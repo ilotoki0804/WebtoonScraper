@@ -1,17 +1,18 @@
 """Download Webtoons from Bufftoon."""
 
 from __future__ import annotations
+
 import re
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import hxsoup
 
 from WebtoonScraper.miscs import EpisodeNoRange
 
-from .A_scraper import Scraper, reload_manager
 from ..miscs import logger
+from .A_scraper import Scraper, reload_manager
 
 TitleId = int
 

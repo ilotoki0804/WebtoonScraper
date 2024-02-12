@@ -1,9 +1,10 @@
 """Download Webtoons from Naver Game."""
 
 from __future__ import annotations
+
 import contextlib
-from itertools import count
 import json
+from itertools import count
 
 from .A_scraper import Scraper, reload_manager
 

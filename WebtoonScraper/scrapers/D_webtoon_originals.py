@@ -1,10 +1,11 @@
 """Download Webtoons from `webtoons.com/en`."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from .A_scraper import Scraper, reload_manager
 from ..exceptions import InvalidWebtoonIdError
+from .A_scraper import Scraper, reload_manager
 
 
 class WebtoonsDotcomScraper(Scraper[int]):

@@ -1,30 +1,21 @@
 """Download webtoons automatiallly or easily"""
 
 from __future__ import annotations
-from pathlib import Path
+
 import time
-from typing import Literal
 from multiprocessing import pool
+from pathlib import Path
+from typing import Literal
+
 import hxsoup
 
-from .scrapers import (
-    Scraper,
-    NaverWebtoonScraper,
-    WebtoonsDotcomScraper,
-    BufftoonScraper,
-    NaverPostScraper,
-    NaverPostWebtoonId,
-    NaverGameScraper,
-    LezhinComicsScraper,
-    KakaopageScraper,
-    NaverBlogScraper,
-    NaverBlogWebtoonId,
-    TistoryScraper,
-    TistoryWebtoonId,
-    KakaoWebtoonScraper,
-)
 from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
-from .miscs import WebtoonId, EpisodeNoRange, logger
+from .miscs import EpisodeNoRange, WebtoonId, logger
+from .scrapers import (BufftoonScraper, KakaopageScraper, KakaoWebtoonScraper,
+                       LezhinComicsScraper, NaverBlogScraper,
+                       NaverBlogWebtoonId, NaverGameScraper, NaverPostScraper,
+                       NaverPostWebtoonId, NaverWebtoonScraper, Scraper,
+                       TistoryScraper, TistoryWebtoonId, WebtoonsDotcomScraper)
 
 NAVER_WEBTOON = "naver_webtoon"
 WEBTOONS_DOTCOM = "webtoons_dotcom"

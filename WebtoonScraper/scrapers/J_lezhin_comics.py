@@ -1,28 +1,24 @@
 """Download Webtoons from Lezhin Comics."""
 
 from __future__ import annotations
-from pathlib import Path
-import re
-import json
-from json import JSONDecodeError
-import shutil
+
 import itertools
+import json
 import random
+import re
+import shutil
+from json import JSONDecodeError
+from pathlib import Path
 
 from hxsoup.exceptions import EmptyResultError
 
+from ..exceptions import (InvalidAuthenticationError, InvalidWebtoonIdError,
+                          UnsupportedWebtoonRatingError, UseFetchEpisode,
+                          WebtoonScraperError)
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
-from .J_lezhin_unshuffler import (
-    unshuffle_typical_webtoon_directory_and_return_target_directory,
-)
-from ..exceptions import (
-    InvalidWebtoonIdError,
-    UnsupportedWebtoonRatingError,
-    UseFetchEpisode,
-    WebtoonScraperError,
-    InvalidAuthenticationError,
-)
+from .J_lezhin_unshuffler import \
+    unshuffle_typical_webtoon_directory_and_return_target_directory
 
 
 class LezhinComicsScraper(Scraper[str]):

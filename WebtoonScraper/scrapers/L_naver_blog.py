@@ -1,19 +1,16 @@
 """Download Webtoons from Naver Blog."""
 
 from __future__ import annotations
+
+import re
 from contextlib import suppress
 from itertools import count
-import re
 from typing import NamedTuple
 
-from .A_scraper import Scraper, reload_manager
-from ..exceptions import (
-    InvalidWebtoonIdError,
-    InvalidBlogIdError,
-    InvalidCategoryNoError,
-    UseFetchEpisode,
-)
+from ..exceptions import (InvalidBlogIdError, InvalidCategoryNoError,
+                          InvalidWebtoonIdError, UseFetchEpisode)
 from ..miscs import logger
+from .A_scraper import Scraper, reload_manager
 
 
 class NaverBlogWebtoonId(NamedTuple):

@@ -1,16 +1,14 @@
-from contextlib import suppress
-from html import escape
 import json
 import os
-from pathlib import Path
 import re
-from typing import Sequence, TypeVar
+from contextlib import suppress
 from datetime import datetime
+from html import escape
+from pathlib import Path
 from turtle import title
+from typing import Sequence, TypeVar
 
-from .directory_merger import (
-    _iterdir_seperating_directories_and_files,
-)
+from .directory_merger import _iterdir_seperating_directories_and_files
 from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
