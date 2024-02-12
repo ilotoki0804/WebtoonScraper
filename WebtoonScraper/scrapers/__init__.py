@@ -13,3 +13,4 @@ from .J_lezhin_comics import LezhinComicsScraper
 from .K_kakaopage import KakaopageScraper
 from .L_naver_blog import NaverBlogScraper, NaverBlogWebtoonId
 from .M_tistory import TistoryScraper, TistoryWebtoonId
+from .N_kakao_webtoon import KakaoWebtoonScraper

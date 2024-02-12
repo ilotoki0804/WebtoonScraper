@@ -21,6 +21,7 @@ from .scrapers import (
     NaverBlogWebtoonId,
     TistoryScraper,
     TistoryWebtoonId,
+    KakaoWebtoonScraper,
 )
 from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .miscs import WebtoonId, EpisodeNoRange, logger
@@ -34,6 +35,7 @@ LEZHIN_COMICS = "lezhin_comics"
 KAKAOPAGE = "kakaopage"
 NAVER_BLOG = "naver_blog"
 TISTORY = "tistory"
+KAKAO_WEBTOON = "kakao_webtoon"
 
 WebtoonPlatforms = Literal[
     "naver_webtoon",
@@ -45,6 +47,7 @@ WebtoonPlatforms = Literal[
     "kakaopage",
     "naver_blog",
     "tistory",
+    "kakao_webtoon",
 ]
 
 SHORT_NAMES: dict[str, WebtoonPlatforms] = {
@@ -57,6 +60,7 @@ SHORT_NAMES: dict[str, WebtoonPlatforms] = {
     "kp": "kakaopage",
     "nb": "naver_blog",
     "ti": "tistory",
+    "kw": "kakao_webtoon",
 }
 
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
@@ -69,6 +73,7 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     KAKAOPAGE: KakaopageScraper,
     NAVER_BLOG: NaverBlogScraper,
     TISTORY: TistoryScraper,
+    KAKAO_WEBTOON: KakaoWebtoonScraper,
 }
 
 
@@ -101,6 +106,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
             BUFFTOON,
             NAVER_GAME,
             KAKAOPAGE,
+            KAKAO_WEBTOON,
         )
     else:
         raise TypeError(f"Unknown type of titleid({type(webtoon_id)})")

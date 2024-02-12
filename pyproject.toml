@@ -35,6 +35,7 @@ demjson3 = "^3.0.6"
 Pillow = "^10.0.1"
 pyfilename = "^0.4.0"
 hxsoup = "==0.3.0"
+pycryptodomex = "^3.20.0"
 
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
