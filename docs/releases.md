@@ -1,6 +1,6 @@
 # Relese Note
 
-## 3.1.0 (2024-02-12)
+## 3.1.1 (2024-02-12)
 
 * 카카오 웹툰 지원 추가: 카카오 웹툰 지원을 추가했습니다.
 * nest-asyncio 더 이상 사용하지 않음: 기존에 `download_webtoon`을 위해 사용되던 nest-asyncio를 더 이상 사용하지 않습니다. 자체적으로 설치해 사용하거나 `async_download_webtoon`을 사용하실 수 있습니다.

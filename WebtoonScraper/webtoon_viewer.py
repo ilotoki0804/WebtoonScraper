@@ -5,7 +5,6 @@ from contextlib import suppress
 from datetime import datetime
 from html import escape
 from pathlib import Path
-from turtle import title
 from typing import Sequence, TypeVar
 
 from .directory_merger import _iterdir_seperating_directories_and_files
