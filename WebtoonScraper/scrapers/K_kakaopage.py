@@ -56,13 +56,13 @@ class KakaopageScraper(Scraper[int]):
                 self.webtoon_id, type(self), rating_notice=True
             )
 
-        thumnail_url = res.soup_select_one(
+        thumbnail_url = res.soup_select_one(
             'meta[property="og:image"]', no_empty_result=True
         ).get("content")
-        assert isinstance(thumnail_url, str)
+        assert isinstance(thumbnail_url, str)
 
         self.title = title
-        self.webtoon_thumbnail_url = thumnail_url
+        self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
