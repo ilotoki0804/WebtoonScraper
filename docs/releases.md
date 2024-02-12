@@ -1,5 +1,14 @@
 # Relese Note
 
+## 3.1.0 (2024-02-12)
+
+* 카카오 웹툰 지원 추가: 카카오 웹툰 지원을 추가했습니다.
+* nest-asyncio 더 이상 사용하지 않음: 기존에 `download_webtoon`을 위해 사용되던 nest-asyncio를 더 이상 사용하지 않습니다. 자체적으로 설치해 사용하거나 `async_download_webtoon`을 사용하실 수 있습니다.
+* directory_merger 관련 변화: `webtoon merge` 커맨드가 웹툰 포함 디렉토리에 대한 것으로 변경되었고, DirectoryMerger 클래스가 삭제되었습니다.
+* logger 분리: 기존에 root logger에 로그를 남기던 것과 달리 별도의 로거를 만들었습니다.
+* 의존성 변경: nest-asyncio가 의존성에서 빠지고 pycryptodomex가 의존성에 추가되었습니다.
+* 기타 버그 수정 및 개선
+
 ## 3.0.1 (2024-01-19)
 
 * pyinstaller 빌드 포함 및 Github Actions로 자동화: 이제 파이썬 설치 없이 pyinstaller로 만들어진 빌드 파일을 이용해 사용할 수 있습니다.
