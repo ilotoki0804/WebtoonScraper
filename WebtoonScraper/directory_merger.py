@@ -443,7 +443,7 @@ def check_filename_state(file_or_directory_name: str) -> FileStates:
 
 
 def check_container_state(
-    directory: PathOrStr, *, warn: bool = True
+    directory: PathOrStr, *, warn: bool = False
 ) -> ContainerStates:
     """해당 path에 있는 디렉토리의 상태를 확인합니다."""
     directory = Path(directory)
