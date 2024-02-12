@@ -307,7 +307,7 @@ def main(argv=None) -> Literal[0, 1]:
             raise NotImplementedError(
                 f"Subparser {args.subparser_name} is not implemented."
             )
-    except Exception as e:
+    except BaseException as e:
         logger.error(e)
         if args.show_detailed_error:
             Console().print_exception()
