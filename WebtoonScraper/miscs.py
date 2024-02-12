@@ -2,6 +2,9 @@ import contextlib
 import logging
 from typing import Any, Callable, Generic, Iterable, TypeAlias, TypeVar
 
+# import coloredlogs
+
+
 __title__ = "WebtoonScraper"
 __description__ = "Scraping webtoons with ease."
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
@@ -20,6 +23,7 @@ EpisodeNoRange: TypeAlias = (
 )
 
 logger = logging.getLogger("webtoonscraper_logger")
+# coloredlogs.install(logger=logger, datefmt='%H:%M:%S')
 
 
 # CHANGE REPORTER

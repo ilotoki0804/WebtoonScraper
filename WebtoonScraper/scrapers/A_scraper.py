@@ -309,7 +309,7 @@ class Scraper(Generic[WebtoonId]):
                 print("Webtoon data are fetched. Download has been started...")
             case the_others:
                 if contexts:
-                    logger.info(
+                    logger.debug(
                         f"WebtoonScraper status: {the_others}, context: {contexts}"
                     )
                 else:
