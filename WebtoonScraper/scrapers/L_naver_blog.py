@@ -61,9 +61,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         fetch_result = response["result"]
 
         if len(fetch_result["items"]) == limit:
-            logger.warning(
-                "It seems to go beyond limit. automatically increase limit."
-            )
+            logger.warning("It seems to go beyond limit. automatically increase limit.")
             return self.fetch_episode_informations(limit * 2)
 
         self.title: str = fetch_result["categoryName"]

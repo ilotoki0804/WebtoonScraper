@@ -282,7 +282,12 @@ def list_directories(parent_directory: Path) -> None:
 
 
 def parse_merge(args: argparse.Namespace) -> None:
-    select_from_directory(args.webtoons_directory_name, args.target_parent_directory, True, args.merge_number)
+    select_from_directory(
+        args.webtoons_directory_name,
+        args.target_parent_directory,
+        True,
+        args.merge_number,
+    )
 
 
 def main(argv=None) -> Literal[0, 1]:

@@ -253,7 +253,9 @@ def add_html_webtoon_viewer(
                     assert isinstance(thumbnail_name, str)
                 break
         else:
-            webtoon_title, thumbnail_name = infer_webtoon_infomations(webtoon_directory, webtoon_title, thumbnail_name)
+            webtoon_title, thumbnail_name = infer_webtoon_infomations(
+                webtoon_directory, webtoon_title, thumbnail_name
+            )
 
     episode_directories = json.dumps(
         [directory.name for directory in directories], ensure_ascii=False

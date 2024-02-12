@@ -34,64 +34,72 @@ class KakaoWebtoonScraper(Scraper[int]):
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
 
-        self.client_id = int(random.random() * 2 ** 32)
+        self.client_id = int(random.random() * 2**32)
         self.timestamp = int(time.time() * 1000)  # time.time을 사용할 수도 있음.
-        chars = [*range(0x30, 0x3a), *range(0x61, 0x7b)]
+        chars = [*range(0x30, 0x3A), *range(0x61, 0x7B)]
         self.nonce = "".join(chr(i) for i in random.choices(chars, k=10))
         self.app_id = f"KP.{self.client_id}.{self.timestamp + 1}"
 
         self.post_headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'ko',
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json;charset=UTF-8',
-            'Cookie': f'theme=dark; _kp_collector={self.app_id}',
-            'Dnt': '1',
-            'Origin': 'https://webtoon.kakao.com',
-            'Pragma': 'no-cache',
-            'Referer': 'https://webtoon.kakao.com/',
-            'Sec-Ch-Ua': '"Not A(Brand";v="99", "Microsoft Edge";v="121", "Chromium";v="121"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-            'Sec-Gpc': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "ko",
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json;charset=UTF-8",
+            "Cookie": f"theme=dark; _kp_collector={self.app_id}",
+            "Dnt": "1",
+            "Origin": "https://webtoon.kakao.com",
+            "Pragma": "no-cache",
+            "Referer": "https://webtoon.kakao.com/",
+            "Sec-Ch-Ua": '"Not A(Brand";v="99", "Microsoft Edge";v="121", "Chromium";v="121"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "Sec-Gpc": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         }
         self.episode_headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'ko',
-            'Cache-Control': 'no-cache',
-            'Cookie': f'theme=dark; _kp_collector={self.app_id}',
-            'Dnt': '1',
-            'Origin': 'https://webtoon.kakao.com',
-            'Pragma': 'no-cache',
-            'Referer': 'https://webtoon.kakao.com/',
-            'Sec-Ch-Ua': '"Not A(Brand";v="99", "Microsoft Edge";v="121", "Chromium";v="121"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-            'Sec-Gpc': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "ko",
+            "Cache-Control": "no-cache",
+            "Cookie": f"theme=dark; _kp_collector={self.app_id}",
+            "Dnt": "1",
+            "Origin": "https://webtoon.kakao.com",
+            "Pragma": "no-cache",
+            "Referer": "https://webtoon.kakao.com/",
+            "Sec-Ch-Ua": '"Not A(Brand";v="99", "Microsoft Edge";v="121", "Chromium";v="121"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "Sec-Gpc": "1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         }
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         self.fetch_episode_informations()
 
-        res = self.hxoptions.get(f"https://webtoon.kakao.com/content/{self.webtoon_seo_id}/{self.webtoon_id}")
+        res = self.hxoptions.get(
+            f"https://webtoon.kakao.com/content/{self.webtoon_seo_id}/{self.webtoon_id}"
+        )
 
         try:
-            title = res.soup_select_one("#root > main > div > div > div > div > p", True).text
+            title = res.soup_select_one(
+                "#root > main > div > div > div > div > p", True
+            ).text
         except EmptyResultError:
-            title = res.soup_select_one('meta[property="og:title"]', True).text.removeprefix(" | 카카오웹툰")
+            title = res.soup_select_one(
+                'meta[property="og:title"]', True
+            ).text.removeprefix(" | 카카오웹툰")
 
-        thumnail_url = res.soup_select_one('meta[property="og:image"]', True).get("content")
+        thumnail_url = res.soup_select_one('meta[property="og:image"]', True).get(
+            "content"
+        )
         assert isinstance(thumnail_url, str)
 
         self.title = title
@@ -107,10 +115,12 @@ class KakaoWebtoonScraper(Scraper[int]):
             res = self.hxoptions.get(
                 f"https://gateway-kw.kakao.com/episode/v2/views/content-home/contents/{self.webtoon_id}/episodes"
                 f"?sort=-NO&offset={offset}&limit={limit}",
-                headers=self.episode_headers
+                headers=self.episode_headers,
             )
             if res.status_code == 404:
-                raise InvalidWebtoonIdError(f"Webtoon ID {self.webtoon_id} is invalid for Kakao Webtoon.")
+                raise InvalidWebtoonIdError(
+                    f"Webtoon ID {self.webtoon_id} is invalid for Kakao Webtoon."
+                )
             webtoon_episodes_data += res.json()["data"]["episodes"]
             offset += limit
             is_last = res.json()["meta"]["pagination"]["last"]
@@ -147,7 +157,10 @@ class KakaoWebtoonScraper(Scraper[int]):
         self.readablities = readablities
         self.is_adult = is_adult
 
-    def get_episode_image_urls(self, episode_no) -> list[tuple[str, bytes, bytes]] | None:
+    def get_episode_image_urls(
+        self,
+        episode_no,
+    ) -> list[tuple[str, bytes, bytes]] | None:
         episode_id = self.episode_ids[episode_no]
         is_readable = self.readablities[episode_no]
 
@@ -187,11 +200,17 @@ class KakaoWebtoonScraper(Scraper[int]):
         cipher = AES.new(key, AES.MODE_CBC, iv)
         return cipher.decrypt(data)
 
-    def _get_decrypt_infomations(self, episode_id, aid: str, zid: str) -> tuple[bytes, bytes]:
+    def _get_decrypt_infomations(
+        self, episode_id, aid: str, zid: str
+    ) -> tuple[bytes, bytes]:
         user_id = episode_id
 
-        temp_key = hashlib.sha256(bytes(f"{user_id}{episode_id}{self.timestamp}", encoding="utf-8")).digest()
-        temp_iv = hashlib.sha256(bytes(f"{self.nonce}{self.timestamp}", encoding="utf-8")).digest()[:16]
+        temp_key = hashlib.sha256(
+            bytes(f"{user_id}{episode_id}{self.timestamp}", encoding="utf-8")
+        ).digest()
+        temp_iv = hashlib.sha256(
+            bytes(f"{self.nonce}{self.timestamp}", encoding="utf-8")
+        ).digest()[:16]
         encrypted_key = base64.b64decode(aid)
         encrypted_iv = base64.b64decode(zid)
 
