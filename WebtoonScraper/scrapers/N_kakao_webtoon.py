@@ -11,6 +11,9 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Self
 
 from Cryptodome.Cipher import AES
 from hxsoup import AsyncClient
@@ -18,7 +21,7 @@ from hxsoup.exceptions import EmptyResultError
 
 from WebtoonScraper.miscs import EpisodeNoRange
 
-from ..exceptions import InvalidWebtoonIdError, UnsupportedWebtoonRatingError
+from ..exceptions import InvalidURLError, InvalidWebtoonIdError, UnsupportedWebtoonRatingError
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 
@@ -29,7 +32,7 @@ class KakaoWebtoonScraper(Scraper[int]):
     BASE_URL = "https://webtoon.kakao.com"
     IS_CONNECTION_STABLE = True
     TEST_WEBTOON_ID = 1180  # 국민
-    URL_REGEX = re.compile(r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)")
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<seo_id>[^\/]+)\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
 
@@ -126,14 +129,19 @@ class KakaoWebtoonScraper(Scraper[int]):
         if is_adult:
             raise UnsupportedWebtoonRatingError("Adult webtoon is not supported.")
 
+        # `webtoon_seo_id`가 존재하지 않을 경우에만 webtoon_seo_id를 override함.
+        # hasattr보다 더 리팩토링하기 좋아 try-except를 사용.
         try:
-            inferred_webtoon_seo_id = seo_ids[0][:-4]
-        except IndexError:
-            logger.warning("SEO ID inferring may not work well.")
-            inferred_webtoon_seo_id = "webtoon"
-        if seo_ids[0][-4] != "-" or not inferred_webtoon_seo_id:
-            logger.warning("SEO ID inferring may not work well.")
-        self.webtoon_seo_id = inferred_webtoon_seo_id or "webtoon"
+            self.webtoon_seo_id
+        except AttributeError:
+            try:
+                inferred_webtoon_seo_id = seo_ids[0][:-4]
+            except IndexError:
+                logger.warning("SEO ID inferring may not work well.")
+                inferred_webtoon_seo_id = "webtoon"
+            if seo_ids[0][-4] != "-" or not inferred_webtoon_seo_id:
+                logger.warning("SEO ID inferring may not work well.")
+            self.webtoon_seo_id = inferred_webtoon_seo_id or "webtoon"
 
         self.episode_ids = episode_ids
         self.seo_ids = seo_ids
@@ -218,3 +226,19 @@ class KakaoWebtoonScraper(Scraper[int]):
         return super().check_if_legitimate_webtoon_id(
             (InvalidWebtoonIdError, UnsupportedWebtoonRatingError)
         )
+
+    @classmethod
+    def from_url(cls, url: str) -> Self:
+        matched = cls.URL_REGEX.match(url)
+        if matched is None:
+            raise InvalidURLError.from_url(url, cls)
+
+        try:
+            webtoon_id: int = cls._get_webtoon_id_from_matched_url(matched)
+            seo_id: str = matched.group("seo_id")
+        except Exception as e:
+            raise InvalidURLError.from_url(url, cls) from e
+
+        self = cls(webtoon_id)
+        self.webtoon_seo_id = seo_id
+        return self
