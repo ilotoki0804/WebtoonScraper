@@ -31,7 +31,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     BASE_URL = "https://post.naver.com"
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
-        r"\?(?:.*&)*seriesNo=(?P<webtoon_id>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
+        r"\?(?:.*&)*seriesNo=(?P<series_no>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
 
@@ -155,3 +155,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                     self.pbar.update(1)
                     if not episode_ids_to_try:
                         return
+
+    @classmethod
+    def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[int, int]:
+        return (int(matched_url.group("series_no")), int(matched_url.group("memberNo")))

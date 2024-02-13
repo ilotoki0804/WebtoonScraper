@@ -13,7 +13,9 @@ from abc import abstractmethod
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, Self, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, TypeVar
+if TYPE_CHECKING:
+    from typing import Self
 from urllib import parse
 
 import hxsoup
@@ -26,7 +28,7 @@ from ..directory_merger import (MERGED_WEBTOON_DIRECTORY, NORMAL_IMAGE,
                                 NORMAL_WEBTOON_DIRECTORY, ContainerStates,
                                 check_container_state, merge_webtoon,
                                 restore_webtoon, webtoon_regexes)
-from ..exceptions import DirectoryStateUnmatchedError, UseFetchEpisode
+from ..exceptions import DirectoryStateUnmatchedError, InvalidURLError, UseFetchEpisode
 from ..miscs import EpisodeNoRange
 from ..miscs import __version__ as version
 from ..miscs import logger
@@ -148,6 +150,19 @@ class Scraper(Generic[WebtoonId]):
         self.episode_titles: list[str]
         self.episode_ids: list[int]
         raise NotImplementedError
+
+    @classmethod
+    def from_url(cls, url: str) -> Self:
+        matched = cls.URL_REGEX.match(url)
+        if matched is None:
+            raise InvalidURLError.from_url(url, cls)
+
+        try:
+            webtoon_id: WebtoonId = cls._get_webtoon_id_from_matched_url(matched)
+        except Exception as e:
+            raise InvalidURLError.from_url(url, cls) from e
+
+        return cls(webtoon_id)
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다."""
@@ -374,6 +389,11 @@ class Scraper(Generic[WebtoonId]):
         self.headers.update(value)
 
     # PRIVATE METHODS
+
+    @classmethod
+    @abstractmethod
+    def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> WebtoonId:
+        return int(matched_url.group("webtoon_id"))
 
     @contextmanager
     def _send_callback_message(self, base_message: str, *contexts):

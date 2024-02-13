@@ -98,3 +98,7 @@ class TistoryScraper(Scraper[tuple[str, str]]):
             for i in res.soup_select("figure > span > img")
             if isinstance(url := i["src"], str)
         ]  # 타입을 확실하게 하기 위해 if문이 필요함.
+
+    @classmethod
+    def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, str]:
+        return (matched_url.group("blog_id"), matched_url.group("category"))

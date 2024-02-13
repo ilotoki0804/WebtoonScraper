@@ -1,6 +1,7 @@
 """Used exceptions of WebtoonScraper."""
 
 from __future__ import annotations
+from typing import Self
 
 
 class WebtoonScraperError(Exception):
@@ -24,14 +25,26 @@ class InvalidWebtoonIdError(WebtoonScraperError):
             if rating_notice
             else ""
         )
-        assert isinstance(scraper, type)
-        if scraper:
-            return cls(
-                f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}."
-                + rating_message
-            )
-        else:
+        if scraper is None:
             return cls(f"Invalid webtoon ID: {webtoon_id}." + rating_message)
+        assert isinstance(scraper, type)
+        return cls(
+            f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}."
+            + rating_message
+        )
+
+
+class InvalidURLError(WebtoonScraperError):
+    """Given URL is not valid."""
+
+    @classmethod
+    def from_url(cls, url: str, scraper=None) -> Self:
+        if scraper is None:
+            return cls(f"URL `{url}` is not matched.")
+        assert isinstance(scraper, type)
+        return cls(
+            f"{scraper.__qualname__} does not accept URL `{url}`."
+        )
 
 
 class UnsupportedWebtoonRatingError(InvalidWebtoonIdError):

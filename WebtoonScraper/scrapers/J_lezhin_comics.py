@@ -286,6 +286,10 @@ class LezhinComicsScraper(Scraper[str]):
 
     # PRIVATE METHODS
 
+    @classmethod
+    def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
+        return matched_url.group("webtoon_id")
+
     def _get_episode_informations_from_json_data(
         self,
         episode_informations_raw: list[dict],
