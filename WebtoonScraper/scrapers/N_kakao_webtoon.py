@@ -7,6 +7,7 @@ import hashlib
 import itertools
 import json
 import random
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -28,7 +29,7 @@ class KakaoWebtoonScraper(Scraper[int]):
     BASE_URL = "https://webtoon.kakao.com"
     IS_CONNECTION_STABLE = True
     TEST_WEBTOON_ID = 1180  # 국민
-    URL_REGEX = r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
 

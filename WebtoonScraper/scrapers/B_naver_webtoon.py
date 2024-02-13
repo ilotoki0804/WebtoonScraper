@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from itertools import count
 from json.decoder import JSONDecodeError
-from typing import TYPE_CHECKING, ClassVar, Literal
+import re
+from typing import TYPE_CHECKING, ClassVar, Literal, Self
 
 from ..exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
 from .A_scraper import Scraper, reload_manager
@@ -16,7 +17,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     BASE_URL: str
     TEST_WEBTOON_ID: int
     WEBTOON_TYPE: ClassVar[Literal["WEBTOON", "BEST_CHALLENGE", "CHALLENGE"]]
-    URL_REGEX: str
+    URL_REGEX: re.Pattern[str]
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
     IS_CONNECTION_STABLE = True
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
@@ -130,7 +131,7 @@ class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     TEST_WEBTOON_ID = 809590  # 이번 생
     WEBTOON_TYPE = "WEBTOON"
     EPISODE_IMAGES_URL_SELECTOR = "#sectionContWide > img"
-    URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/webtoon\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*")
 
 
 class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
@@ -145,7 +146,7 @@ class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     TEST_WEBTOON_ID = 809971  # 까마귀
     WEBTOON_TYPE = "BEST_CHALLENGE"
     EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
-    URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/bestChallenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?comic[.]naver[.]com\/bestChallenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*")
 
 
 class ChallengeSpecificScraper(AbstractNaverWebtoonScraper):
@@ -160,7 +161,7 @@ class ChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     TEST_WEBTOON_ID = 818058  # T/F
     WEBTOON_TYPE = "CHALLENGE"
     EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
-    URL_REGEX: str = r"(?:https?:\/\/)?comic[.]naver[.]com\/challenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?comic[.]naver[.]com\/challenge\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*")
 
 
 class NaverWebtoonScraper(
@@ -170,7 +171,7 @@ class NaverWebtoonScraper(
 ):
     """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
 
-    URL_REGEX: str = r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/(?:webtoon|bestChallenge|challenge)\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/(?:webtoon|bestChallenge|challenge)\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*")
     TEST_WEBTOON_IDS = (
         NaverWebtoonSpecificScraper.TEST_WEBTOON_ID,
         BestChallengeSpecificScraper.TEST_WEBTOON_ID,

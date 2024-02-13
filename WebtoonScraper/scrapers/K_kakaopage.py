@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 from hxsoup.client import AsyncClient
 
@@ -17,7 +18,7 @@ class KakaopageScraper(Scraper[int]):
     BASE_URL = "https://page.kakao.com"
     IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
-    URL_REGEX = r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
 

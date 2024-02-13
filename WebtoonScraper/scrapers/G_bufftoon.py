@@ -24,7 +24,7 @@ class BufftoonScraper(Scraper[int]):
     BASE_URL = "https://bufftoon.plaync.com"
     TEST_WEBTOON_ID = 1001216  # 비트
     IS_CONNECTION_STABLE = True
-    URL_REGEX = r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "png"
 
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:

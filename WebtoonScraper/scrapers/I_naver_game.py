@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import json
 from itertools import count
+import re
 
 from .A_scraper import Scraper, reload_manager
 
@@ -15,7 +16,7 @@ class NaverGameScraper(Scraper[int]):
     TEST_WEBTOON_ID = 5  # 모배툰
     BASE_URL = "https://game.naver.com/original_series"
     IS_CONNECTION_STABLE = True
-    URL_REGEX = r"(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?")
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:

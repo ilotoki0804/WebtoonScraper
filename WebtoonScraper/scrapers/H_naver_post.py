@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 from collections import defaultdict, deque
 from itertools import count
@@ -28,7 +29,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     TEST_WEBTOON_ID = NaverPostWebtoonId(597061, 19803452)  # 겜덕겜소
     IS_CONNECTION_STABLE = True
     BASE_URL = "https://post.naver.com"
-    URL_REGEX: str = (
+    URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
         r"\?(?:.*&)*seriesNo=(?P<webtoon_id>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )

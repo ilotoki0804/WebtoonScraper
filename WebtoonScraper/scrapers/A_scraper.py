@@ -13,7 +13,7 @@ from abc import abstractmethod
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, Self, TypeVar
 from urllib import parse
 
 import hxsoup
@@ -104,7 +104,7 @@ class Scraper(Generic[WebtoonId]):
     TEST_WEBTOON_ID: ClassVar
     TEST_WEBTOON_IDS: ClassVar[tuple] = ()
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int | float] = 0
-    URL_REGEX: ClassVar[str]
+    URL_REGEX: ClassVar[re.Pattern[str]]
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
 
     def __init__(self, webtoon_id: WebtoonId) -> None:

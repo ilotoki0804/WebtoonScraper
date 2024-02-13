@@ -1,6 +1,7 @@
 """Download Webtoons from `webtoons.com/en`."""
 
 from __future__ import annotations
+import re
 
 from typing import TYPE_CHECKING
 
@@ -18,7 +19,7 @@ class WebtoonsDotcomScraper(Scraper[int]):
         5291,  # Wumpus
         263735,  # Spook
     )
-    URL_REGEX: str = r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*")
     base_url: str
 
     def __init__(self, titleid) -> None:
