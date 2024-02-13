@@ -26,7 +26,7 @@ class KakaoWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Kakaopage."""
 
     BASE_URL = "https://webtoon.kakao.com"
-    IS_CONNECTION_STABLE = True  # 아닐 경우 변경하기
+    IS_CONNECTION_STABLE = True
     TEST_WEBTOON_ID = 1180  # 국민
     URL_REGEX = r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)"
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
@@ -35,18 +35,18 @@ class KakaoWebtoonScraper(Scraper[int]):
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
 
-        self.client_id = int(random.random() * 2**32)
-        self.timestamp = int(time.time() * 1000)
+        self._client_id = int(random.random() * 2**32)
+        self._timestamp = int(time.time() * 1000)
         chars = [*range(0x30, 0x3A), *range(0x61, 0x7B)]
-        self.nonce = "".join(chr(i) for i in random.choices(chars, k=10))
-        self.app_id = f"KP.{self.client_id}.{self.timestamp + 1}"
+        self._nonce = "".join(chr(i) for i in random.choices(chars, k=10))
+        self._app_id = f"KP.{self._client_id}.{self._timestamp + 1}"
 
         self.episode_headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "ko",
             "Cache-Control": "no-cache",
-            "Cookie": f"theme=dark; _kp_collector={self.app_id}",
+            "Cookie": f"theme=dark; _kp_collector={self._app_id}",
             "Dnt": "1",
             "Origin": "https://webtoon.kakao.com",
             "Pragma": "no-cache",
@@ -103,10 +103,10 @@ class KakaoWebtoonScraper(Scraper[int]):
                 raise InvalidWebtoonIdError(
                     f"Webtoon ID {self.webtoon_id} is invalid for Kakao Webtoon."
                 )
-            data = res.json()["data"]
-            webtoon_episodes_data += data["episodes"]
+            json_data = res.json()
+            webtoon_episodes_data += json_data["data"]["episodes"]
             offset += limit
-            is_last = data["pagination"]["last"]
+            is_last = json_data["meta"]["pagination"]["last"]
 
         episode_ids: list[int] = []
         seo_ids: list[str] = []
@@ -153,10 +153,10 @@ class KakaoWebtoonScraper(Scraper[int]):
         payload = {
             "id": episode_id,
             "type": "AES_CBC_WEBP",
-            "nonce": self.nonce,
-            "timestamp": str(self.timestamp),
+            "nonce": self._nonce,
+            "timestamp": str(self._timestamp),
             "download": False,
-            "webAppId": f"KP.{self.client_id}.{self.timestamp + 1}",
+            "webAppId": self._app_id,
         }
 
         res = self.hxoptions.post(
@@ -183,9 +183,9 @@ class KakaoWebtoonScraper(Scraper[int]):
         user_id = episode_id
 
         temp_key = hashlib.sha256(
-            f"{user_id}{episode_id}{self.timestamp}".encode()
+            f"{user_id}{episode_id}{self._timestamp}".encode()
         ).digest()
-        temp_iv = hashlib.sha256(f"{self.nonce}{self.timestamp}".encode()).digest()[:16]
+        temp_iv = hashlib.sha256(f"{self._nonce}{self._timestamp}".encode()).digest()[:16]
         encrypted_key = base64.b64decode(aid)
         encrypted_iv = base64.b64decode(zid)
 
