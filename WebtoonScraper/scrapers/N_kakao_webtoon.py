@@ -12,6 +12,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib import parse
+
 if TYPE_CHECKING:
     from typing import Self
 
@@ -240,5 +242,5 @@ class KakaoWebtoonScraper(Scraper[int]):
             raise InvalidURLError.from_url(url, cls) from e
 
         self = cls(webtoon_id)
-        self.webtoon_seo_id = seo_id
+        self.webtoon_seo_id = parse.unquote(seo_id)
         return self
