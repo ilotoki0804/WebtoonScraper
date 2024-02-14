@@ -413,16 +413,7 @@ scraper.download_webtoon(add_webtoon_viewer=True)
 
 모아서 보기는 웹툰의 여러 회차를 한 데에 묶습니다. 예를 들어 5화씩 모아서 보기를 설정한다면 5화치 웹툰이 한 폴더를 사용하게 됩니다.
 
-사용자가 사용하기 쉬운 모아서 보기 사용은 `DirectoryMerger`를 통해 할 수 있습니다. DirectoryMerger는 WebtoonScraper를 통해 바로 사용이 가능합니다.
-
-```python
-from WebtoonScraper import DirectoryMerger
-
-dm = DirectoryMerger()
-dm.select(5)
-```
-
-웹툰 디렉토리를 안다면 모아서 보기로 변경할 때에는 `WebtoonScraper.directory_merger.merge_webtoon`을, `WebtoonScraper.directory_merger.restore_webtoon`을 사용하면 됩니다.
+`WebtoonScraper.directory_merger.merge_webtoon`와 `WebtoonScraper.directory_merger.restore_webtoon`를 사용하면 됩니다.
 
 ```python
 from pathlib import Path
