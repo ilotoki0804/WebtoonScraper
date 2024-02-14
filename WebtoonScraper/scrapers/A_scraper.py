@@ -153,7 +153,12 @@ class Scraper(Generic[WebtoonId]):
         raise NotImplementedError
 
     @classmethod
-    def from_url(cls, url: str) -> Self:
+    def from_url(
+        cls,
+        url: str,
+        *args,  # cookie나 bearer같은 optional parameter를 잡기 위해 필요.
+        **kwargs,
+    ) -> Self:
         matched = cls.URL_REGEX.match(url)
         if matched is None:
             raise InvalidURLError.from_url(url, cls)
@@ -163,7 +168,7 @@ class Scraper(Generic[WebtoonId]):
         except Exception as e:
             raise InvalidURLError.from_url(url, cls) from e
 
-        return cls(webtoon_id)
+        return cls(webtoon_id, *args, **kwargs)
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다."""

@@ -215,6 +215,7 @@ class KakaoWebtoonScraper(Scraper[int]):
 
     @classmethod
     def from_url(cls, url: str) -> Self:
+        """후일 cookie 등이 요구될 경우 *args, **kwargs 추가 필요."""
         matched = cls.URL_REGEX.match(url)
         if matched is None:
             raise InvalidURLError.from_url(url, cls)
