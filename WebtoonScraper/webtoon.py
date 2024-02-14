@@ -6,6 +6,7 @@ import time
 from multiprocessing import pool
 from pathlib import Path
 from typing import Literal
+import warnings
 
 import hxsoup
 
@@ -181,7 +182,7 @@ def download_webtoon(
             raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_id_or_url}")
         webtoon_scraper = webtoon_scraper
     else:
-        logger.warning("Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.")
+        warnings.warn("Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.", DeprecationWarning)
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
