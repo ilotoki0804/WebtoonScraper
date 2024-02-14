@@ -24,7 +24,8 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     TEST_WEBTOON_ID = NaverBlogWebtoonId("bkid4", 55)  # 상덕
     IS_CONNECTION_STABLE = True
     BASE_URL = "https://m.blog.naver.com"
-    URL_REGEX = re.compile(r"(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*")
+    URL_REGEX = re.compile(r"(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*"
+                           r"|(?:https?:\/\/)?m[.]blog[.]naver[.]com\/PostList[.]naver\?blogId=(?P<blog_id2>\w+)&(?:.*&)*categoryNo=(?P<category_no2>\d+)(?:&.*)*")
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
@@ -125,4 +126,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
     @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, int]:
-        return (matched_url.group("blog_id"), int(matched_url.group("category_no")))
+        try:
+            return (matched_url.group("blog_id"), int(matched_url.group("category_no")))
+        except (TypeError, ValueError):
+            return (matched_url.group("blog_id2"), int(matched_url.group("category_no2")))
