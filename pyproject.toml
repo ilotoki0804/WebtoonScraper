@@ -44,6 +44,9 @@ pyinstaller = "^6.3.0"
 nest-asyncio = "^1.5.8"
 coloredlogs = "^15.0.1"
 
+[tool.black]
+line-length = 120
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

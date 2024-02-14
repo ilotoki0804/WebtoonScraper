@@ -45,13 +45,9 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         response = self.hxoptions.get(
             f"https://m.post.naver.com/my/series/detail.naver?seriesNo={series_no}&memberNo={member_no}"
         )
-        title: str = response.soup_select_one(
-            "h2.tit_series > span", no_empty_result=True
-        ).text.strip()
+        title: str = response.soup_select_one("h2.tit_series > span", no_empty_result=True).text.strip()
 
-        image_url_original = response.soup_select_one(
-            'meta[property="og:image"]', no_empty_result=True
-        )
+        image_url_original = response.soup_select_one('meta[property="og:image"]', no_empty_result=True)
         image_url: str = image_url_original["content"]  # type: ignore
 
         self.title = title
@@ -80,13 +76,8 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             if prev_data == decoded_response_data is not None:
                 break
 
-            subtitle_list += [
-                tag.text.strip() for tag in soup.select("ul > li > a > div > span.ell")
-            ]
-            episode_id_list += [
-                next(map(int, tag.get("data-cid").split("_")))  # type: ignore
-                for tag in soup.select("ul > li > a > div > span.spot_post_like")
-            ]
+            subtitle_list += [tag.text.strip() for tag in soup.select("ul > li > a > div > span.ell")]
+            episode_id_list += [next(map(int, tag.get("data-cid").split("_"))) for tag in soup.select("ul > li > a > div > span.spot_post_like")]  # type: ignore
 
             prev_data = decoded_response_data
 
@@ -110,16 +101,10 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         episode_images_url = [tag["data-src"] for tag in soup_content.select(selector)]
         if TYPE_CHECKING:
             episode_images_url = [
-                episode_image_url
-                for episode_image_url in episode_images_url
-                if isinstance(episode_image_url, str)
+                episode_image_url for episode_image_url in episode_images_url if isinstance(episode_image_url, str)
             ]
 
-        return [
-            url
-            for url in episode_images_url
-            if not url.startswith("https://mail.naver.com/read/image/")
-        ]
+        return [url for url in episode_images_url if not url.startswith("https://mail.naver.com/read/image/")]
 
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.

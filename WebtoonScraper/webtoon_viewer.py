@@ -250,13 +250,9 @@ def add_html_webtoon_viewer(
                     assert isinstance(thumbnail_name, str)
                 break
         else:
-            webtoon_title, thumbnail_name = infer_webtoon_infomations(
-                webtoon_directory, webtoon_title, thumbnail_name
-            )
+            webtoon_title, thumbnail_name = infer_webtoon_infomations(webtoon_directory, webtoon_title, thumbnail_name)
 
-    episode_directories = json.dumps(
-        [directory.name for directory in directories], ensure_ascii=False
-    )
+    episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
     images_of_episode_directories = json.dumps(
         [os.listdir(episode_directory_name) for episode_directory_name in directories],
         ensure_ascii=False,
@@ -297,9 +293,7 @@ def infer_webtoon_infomations(
                     thumbnail_path = file
                     break
             else:
-                thumbnail_path = _select_from_sequence(
-                    files, "Please select thumbnail in this list."
-                )
+                thumbnail_path = _select_from_sequence(files, "Please select thumbnail in this list.")
         thumbnail_name = thumbnail_path.name
 
     if webtoon_title is None:

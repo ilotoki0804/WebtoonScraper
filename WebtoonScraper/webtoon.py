@@ -12,11 +12,22 @@ import hxsoup
 
 from .exceptions import InvalidPlatformError, InvalidURLError, UnsupportedWebtoonRatingError
 from .miscs import EpisodeNoRange, WebtoonId, logger
-from .scrapers import (BufftoonScraper, KakaopageScraper, KakaoWebtoonScraper,
-                       LezhinComicsScraper, NaverBlogScraper,
-                       NaverBlogWebtoonId, NaverGameScraper, NaverPostScraper,
-                       NaverPostWebtoonId, NaverWebtoonScraper, Scraper,
-                       TistoryScraper, TistoryWebtoonId, WebtoonsDotcomScraper)
+from .scrapers import (
+    BufftoonScraper,
+    KakaopageScraper,
+    KakaoWebtoonScraper,
+    LezhinComicsScraper,
+    NaverBlogScraper,
+    NaverBlogWebtoonId,
+    NaverGameScraper,
+    NaverPostScraper,
+    NaverPostWebtoonId,
+    NaverWebtoonScraper,
+    Scraper,
+    TistoryScraper,
+    TistoryWebtoonId,
+    WebtoonsDotcomScraper,
+)
 
 NAVER_WEBTOON = "naver_webtoon"
 WEBTOONS_DOTCOM = "webtoons_dotcom"
@@ -108,9 +119,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
 
-    results = [
-        (platform, title) for platform, title in results_raw if title is not None
-    ]
+    results = [(platform, title) for platform, title in results_raw if title is not None]
 
     if (webtoon_length := len(results)) == 1:
         print(f"Webtoon's platform is assumed to be {results[0][0]}")
@@ -130,16 +139,13 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         platform_no = 1 if platform_no == "" else int(platform_no)
     except ValueError:
         raise ValueError(
-            "Webtoon ID should be integer. "
-            f"{platform_no!r} is cannot be converted to integer."
+            "Webtoon ID should be integer. " f"{platform_no!r} is cannot be converted to integer."
         ) from None
 
     try:
         selected_platform, selected_webtoon = results[platform_no - 1]
     except IndexError:
-        raise ValueError(
-            f"Exceeded the range of webtoons(length of results was {results})."
-        ) from None
+        raise ValueError(f"Exceeded the range of webtoons(length of results was {results}).") from None
     logger.info(f"Webtoon {selected_webtoon} is selected.")
     return selected_platform
 
@@ -182,7 +188,9 @@ def download_webtoon(
             raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_id_or_url}")
         webtoon_scraper = webtoon_scraper
     else:
-        warnings.warn("Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.", DeprecationWarning)
+        warnings.warn(
+            "Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.", DeprecationWarning
+        )
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
@@ -221,10 +229,7 @@ def download_webtoons_getting_paid(
     res = hxsoup.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}")
     raw_html = res.json().get("notice").get("content")
 
-    titleids = (
-        int(tag.get("href").removeprefix("https://comic.naver.com/webtoon/list?titleId=").partition("&")[0])  # type: ignore
-        for tag in hxsoup.SoupTools(raw_html).soup_select("a")
-    )
+    titleids = (int(tag.get("href").removeprefix("https://comic.naver.com/webtoon/list?titleId=").partition("&")[0]) for tag in hxsoup.SoupTools(raw_html).soup_select("a"))  # type: ignore
 
     for titleid in titleids:
         try:

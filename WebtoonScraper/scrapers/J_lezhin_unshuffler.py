@@ -10,10 +10,14 @@ from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 
-from ..directory_merger import (NORMAL_EPISODE_DIRECTORY,
-                                NORMAL_WEBTOON_DIRECTORY,
-                                check_container_state, check_filename_state,
-                                move_thumbnail_only, webtoon_regexes)
+from ..directory_merger import (
+    NORMAL_EPISODE_DIRECTORY,
+    NORMAL_WEBTOON_DIRECTORY,
+    check_container_state,
+    check_filename_state,
+    move_thumbnail_only,
+    webtoon_regexes,
+)
 from ..exceptions import DirectoryStateUnmatchedError
 from ..miscs import logger
 
@@ -23,13 +27,9 @@ def unshuffle_typical_webtoon_directory_and_return_target_directory(
 ) -> Path:
     str_source_webtoon_directory = str(source_webtoon_directory)
     if str_source_webtoon_directory.endswith(", shuffled)"):
-        str_target_webtoon_directory = (
-            str_source_webtoon_directory.removesuffix(", shuffled)") + ")"
-        )
+        str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled)") + ")"
     elif str_source_webtoon_directory.endswith(", shuffled, HD)"):
-        str_target_webtoon_directory = (
-            str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
-        )
+        str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
     else:
         raise ValueError(
             f"webtoon directory {source_webtoon_directory} is not typical. "
@@ -37,9 +37,7 @@ def unshuffle_typical_webtoon_directory_and_return_target_directory(
         )
     target_webtoon_directory = Path(str_target_webtoon_directory)
 
-    unshuffle_webtoon_directory_to_directory(
-        source_webtoon_directory, target_webtoon_directory, episode_int_ids
-    )
+    unshuffle_webtoon_directory_to_directory(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
     return target_webtoon_directory
 
 
@@ -50,59 +48,43 @@ def unshuffle_webtoon_directory_to_directory(
     process_number: int | None = None,
     proceed_without_checking_directory_state: bool = False,
 ) -> None:
-    ids_file_search_result = search_episode_int_ids_exclude_if_from_directory(
-        source_webtoon_directory
-    )
+    ids_file_search_result = search_episode_int_ids_exclude_if_from_directory(source_webtoon_directory)
     if episode_int_ids is None:
         if not ids_file_search_result:
-            raise ValueError(
-                "episode_id_ints is not provided. Provide it or download episode_id_ints."
-            )
+            raise ValueError("episode_id_ints is not provided. Provide it or download episode_id_ints.")
 
         episode_int_ids, _, _ = ids_file_search_result
 
     try:
         target_webtoon_directory.mkdir(exist_ok=True)
-        move_thumbnail_only(
-            source_webtoon_directory, target_webtoon_directory, copy=True
-        )
+        move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
 
         if not proceed_without_checking_directory_state:
             directory_state = check_container_state(source_webtoon_directory)
             if directory_state != NORMAL_WEBTOON_DIRECTORY:
-                raise DirectoryStateUnmatchedError(
-                    f"Directory state is {directory_state}, which is not supported."
-                )
+                raise DirectoryStateUnmatchedError(f"Directory state is {directory_state}, which is not supported.")
 
         unshuffle_parameters = []
         for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):
             source_episode_directory = source_webtoon_directory / episode_directory_name
             target_episode_directory = target_webtoon_directory / episode_directory_name
 
-            processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(
-                episode_directory_name
-            )
+            processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
             if processed_directory_name is None:
-                logger.debug(
-                    f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored."
-                )
+                logger.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
                 continue
 
             episode_no = int(processed_directory_name.group("episode_no"))
             episode_id = episode_int_ids[episode_no - 1]
 
-            unshuffle_parameters.append(
-                (source_episode_directory, target_episode_directory, episode_id)
-            )
+            unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
 
         print(
             "Unshuffling is started. It takes a while and it's very CPU-intensive task. "
             "So keep patient and wait until the process end."
         )
         with multiprocessing.Pool(process_number) as p:
-            unshuffled_episode_ids = p.imap(
-                unshuffle_episode_unpacking, unshuffle_parameters
-            )
+            unshuffled_episode_ids = p.imap(unshuffle_episode_unpacking, unshuffle_parameters)
             progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
             for episode_name in progress_bar:
                 progress_bar.set_description(f"Episode {episode_name} unshuffle ended")
@@ -154,16 +136,9 @@ def unshuffle_episode(
     except FileExistsError:
         # stdout이 원본 interpreter와는 다른지 logging이 출력되지는 않음. logging이 출력되게 하거나 제거할 것.
 
-        if (
-            check_filename_state(target_episode_directory.name)
-            != NORMAL_WEBTOON_DIRECTORY
-        ):
-            logger.warning(
-                f"{target_episode_directory.name} is not valid container state. Delete items and continue."
-            )
-        elif len(os.listdir(target_episode_directory)) == len(
-            os.listdir(source_episode_directory)
-        ):
+        if check_filename_state(target_episode_directory.name) != NORMAL_WEBTOON_DIRECTORY:
+            logger.warning(f"{target_episode_directory.name} is not valid container state. Delete items and continue.")
+        elif len(os.listdir(target_episode_directory)) == len(os.listdir(source_episode_directory)):
             logger.warning(
                 f"Skipping {target_episode_directory.name}, because there are items in the directory and the number of contents in each directory is the same."
             )
@@ -233,12 +208,8 @@ def unshuffle_image_and_save(base_image_path, alt_image_path, image_order) -> No
         margin = image_y % 5
         image_y -= margin
         cropped_images: list[Image.Image] = [None] * 25  # type: ignore # 이 None은 후에 image로 덮어씌워진다.
-        for index_x, left, right in (
-            (i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)
-        ):
-            for index_y, upper, lower in (
-                (i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)
-            ):
+        for index_x, left, right in ((i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)):
+            for index_y, upper, lower in ((i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)):
                 cropped_image: Image.Image = im.crop((left, upper, right, lower))
                 image_index = index_x + index_y * 5
                 cropped_images[image_order.index(image_index)] = cropped_image

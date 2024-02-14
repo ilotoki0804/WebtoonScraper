@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Self
 
@@ -18,22 +19,16 @@ class InvalidWebtoonIdError(WebtoonScraperError):
     """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported in most platform."""
 
     @classmethod
-    def from_webtoon_id(
-        cls, webtoon_id, scraper=None, rating_notice: bool = False
-    ) -> InvalidWebtoonIdError:
+    def from_webtoon_id(cls, webtoon_id, scraper=None, rating_notice: bool = False) -> InvalidWebtoonIdError:
         rating_message = (
-            " It might be because rating of the webtoon is not supported. "
-            "Check if the webtoon is adult-only."
+            " It might be because rating of the webtoon is not supported. " "Check if the webtoon is adult-only."
             if rating_notice
             else ""
         )
         if scraper is None:
             return cls(f"Invalid webtoon ID: {webtoon_id}." + rating_message)
         assert isinstance(scraper, type)
-        return cls(
-            f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}."
-            + rating_message
-        )
+        return cls(f"Invalid webtoon ID: {webtoon_id} at {scraper.__qualname__}." + rating_message)
 
 
 class InvalidURLError(WebtoonScraperError):
@@ -44,9 +39,7 @@ class InvalidURLError(WebtoonScraperError):
         if scraper is None:
             return cls(f"URL `{url}` is not matched.")
         assert isinstance(scraper, type)
-        return cls(
-            f"{scraper.__qualname__} does not accept URL `{url}`."
-        )
+        return cls(f"{scraper.__qualname__} does not accept URL `{url}`.")
 
 
 class UnsupportedWebtoonRatingError(InvalidWebtoonIdError):
@@ -61,9 +54,7 @@ class UseFetchEpisode(WebtoonScraperError):
     """`fetch_episode_informations` do all."""
 
     def __init__(self, message: str = ""):
-        super().__init__(
-            message or "Use `fetch_episode_informations` for get webtoon information."
-        )
+        super().__init__(message or "Use `fetch_episode_informations` for get webtoon information.")
 
 
 class InvalidBlogIdError(InvalidWebtoonIdError):
@@ -104,6 +95,5 @@ class Unreachable(WebtoonScraperError):
     def __init__(self, message: str | None = None):
         super().__init__(
             "This code is meant to be unreachable. If you saw this message, it's clearly error. "
-            "Please contect developer or make a issue for this."
-            + ("\n" + message if message else "")
+            "Please contect developer or make a issue for this." + ("\n" + message if message else "")
         )

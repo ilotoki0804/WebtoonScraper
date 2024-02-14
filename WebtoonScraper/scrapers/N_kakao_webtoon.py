@@ -72,22 +72,14 @@ class KakaoWebtoonScraper(Scraper[int]):
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         self.fetch_episode_informations()
 
-        res = self.hxoptions.get(
-            f"https://webtoon.kakao.com/content/{self.webtoon_seo_id}/{self.webtoon_id}"
-        )
+        res = self.hxoptions.get(f"https://webtoon.kakao.com/content/{self.webtoon_seo_id}/{self.webtoon_id}")
 
         try:
-            title = res.soup_select_one(
-                "#root > main > div > div > div > div > p", True
-            ).text
+            title = res.soup_select_one("#root > main > div > div > div > div > p", True).text
         except EmptyResultError:
-            title = res.soup_select_one(
-                'meta[property="og:title"]', True
-            ).text.removeprefix(" | 카카오웹툰")
+            title = res.soup_select_one('meta[property="og:title"]', True).text.removeprefix(" | 카카오웹툰")
 
-        thumbnail_url = res.soup_select_one('meta[property="og:image"]', True).get(
-            "content"
-        )
+        thumbnail_url = res.soup_select_one('meta[property="og:image"]', True).get("content")
         assert isinstance(thumbnail_url, str)
 
         self.title = title
@@ -106,9 +98,7 @@ class KakaoWebtoonScraper(Scraper[int]):
                 headers=self.episode_headers,
             )
             if res.status_code == 404:
-                raise InvalidWebtoonIdError(
-                    f"Webtoon ID {self.webtoon_id} is invalid for Kakao Webtoon."
-                )
+                raise InvalidWebtoonIdError(f"Webtoon ID {self.webtoon_id} is invalid for Kakao Webtoon.")
             json_data = res.json()
             webtoon_episodes_data += json_data["data"]["episodes"]
             offset += limit
@@ -188,14 +178,10 @@ class KakaoWebtoonScraper(Scraper[int]):
         cipher = AES.new(key, AES.MODE_CBC, iv)
         return cipher.decrypt(data)
 
-    def _get_decrypt_infomations(
-        self, episode_id, aid: str, zid: str
-    ) -> tuple[bytes, bytes]:
+    def _get_decrypt_infomations(self, episode_id, aid: str, zid: str) -> tuple[bytes, bytes]:
         user_id = episode_id
 
-        temp_key = hashlib.sha256(
-            f"{user_id}{episode_id}{self._timestamp}".encode()
-        ).digest()
+        temp_key = hashlib.sha256(f"{user_id}{episode_id}{self._timestamp}".encode()).digest()
         temp_iv = hashlib.sha256(f"{self._nonce}{self._timestamp}".encode()).digest()[:16]
         encrypted_key = base64.b64decode(aid)
         encrypted_iv = base64.b64decode(zid)
@@ -225,9 +211,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         file_directory.write_bytes(self._decrypt(image_raw, key, iv))
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id(
-            (InvalidWebtoonIdError, UnsupportedWebtoonRatingError)
-        )
+        return super().check_if_legitimate_webtoon_id((InvalidWebtoonIdError, UnsupportedWebtoonRatingError))
 
     @classmethod
     def from_url(cls, url: str) -> Self:

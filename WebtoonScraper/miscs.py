@@ -17,10 +17,10 @@ __license__ = "Apache-2.0"
 __github_user_name__ = __author__
 __github_project_name__ = __title__
 
-WebtoonId: TypeAlias = "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]"  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
-EpisodeNoRange: TypeAlias = (
-    "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
+WebtoonId: TypeAlias = (
+    "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]"  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
 )
+EpisodeNoRange: TypeAlias = "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
 
 logger = logging.getLogger("webtoonscraper_logger")
 # coloredlogs.install(logger=logger, datefmt='%H:%M:%S')
@@ -42,22 +42,14 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
     def __init__(
         self,
         default_value: ValueType | Missing = missing,
-        value_unchanging_callback: Callable[
-            [UsingClass, str, ValueType, ValueType], Any
-        ]
-        | None = None,
-        value_changing_callback: Callable[
-            [UsingClass, ValueType, ValueType, str], ValueType
-        ]
-        | None = None,
+        value_unchanging_callback: Callable[[UsingClass, str, ValueType, ValueType], Any] | None = None,
+        value_changing_callback: Callable[[UsingClass, ValueType, ValueType, str], ValueType] | None = None,
     ) -> None:
         if not isinstance(default_value, Missing):
             self.default_value: ValueType = default_value
 
         if value_changing_callback and value_unchanging_callback:
-            raise TypeError(
-                "value_changing_callback and value_unchanging_callback cannot be defined same time."
-            )
+            raise TypeError("value_changing_callback and value_unchanging_callback cannot be defined same time.")
 
         self.value_changing_callback = value_changing_callback
         self.value_unchanging_callback = value_unchanging_callback
@@ -83,16 +75,12 @@ class ChangeReporter(Generic[ValueType, UsingClass]):
         with contextlib.suppress(AttributeError):
             return self.get_value(instance)
 
-        raise AttributeError(
-            f"AttributeError: '{cls.__name__}' object has no attribute '{self.name}'"
-        )
+        raise AttributeError(f"AttributeError: '{cls.__name__}' object has no attribute '{self.name}'")
 
     def __set__(self, instance: UsingClass, new_value: ValueType) -> None:
         old_value = self.get_value()
         if self.value_changing_callback is not None:
-            new_value = self.value_changing_callback(
-                instance, old_value, new_value, self.name
-            )
+            new_value = self.value_changing_callback(instance, old_value, new_value, self.name)
         elif self.value_unchanging_callback is not None:
             self.value_unchanging_callback(instance, self.name, new_value, old_value)
 

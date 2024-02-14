@@ -15,19 +15,20 @@ from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.directory_merger import (MERGED_WEBTOON_DIRECTORY,
-                                             NORMAL_WEBTOON_DIRECTORY,
-                                             ContainerStates,
-                                             check_container_state,
-                                             merge_webtoon, restore_webtoon,
-                                             select_from_directory)
+from WebtoonScraper.directory_merger import (
+    MERGED_WEBTOON_DIRECTORY,
+    NORMAL_WEBTOON_DIRECTORY,
+    ContainerStates,
+    check_container_state,
+    merge_webtoon,
+    restore_webtoon,
+    select_from_directory,
+)
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
-acceptable_chars = set(
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
-)
+acceptable_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 
 
 def remove_space_and_parentheses(value):
@@ -48,14 +49,13 @@ def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
     if "," not in webtoon_id:
         raise ValueError("Invalid webtoon id.")
 
-    match_result = re.match(
-        r""" * *[(]? *(['"]?(.+?)['"]?) *, *(['"]?(.+?)['"]?) *[)]? *$""", webtoon_id
-    )
+    match_result = re.match(r""" * *[(]? *(['"]?(.+?)['"]?) *, *(['"]?(.+?)['"]?) *[)]? *$""", webtoon_id)
     assert match_result is not None, "Invalid webtoon id."
-    is_arg1_quoted, is_arg2_quoted = match_result.group(2)[0] in {
+    is_arg1_quoted = match_result.group(2)[0] in {
         '"',
         "'",
-    }, match_result.group(3)[0] in {'"', "'"}
+    }
+    is_arg2_quoted = match_result.group(3)[0] in {'"', "'"}
     arg1, arg2 = match_result.group(2), match_result.group(4)
 
     if arg1.isdigit() and not is_arg1_quoted:
@@ -81,8 +81,7 @@ def str_to_episode_no_range(episode_no_range: str) -> EpisodeNoRange:
         return int(value) if value and value.lower() != "none" else None
 
     start, end = (
-        make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i))
-        for i in episode_no_range.split("~")
+        make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i)) for i in episode_no_range.split("~")
     )
 
     return start, end
@@ -103,9 +102,7 @@ parser.add_argument(
     action="version",
     version=f"WebtoonScraper {__version__} of Python {sys.version} from {str(files(WebtoonScraper))}",
 )
-parser.add_argument(
-    "--show-detailed-error", action="store_true", help="Show detailed error."
-)
+parser.add_argument("--show-detailed-error", action="store_true", help="Show detailed error.")
 subparsers = parser.add_subparsers(title="Commands", help="Choose command you want.")
 
 # 'download' subparsers
@@ -162,18 +159,14 @@ download_subparser.add_argument(
     default="webtoon",
     help="The directory you want to download to.",
 )
-download_subparser.add_argument(
-    "--list-episodes", action="store_true", help="List all episodes."
-)
+download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes.")
 download_subparser.add_argument(
     "--get-paid-episode",
     action="store_true",
     help="Get paid episode. Lezhin Comics only.",
 )
 
-merge_subparser = subparsers.add_parser(
-    "merge", help="Merge/Restore webtoon directory."
-)
+merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
 merge_subparser.set_defaults(subparser_name="merge")
 merge_subparser.add_argument(
     "webtoons_directory_name",
@@ -245,8 +238,7 @@ CONTAINER_STATE_TO_DO_STATE: dict[ContainerStates, Literal["merge", "restore"]] 
 
 def get_state(source_directory: Path) -> ContainerStates:
     states: dict[Path, ContainerStates] = {
-        webtoon_directory: check_container_state(webtoon_directory)
-        for webtoon_directory in source_directory.iterdir()
+        webtoon_directory: check_container_state(webtoon_directory) for webtoon_directory in source_directory.iterdir()
     }
     all_unique_states = set(states.values())
     if len(all_unique_states) != 1:
@@ -308,9 +300,7 @@ def main(argv=None) -> Literal[0, 1]:
         elif args.subparser_name == "merge":
             parse_merge(args)
         else:
-            raise NotImplementedError(
-                f"Subparser {args.subparser_name} is not implemented."
-            )
+            raise NotImplementedError(f"Subparser {args.subparser_name} is not implemented.")
     except BaseException as e:
         logger.error(e)
         if args.show_detailed_error:

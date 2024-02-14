@@ -7,8 +7,7 @@ from contextlib import suppress
 from itertools import count
 from typing import NamedTuple
 
-from ..exceptions import (InvalidBlogIdError, InvalidCategoryNoError,
-                          InvalidWebtoonIdError, UseFetchEpisode)
+from ..exceptions import InvalidBlogIdError, InvalidCategoryNoError, InvalidWebtoonIdError, UseFetchEpisode
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 
@@ -24,8 +23,10 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     TEST_WEBTOON_ID = NaverBlogWebtoonId("bkid4", 55)  # 상덕
     IS_CONNECTION_STABLE = True
     BASE_URL = "https://m.blog.naver.com"
-    URL_REGEX = re.compile(r"(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*"
-                           r"|(?:https?:\/\/)?m[.]blog[.]naver[.]com\/PostList[.]naver\?blogId=(?P<blog_id2>\w+)&(?:.*&)*categoryNo=(?P<category_no2>\d+)(?:&.*)*")
+    URL_REGEX = re.compile(
+        r"(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*"
+        r"|(?:https?:\/\/)?m[.]blog[.]naver[.]com\/PostList[.]naver\?blogId=(?P<blog_id2>\w+)&(?:.*&)*categoryNo=(?P<category_no2>\d+)(?:&.*)*"
+    )
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
@@ -52,9 +53,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         if response["isSuccess"] is False:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
         if response["result"]["categoryName"] == "전체글" and category_no != 0:
-            raise InvalidCategoryNoError(
-                "Invalid category number. Maybe there's a typo or category is deleted."
-            )
+            raise InvalidCategoryNoError("Invalid category number. Maybe there's a typo or category is deleted.")
 
         fetch_result = response["result"]
 
@@ -63,9 +62,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             return self.fetch_episode_informations(limit * 2)
 
         self.title: str = fetch_result["categoryName"]
-        self.webtoon_thumbnail_url: str = (
-            fetch_result["items"][0]["thumbnailUrl"] + "?type=ffn640_640"
-        )
+        self.webtoon_thumbnail_url: str = fetch_result["items"][0]["thumbnailUrl"] + "?type=ffn640_640"
 
         items = fetch_result["items"]
         for i in count(2):
@@ -94,8 +91,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             # 아래 코드보다 콤펙트한 버전. 만약 다운로드가 잘 안 될 경우
             # 이 코드를 비활성화하고 아래 코드를 활성화해서 경고가 나오지는 않는지 확인할 것.
             one_episode_image_urls = [
-                thumbnail["encodedThumbnailUrl"] + "?type=w800"
-                for thumbnail in episode["thumbnailList"]
+                thumbnail["encodedThumbnailUrl"] + "?type=w800" for thumbnail in episode["thumbnailList"]
             ]
 
             # 흔하지 않은 타입에 대한 경고를 포함한 버전.
@@ -112,9 +108,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
             #     one_episode_image_urls.append(thumbnail['encodedThumbnailUrl'] + '?type=w800')
 
             with suppress(ValueError):
-                one_episode_image_urls = sorted(
-                    one_episode_image_urls, key=get_integer_picture_name
-                )
+                one_episode_image_urls = sorted(one_episode_image_urls, key=get_integer_picture_name)
 
             self.episodes_image_urls.append(one_episode_image_urls)
 

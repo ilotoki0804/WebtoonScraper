@@ -54,9 +54,7 @@ class BufftoonScraper(Scraper[int]):
         )
         image_url_original = image_url_original["style"]
         assert isinstance(image_url_original, str)
-        image_url_processed = re.search(
-            r"background-image:url[(](.+)[)];", image_url_original
-        )
+        image_url_processed = re.search(r"background-image:url[(](.+)[)];", image_url_original)
         assert isinstance(image_url_processed, re.Match)
         image_url = image_url_processed.group(1)
 
@@ -91,9 +89,7 @@ class BufftoonScraper(Scraper[int]):
                 continue
             # episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode["listImgPath"]
-            raw_episode_id_processed = re.search(
-                rf"contents\/.\/{self.webtoon_id}\/(\d+)\/", raw_episode_id
-            )
+            raw_episode_id_processed = re.search(rf"contents\/.\/{self.webtoon_id}\/(\d+)\/", raw_episode_id)
             assert isinstance(raw_episode_id_processed, re.Match)
             episode_id = int(raw_episode_id_processed[1])
             episode_ids.append(episode_id)
@@ -110,8 +106,6 @@ class BufftoonScraper(Scraper[int]):
         episode_images_url = [element["src"] for element in episode_images_url]
 
         if TYPE_CHECKING:
-            episode_images_url = [
-                element for element in episode_images_url if isinstance(element, str)
-            ]
+            episode_images_url = [element for element in episode_images_url if isinstance(element, str)]
 
         return episode_images_url

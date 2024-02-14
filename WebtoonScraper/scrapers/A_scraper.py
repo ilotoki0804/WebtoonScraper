@@ -14,6 +14,7 @@ from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, TypeVar
+
 if TYPE_CHECKING:
     from typing import Self
 from urllib import parse
@@ -24,19 +25,23 @@ from rich.console import Console
 from rich.table import Table
 from tqdm import tqdm
 
-from ..directory_merger import (MERGED_WEBTOON_DIRECTORY, NORMAL_IMAGE,
-                                NORMAL_WEBTOON_DIRECTORY, ContainerStates,
-                                check_container_state, merge_webtoon,
-                                restore_webtoon, webtoon_regexes)
+from ..directory_merger import (
+    MERGED_WEBTOON_DIRECTORY,
+    NORMAL_IMAGE,
+    NORMAL_WEBTOON_DIRECTORY,
+    ContainerStates,
+    check_container_state,
+    merge_webtoon,
+    restore_webtoon,
+    webtoon_regexes,
+)
 from ..exceptions import DirectoryStateUnmatchedError, InvalidURLError, UseFetchEpisode
 from ..miscs import EpisodeNoRange
 from ..miscs import __version__ as version
 from ..miscs import logger
 from ..webtoon_viewer import add_html_webtoon_viewer
 
-WebtoonId = TypeVar(
-    "WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str]
-)
+WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
 
 
 def reload_manager(f):
@@ -56,8 +61,7 @@ def reload_manager(f):
         if f in self._return_cache:
             if not reload:
                 logger.debug(
-                    f"{f} is already loaded, so skipping loading. "
-                    "In order to reload, set parameter by reload=True."
+                    f"{f} is already loaded, so skipping loading. " "In order to reload, set parameter by reload=True."
                 )
                 return self._return_cache[f]
             logger.warning("Refreshing webtoon_information")
@@ -65,10 +69,7 @@ def reload_manager(f):
         try:
             return_value = f(self, *args, reload=reload, **kwargs)
         except Exception:
-            logger.info(
-                "Exception is occured while function is executed. "
-                "So function is not marked as loaded."
-            )
+            logger.info("Exception is occured while function is executed. " "So function is not marked as loaded.")
             raise
 
         self._return_cache[f] = return_value
@@ -204,13 +205,9 @@ class Scraper(Generic[WebtoonId]):
             )
         except RuntimeError as e:
             try:
-                e.add_note(
-                    "Use `async_download_webtoon` in Jupyter or asyncio environment."
-                )
+                e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             except AttributeError:
-                logger.warning(
-                    "Use `async_download_webtoon` in Jupyter or asyncio environment."
-                )
+                logger.warning("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             raise e
 
     async def async_download_webtoon(
@@ -254,9 +251,7 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
         if merge_number is not None:
-            with self._send_callback_message(
-                "merge_webtoon", merge_number, webtoon_directory
-            ):
+            with self._send_callback_message("merge_webtoon", merge_number, webtoon_directory):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if add_viewer:
@@ -286,9 +281,7 @@ class Scraper(Generic[WebtoonId]):
         table = Table(show_header=True, header_style="bold blue", box=None)
         table.add_column("Episode number [dim](ID)[/dim]", width=12)
         table.add_column("Episode Title", style="bold")
-        for i, (episode_id, episode_title) in enumerate(
-            zip(self.episode_ids, self.episode_titles), 1
-        ):
+        for i, (episode_id, episode_title) in enumerate(zip(self.episode_ids, self.episode_titles), 1):
             table.add_row(
                 f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
                 str(episode_title),
@@ -297,8 +290,7 @@ class Scraper(Generic[WebtoonId]):
 
     def check_if_legitimate_webtoon_id(
         self,
-        exception_type: type[BaseException]
-        | tuple[type[BaseException], ...] = Exception,
+        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
     ) -> str | None:
         """webtoon_id가 플랫폼에서 적합하다면 제목을 반환하고 아니라면 None을 반환합니다."""
         try:
@@ -324,9 +316,7 @@ class Scraper(Generic[WebtoonId]):
                 print("Webtoon data are fetched. Download has been started...")
             case the_others:
                 if contexts:
-                    logger.debug(
-                        f"WebtoonScraper status: {the_others}, context: {contexts}"
-                    )
+                    logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
                 else:
                     logger.info(f"WebtoonScraper status: {the_others}")
 
@@ -372,15 +362,9 @@ class Scraper(Generic[WebtoonId]):
     def headers(self) -> dict[str, str]:
         """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
         headers = self.hxoptions.headers
-        assert isinstance(
-            headers, dict
-        ), "Invalid subclassing could cause this error. Content developer."
+        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
         if TYPE_CHECKING:
-            headers = {
-                k: v
-                for k, v in headers.items()
-                if isinstance(k, str) and isinstance(v, str)
-            }
+            headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
         return headers
 
     @headers.setter
@@ -407,9 +391,7 @@ class Scraper(Generic[WebtoonId]):
         else:
             self.callback(base_message + "_end", True)
 
-    def _episode_no_range_to_real_range(
-        self, episode_no_range: EpisodeNoRange
-    ) -> Iterable[int]:
+    def _episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
         """
         Args:
             episode_no_range:
@@ -453,13 +435,9 @@ class Scraper(Generic[WebtoonId]):
         if isinstance(episode_no_range, Iterable):
             return sorted(i - 1 for i in episode_no_range if i <= episode_length)
 
-        raise TypeError(
-            f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again."
-        )
+        raise TypeError(f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again.")
 
-    async def _download_episodes(
-        self, episode_no_list: Iterable[int], webtoon_directory: Path
-    ) -> None:
+    async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.
 
         Args:
@@ -474,13 +452,8 @@ class Scraper(Generic[WebtoonId]):
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
-                is_download_sucessful = await self._download_episode(
-                    episode_no, webtoon_directory, client
-                )
-                if (
-                    not is_download_sucessful
-                    and self._end_downloading_when_error_occured
-                ):
+                is_download_sucessful = await self._download_episode(episode_no, webtoon_directory, client)
+                if not is_download_sucessful and self._end_downloading_when_error_occured:
                     logger.warning(
                         "Downloading is stopped since downloading prevous episode was unsuccessful. "
                         "Set `self.end_downloading_when_error_occured` to False if you want to "
@@ -508,41 +481,29 @@ class Scraper(Generic[WebtoonId]):
         """
 
         does_filename_inappropriate = any(
-            not webtoon_regexes[NORMAL_IMAGE].match(file)
-            for file in os.listdir(episode_directory)
+            not webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_directory)
         )
-        does_file_count_inappropriate = len(image_urls) != len(
-            os.listdir(episode_directory)
-        )
+        does_file_count_inappropriate = len(image_urls) != len(os.listdir(episode_directory))
         return does_filename_inappropriate or does_file_count_inappropriate
 
-    async def _download_episode(
-        self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient
-    ) -> bool:
+    async def _download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> bool:
         """한 회차를 다운로드받습니다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
         episode_title = self.episode_titles[episode_no]
         safe_episode_title = self._get_safe_file_name(episode_title)
-        episode_directory = (
-            webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
-        )
+        episode_directory = webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
 
         if episode_directory.is_file():
-            raise FileExistsError(
-                f"File at {episode_directory} already exists. Please delete the file."
-            )
+            raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
 
         try:
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
                     case ExistingEpisodePolicy.SKIP:
-                        self._set_progress_indication(
-                            f"downloading {episode_title} is skipped"
-                        )
+                        self._set_progress_indication(f"downloading {episode_title} is skipped")
                         return True
                     case ExistingEpisodePolicy.INTERRUPT:
                         raise FileExistsError(
-                            f"Directory at {episode_directory} already exists. "
-                            "Please delete the directory."
+                            f"Directory at {episode_directory} already exists. " "Please delete the directory."
                         )
                     case ExistingEpisodePolicy.REDOWNLOAD:
                         check_integrity = False
@@ -564,12 +525,8 @@ class Scraper(Generic[WebtoonId]):
                 return False
 
             if check_integrity:
-                if not self._check_directory_integrity(
-                    episode_directory, episode_images_url
-                ):
-                    self._set_progress_indication(
-                        f"Downloading {episode_title} is skipped after integrity check"
-                    )
+                if not self._check_directory_integrity(episode_directory, episode_images_url):
+                    self._set_progress_indication(f"Downloading {episode_title} is skipped after integrity check")
                     return True
 
                 shutil.rmtree(episode_directory)
@@ -618,18 +575,14 @@ class Scraper(Generic[WebtoonId]):
         file_directory = episode_directory / file_name
         file_directory.write_bytes(image_raw)
 
-    def _download_webtoon_thumbnail(
-        self, webtoon_directory: Path, file_extension: str | None = None
-    ) -> str:
+    def _download_webtoon_thumbnail(self, webtoon_directory: Path, file_extension: str | None = None) -> str:
         """
         웹툰의 썸네일을 불러오고 thumbnail_directory에 저장합니다.
         Args:
             webtoon_directory (Path): 썸네일을 저장할 디렉토리입니다.
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
-        file_extension = file_extension or self._get_file_extension(
-            self.webtoon_thumbnail_url
-        )
+        file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
         thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
         (webtoon_directory / thumbnail_name).write_bytes(image_raw)
@@ -663,9 +616,7 @@ class Scraper(Generic[WebtoonId]):
         Returns:
             파일 확장자를 반환합니다.
         """
-        url_path = parse.urlparse(
-            filename_or_url
-        ).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
+        url_path = parse.urlparse(filename_or_url).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
         extension_name = re.search(r"(?<=[.])\w+?$", url_path)
         if extension_name is not None:
             return extension_name.group(0)
@@ -673,9 +624,7 @@ class Scraper(Generic[WebtoonId]):
         if cls.DEFAULT_IMAGE_FILE_EXTENSION is not None:
             return cls.DEFAULT_IMAGE_FILE_EXTENSION
 
-        raise ValueError(
-            f"File extension not detected of {filename_or_url}(path: {url_path})."
-        )
+        raise ValueError(f"File extension not detected of {filename_or_url}(path: {url_path}).")
 
     @staticmethod
     def _get_safe_file_name(file_or_diretory_name: str) -> str:
