@@ -9,7 +9,7 @@ from typing import Literal
 
 import hxsoup
 
-from .exceptions import InvalidPlatformError, UnsupportedWebtoonRatingError
+from .exceptions import InvalidPlatformError, InvalidURLError, UnsupportedWebtoonRatingError
 from .miscs import EpisodeNoRange, WebtoonId, logger
 from .scrapers import (BufftoonScraper, KakaopageScraper, KakaoWebtoonScraper,
                        LezhinComicsScraper, NaverBlogScraper,
@@ -143,6 +143,16 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     return selected_platform
 
 
+def get_webtoon_platform_from_url(webtoon_url: str) -> Scraper | None:
+    for platform_name, platform_class in PLATFORMS.items():
+        try:
+            platform = platform_class.from_url(webtoon_url)
+        except InvalidURLError:
+            continue
+        return platform
+    return None
+
+
 def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]:
     platform_class: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
     if platform_class is None:
@@ -151,63 +161,50 @@ def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]
 
 
 def download_webtoon(
-    webtoon_id: WebtoonId,
+    webtoon_id_or_url: WebtoonId,
     webtoon_platform: WebtoonPlatforms | None = None,
     merge_number: int | None = None,
     *,
     cookie: str | None = None,
     episode_no_range: EpisodeNoRange = None,
     bearer: str | None = None,
-    is_list_episodes: bool = False,
+    list_episodes: bool = False,
     download_directory: str | Path = "webtoon",
     get_paid_episode: bool = False,
 ) -> None:
-    if bearer is not None and isinstance(webtoon_id, str):
-        webtoon_scraper = LezhinComicsScraper(webtoon_id)
-        webtoon_scraper.bearer = bearer
-        if cookie is not None:
-            webtoon_scraper.cookie = cookie
-        webtoon_scraper.get_paid_episode = get_paid_episode
-    elif cookie is not None:
-        webtoon_scraper = BufftoonScraper(webtoon_id)
-        webtoon_scraper.cookie = cookie
-    webtoon_platform = webtoon_platform or get_webtoon_platform(webtoon_id)
-    if webtoon_platform is None:
-        raise ValueError(
-            "You didn't select a valid item, or webtoon id was inappropriate. "
-            "Select a valid item or webtoon id."
-        )
-
-    if cookie is not None:
-        if webtoon_platform != BUFFTOON:
-            raise ValueError(
-                "Cookie is not required unless you are downloading Bufftoon. "
-                "Use bearer if platform what you want to download is Lezhin Comics."
-            )
-        webtoon_scraper = BufftoonScraper(webtoon_id, cookie=cookie)
-    elif bearer is not None:
-        if webtoon_platform != LEZHIN_COMICS:
-            raise ValueError(
-                "bearer is not required unless you are downloading Lezhin Comics. "
-                "Use cookie if platform what you want to download is Bufftoon."
-            )
-        assert isinstance(webtoon_id, str)
-        webtoon_scraper = LezhinComicsScraper(webtoon_id, bearer=bearer)
+    # 스크래퍼 불러오기
+    if webtoon_platform:
+        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
+    elif isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
+        webtoon_scraper = get_webtoon_platform_from_url(webtoon_id_or_url)
+        if webtoon_scraper is None:
+            raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_id_or_url}")
+        webtoon_scraper = webtoon_scraper
     else:
-        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id)
-        if isinstance(webtoon_scraper, BufftoonScraper):
-            logger.warning(
-                "Proceed without cookie. It'll limit the number of episodes can be downloaded of Bufftoon."
-            )
-        if isinstance(webtoon_scraper, LezhinComicsScraper):
-            logger.warning(
-                "Proceed without bearer. It'll limit the number of episodes can be downloaded of Lezhin Comics."
-            )
+        logger.warning("Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.")
+        webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
+        if webtoon_platform is None:
+            raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
+        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
 
-    if is_list_episodes:
+    # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
+    if cookie:
+        if not isinstance(webtoon_scraper, (LezhinComicsScraper, BufftoonScraper)):
+            raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
+        webtoon_scraper.cookie = cookie
+    if bearer:
+        if not isinstance(webtoon_scraper, LezhinComicsScraper):
+            raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
+        webtoon_scraper.bearer = bearer
+    if get_paid_episode and isinstance(webtoon_scraper, LezhinComicsScraper):
+        webtoon_scraper.get_paid_episode = get_paid_episode
+
+    # list_episodes 출력하기
+    if list_episodes:
         webtoon_scraper.list_episodes()
         return
 
+    # 다운로드
     webtoon_scraper.base_directory = download_directory
     webtoon_scraper.download_webtoon(
         episode_no_range,

@@ -35,6 +35,10 @@ def remove_space_and_parentheses(value):
 
 
 def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
+    # URL인 경우
+    if "." in webtoon_id:
+        return webtoon_id
+
     if webtoon_id.isdigit():
         # all others
         return int(webtoon_id)
@@ -214,7 +218,7 @@ def parse_download(args: argparse.Namespace) -> None:
         bearer=args.bearer,
         episode_no_range=args.range,
         download_directory=args.download_directory,
-        is_list_episodes=args.list_episodes,
+        list_episodes=args.list_episodes,
         get_paid_episode=args.get_paid_episode,
     )
 
