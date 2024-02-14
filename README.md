@@ -65,6 +65,14 @@
     from WebtoonScraper import webtoon as wt
     ```
 
+## How to use
+
+사용 방법은 [`사용 방법` 문서](docs/how_to_use.md)를 참고해 주세요.
+
+## 이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류
+
+[이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류 문서](docs/download_availability.md)를 참고하세요.
+
 ## Build from source
 
 우선 git과 python을 설치하고 레포지토리를 클론하세요.
@@ -99,14 +107,6 @@ python build.py
 ```
 
 이제 `dist`에 빌드된 `whl` 파일과 `tar.gz` 파일이 나타납니다.
-
-## How to use
-
-사용 방법은 [`사용 방법` 문서](docs/how_to_use.md)를 참고해 주세요.
-
-## 이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류
-
-[이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류 문서](docs/download_availability.md)를 참고하세요.
 
 ## Relese Note
 
