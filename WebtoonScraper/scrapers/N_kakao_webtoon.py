@@ -85,13 +85,13 @@ class KakaoWebtoonScraper(Scraper[int]):
                 'meta[property="og:title"]', True
             ).text.removeprefix(" | 카카오웹툰")
 
-        thumnail_url = res.soup_select_one('meta[property="og:image"]', True).get(
+        thumbnail_url = res.soup_select_one('meta[property="og:image"]', True).get(
             "content"
         )
-        assert isinstance(thumnail_url, str)
+        assert isinstance(thumbnail_url, str)
 
         self.title = title
-        self.webtoon_thumbnail_url = thumnail_url
+        self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
     def fetch_episode_informations(self, *, reload: bool = False) -> None:
