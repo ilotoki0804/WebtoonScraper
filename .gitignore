@@ -10,6 +10,8 @@ _*/
 
 # venv for this repository
 .webtoon/
+.venv/
+.py310/
 
 # secret vault
 .vault/
