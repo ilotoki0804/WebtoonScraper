@@ -7,6 +7,8 @@ from json.decoder import JSONDecodeError
 import re
 from typing import TYPE_CHECKING, ClassVar, Literal
 
+import hxsoup
+
 from ..exceptions import InvalidPlatformError, InvalidURLError, UnsupportedWebtoonRatingError
 from .A_scraper import Scraper, reload_manager
 
@@ -163,6 +165,7 @@ class NaverWebtoonScraper(
 
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m[.])?comic[.]naver[.]com\/(?P<webtoon_type>webtoon|bestChallenge|challenge)\/list\?(?:.*&)*titleId=(?P<webtoon_id>\d+)(?:&.*)*"
+        r"|(?:https?:\/\/)?(?P<short_url>naver[.]me\/\w+)"
     )
     TEST_WEBTOON_IDS = (
         NaverWebtoonSpecificScraper.TEST_WEBTOON_ID,
@@ -197,7 +200,11 @@ class NaverWebtoonScraper(
             webtoon_id: int = int(matched.group("webtoon_id"))
             webtoon_type: str = matched.group("webtoon_type")
         except Exception as e:
-            raise InvalidURLError.from_url(url, cls) from e
+            short_url = matched.group("short_url")
+            if short_url is None:
+                raise InvalidURLError.from_url(url, cls) from e
+            full_url = hxsoup.get("https://" + short_url).headers["location"]
+            return cls.from_url(full_url)
 
         match webtoon_type:
             case "webtoon":
