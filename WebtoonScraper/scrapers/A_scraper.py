@@ -312,7 +312,7 @@ class Scraper(Generic[WebtoonId]):
         """
         match situation:
             case "download_episode_end":
-                print(f"A webtoon {self.title} download ended.")
+                print(f"The webtoon {self.title} download ended.")
             case "merge_webtoon_end":
                 print("Merging webtoon ended.")
             case "merge_webtoon_start":
@@ -323,7 +323,7 @@ class Scraper(Generic[WebtoonId]):
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
                 else:
-                    logger.info(f"WebtoonScraper status: {the_others}")
+                    logger.debug(f"WebtoonScraper status: {the_others}")
 
     def get_informations(self, fetch: bool = False):
         if fetch:
