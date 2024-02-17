@@ -223,7 +223,7 @@ class Scraper(Generic[WebtoonId]):
         manual_container_state: ContainerStates | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
-        with self._send_callback_message("setup"):
+        with self._send_context_callback_message("setup"):
             self.fetch_all()
 
         webtoon_directory_name = self.get_webtoon_directory_name()
@@ -245,18 +245,18 @@ class Scraper(Generic[WebtoonId]):
         else:
             webtoon_directory.mkdir(parents=True, exist_ok=True)
 
-        with self._send_callback_message("download_thubnail"):
+        with self._send_context_callback_message("download_thubnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
 
-        with self._send_callback_message("download_episode"):
+        with self._send_context_callback_message("download_episode"):
             await self._download_episodes(episode_no_list, webtoon_directory)
 
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
         if merge_number is not None:
-            with self._send_callback_message("merge_webtoon", merge_number, webtoon_directory):
+            with self._send_context_callback_message("merge_webtoon", merge_number, webtoon_directory):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if add_viewer:
@@ -385,7 +385,7 @@ class Scraper(Generic[WebtoonId]):
         return int(matched_url.group("webtoon_id"))
 
     @contextmanager
-    def _send_callback_message(self, base_message: str, *contexts):
+    def _send_context_callback_message(self, base_message: str, *contexts):
         self.callback(base_message + "_start", *contexts)
         end_contexts = []
         try:
