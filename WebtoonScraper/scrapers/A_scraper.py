@@ -450,9 +450,12 @@ class Scraper(Generic[WebtoonId]):
                 iterable이므로 list 등으로 변환하는 과정이 필요할 수도 있습니다.
             webtoon_directory: 웹툰 디렉토리입니다.
         """
-        self.pbar = tqdm(episode_no_list)
+        if self.use_tqdm_while_download:
+            episodes = self.pbar = tqdm(episode_no_list)
+        else:
+            episodes = episode_no_list
         async with self.hxoptions.build_async_client() as client:
-            for episode_no in self.pbar:
+            for i, episode_no in enumerate(episodes):
                 if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
@@ -465,6 +468,9 @@ class Scraper(Generic[WebtoonId]):
                         "proceed download."
                     )
                     break
+
+                if not self.use_tqdm_while_download:
+                    self.callback("episode_download_complete", i, episode_no, is_download_sucessful)
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
         """다운로드할 디렉토리를 재안내합니다.
@@ -609,7 +615,7 @@ class Scraper(Generic[WebtoonId]):
                 self.pbar.set_description(description)
                 return
 
-        print(description)
+        self.callback("description", description)
 
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
