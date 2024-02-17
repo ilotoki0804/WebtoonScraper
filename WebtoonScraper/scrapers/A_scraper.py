@@ -256,7 +256,11 @@ class Scraper(Generic[WebtoonId]):
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
         if merge_number is not None:
-            with self._send_context_callback_message("merge_webtoon", merge_number, webtoon_directory):
+            with self._send_context_callback_message(
+                "merge_webtoon",
+                merge_number=merge_number,
+                webtoon_directory=webtoon_directory
+            ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if add_viewer:
@@ -304,7 +308,7 @@ class Scraper(Generic[WebtoonId]):
         except exception_type:
             return None
 
-    def callback(self, situation: str, *contexts) -> None:
+    def callback(self, situation: str, **contexts) -> None:
         """웹툰 다운로드의 중요한 순간들을 알림받습니다.
 
         주의: callback은 다운로드 과정을 멈추고 작업합니다.
@@ -319,6 +323,15 @@ class Scraper(Generic[WebtoonId]):
                 print("Merging webtoon has started...")
             case "setup_end":
                 print("Webtoon data are fetched. Download has been started...")
+            case "description":
+                print(contexts["description"])
+            case "episode_download_complete":
+                # index = contexts["index"]
+                is_download_sucessful = contexts["is_download_sucessful"]
+                if is_download_sucessful:
+                    episode_no = contexts["episode_no"]
+                    episode_title = self.episode_titles[episode_no]
+                    print(f"Episode `{episode_title}`({episode_no}) sucessfully downloaded.")
             case the_others:
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
@@ -385,16 +398,16 @@ class Scraper(Generic[WebtoonId]):
         return int(matched_url.group("webtoon_id"))
 
     @contextmanager
-    def _send_context_callback_message(self, base_message: str, *contexts):
-        self.callback(base_message + "_start", *contexts)
-        end_contexts = []
+    def _send_context_callback_message(self, base_message: str, **contexts):
+        self.callback(base_message + "_start", **contexts)
+        end_contexts = {}
         try:
             yield end_contexts
         except Exception:
-            if not self.callback(base_message + "_end", False, *end_contexts):
+            if not self.callback(base_message + "_end", is_successful=False, **end_contexts):
                 raise
         else:
-            self.callback(base_message + "_end", True)
+            self.callback(base_message + "_end", is_successful=True)
 
     def _episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
         """
@@ -470,7 +483,12 @@ class Scraper(Generic[WebtoonId]):
                     break
 
                 if not self.use_tqdm_while_download:
-                    self.callback("episode_download_complete", i, episode_no, is_download_sucessful)
+                    self.callback(
+                        "episode_download_complete",
+                        index=i,
+                        episode_no=episode_no,
+                        is_download_sucessful=is_download_sucessful
+                    )
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
         """다운로드할 디렉토리를 재안내합니다.
@@ -615,7 +633,7 @@ class Scraper(Generic[WebtoonId]):
                 self.pbar.set_description(description)
                 return
 
-        self.callback("description", description)
+        self.callback("description", description=description)
 
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
