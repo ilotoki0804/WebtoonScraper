@@ -331,7 +331,7 @@ class Scraper(Generic[WebtoonId]):
                 if is_download_sucessful:
                     episode_no = contexts["episode_no"]
                     episode_title = self.episode_titles[episode_no]
-                    print(f"Episode `{episode_title}`({episode_no}) sucessfully downloaded.")
+                    print(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
             case the_others:
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
@@ -466,7 +466,7 @@ class Scraper(Generic[WebtoonId]):
         if self.use_tqdm_while_download:
             episodes = self.pbar = tqdm(episode_no_list)
         else:
-            episodes = episode_no_list
+            episodes = tuple(episode_no_list)
         async with self.hxoptions.build_async_client() as client:
             for i, episode_no in enumerate(episodes):
                 if self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS:
@@ -487,6 +487,7 @@ class Scraper(Generic[WebtoonId]):
                         "episode_download_complete",
                         index=i,
                         episode_no=episode_no,
+                        episodes=episodes,
                         is_download_sucessful=is_download_sucessful
                     )
 
