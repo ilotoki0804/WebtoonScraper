@@ -61,7 +61,7 @@ def reload_manager(f):
         if f in self._return_cache:
             if not reload:
                 logger.debug(
-                    f"{f} is already loaded, so skipping loading. " "In order to reload, set parameter by reload=True."
+                    f"{f} is already loaded, so loading is skipped. In order to reload, set parameter by reload=True."
                 )
                 return self._return_cache[f]
             logger.warning("Refreshing webtoon_information")
@@ -322,7 +322,8 @@ class Scraper(Generic[WebtoonId]):
             case "merge_webtoon_start":
                 print("Merging webtoon has started...")
             case "setup_end":
-                print("Webtoon data are fetched. Download has been started...")
+                if contexts.get("is_successful", True):
+                    print("Webtoon data are fetched. Download has been started...")
             case "description":
                 print(contexts["description"])
             case "episode_download_complete":
