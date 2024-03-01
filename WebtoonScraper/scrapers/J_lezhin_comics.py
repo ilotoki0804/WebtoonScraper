@@ -9,6 +9,7 @@ import re
 import shutil
 from json import JSONDecodeError
 from pathlib import Path
+import os
 
 from hxsoup.exceptions import EmptyResultError
 
@@ -47,7 +48,7 @@ class LezhinComicsScraper(Scraper[str]):
         * 사용자 정보를 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요
         * 성인 웹툰을 리스팅/다운로드/웹툰의 사용자 정보를 다운로드하고 싶은 경우: 각자 필요한 값에 cookie가 추가로 필요
 
-        bearer와 cookie를 어떻게 얻는지는 [이 문서](https://github.com/ilotoki0804/WebtoonScraper/blob/master/docs/how_to_use.md#레진코믹스-다운로드)를 참고하세요.
+        bearer와 cookie를 어떻게 얻는지는 [이 문서](https://github.com/ilotoki0804/WebtoonScraper/blob/master/docs/how_to_use.md#bearer-가져오기)를 참고하세요.
         """
         super().__init__(webtoon_id)
         self.headers.update(
@@ -65,9 +66,9 @@ class LezhinComicsScraper(Scraper[str]):
             attempts=3,
         )
         self.cookie = cookie or "x-lz-locale=ko_KR"  # 수정 시에는 중복된 부분도 수정하기
-        if bearer is not None and bearer and not bearer.startswith("Bearer"):
+        self.bearer = bearer or os.environ.get("LEZHIN_BEARER", None)
+        if self.bearer is not None and bearer and not bearer.startswith("Bearer"):
             raise InvalidAuthenticationError("Invalid bearer. Please type valid bearer.")
-        self.bearer = bearer or ""
 
         self.do_not_unshuffle: bool = False
         self.delete_shuffled_file: bool = False
@@ -114,7 +115,7 @@ class LezhinComicsScraper(Scraper[str]):
                 )
             if "adult" in res.url.path:
                 raise UnsupportedWebtoonRatingError(
-                    "The account is not adult authenticated. " "Thus can not download adult webtoons."
+                    "The account is not adult authenticated. Thus can not download adult webtoons."
                 )
 
         thumbnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
@@ -247,14 +248,15 @@ class LezhinComicsScraper(Scraper[str]):
     # PROPERTIES
 
     @property
-    def bearer(self) -> str:
+    def bearer(self) -> str | None:
         return self._bearer
 
     @bearer.setter
-    def bearer(self, value: str) -> None:
+    def bearer(self, value: str | None) -> None:
         """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
         self._bearer = value
-        self.headers.update(Authorization=value)
+        if value is not None:
+            self.headers.update(Authorization=value)
 
     # PRIVATE METHODS
 

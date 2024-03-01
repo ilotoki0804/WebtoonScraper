@@ -710,7 +710,9 @@ scraper = LezhinComicsScraper.from_url(
 scraper.download_webtoon()
 ```
 
-로그인하지 않으면 bearer를 얻을 수 없는데, 이 경우 다운로드할 수는 있지만 약 1~2화 정도로 다운로드받을 수 있는 웹툰이 폭이 심하게 제한됩니다.
+#### bearer 가져오기
+
+bearer가 없는 경우 경우 다운로드할 수는 있지만 약 1~2화 정도로 다운로드받을 수 있는 웹툰이 폭이 심하게 제한됩니다.
 
 이 과정은 PC를 기준으로 설명합니다. 만약 모바일이라면 Kiwi Browser 등을 통해 다음의 과정을 수행할 수 있습니다.
 
@@ -736,6 +738,22 @@ scraper.download_webtoon()
     ```
 
 1. 로그인하면 볼 수 있는 모든 에피소드가 다운로드됩니다.
+
+#### bearer를 환경 변수로 설정
+
+bearer는 직접 넘기는 대신 환경 변수를 통해 설정할 수도 있습니다. 만약 bearer를 넘기지 않거나 None으로 넘길 경우에 LEZHIN_BEARER 환경 변수가 설정되어 있다면 해당 환경 변수에 맞추어 설정됩니다.
+
+```console
+# bash의 경우
+export LEZHIN_BEARER=<bearer here>
+webtoon download dr_hearthstone -p lc
+```
+
+```console
+echo 윈도우의 경우
+set LEZHIN_BEARER=<bearer here>
+webtoon download dr_hearthstone -p lc
+```
 
 #### 유료 회차 다운로드받기
 
