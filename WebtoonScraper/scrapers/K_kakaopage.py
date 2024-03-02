@@ -21,6 +21,7 @@ class KakaopageScraper(Scraper[int]):
     URL_REGEX = re.compile(r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
+    PLATFORM = "kakaopage"
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)

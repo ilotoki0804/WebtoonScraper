@@ -109,6 +109,7 @@ class Scraper(Generic[WebtoonId]):
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int | float] = 0
     URL_REGEX: ClassVar[re.Pattern[str]]
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
+    PLATFORM: ClassVar[str]
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """
@@ -348,6 +349,7 @@ class Scraper(Generic[WebtoonId]):
             "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
             "episode_ids": self.episode_ids,
             "episode_titles": self.episode_titles,
+            "platform": self.PLATFORM,
         }
 
     # PROPERTIES

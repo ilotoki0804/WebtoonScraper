@@ -26,6 +26,7 @@ class BufftoonScraper(Scraper[int]):
     IS_CONNECTION_STABLE = True
     URL_REGEX = re.compile(r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "png"
+    PLATFORM = "bufftoon"
 
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)

@@ -39,6 +39,7 @@ class LezhinComicsScraper(Scraper[str]):
     IS_CONNECTION_STABLE = True
     URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
+    PLATFORM = "lezhin_comics"
 
     def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
         """

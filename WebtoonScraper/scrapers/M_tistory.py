@@ -23,6 +23,7 @@ class TistoryScraper(Scraper[tuple[str, str]]):
     TEST_WEBTOON_ID = TistoryWebtoonId("doldistudio", "진돌만화")
     # 티스토리는 커스텀 URL을 쓰는 경우도 많기에 이 regex에 걸리지 않을 수도 있음.
     URL_REGEX = re.compile(r"(?:https?:\/\/)?(?P<blog_id>.*?)[.]tistory[.]com\/category\/(?P<category>[^?]*)")
+    PLATFORM = "tistory"
 
     def get_webtoon_directory_name(self) -> str:
         # category_no는 거의 대부분 title과 같기 때문에 사용하지 않음.

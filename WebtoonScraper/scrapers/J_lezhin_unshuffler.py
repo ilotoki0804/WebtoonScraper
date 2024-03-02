@@ -106,6 +106,7 @@ def unshuffle_webtoon_directory_to_directory(
 def search_episode_int_ids_exclude_if_from_directory(
     source_webtoon_directory: Path,
 ) -> tuple[list[int], Path | None, Path | None] | None:
+    # sourcery skip: extract-method
     for episode_int_ids_or_not in os.listdir(source_webtoon_directory):
         if episode_int_ids_or_not.endswith("_ids.txt"):
             text_file_name = episode_int_ids_or_not

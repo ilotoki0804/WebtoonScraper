@@ -23,6 +23,7 @@ class WebtoonsDotcomScraper(Scraper[int]):
         r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:.*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
     )
     base_url: str
+    PLATFORM = "webtoons_dotcom"
 
     def __init__(self, titleid) -> None:
         super().__init__(titleid)

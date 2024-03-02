@@ -34,6 +34,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         r"\?(?:.*&)*seriesNo=(?P<series_no>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
+    PLATFORM = "naver_post"
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)

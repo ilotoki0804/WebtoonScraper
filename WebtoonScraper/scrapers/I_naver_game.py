@@ -19,6 +19,7 @@ class NaverGameScraper(Scraper[int]):
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?"
     )
+    PLATFORM = "naver_game"
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
