@@ -259,7 +259,7 @@ class Scraper(Generic[WebtoonId]):
             with self._send_context_callback_message(
                 "merge_webtoon",
                 merge_number=merge_number,
-                webtoon_directory=webtoon_directory
+                webtoon_directory=webtoon_directory,
             ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
@@ -489,7 +489,7 @@ class Scraper(Generic[WebtoonId]):
                         index=i,
                         episode_no=episode_no,
                         episodes=episodes,
-                        is_download_sucessful=is_download_sucessful
+                        is_download_sucessful=is_download_sucessful,
                     )
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:

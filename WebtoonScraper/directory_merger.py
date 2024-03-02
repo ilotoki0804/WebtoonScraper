@@ -1,4 +1,5 @@
 """This module provides FolderMerger class."""
+
 # 디렉토리 복구 함수 제작
 from __future__ import annotations
 

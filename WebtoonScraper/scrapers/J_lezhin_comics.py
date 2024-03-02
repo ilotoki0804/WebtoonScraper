@@ -80,7 +80,10 @@ class LezhinComicsScraper(Scraper[str]):
         await super().async_download_webtoon(*args, **kwargs)
         if self._unshuffled_webtoon_directory is None:
             return
-        shutil.copy(self._unshuffled_webtoon_directory / "information.json", self._webtoon_directory / "information.json")
+        shutil.copy(
+            self._unshuffled_webtoon_directory / "information.json",
+            self._webtoon_directory / "information.json"
+        )
 
     def fetch_all(self, reload: bool = False) -> None:
         super().fetch_all(reload)
@@ -259,7 +262,9 @@ class LezhinComicsScraper(Scraper[str]):
             episode_int_ids=self.episode_int_ids,
             information_chars=self.information_chars,
             free_episodes=self.free_episodes,
-            shuffled_webtoon_directory_name=None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name,
+            shuffled_webtoon_directory_name=(
+                None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name
+            ),
         )
         return result
 

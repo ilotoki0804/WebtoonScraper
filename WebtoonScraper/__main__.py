@@ -113,7 +113,7 @@ download_subparser.add_argument(
     type=str_to_webtoon_id,
     metavar="webtoon_id",
     help="Webtoon ID. If you want to download Naver Post, you should follow this format: "
-    '"seriesNo,memberNo", for example: "614921,19803452". '
+    '"seriesNo,memberNo", for example: "614921,19803452". ',
     # 'Check docs to detailed way to do.'
 )
 download_subparser.add_argument(
