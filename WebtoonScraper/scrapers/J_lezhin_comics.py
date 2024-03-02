@@ -134,8 +134,8 @@ class LezhinComicsScraper(Scraper[str]):
         assert "src" not in webtoon_raw_data.attrs, f"Invalid {self.webtoon_id=}."
 
         try:
-            product_start = re.search(r"__LZ_PRODUCT__ *= *{\n *productType: *'comic',\n *product: *", webtoon_raw_data.text).end()  # type: ignore
-            product_end, departure_start = re.search(",\n *departure: *'',\n *all: *", webtoon_raw_data.text).span()  # type: ignore
+            product_start = re.search(r"__LZ_PRODUCT__ *= *{\n? *productType: *'comic',\n? *product: *", webtoon_raw_data.text).end()  # type: ignore
+            product_end, departure_start = re.search(",\n? *departure: *'',\n? *all: *", webtoon_raw_data.text).span()  # type: ignore
             # departure_end = re.search(",\n *prefree", webtoon_raw_data.text).start()  # type: ignore
 
             product = json.loads(webtoon_raw_data.text[product_start:product_end])
@@ -149,20 +149,20 @@ class LezhinComicsScraper(Scraper[str]):
         title = product["display"]["title"]
         # webtoon_id_str = product["alias"]  # webtoon_id가 바로 이것이라 필요없음.
         webtoon_int_id = product["id"]
-        # is_adult = product["isAdult"]
+        is_adult = product["isAdult"]
         if "metadata" in product:
             metadata = product["metadata"]
             is_shuffled = metadata["imageShuffle"] if "imageShuffle" in metadata else False
         else:
             is_shuffled = False
 
-        # departure는 product['episodes']와 동일하기에 product['episodes']를 사용해도 무관하다.
         self._get_episode_informations_from_json_data(product["episodes"])
 
         self.webtoon_thumbnail_url = thumbnail_url
         self.title = title
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id
+        self.is_adult: bool = is_adult
 
     @reload_manager
     def fetch_user_informations(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
@@ -265,6 +265,7 @@ class LezhinComicsScraper(Scraper[str]):
             shuffled_webtoon_directory_name=(
                 None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name
             ),
+            is_adult=self.is_adult,
         )
         return result
 
@@ -301,11 +302,9 @@ class LezhinComicsScraper(Scraper[str]):
         display_names: list[str] = []
         unusable_episodes: list[bool] = []
         free_episodes: list[bool] = []
-        # for episode in reversed(departure):
         for episode in reversed(episode_informations_raw):
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
-            # bool(episode["coin"])도 `"freedAt" in episode` 동일한 역할을 할 것으로 기대된다.
             is_episode_unusable = is_episode_expired or is_episode_not_for_sale
             is_episode_free = "freedAt" in episode
 
