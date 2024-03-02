@@ -1,5 +1,7 @@
 """Unshuffles Lezhin Comics Webtoon."""
+
 from __future__ import annotations
+import json
 
 import multiprocessing
 import os
@@ -95,14 +97,15 @@ def unshuffle_webtoon_directory_to_directory(
                 id_text_file_target_path,
                 id_text_file_source_path,
             ) = ids_file_search_result
-            os.rename(id_text_file_target_path, id_text_file_source_path)
+            if id_text_file_target_path is not None and id_text_file_source_path is not None:
+                os.rename(id_text_file_target_path, id_text_file_source_path)
 
     logger.info("Unshuffling ended successfully.")
 
 
 def search_episode_int_ids_exclude_if_from_directory(
     source_webtoon_directory: Path,
-) -> tuple[list[int], Path, Path] | None:
+) -> tuple[list[int], Path | None, Path | None] | None:
     for episode_int_ids_or_not in os.listdir(source_webtoon_directory):
         if episode_int_ids_or_not.endswith("_ids.txt"):
             text_file_name = episode_int_ids_or_not
@@ -115,6 +118,10 @@ def search_episode_int_ids_exclude_if_from_directory(
             os.rename(id_text_file_source_path, id_text_file_target_path)
 
             return episode_int_ids, id_text_file_target_path, id_text_file_source_path
+
+        if episode_int_ids_or_not.endswith("information.json"):
+            informations = json.loads((source_webtoon_directory / "information.json").read_text("utf-8"))
+            return informations["episode_int_ids"], None, None
 
     return None
 
