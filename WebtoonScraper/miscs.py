@@ -5,17 +5,13 @@ from typing import Any, Callable, Generic, Iterable, TypeAlias, TypeVar
 # import coloredlogs
 
 
-__title__ = "WebtoonScraper"
+__github_user_name__ = __title__ = "WebtoonScraper"
+__github_project_name__ = __author__ = "ilotoki0804"
 __description__ = "Scraping webtoons with ease."
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version_info__ = (3, 1, 4)
 __version__ = str.join(".", map(str, __version_info__))
-__author__ = "ilotoki0804"
-__author_email__ = "ilotoki0804@gmail.com"
 __license__ = "Apache-2.0"
-
-__github_user_name__ = __author__
-__github_project_name__ = __title__
 
 WebtoonId: TypeAlias = (
     "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]"  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
