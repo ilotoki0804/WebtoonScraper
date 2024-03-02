@@ -76,6 +76,12 @@ class LezhinComicsScraper(Scraper[str]):
         self.get_paid_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
 
+    async def async_download_webtoon(self, *args, **kwargs):
+        await super().async_download_webtoon(*args, **kwargs)
+        if self._unshuffled_webtoon_directory is None:
+            return
+        shutil.copy(self._unshuffled_webtoon_directory / "information.json", self._webtoon_directory / "information.json")
+
     def fetch_all(self, reload: bool = False) -> None:
         super().fetch_all(reload)
         self.fetch_user_informations(reload=reload)
@@ -245,6 +251,18 @@ class LezhinComicsScraper(Scraper[str]):
             return None
         return title.text if title else None
 
+    def get_informations(self, *args, **kwargs):
+        result = super().get_informations(*args, **kwargs)
+        result.update(
+            is_shuffled=self.is_shuffled,
+            webtoon_int_id=self.webtoon_int_id,
+            episode_int_ids=self.episode_int_ids,
+            information_chars=self.information_chars,
+            free_episodes=self.free_episodes,
+            shuffled_webtoon_directory_name=None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name,
+        )
+        return result
+
     # PROPERTIES
 
     @property
@@ -339,11 +357,17 @@ class LezhinComicsScraper(Scraper[str]):
 
     def _set_directory_to_merge(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
+        self._unshuffled_webtoon_directory: Path | None
+
         if not self.is_shuffled or self.do_not_unshuffle:
             if self.is_shuffled:
                 logger.warning(
                     "This webtoon is shuffled, but because self.do_not_unshuffle is set to True, webtoon won't be shuffled."
                 )
+
+            self._webtoon_directory = base_webtoon_directory
+            self._unshuffled_webtoon_directory = None
+
             return base_webtoon_directory
 
         target_webtoon_directory = unshuffle_typical_webtoon_directory_and_return_target_directory(
@@ -352,6 +376,10 @@ class LezhinComicsScraper(Scraper[str]):
         if self.delete_shuffled_file:
             shutil.rmtree(base_webtoon_directory)
             print("Shuffled webtoon directory is deleted.")
+
+        self._webtoon_directory = base_webtoon_directory
+        self._unshuffled_webtoon_directory = target_webtoon_directory
+
         return target_webtoon_directory
 
     def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
