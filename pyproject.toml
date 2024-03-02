@@ -43,6 +43,7 @@ ipykernel = "^6.28.0"
 pyinstaller = "^6.3.0"
 nest-asyncio = "^1.5.8"
 coloredlogs = "^15.0.1"
+black = {extras = ["full"], version = "^24.2.0"}
 
 [tool.black]
 line-length = 120
