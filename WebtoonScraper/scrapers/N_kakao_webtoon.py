@@ -23,7 +23,7 @@ from hxsoup.exceptions import EmptyResultError
 
 from WebtoonScraper.miscs import EpisodeNoRange
 
-from ..exceptions import InvalidURLError, InvalidWebtoonIdError, UnsupportedWebtoonRatingError
+from ..exceptions import InvalidURLError, InvalidWebtoonIdError, UnsupportedRatingError
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 
@@ -33,7 +33,7 @@ class KakaoWebtoonScraper(Scraper[int]):
 
     BASE_URL = "https://webtoon.kakao.com"
     IS_CONNECTION_STABLE = True
-    TEST_WEBTOON_ID = 1180  # 국민
+    TEST_WEBTOON_ID = 2343  # 부기
     URL_REGEX = re.compile(r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<seo_id>[^\/]+)\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
@@ -120,7 +120,7 @@ class KakaoWebtoonScraper(Scraper[int]):
             is_adult = informations["adult"]
 
         if is_adult:
-            raise UnsupportedWebtoonRatingError("Adult webtoon is not supported.")
+            raise UnsupportedRatingError("Adult webtoon is not supported.")
 
         # `webtoon_seo_id`가 존재하지 않을 경우에만 webtoon_seo_id를 override함.
         # hasattr보다 더 리팩토링하기 좋아 try-except를 사용.
@@ -212,7 +212,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         file_directory.write_bytes(self._decrypt(image_raw, key, iv))
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id((InvalidWebtoonIdError, UnsupportedWebtoonRatingError))
+        return super().check_if_legitimate_webtoon_id((InvalidWebtoonIdError, UnsupportedRatingError))
 
     @classmethod
     def from_url(cls, url: str) -> Self:
