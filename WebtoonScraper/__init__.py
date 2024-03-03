@@ -13,7 +13,6 @@ import sys as _sys
 
 from .miscs import (
     __author__,
-    __author_email__,
     __description__,
     __github_project_name__,
     __github_user_name__,
