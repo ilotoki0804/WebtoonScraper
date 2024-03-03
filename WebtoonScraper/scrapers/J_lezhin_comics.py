@@ -16,7 +16,7 @@ from hxsoup.exceptions import EmptyResultError
 from ..exceptions import (
     InvalidAuthenticationError,
     InvalidWebtoonIdError,
-    UnsupportedWebtoonRatingError,
+    UnsupportedRatingError,
     UseFetchEpisode,
     WebtoonScraperError,
 )
@@ -116,14 +116,14 @@ class LezhinComicsScraper(Scraper[str]):
             title = res.soup_select_one("h2.comicInfo__title", no_empty_result=True).text
         except EmptyResultError:
             if self.cookie != "x-lz-locale=ko_KR":
-                raise UnsupportedWebtoonRatingError(
+                raise UnsupportedRatingError(
                     "Adult webtoon is not available since you don't set cookie. "
                     "See https://github.com/ilotoki0804/WebtoonScraper/blob/master"
                     "/docs/how_to_use.md#성인-웹툰-다운로드하기 "
                     "to check how to download"
                 )
             if "adult" in res.url.path:
-                raise UnsupportedWebtoonRatingError(
+                raise UnsupportedRatingError(
                     "The account is not adult authenticated. Thus can not download adult webtoons."
                 )
 

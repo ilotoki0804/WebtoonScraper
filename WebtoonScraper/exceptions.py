@@ -42,8 +42,8 @@ class InvalidURLError(WebtoonScraperError):
         return cls(f"{scraper.__qualname__} does not accept URL `{url}`.")
 
 
-class UnsupportedWebtoonRatingError(InvalidWebtoonIdError):
-    """The weboon is not supported to download due to rating."""
+class UnsupportedRatingError(InvalidWebtoonIdError):
+    """The weboon can't be downloaded due to rating."""
 
 
 class InvalidAuthenticationError(WebtoonScraperError):

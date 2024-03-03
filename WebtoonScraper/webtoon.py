@@ -10,7 +10,7 @@ import warnings
 
 import hxsoup
 
-from .exceptions import InvalidPlatformError, InvalidURLError, UnsupportedWebtoonRatingError
+from .exceptions import InvalidPlatformError, InvalidURLError, UnsupportedRatingError
 from .miscs import EpisodeNoRange, WebtoonId, logger
 from .scrapers import (
     BufftoonScraper,
@@ -234,6 +234,6 @@ def download_webtoons_getting_paid(
     for titleid in titleids:
         try:
             download_webtoon(titleid, NAVER_WEBTOON, merge_number=merge_number)
-        except UnsupportedWebtoonRatingError as e:
+        except UnsupportedRatingError as e:
             print(e)
         time.sleep(10)
