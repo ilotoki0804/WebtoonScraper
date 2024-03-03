@@ -1,6 +1,7 @@
 """Download Webtoons from Lezhin Comics."""
 
 from __future__ import annotations
+from contextlib import suppress
 
 import itertools
 import json
@@ -87,7 +88,8 @@ class LezhinComicsScraper(Scraper[str]):
 
     def fetch_all(self, reload: bool = False) -> None:
         super().fetch_all(reload)
-        self.fetch_user_informations(reload=reload)
+        with suppress(InvalidAuthenticationError):
+            self.fetch_user_informations(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
         directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
@@ -168,7 +170,10 @@ class LezhinComicsScraper(Scraper[str]):
     def fetch_user_informations(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
         user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
-        data = self.hxoptions.get(url).json()
+        try:
+            data = self.hxoptions.get(url).json()
+        except JSONDecodeError:
+            raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
         if "error" in data:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
         data: dict = data["data"]
@@ -187,7 +192,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[str] | None:
         # sourcery skip: simplify-fstring-formatting
-        is_purchased = self.purchased_episodes[episode_no]
+        is_purchased = self.purchased_episodes[episode_no] if hasattr(self, "purchased_episodes") else False
 
         if is_purchased and self.is_fhd_downloaded is not None:
             self.is_fhd_downloaded = True
