@@ -366,7 +366,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     def _set_directory_to_merge(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
-        from .J_lezhin_unshuffler import unshuffle_typical_webtoon_directory_and_return_target_directory
+        from .J_lezhin_unshuffler import unshuffle_typical_webtoon
 
         self._unshuffled_webtoon_directory: Path | None
 
@@ -381,7 +381,7 @@ class LezhinComicsScraper(Scraper[str]):
 
             return base_webtoon_directory
 
-        target_webtoon_directory = unshuffle_typical_webtoon_directory_and_return_target_directory(
+        target_webtoon_directory = unshuffle_typical_webtoon(
             base_webtoon_directory, self.episode_int_ids
         )
         if self.delete_shuffled_file:
