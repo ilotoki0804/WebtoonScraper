@@ -213,8 +213,8 @@ class Scraper(Generic[WebtoonId]):
             try:
                 e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             except AttributeError:
-                logger.warning("Use `async_download_webtoon` in Jupyter or asyncio environment.")
-            raise e
+                logger.error("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+            raise
 
     async def async_download_webtoon(
         self,
