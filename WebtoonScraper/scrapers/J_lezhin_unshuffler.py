@@ -35,10 +35,7 @@ def unshuffle_typical_webtoon(
     elif str_source_webtoon_directory.endswith(", shuffled, HD)"):
         str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
     else:
-        raise ValueError(
-            f"webtoon directory {source_webtoon_directory} is not typical. "
-            "Use `unshuffle`."
-        )
+        raise ValueError(f"webtoon directory {source_webtoon_directory} is not typical. Use `unshuffle`.")
     target_webtoon_directory = Path(str_target_webtoon_directory)
 
     unshuffle(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
@@ -108,6 +105,7 @@ def find_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
         "and episode_id_ints is not provided."
     )
 
+
 def unshuffle_episode_packed(args) -> str | None:
     """
     Equevalent to `lambda x: unshuffle_episode(*x)`,
@@ -141,7 +139,7 @@ def calculate_random_numbers(seed: int) -> list[int]:
     state = seed
     for _ in range(25):
         state ^= state >> 12
-        state ^= (state << 25) & 0xffffffffffffffff
+        state ^= (state << 25) & 0xFFFFFFFFFFFFFFFF
         state ^= state >> 27
         result = (state >> 32) % 25
         results.append(result)
@@ -174,8 +172,5 @@ def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_
         assambled_image = image
         for image_index, cropped_image in enumerate(cropped_images):
             index_y, index_x = divmod(image_index, 5)
-            assambled_image.paste(
-                cropped_image,
-                (index_x * image_x // 5, index_y * image_y // 5)
-            )
+            assambled_image.paste(cropped_image, (index_x * image_x // 5, index_y * image_y // 5))
         assambled_image.save(alt_image_path)

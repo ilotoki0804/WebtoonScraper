@@ -83,7 +83,7 @@ class LezhinComicsScraper(Scraper[str]):
             return
         shutil.copy(
             self._unshuffled_webtoon_directory / "information.json",
-            self._webtoon_directory / "information.json"
+            self._webtoon_directory / "information.json",
         )
 
     def fetch_all(self, reload: bool = False) -> None:
@@ -381,9 +381,7 @@ class LezhinComicsScraper(Scraper[str]):
 
             return base_webtoon_directory
 
-        target_webtoon_directory = unshuffle_typical_webtoon(
-            base_webtoon_directory, self.episode_int_ids
-        )
+        target_webtoon_directory = unshuffle_typical_webtoon(base_webtoon_directory, self.episode_int_ids)
         if self.delete_shuffled_file:
             shutil.rmtree(base_webtoon_directory)
             print("Shuffled webtoon directory is deleted.")
