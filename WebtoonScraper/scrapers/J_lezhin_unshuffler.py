@@ -18,7 +18,7 @@ from ..directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     check_container_state,
     check_filename_state,
-    move_thumbnail_only,
+    _iterdir_seperating_directories_and_files,
     webtoon_regexes,
 )
 from ..exceptions import DirectoryStateUnmatchedError
@@ -56,7 +56,10 @@ def unshuffle(
         episode_int_ids = find_episode_int_ids(source_webtoon_directory)
 
     target_webtoon_directory.mkdir(exist_ok=True)
-    move_thumbnail_only(source_webtoon_directory, target_webtoon_directory, copy=True)
+
+    directories, files = _iterdir_seperating_directories_and_files(source_webtoon_directory)
+    for file in files:
+        shutil.copy(file, target_webtoon_directory / file.name)
 
     if check_directory_state:
         directory_state = check_container_state(source_webtoon_directory)
