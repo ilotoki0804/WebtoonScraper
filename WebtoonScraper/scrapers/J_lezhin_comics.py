@@ -28,7 +28,12 @@ from .A_scraper import Scraper, reload_manager
 class LezhinComicsScraper(Scraper[str]):
     """Scrape webtoons from Lezhin Comics.
 
-    self.fhd_downloaded가 None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
+    ## 추가적인 속성(attribute) 설명
+        self.do_not_unshuffle (bool): True일 경우 unshuffle을 하지 **않습니다.** 기본값은 False입니다.
+        self.delete_shuffled_file (bool): unshuffling이 끝난 후 unshuffle된 파일을 제거합니다. 기본값은 False입니다.
+        self.get_paid_episode (bool): True일 경우 자신이 소장하고 있는 유료 회차도 다운로드받습니다.
+            True로 설정할 경우 다량의 경고 메시지가 나올 수 있으나 무시하시면 됩니다. 기본값은 False입니다.
+        self.is_fhd_downloaded (bool | None): None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
     """
 
     BASE_URL = "https://www.lezhin.com/ko/comic"
@@ -73,7 +78,6 @@ class LezhinComicsScraper(Scraper[str]):
 
         self.do_not_unshuffle: bool = False
         self.delete_shuffled_file: bool = False
-        self.download_episode_id_ints_if_shuffled: bool = True
         self.get_paid_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
 
