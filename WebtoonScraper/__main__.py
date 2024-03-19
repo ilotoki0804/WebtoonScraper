@@ -9,6 +9,7 @@ import sys
 from importlib.resources import files
 from pathlib import Path
 from typing import Literal
+import logging
 
 from rich.console import Console
 from rich.table import Table
@@ -102,7 +103,7 @@ parser.add_argument(
     action="version",
     version=f"WebtoonScraper {__version__} of Python {sys.version} from {str(files(WebtoonScraper))}",
 )
-parser.add_argument("--show-detailed-error", action="store_true", help="Show detailed error.")
+parser.add_argument("-v", "--verbose", action="store_true", help="Set logger level to INFO and show detailed error.")
 subparsers = parser.add_subparsers(title="Commands", help="Choose command you want.")
 
 # 'download' subparsers
@@ -294,6 +295,9 @@ def main(argv=None) -> Literal[0, 1]:
     if not hasattr(args, "subparser_name"):
         return main(argv=["--help"])
 
+    if args.verbose:
+        logger.setLevel(logging.INFO)
+
     try:
         if args.subparser_name == "download":
             parse_download(args)
@@ -302,8 +306,8 @@ def main(argv=None) -> Literal[0, 1]:
         else:
             raise NotImplementedError(f"Subparser {args.subparser_name} is not implemented.")
     except BaseException as e:
-        logger.error(f"{type(e)}: {e}")
-        if args.show_detailed_error:
+        logger.error(f"{type(e).__name__}: {e}")
+        if args.verbose:
             Console().print_exception()
         return 1
     else:
