@@ -55,7 +55,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         self.webtoon_thumbnail_url = image_url
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         series_no, member_no = self.webtoon_id
         subtitle_list: list[str] = []
         episode_id_list: list[int] = []

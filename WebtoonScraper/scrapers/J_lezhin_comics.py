@@ -93,7 +93,7 @@ class LezhinComicsScraper(Scraper[str]):
     def fetch_all(self, reload: bool = False) -> None:
         super().fetch_all(reload)
         with suppress(InvalidAuthenticationError):
-            self.fetch_user_informations(reload=reload)
+            self.fetch_user_information(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
         directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
@@ -112,7 +112,7 @@ class LezhinComicsScraper(Scraper[str]):
         raise UseFetchEpisode()
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         res = self.hxoptions.get(f"{self.BASE_URL}/{self.webtoon_id}")
         if res.status_code == 404:
@@ -162,7 +162,7 @@ class LezhinComicsScraper(Scraper[str]):
         else:
             is_shuffled = False
 
-        self._get_episode_informations_from_json_data(product["episodes"])
+        self._get_episode_information_from_json_data(product["episodes"])
 
         self.webtoon_thumbnail_url = thumbnail_url
         self.title = title
@@ -171,7 +171,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.is_adult: bool = is_adult
 
     @reload_manager
-    def fetch_user_informations(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
+    def fetch_user_information(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
         user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         try:
@@ -263,8 +263,8 @@ class LezhinComicsScraper(Scraper[str]):
             return None
         return title.text if title else None
 
-    def get_informations(self, *args, **kwargs):
-        result = super().get_informations(*args, **kwargs)
+    def get_information(self, *args, **kwargs):
+        result = super().get_information(*args, **kwargs)
         result.update(
             is_shuffled=self.is_shuffled,
             webtoon_int_id=self.webtoon_int_id,
@@ -297,9 +297,9 @@ class LezhinComicsScraper(Scraper[str]):
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
         return matched_url.group("webtoon_id")
 
-    def _get_episode_informations_from_json_data(
+    def _get_episode_information_from_json_data(
         self,
-        episode_informations_raw: list[dict],
+        episode_information_raw: list[dict],
         get_paid_episode: bool | None = None,
         get_unusable_episode: bool = False,
     ) -> None:
@@ -311,7 +311,7 @@ class LezhinComicsScraper(Scraper[str]):
         display_names: list[str] = []
         unusable_episodes: list[bool] = []
         free_episodes: list[bool] = []
-        for episode in reversed(episode_informations_raw):
+        for episode in reversed(episode_information_raw):
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
             is_episode_unusable = is_episode_expired or is_episode_not_for_sale

@@ -57,7 +57,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             raise InvalidPlatformError(f"Use {platform_name} Scraper to download {platform_name}.")
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         prev_articleList = []
         subtitles = []
         episode_ids = []
@@ -67,7 +67,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 res = self.hxoptions.get(url).json()
             except JSONDecodeError:
                 # fetch_webtoon_information은 지원하지 않는 rating일 때 오류를 낸다.
-                # 만약 fetch_webtoon_information보다 fetch_episode_informations가 먼저
+                # 만약 fetch_webtoon_information보다 fetch_episode_information가 먼저
                 # 실행되었을 경우 UnsupportedWebtoonRatingError를 미처 내지 못했을 수 있다.
                 # 그런 경우인지 확인한 후 만약 지원하지 않는 rating에 대한 오류가 아니었다면
                 # 다른 버그로 간주하고 다시 raise한다.

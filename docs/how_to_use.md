@@ -330,12 +330,12 @@ scraper.download_webtoon(merge_number=5)
 * `Scraper.webtoon_thumbnail_url`: 웹툰 썸네일 URL
 * `Scraper.title`: 제목
 
-`Scraper.fetch_episode_informations()`을 이용해 불러오는 정보들:
+`Scraper.fetch_episode_information()`을 이용해 불러오는 정보들:
 
 * `Scraper.episode_titles`: 각 에피소드의 제목
 * `Scraper.episode_ids`: 각 에피소드의 ID.
 
-이때 `Scraper.fetch_webtoon_information()`와 `Scraper.fetch_episode_informations()`를 구분하지 않고 다운로드하고 싶을 경우 `Scraper.fetch_all`을 사용할 수 있습니다.
+이때 `Scraper.fetch_webtoon_information()`와 `Scraper.fetch_episode_information()`를 구분하지 않고 다운로드하고 싶을 경우 `Scraper.fetch_all`을 사용할 수 있습니다.
 
 ```python
 from WebtoonScraper.scrapers import NaverWebtoonScraper
@@ -344,7 +344,7 @@ from WebtoonScraper.scrapers import NaverWebtoonScraper
 scraper = NaverWebtoonScraper(819217)
 scraper.fetch_all()
 
-# fetch_webtoon_information에서 가져온 정보와 fetch_episode_informations 모두를 사용할 수 있음.
+# fetch_webtoon_information에서 가져온 정보와 fetch_episode_information 모두를 사용할 수 있음.
 print(scraper.title)
 print(scraper.episode_titles)
 ```

@@ -62,7 +62,7 @@ class KakaopageScraper(Scraper[int]):
         self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         curser = "0"
         # episode_length: int = 0
         has_next_page: bool = True

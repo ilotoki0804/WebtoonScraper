@@ -51,10 +51,10 @@ class InvalidAuthenticationError(WebtoonScraperError):
 
 
 class UseFetchEpisode(WebtoonScraperError):
-    """`fetch_episode_informations` do all."""
+    """`fetch_episode_information` do all."""
 
     def __init__(self, message: str = ""):
-        super().__init__(message or "Use `fetch_episode_informations` for get webtoon information.")
+        super().__init__(message or "Use `fetch_episode_information` for get webtoon information.")
 
 
 class InvalidBlogIdError(InvalidWebtoonIdError):

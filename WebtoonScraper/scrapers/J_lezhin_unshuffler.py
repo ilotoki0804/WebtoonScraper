@@ -96,9 +96,9 @@ def find_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
     information_file = source_webtoon_directory / "information.json"
     if information_file.exists():
         with suppress(json.JSONDecodeError):
-            informations = json.loads(information_file.read_text("utf-8"))
+            information = json.loads(information_file.read_text("utf-8"))
         with suppress(KeyError):
-            return informations["episode_int_ids"]
+            return information["episode_int_ids"]
 
     raise ValueError(
         "There's no information.json(or lack of information about episode_id_ints on it) "

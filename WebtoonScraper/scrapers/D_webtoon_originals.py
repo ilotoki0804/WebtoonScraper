@@ -60,7 +60,7 @@ class WebtoonsDotcomScraper(Scraper[int]):
         self.webtoon_thumbnail_url = webtoon_thumbnail
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         # getting title_no
         url = f"{self.base_url}/list?title_no={self.webtoon_id}"
         title_no_str = (

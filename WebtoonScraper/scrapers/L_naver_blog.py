@@ -45,7 +45,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         raise UseFetchEpisode()
 
     @reload_manager
-    def fetch_episode_informations(self, limit: int = 1000, *, reload: bool = False):
+    def fetch_episode_information(self, limit: int = 1000, *, reload: bool = False):
         blog_id, category_no = self.webtoon_id
 
         url = f"{self.BASE_URL}/api/blogs/{blog_id}/post-list?categoryNo={category_no}&itemCount=24&page={{i}}"
@@ -60,7 +60,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
         if len(fetch_result["items"]) == limit:
             logger.warning("It seems to go beyond limit. automatically increase limit.")
-            return self.fetch_episode_informations(limit * 2)
+            return self.fetch_episode_information(limit * 2)
 
         self.title: str = fetch_result["categoryName"]
         self.webtoon_thumbnail_url: str = fetch_result["items"][0]["thumbnailUrl"] + "?type=ffn640_640"

@@ -56,7 +56,7 @@ class TistoryScraper(Scraper[tuple[str, str]]):
         self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         blog_id, category = self.webtoon_id
 
         episode_titles = []

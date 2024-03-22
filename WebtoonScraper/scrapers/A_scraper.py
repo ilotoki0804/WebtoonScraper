@@ -126,7 +126,7 @@ class Scraper(Generic[WebtoonId]):
         self.webtoon_id = webtoon_id
         self.base_directory = "webtoon"
         self.use_tqdm_while_download = True
-        self.does_store_informations = True
+        self.does_store_information = True
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
         self._end_downloading_when_error_occured = False
 
@@ -147,7 +147,7 @@ class Scraper(Generic[WebtoonId]):
 
     @reload_manager
     @abstractmethod
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         """웹툰의 에피소드에 대한 정보(에피소드 목록이나 ID 등)를 불러옵니다."""
         self.episode_titles: list[str]
         self.episode_ids: list[int]
@@ -183,7 +183,7 @@ class Scraper(Generic[WebtoonId]):
         """
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
-        self.fetch_episode_informations(reload=reload)
+        self.fetch_episode_information(reload=reload)
 
     def download_webtoon(
         self,
@@ -267,9 +267,9 @@ class Scraper(Generic[WebtoonId]):
         if add_viewer:
             add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
 
-        if self.does_store_informations:
-            informations = self.get_informations()
-            informations.update(
+        if self.does_store_information:
+            information = self.get_information()
+            information.update(
                 thumbnail_name=thumbnail_name,
                 information_name="information.json",
                 original_webtoon_directory_name=webtoon_directory_name,
@@ -277,12 +277,12 @@ class Scraper(Generic[WebtoonId]):
                 contents=["thumbnail", "information"],
             )
             if add_viewer:
-                informations.update(
+                information.update(
                     webtoon_viewer_name="webtoon.html",
                 )
-                informations["contents"].append("webtoon_viewer")
+                information["contents"].append("webtoon_viewer")
             (webtoon_directory / "information.json").write_text(
-                json.dumps(informations, ensure_ascii=False, indent=2), encoding="utf-8"
+                json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8"
             )
 
     def list_episodes(self) -> None:
@@ -340,7 +340,7 @@ class Scraper(Generic[WebtoonId]):
                 else:
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
-    def get_informations(self, fetch: bool = False):
+    def get_information(self, fetch: bool = False):
         if fetch:
             self.fetch_all()
         return {

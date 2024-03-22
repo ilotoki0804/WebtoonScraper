@@ -71,7 +71,7 @@ class KakaoWebtoonScraper(Scraper[int]):
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        self.fetch_episode_informations()
+        self.fetch_episode_information()
 
         res = self.hxoptions.get(f"https://webtoon.kakao.com/content/{self.webtoon_seo_id}/{self.webtoon_id}")
 
@@ -87,7 +87,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         self.webtoon_thumbnail_url = thumbnail_url
 
     @reload_manager
-    def fetch_episode_informations(self, *, reload: bool = False) -> None:
+    def fetch_episode_information(self, *, reload: bool = False) -> None:
         offset = 0
         limit = 30
         is_last: bool = False
@@ -111,13 +111,13 @@ class KakaoWebtoonScraper(Scraper[int]):
         episode_titles: list[str] = []
         readablities: list[bool] = []
         is_adult: bool = False
-        for informations in reversed(webtoon_episodes_data):
-            episode_ids.append(informations["id"])
-            seo_ids.append(informations["seoId"])
-            numbers.append(informations["no"])
-            episode_titles.append(informations["title"])
-            readablities.append(informations["readable"])
-            is_adult = informations["adult"]
+        for information in reversed(webtoon_episodes_data):
+            episode_ids.append(information["id"])
+            seo_ids.append(information["seoId"])
+            numbers.append(information["no"])
+            episode_titles.append(information["title"])
+            readablities.append(information["readable"])
+            is_adult = information["adult"]
 
         if is_adult:
             raise UnsupportedRatingError("Adult webtoon is not supported.")
