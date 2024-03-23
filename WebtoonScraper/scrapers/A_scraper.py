@@ -81,11 +81,11 @@ def reload_manager(f):
 class ExistingEpisodePolicy(Enum):
     """다운로드받을 에피소드와 이름이 같은 폴더가 존재할 때의 대처법입니다."""
 
-    HARD_CHECK = "hard_check"
-    """해당 에피소드의 이미지 개수가 일치하지 않을 때 다시 다운로드받습니다(기본값)."""
-
     SKIP = "skip"
-    """폴더가 이미 존재한다면 스킵합니다."""
+    """폴더가 이미 존재한다면 스킵합니다(기본값)."""
+
+    HARD_CHECK = "hard_check"
+    """해당 에피소드의 이미지 개수가 일치하지 않을 때 다시 다운로드받습니다."""
 
     INTERRUPT = "interrupt"
     """폴처가 이미 존재한다면 예외를 발생시킵니다."""
