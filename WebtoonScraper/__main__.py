@@ -110,12 +110,11 @@ subparsers = parser.add_subparsers(title="Commands", help="Choose command you wa
 download_subparser = subparsers.add_parser("download", help="Download webtoons.")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
-    "webtoon_id",
+    "webtoon_ids",
     type=str_to_webtoon_id,
-    metavar="webtoon_id",
-    help="Webtoon ID. If you want to download Naver Post, you should follow this format: "
-    '"seriesNo,memberNo", for example: "614921,19803452". ',
-    # 'Check docs to detailed way to do.'
+    metavar="webtoon_ids",
+    help="Webtoon ID or URL.",
+    nargs="+"
 )
 download_subparser.add_argument(
     "-p",
@@ -196,25 +195,26 @@ merge_subparser.add_argument(
 def parse_download(args: argparse.Namespace) -> None:
     args.platform = webtoon.SHORT_NAMES.get(args.platform, args.platform)
 
-    # 만약 다른 타입의 튜플인데 NAVER_BLOG라면 자동으로 (str, int)로 변환한다.
-    if args.platform == webtoon.NAVER_BLOG and isinstance(args.webtoon_id[0], int):
-        args.webtoon_id = str(args.webtoon_id[0]), int(args.webtoon_id[1])
+    for webtoon_id in args.webtoon_ids:
+        # 만약 다른 타입의 튜플인데 NAVER_BLOG라면 자동으로 (str, int)로 변환한다.
+        if args.platform == webtoon.NAVER_BLOG and isinstance(webtoon_id[0], int):
+            webtoon_id = str(webtoon_id[0]), int(webtoon_id[1])
 
-    # 만약 다른 타입의 튜플인데 TISTORY라면 자동으로 (str, str)로 변환한다.
-    if args.platform == webtoon.TISTORY and isinstance(args.webtoon_id[0], int):
-        args.webtoon_id = str(args.webtoon_id[0]), str(args.webtoon_id[1])
+        # 만약 다른 타입의 튜플인데 TISTORY라면 자동으로 (str, str)로 변환한다.
+        if args.platform == webtoon.TISTORY and isinstance(webtoon_id[0], int):
+            webtoon_id = str(webtoon_id[0]), str(webtoon_id[1])
 
-    webtoon.download_webtoon(
-        args.webtoon_id,
-        args.platform,
-        args.merge_number,
-        cookie=args.cookie,
-        bearer=args.bearer,
-        episode_no_range=args.range,
-        download_directory=args.download_directory,
-        list_episodes=args.list_episodes,
-        get_paid_episode=args.get_paid_episode,
-    )
+        webtoon.download_webtoon(
+            webtoon_id,
+            args.platform,
+            args.merge_number,
+            cookie=args.cookie,
+            bearer=args.bearer,
+            episode_no_range=args.range,
+            download_directory=args.download_directory,
+            list_episodes=args.list_episodes,
+            get_paid_episode=args.get_paid_episode,
+        )
 
 
 CONTAINER_STATE_PER_ARGS: dict[str, ContainerStates] = {
