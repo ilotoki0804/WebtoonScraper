@@ -47,12 +47,12 @@ HTML_TEMPLATE = """\
             border-radius: 1rem;
         }
         @media (orientation: portrait) {
-            div#image-container img, #big-button, .comment-box {
+            div#image-container img, #big-button, .comment-box, .author-comment-box {
                 width: 100%;
             }
         }
         @media (orientation: landscape) {
-            div#image-container img, #big-button, .comment-box {
+            div#image-container img, #big-button, .comment-box, .author-comment-box {
                 width: 40rem;
             }
         }
@@ -89,6 +89,10 @@ HTML_TEMPLATE = """\
         .show-reply {
             display: inline;
         }
+
+        .author-comment-box {
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -119,6 +123,8 @@ HTML_TEMPLATE = """\
         const createdTime = {created_time};
         const comments = {comments};
         const commentCounts = {comment_counts};
+        const authorComments = {author_comments};
+        const authorName = {author_name};
         const mergeNumber = {merge_number};
 
         const localStorageName = `viewedEpisode(${webtoonTitle})`;
@@ -168,7 +174,7 @@ HTML_TEMPLATE = """\
             });
 
             titleBars.forEach((titleBar) => {
-                titleBar.innerHTML = `${webtoonTitle} | ${directoryName} | downloaded via WebtoonScraper`
+                titleBar.innerText = `${webtoonTitle} by ${authorName} | ${directoryName} | downloaded via WebtoonScraper`
             });
 
             while (imageContainer.lastChild) {
@@ -252,7 +258,7 @@ HTML_TEMPLATE = """\
 
             function createCommentBox(information) {
                 comment = document.createElement("div");
-                comment.classList.add("comment-box")
+                comment.classList.add("comment-box");
                 comment.innerHTML = `
                     <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${information.created}</small></div>
                     <div class="comment-body">${escapeHTML(information.comment)}</div>
@@ -265,9 +271,21 @@ HTML_TEMPLATE = """\
                 `.replace(/  +/g, '');
                 return comment;
             }
+
             while (commentsBox.lastChild) {
                 commentsBox.removeChild(commentsBox.lastChild);
             }
+
+            let authorComment = authorComments[episodeNo];
+            if (authorComment) {
+                let authorCommentDiv = document.createElement("div");
+                authorCommentDiv.classList.add("author-comment-box");
+                authorCommentDiv.innerHTML = `<strong>${authorName}</strong>: ${authorComment}`;
+                commentsBox.appendChild(authorCommentDiv);
+            } else {
+                console.log("There's no author comment to present.");
+            }
+
             episode_comments.forEach((comment) => commentsBox.appendChild(createCommentBox(comment)));
             // commentsBox.appendChild(createCommentBox({
             //     "comments_id": "1234",
@@ -383,6 +401,8 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
             thumbnail_name = information["thumbnail_name"]
             comments = information.get("comments", {})
             comment_counts = information.get("comment_counts", {})
+            author_comments = information.get("author_comments", {})
+            author_name = information.get("author_name", "author")
             merge_number = information["merge_number"]
             break
     else:
@@ -407,6 +427,8 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
         .replace(r"{comments}", json.dumps(comments, ensure_ascii=False))
         .replace(r"{comment_counts}", json.dumps(comment_counts))
+        .replace(r"{author_comments}", json.dumps(author_comments))
+        .replace(r"{author_name}", json.dumps(author_name))
         .replace(r"{merge_number}", "null" if merge_number is None else str(merge_number))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
