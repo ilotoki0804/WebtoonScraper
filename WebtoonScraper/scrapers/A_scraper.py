@@ -148,6 +148,7 @@ class Scraper(Generic[WebtoonId]):
         self.comments_option: CommentsDownloadOption | None = None
         self.comments = {}
         self.comment_counts = {}
+        self.author_comments = {}
 
     # PUBLIC METHODS
 

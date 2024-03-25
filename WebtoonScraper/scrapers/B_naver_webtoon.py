@@ -98,7 +98,8 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         # sourcery skip: de-morgan
         episode_id = self.episode_ids[episode_no]
         url = f"{self.BASE_URL}/detail?titleId={self.webtoon_id}&no={episode_id}"
-        episode_image_urls_raw = self.hxoptions.get(url).soup_select(self.EPISODE_IMAGES_URL_SELECTOR)
+        response = self.hxoptions.get(url)
+        episode_image_urls_raw = response.soup_select(self.EPISODE_IMAGES_URL_SELECTOR)
         episode_image_urls = [
             element["src"]
             for element in episode_image_urls_raw
@@ -107,6 +108,12 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         if TYPE_CHECKING:
             episode_image_urls = [url for url in episode_image_urls if isinstance(url, str)]
+
+        information_script = response.soup_select_one("body > script", True).text
+        search_result = re.search(r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,', information_script)
+        if search_result is None:
+            raise ValueError
+        self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
 
         return episode_image_urls
 
