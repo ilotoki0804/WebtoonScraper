@@ -576,7 +576,7 @@ class Scraper(Generic[WebtoonId]):
                         return True
                     case ExistingEpisodePolicy.INTERRUPT:
                         raise FileExistsError(
-                            f"Directory at {episode_directory} already exists. " "Please delete the directory."
+                            f"Directory at {episode_directory} already exists. Please delete the directory."
                         )
                     case ExistingEpisodePolicy.REDOWNLOAD:
                         check_integrity = False
@@ -588,7 +588,7 @@ class Scraper(Generic[WebtoonId]):
 
             episode_images_url = self.get_episode_image_urls(episode_no)
 
-            if episode_images_url is None:
+            if not episode_images_url:
                 logger.warning(
                     f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
                 )
