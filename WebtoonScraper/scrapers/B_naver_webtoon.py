@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from itertools import count
+import json
+import time
+from datetime import datetime
 from json.decoder import JSONDecodeError
 import re
 from typing import TYPE_CHECKING, ClassVar, Literal
@@ -10,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 import hxsoup
 
 from ..exceptions import InvalidPlatformError, InvalidURLError, UnsupportedRatingError
-from .A_scraper import Scraper, reload_manager
+from .A_scraper import Scraper, reload_manager, CommentsDownloadOption
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
@@ -24,6 +27,11 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     IS_CONNECTION_STABLE = True
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
     PLATFORM = "naver_webtoon"
+    COMMENTS_DOWNLOAD_SUPPORTED = True
+
+    def __init__(self, webtoon_id: int) -> None:
+        super().__init__(webtoon_id)
+        self.headers.update(Referer='https://comic.naver.com/webtoon/')
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
@@ -102,9 +110,44 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         return episode_image_urls
 
+    def get_episode_comments(self, episode_no) -> None:
+        if self.comments_option != CommentsDownloadOption():
+            raise ValueError("Only default option is supported.")
+
+        episode_id = self.episode_ids[episode_no]
+
+        formatted_time = datetime.now().strftime("%Y%m%d%H%M%S")
+        url = (
+            "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json"
+            f"?ticket=comic&templateId=webtoon&pool=cbox3&_cv={formatted_time}&lang=ko&country=KR"
+            f"&objectId={self.webtoon_id}_{episode_id}&categoryId=&pageSize=30&indexSize=10&groupId={self.webtoon_id}"
+            "&listType=OBJECT&pageType=more&page=1&currentPage=1&refresh=true&sort=BEST"
+        )
+
+        res = self.hxoptions.get(url)
+        data = json.loads(res.text[10:-2])["result"]
+        comments = data["commentList"]
+        comments_total_counts = data["count"]["total"]
+        self.comments[episode_no] = [self._extract_comment_infomation(comment) for comment in comments]
+        self.comment_counts[episode_no] = comments_total_counts
+
     def check_if_legitimate_webtoon_id(self) -> str | None:
         return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
 
+    @staticmethod
+    def _extract_comment_infomation(comment_data: dict):
+        return {
+            "comments_id": comment_data["commentNo"],
+            # "reply_to": comment_data["parentCommentNo"],
+            "reply_count": int(comment_data["replyCount"]),
+            "comment": comment_data["contents"],
+            "username": comment_data["userName"],  # or "shareCommentUserName"
+            "likes": int(comment_data["sympathyCount"]),
+            "dislikes": int(comment_data["antipathyCount"]),
+            "last_modified": comment_data["modTime"],
+            "created": comment_data["regTime"],
+            "replies": [],
+        }
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     """네이버 정식 연재만 다운로드받을 수 있는 스크래퍼입니다.

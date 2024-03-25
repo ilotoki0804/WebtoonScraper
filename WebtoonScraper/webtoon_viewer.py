@@ -20,9 +20,15 @@ HTML_TEMPLATE = """\
     <title>{webtoon_title}</title>
     <link rel="icon" href={webtoon_thumbnail_name_repr} type="image/x-icon">
     <style>
-        div.episode-selector {
+        body {
+            background-color: rgb(249, 249, 249);
+        }
+        .episode-selector {
             text-align: center;
-            padding-bottom: 1em;
+            padding-bottom: 1rem;
+        }
+        .margin {
+            margin-top: 1rem;
         }
         div#image-container {
             display: flex;
@@ -31,34 +37,79 @@ HTML_TEMPLATE = """\
             align-items: center;
             width: 100%;
         }
+        #big-button {
+            height: 12rem;
+            font-size: 3rem;
+            background-color: rgb(200, 239, 137);
+            border: 3rem darkblue darkblue;
+            border-color: rgb(200, 239, 137);
+            margin-bottom: 1rem;
+            border-radius: 1rem;
+        }
         @media (orientation: portrait) {
-            div#image-container img {
+            div#image-container img, #big-button, .comment-box {
                 width: 100%;
             }
         }
         @media (orientation: landscape) {
-            div#image-container img {
-                width: 70%;
+            div#image-container img, #big-button, .comment-box {
+                width: 40rem;
             }
+        }
+
+        #comments {
+            text-align: justify;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            align-items: center;
+            margin-bottom: 3rem;
+            display: none;
+        }
+
+        .comment-box {
+            border: solid #000;
+            background-color: white;
+
+            padding: 1rem;
+            box-sizing: border-box;
+            margin-top: 1rem;
+
+            text-align: justify;
+        }
+
+        .comment-box > div + div {
+            margin-top: 1rem;
+        }
+
+        .username > small, .buttons > small {
+            float: right;
+        }
+
+        .show-reply {
+            display: inline;
         }
     </style>
 </head>
 <body>
-    <div class="episode-selector">
+    <header class="episode-selector">
+        <div id="platform-warning"></div>
         <span class="title-bar"></span>
         <br>
         <button class="prev-episode">이전 에피소드</button>
         <select class="episode-selector-dropdown"></select>
         <button id="delete-history">조회 기록 지우기</button>
         <button class="next-episode">다음 에피소드</button>
-    </div>
+    </header>
     <div id="image-container"></div>
-    <div class="episode-selector">
-        <button class="next-episode" style="width: 70%; height: 200px; font-size: 3em; background-color: aliceblue;" type="button">다음 에피소드</button>
+    <div class="episode-selector margin">
+        <button class="next-episode" id="big-button" type="button">다음 에피소드</button>
         <br>
         <button class="prev-episode">이전 에피소드</button>
         <select class="episode-selector-dropdown"></select>
+        <button id="show-comments" type="button">Show comments</button>
         <br>
+        <div id="comments"></div>
         <span class="title-bar"></span>
     </div>
     <script>
@@ -66,56 +117,47 @@ HTML_TEMPLATE = """\
         const episodeDirectories = {episode_directories};
         const webtoonImagesOfDirectories = {images_of_episode_directories};
         const createdTime = {created_time};
+        const comments = {comments};
+        const commentCounts = {comment_counts};
+
         const localStorageName = `viewedEpisode(${webtoonTitle})`;
         const prevEpisodeButtons = Array.from(document.getElementsByClassName("prev-episode"));
         const nextEpisodeButtons = Array.from(document.getElementsByClassName("next-episode"));
         const titleBars = Array.from(document.getElementsByClassName("title-bar"));
         const episodeSelectors = Array.from(document.getElementsByClassName("episode-selector-dropdown"));
         const viewedEpisodesLocalStorageName = `viewedEpisodes@${webtoonTitle}(${createdTime})`;
-        const lastViewedEpisodeLocalStorageName = `lastViewedEpisode@${webtoonTitle}(${createdTime})`;
-        const episodeNoRaw = window.localStorage.getItem(lastViewedEpisodeLocalStorageName);
         const resetButton = document.getElementById("delete-history");
-        let episodeNo = 0;
-        if (episodeNoRaw !== null) {
-            episodeNo = parseInt(episodeNoRaw);
-        }
+        const commentsBox = document.getElementById("comments");
+        const showComments = document.getElementById("show-comments");
+        let commentsShowed = false;
+        let episodeNo = getEpisodeNo();
         let viewedEpisodes = [];
 
-        loadViewedEpisodes();
-        function loadViewedEpisodes() {
-            let viewedEpisodesRaw = window.localStorage.getItem(viewedEpisodesLocalStorageName);
-            if (viewedEpisodesRaw == null) {
-                viewedEpisodes = [];
-                episodeDirectories.forEach(() => viewedEpisodes.push(false));
-                window.localStorage.setItem(viewedEpisodesLocalStorageName, JSON.stringify(viewedEpisodes));
+        function getEpisodeNo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let episodeNo = urlParams.get("episode_no");
+            if (episodeNo == null) {
+                applyEpisodeNoAndRender(0);
+                return 0;
             } else {
-                viewedEpisodes = Array.from(JSON.parse(viewedEpisodesRaw));
+                return episodeNo - 1;
             }
         }
 
-        (function renderDropdown() {
-            episodeSelectors.forEach((selector) => {
-                episodeDirectories.forEach((episodeDirectory, index) => {
-                    const option = document.createElement("option");
-                    option.value = index;
-                    option.innerHTML = episodeDirectory;
-                    option.selected = index == episodeNo;
-                    selector.appendChild(option);
-                });
-                selector.addEventListener("input", function(event) {
-                    selector.childNodes.forEach((options, index) => {
-                        if (options.selected) {
-                            drawImage(index);
-                        }
-                    })
-                });
-            });
-        })();
+        function applyEpisodeNoAndRender(value) {
+            if (value < 0 || value >= episodeDirectories.length) {
+                console.error("Cannot apply episodeNo; incorrect value: " + value)
+                return;
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set("episode_no", value + 1);
+            window.history.pushState(null, null, `?${urlParams.toString()}`);
+            episodeNo = value;
+            refresh();
+        }
 
-        drawImage(episodeNo);
-        function drawImage(index) {
-            episodeNo = index;
-            window.localStorage.setItem(lastViewedEpisodeLocalStorageName, episodeNo);
+        function refresh() {
+            let index = episodeNo;
             const imageContainer = document.getElementById('image-container');
 
             const directoryName = episodeDirectories[index];
@@ -125,17 +167,24 @@ HTML_TEMPLATE = """\
             });
 
             titleBars.forEach((titleBar) => {
-                titleBar.innerHTML = `${webtoonTitle} | ${directoryName} | downloaded by WebtoonScraper`
+                titleBar.innerHTML = `${webtoonTitle} | ${directoryName} | downloaded via WebtoonScraper`
             });
 
-            while (imageContainer.firstChild) {
-                imageContainer.removeChild(imageContainer.firstChild);
+            while (imageContainer.lastChild) {
+                imageContainer.removeChild(imageContainer.lastChild);
             }
 
             webtoonImages.forEach((webtoonImageSrc, index) => {
                 const image = document.createElement("img");
                 image.src = webtoonImageSrc;
                 image.alt = imagesName[index];
+                image.onerror = () => {
+                    if (/Android|iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                        document.getElementById("platform-warning").innerText = "This may not work well in mobile platforms."
+                    } else {
+                        document.getElementById("platform-warning").innerText = "Check whether your files are intect or not."
+                    }
+                };
                 imageContainer.appendChild(image);
             });
 
@@ -145,69 +194,154 @@ HTML_TEMPLATE = """\
             episodeSelectors.forEach((selector) => {
                 selector.childNodes.forEach((option, optionIndex) => {
                     if (viewedEpisodes[optionIndex]) {
-                        option.innerHTML = "☑ " + episodeDirectories[optionIndex];
+                        option.innerText = "☑ " + episodeDirectories[optionIndex];
                     } else {
-                        option.innerHTML = "☐ " + episodeDirectories[optionIndex];
+                        option.innerText = "☐ " + episodeDirectories[optionIndex];
                     }
                     option.selected = optionIndex == episodeNo;
                 })
             });
 
             window.scrollTo(0, 0);
-            updateButton();
+            updateButtons();
+            updateComments();
         }
 
-
-        function updateButton() {
+        function updateButtons() {
             if (episodeNo == 0) {
                 prevEpisodeButtons.forEach((button) => {
-                    button.innerHTML = "이전 회차가 없습니다.";
+                    button.innerText = "이전 회차가 없습니다.";
                     button.disabled = true;
                 });
             } else {
                 prevEpisodeButtons.forEach((button) => {
-                    button.innerHTML = "이전 회차";
+                    button.innerText = "이전 회차";
                     button.disabled = false;
                 });
             }
             if (episodeDirectories.length - 1 <= episodeNo) {
                 nextEpisodeButtons.forEach((button) => {
-                    button.innerHTML = "다음 회차가 없습니다.";
+                    button.innerText = "다음 회차가 없습니다.";
                     button.disabled = true;
                 });
             } else {
                 nextEpisodeButtons.forEach((button) => {
-                    button.innerHTML = "다음 회차";
+                    button.innerText = "다음 회차";
                     button.disabled = false;
                 });
             }
         }
 
+        function escapeHTML(unsafeText) {
+            let div = document.createElement('div');
+            div.innerText = unsafeText;
+            return div.innerHTML;
+        }
+        function updateComments() {
+            let episode_comments = comments[episodeNo];
+            if (!episode_comments) {
+                console.log("There's no comments to show.");
+                commentsBox.style.display = "none";
+                showComments.style.display = "none";
+                return;
+            }
+
+            function createCommentBox(information) {
+                comment = document.createElement("div");
+                comment.classList.add("comment-box")
+                comment.innerHTML = `
+                    <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${information.created}</small></div>
+                    <div class="comment-body">${escapeHTML(information.comment)}</div>
+                    <div class="created-date"></div>
+                    <div class="buttons">
+                        <button class="show-reply">${information.reply_count} ${information.reply_count <= 1? "reply": "replies"}</button>
+                        <small>👍${information.likes} 👎${information.dislikes}</small>
+                    </div>
+                    <div class="replies"></div>
+                `.replace(/  +/g, '');
+                return comment;
+            }
+            while (commentsBox.lastChild) {
+                commentsBox.removeChild(commentsBox.lastChild);
+            }
+            episode_comments.forEach((comment) => commentsBox.appendChild(createCommentBox(comment)));
+            // commentsBox.appendChild(createCommentBox({
+            //     "comments_id": "1234",
+            //     "reply_count": 50,
+            //     "comment": "진돌진돌진돌 세끼진돌진돌 번식진돌진돌 가족진돌진돌 진돌진돌진돌",
+            //     "username": "진돌",
+            //     "likes": 1000,
+            //     "dislikes": 23,
+            //     "last_modified": "2023-01-10",
+            //     "created": "2023-01-10",
+            //     "replies": [],
+            // }));
+        }
+
+        let viewedEpisodesRaw = window.localStorage.getItem(viewedEpisodesLocalStorageName);
+        if (viewedEpisodesRaw == null) {
+            viewedEpisodes = [];
+            episodeDirectories.forEach(() => viewedEpisodes.push(false));
+            window.localStorage.setItem(viewedEpisodesLocalStorageName, JSON.stringify(viewedEpisodes));
+        } else {
+            viewedEpisodes = Array.from(JSON.parse(viewedEpisodesRaw));
+        }
+
+        episodeSelectors.forEach((selector) => {
+            episodeDirectories.forEach((episodeDirectory, index) => {
+                const option = document.createElement("option");
+                option.value = index;
+                option.innerHTML = episodeDirectory;
+                option.selected = index == episodeNo;
+                selector.appendChild(option);
+            });
+            selector.addEventListener("input", (event) => {
+                selector.childNodes.forEach((options, index) => {
+                    if (options.selected) {
+                        applyEpisodeNoAndRender(index);
+                    }
+                })
+            });
+        });
+
         prevEpisodeButtons.forEach((button) => {
-            button.addEventListener("click", function() {
-                if (episodeNo > 0) {
-                    drawImage(episodeNo - 1);
-                }
+            button.addEventListener("click", () => {
+                applyEpisodeNoAndRender(episodeNo - 1);
             });
         });
-
         nextEpisodeButtons.forEach((button) => {
-            button.addEventListener("click", function() {
-                const originalepisodeNo = episodeNo
-                try {
-                    drawImage(episodeNo + 1);
-                } catch {
-                    episodeNo = originalepisodeNo;
-                }
+            button.addEventListener("click", () => {
+                applyEpisodeNoAndRender(episodeNo + 1);
             });
         });
-
-        resetButton.addEventListener("click", function() {
-            console.log("reset");
+        resetButton.addEventListener("click", () => {
             window.localStorage.removeItem(viewedEpisodesLocalStorageName);
-            loadViewedEpisodes();
-            drawImage(episodeNo);
-        })
+            viewedEpisodes = [];
+            applyEpisodeNoAndRender(episodeNo);
+        });
+        showComments.addEventListener("click", () => {
+            let episodeCommentCount = commentCounts[episodeNo];
+            if (episodeCommentCount) {
+                if (commentsShowed) {
+                    commentsBox.style.display = "none";
+                    showComments.innerText = `Show ${episodeCommentCount} comment(s)`
+                } else {
+                    commentsBox.style.display = "flex";
+                    showComments.innerText = `Hide ${episodeCommentCount} comment(s)`
+                }
+            } else {
+                if (commentsShowed) {
+                    commentsBox.style.display = "none";
+                    showComments.innerText = "Show comments"
+                } else {
+                    commentsBox.style.display = "flex";
+                    showComments.innerText = "Hide comments"
+                }
+            }
+            commentsShowed ^= true;
+        });
+
+        applyEpisodeNoAndRender(episodeNo);
     </script>
 </body>
 </html>\
@@ -230,27 +364,20 @@ def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) 
     return sequence_to_select[user_answer - 1]
 
 
-def add_html_webtoon_viewer(
-    webtoon_directory: Path,
-    webtoon_title: str | None = None,
-    thumbnail_name: str | None = None,
-) -> None:
+def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
     """information.json의 데이터보다 인자로 주어진 데이터를 더 우선 순위로 잡습니다."""
     directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
-    if webtoon_title is None or thumbnail_name is None:
-        for file in files:
-            if file.name == "information.json":
-                with file.open("r", encoding="utf-8") as f:
-                    information = json.load(f)
-                if webtoon_title is None:
-                    webtoon_title = information["title"]
-                    assert isinstance(webtoon_title, str)
-                if thumbnail_name is None:
-                    thumbnail_name = information["thumbnail_name"]
-                    assert isinstance(thumbnail_name, str)
-                break
-        else:
-            webtoon_title, thumbnail_name = infer_webtoon_infomations(webtoon_directory, webtoon_title, thumbnail_name)
+    for file in files:
+        if file.name == "information.json":
+            with file.open("r", encoding="utf-8") as f:
+                information = json.load(f)
+            webtoon_title = information["title"]
+            thumbnail_name = information["thumbnail_name"]
+            comments = information.get("comments", {})
+            comment_counts = information.get("comment_counts", {})
+            break
+    else:
+        raise ValueError("There's no information.json, thus cannot create webtoon viewer.")
 
     episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
     images_of_episode_directories = json.dumps(
@@ -263,12 +390,14 @@ def add_html_webtoon_viewer(
             r"{webtoon_thumbnail_name_repr}",
             json.dumps(thumbnail_name, ensure_ascii=False),
         )
-        .replace(r"{webtoon_title}", escape(webtoon_title))
+        .replace(r"{webtoon_title}", escape(webtoon_title))  # type: ignore
         .replace(r"{webtoon_title_repr}", json.dumps(webtoon_title, ensure_ascii=False))
         .replace(r"{episode_directories}", episode_directories)
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
         .replace(r"{version}", version)
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
+        .replace(r"{comments}", json.dumps(comments, ensure_ascii=False))
+        .replace(r"{comment_counts}", json.dumps(comment_counts))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
 

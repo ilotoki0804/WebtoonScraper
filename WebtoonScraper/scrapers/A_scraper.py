@@ -13,7 +13,7 @@ from abc import abstractmethod
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, NamedTuple, TypeVar
 
 if TYPE_CHECKING:
     from typing import Self
@@ -43,6 +43,21 @@ from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
 
+
+class CommentsDownloadOption(NamedTuple):
+    """Some option can be not supported by scaper.
+
+    Default setting(top comments only, no reply, not hard) are always supported and strongly recommended.
+    """
+
+    top_comments_only: bool = True
+    """Download top comments only. Download all comments if False."""
+
+    reply: bool = False
+    """Download replies of comments."""
+
+    hard: bool = False
+    """Stop when failed to download comments."""
 
 def reload_manager(f):
     """
@@ -110,6 +125,7 @@ class Scraper(Generic[WebtoonId]):
     URL_REGEX: ClassVar[re.Pattern[str]]
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
     PLATFORM: ClassVar[str]
+    COMMENTS_DOWNLOAD_SUPPORTED: bool = False
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """
@@ -129,6 +145,9 @@ class Scraper(Generic[WebtoonId]):
         self.does_store_information = True
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
         self._end_downloading_when_error_occured = False
+        self.comments_option: CommentsDownloadOption | None = None
+        self.comments = {}
+        self.comment_counts = {}
 
     # PUBLIC METHODS
 
@@ -136,6 +155,11 @@ class Scraper(Generic[WebtoonId]):
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         """해당 회차를 구성하는 이미지들의 URL을 불러옵니다."""
         raise NotImplementedError
+
+    @abstractmethod
+    def get_episode_comments(self, episode_no: int) -> None:
+        """해당 회차의 댓글을 모두 불러옵니다. 웹툰 플랫폼에 따라 지원하지 않을 수 있습니다."""
+        raise NotImplementedError("Downloading comments is not supported in this scraper.")
 
     @reload_manager
     @abstractmethod
@@ -224,6 +248,10 @@ class Scraper(Generic[WebtoonId]):
         manual_container_state: ContainerStates | None = None,
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
+        if not self.COMMENTS_DOWNLOAD_SUPPORTED and self.comments_option:
+            logger.warning("Comments downloading is not supported in this scraper. "
+                           "comments_option will be ignored and comments won't be downloaded.")
+
         with self._send_context_callback_message("setup"):
             self.fetch_all()
 
@@ -264,9 +292,6 @@ class Scraper(Generic[WebtoonId]):
             ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
-        if add_viewer:
-            add_html_webtoon_viewer(webtoon_directory, self.title, thumbnail_name)
-
         if self.does_store_information:
             information = self.get_information()
             information.update(
@@ -284,6 +309,9 @@ class Scraper(Generic[WebtoonId]):
             (webtoon_directory / "information.json").write_text(
                 json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8"
             )
+
+        if add_viewer:
+            add_html_webtoon_viewer(webtoon_directory)
 
     def list_episodes(self) -> None:
         """웹툰 에피소드 목록을 프린트합니다."""
@@ -340,16 +368,16 @@ class Scraper(Generic[WebtoonId]):
                 else:
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
-    def get_information(self, fetch: bool = False):
-        if fetch:
-            self.fetch_all()
+    def get_information(self):
         return {
             "version": version,
             "title": self.title,
+            "platform": self.PLATFORM,
             "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
             "episode_ids": self.episode_ids,
             "episode_titles": self.episode_titles,
-            "platform": self.PLATFORM,
+            "comments": self.comments,
+            "comment_counts": self.comment_counts,
         }
 
     # PROPERTIES
@@ -484,6 +512,18 @@ class Scraper(Generic[WebtoonId]):
                         "proceed download."
                     )
                     break
+
+                if self.COMMENTS_DOWNLOAD_SUPPORTED and self.comments_option is not None:
+                    try:
+                        self.get_episode_comments(episode_no)
+                    except NotImplementedError:
+                        pass
+                    except Exception as e:
+                        if self.comments_option.hard:
+                            raise
+
+                        logger.warning(f"Failed to download comments of episode #{episode_no}.\n"
+                                       f"{type(e).__name__}: {e}")
 
                 if not self.use_tqdm_while_download:
                     self.callback(
