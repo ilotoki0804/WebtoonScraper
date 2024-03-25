@@ -119,6 +119,7 @@ HTML_TEMPLATE = """\
         const createdTime = {created_time};
         const comments = {comments};
         const commentCounts = {comment_counts};
+        const mergeNumber = {merge_number};
 
         const localStorageName = `viewedEpisode(${webtoonTitle})`;
         const prevEpisodeButtons = Array.from(document.getElementsByClassName("prev-episode"));
@@ -382,6 +383,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
             thumbnail_name = information["thumbnail_name"]
             comments = information.get("comments", {})
             comment_counts = information.get("comment_counts", {})
+            merge_number = information["merge_number"]
             break
     else:
         raise ValueError("There's no information.json, thus cannot create webtoon viewer.")
@@ -405,6 +407,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
         .replace(r"{comments}", json.dumps(comments, ensure_ascii=False))
         .replace(r"{comment_counts}", json.dumps(comment_counts))
+        .replace(r"{merge_number}", "null" if merge_number is None else str(merge_number))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
 
