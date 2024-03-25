@@ -237,7 +237,10 @@ HTML_TEMPLATE = """\
             div.innerText = unsafeText;
             return div.innerHTML;
         }
+
         function updateComments() {
+            refreshCommentsButton();
+
             let episode_comments = comments[episodeNo];
             if (!episode_comments) {
                 console.log("There's no comments to show.");
@@ -276,6 +279,27 @@ HTML_TEMPLATE = """\
             //     "created": "2023-01-10",
             //     "replies": [],
             // }));
+        }
+
+        function refreshCommentsButton() {
+            let episodeCommentCount = commentCounts[episodeNo];
+            if (episodeCommentCount) {
+                if (commentsShowed) {
+                    commentsBox.style.display = "none";
+                    showComments.innerText = `Show ${episodeCommentCount} comment(s)`;
+                } else {
+                    commentsBox.style.display = "flex";
+                    showComments.innerText = `Hide ${episodeCommentCount} comment(s)`;
+                }
+            } else {
+                if (commentsShowed) {
+                    commentsBox.style.display = "none";
+                    showComments.innerText = "Show comments";
+                } else {
+                    commentsBox.style.display = "flex";
+                    showComments.innerText = "Hide comments";
+                }
+            }
         }
 
         let viewedEpisodesRaw = window.localStorage.getItem(viewedEpisodesLocalStorageName);
@@ -320,25 +344,8 @@ HTML_TEMPLATE = """\
             applyEpisodeNoAndRender(episodeNo);
         });
         showComments.addEventListener("click", () => {
-            let episodeCommentCount = commentCounts[episodeNo];
-            if (episodeCommentCount) {
-                if (commentsShowed) {
-                    commentsBox.style.display = "none";
-                    showComments.innerText = `Show ${episodeCommentCount} comment(s)`
-                } else {
-                    commentsBox.style.display = "flex";
-                    showComments.innerText = `Hide ${episodeCommentCount} comment(s)`
-                }
-            } else {
-                if (commentsShowed) {
-                    commentsBox.style.display = "none";
-                    showComments.innerText = "Show comments"
-                } else {
-                    commentsBox.style.display = "flex";
-                    showComments.innerText = "Hide comments"
-                }
-            }
             commentsShowed ^= true;
+            updateComments();
         });
 
         applyEpisodeNoAndRender(episodeNo);
