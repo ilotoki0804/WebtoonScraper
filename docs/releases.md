@@ -1,5 +1,15 @@
 # Relese Note
 
+## 3.2.0 (2024-03-26)
+
+* `webtoon.html`가 디자인, 코드 등이 개선되었습니다.
+* 웹툰의 댓글과 작가의 말을 다운로드할 수 있습니다. 현재는 네이버 웹툰에서만 사용 가능합니다. `webtoon.html`에서 `show comments` 버튼을 눌러 다운로드한 댓글을 확인할 수 있습니다.
+* 로깅을 루트 로거 대신 설정된 로거를 사용하도록 변경되었습니다.
+* LEZHIN_BEARER를 환경 변수로 설정해 사용할 수 있습니다.
+* CLI에서 여러 웹툰 ID를 입력할 수 있도록 변경되었습니다. 예를 들어 두 개의 웹툰을 다운로드받고 싶다면 `webtoon download webtoonid1 webtoonid2 -p naver_webtoon`과 같이 사용할 수 있습니다.
+* `--show-detialed-error` 옵션이 삭제되고 같은 역할을 하는 `--verbose`가 추가되었습니다.
+* `__license__`가 삭제되었습니다.
+
 ## 3.1.2 (2024-02-14)
 
 * Scraper.from_url 추가 및 관련 문서 개선: webtoon_id 대신 raw URL에서 직접 사용할 수 있습니다.
