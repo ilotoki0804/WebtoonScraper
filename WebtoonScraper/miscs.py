@@ -11,7 +11,6 @@ __description__ = "Scraping webtoons with ease."
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version_info__ = (3, 1, 4)
 __version__ = str.join(".", map(str, __version_info__))
-__license__ = "Apache-2.0"
 
 WebtoonId: TypeAlias = (
     "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str]"  # + ' | NaverPostWebtoonId | NaverBlogWebtoonId'
