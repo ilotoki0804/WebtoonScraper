@@ -149,6 +149,7 @@ class Scraper(Generic[WebtoonId]):
         self.comments = {}
         self.comment_counts = {}
         self.author_comments = {}
+        self.author = None
 
     # PUBLIC METHODS
 
@@ -168,6 +169,7 @@ class Scraper(Generic[WebtoonId]):
         """웹툰 자체에 대한 정보(제목이나 썸네일 등)를 불러옵니다."""
         self.webtoon_thumbnail_url: str
         self.title: str
+        self.author: str | None
         raise NotImplementedError
 
     @reload_manager
@@ -294,7 +296,13 @@ class Scraper(Generic[WebtoonId]):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
         if self.does_store_information:
-            information = self.get_information()
+            information_file = webtoon_directory / "information.json"
+            if information_file.is_file():
+                old_information = json.loads(information_file.read_text(encoding="utf-8"))
+            else:
+                old_information = {}
+
+            information = self.get_information(old_information)
             information.update(
                 thumbnail_name=thumbnail_name,
                 information_name="information.json",
@@ -307,7 +315,7 @@ class Scraper(Generic[WebtoonId]):
                     webtoon_viewer_name="webtoon.html",
                 )
                 information["contents"].append("webtoon_viewer")
-            (webtoon_directory / "information.json").write_text(
+            information_file.write_text(
                 json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8"
             )
 
@@ -369,7 +377,7 @@ class Scraper(Generic[WebtoonId]):
                 else:
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
-    def get_information(self):
+    def get_information(self, old_information: dict):
         return {
             "version": version,
             "title": self.title,
@@ -377,8 +385,10 @@ class Scraper(Generic[WebtoonId]):
             "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
             "episode_ids": self.episode_ids,
             "episode_titles": self.episode_titles,
-            "comments": self.comments,
-            "comment_counts": self.comment_counts,
+            "comments": old_information.get("comments", {}) | self.comments,
+            "comment_counts": old_information.get("comment_counts", {}) | self.comment_counts,
+            "author_comments": old_information.get("author_comments", {}) | self.author_comments,
+            "author": self.author,
         }
 
     # PROPERTIES

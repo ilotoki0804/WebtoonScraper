@@ -44,6 +44,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         webtoon_thumbnail = webtoon_json_info["sharedThumbnailUrl"]  # 실제로 웹툰 페이지에 사용되는 썸네일
         title = webtoon_json_info["titleName"]  # 제목
         webtoon_type = webtoon_json_info["webtoonLevelCode"]  # BEST_CHALLENGE or WEBTOON
+        authors = "/".join(author["name"] for author in webtoon_json_info['communityArtists'])
 
         if webtoon_json_info["age"]["type"] == "RATE_18":
             raise UnsupportedRatingError(
@@ -55,6 +56,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         self.webtoon_thumbnail_url = webtoon_thumbnail
         self.title = title
         self.webtoon_type = webtoon_type
+        self.author = authors
 
         if not no_invalid_webtoon_type_error and self.WEBTOON_TYPE != webtoon_type:
             platform_name = {
@@ -109,11 +111,13 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         if TYPE_CHECKING:
             episode_image_urls = [url for url in episode_image_urls if isinstance(url, str)]
 
-        information_script = response.soup_select_one("body > script", True).text
-        search_result = re.search(r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,', information_script)
-        if search_result is None:
-            raise ValueError
-        self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
+        script = response.soup_select_one("body > script")
+        if script is not None:
+            information_script = script.text
+            search_result = re.search(r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,', information_script)
+            if search_result is None:
+                raise ValueError
+            self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
 
         return episode_image_urls
 

@@ -263,8 +263,8 @@ class LezhinComicsScraper(Scraper[str]):
             return None
         return title.text if title else None
 
-    def get_information(self, *args, **kwargs):
-        result = super().get_information(*args, **kwargs)
+    def get_information(self, old_information: dict):
+        result = super().get_information(old_information)
         result.update(
             is_shuffled=self.is_shuffled,
             webtoon_int_id=self.webtoon_int_id,

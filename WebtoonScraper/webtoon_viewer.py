@@ -277,13 +277,13 @@ HTML_TEMPLATE = """\
             }
 
             let authorComment = authorComments[episodeNo];
-            if (authorComment) {
+            if (authorComment && authorComment != ".") {
                 let authorCommentDiv = document.createElement("div");
                 authorCommentDiv.classList.add("author-comment-box");
                 authorCommentDiv.innerHTML = `<strong>${authorName}</strong>: ${authorComment}`;
                 commentsBox.appendChild(authorCommentDiv);
             } else {
-                console.log("There's no author comment to present.");
+                console.log("There's no author comment to present, or the author comment was `.`.");
             }
 
             episode_comments.forEach((comment) => commentsBox.appendChild(createCommentBox(comment)));
@@ -402,7 +402,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
             comments = information.get("comments", {})
             comment_counts = information.get("comment_counts", {})
             author_comments = information.get("author_comments", {})
-            author_name = information.get("author_name", "author")
+            author_name = information.get("author", "author")
             merge_number = information["merge_number"]
             break
     else:
@@ -427,8 +427,8 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
         .replace(r"{comments}", json.dumps(comments, ensure_ascii=False))
         .replace(r"{comment_counts}", json.dumps(comment_counts))
-        .replace(r"{author_comments}", json.dumps(author_comments))
-        .replace(r"{author_name}", json.dumps(author_name))
+        .replace(r"{author_comments}", json.dumps(author_comments, ensure_ascii=False))
+        .replace(r"{author_name}", json.dumps(author_name, ensure_ascii=False))
         .replace(r"{merge_number}", "null" if merge_number is None else str(merge_number))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
