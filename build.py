@@ -49,7 +49,7 @@ pyproject_data = tomlkit.parse(pyproject_path.read_text())
 pyproject_data['tool']['poetry']['version'] = __version__  # type: ignore
 pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding='utf-8')
 
-long_description = f'Check lastest version on [here]({github_project_url}).\n'
+long_description = f'Check lastest version [here]({github_project_url}).\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
 long_description = re.sub(r'\[(?P<description>.*?)\]\((..\/)*(?P<path>(?P<directory_type>images|docs).*?)\)',
                           make_relative_link_work, long_description)
