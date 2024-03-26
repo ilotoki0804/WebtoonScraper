@@ -2,11 +2,9 @@ import contextlib
 import logging
 from typing import Any, Callable, Generic, Iterable, TypeAlias, TypeVar
 
-# import coloredlogs
 
-
-__github_user_name__ = __title__ = "WebtoonScraper"
-__github_project_name__ = __author__ = "ilotoki0804"
+__github_project_name__ = __title__ = "WebtoonScraper"
+__github_user_name__ = __author__ = "ilotoki0804"
 __description__ = "Scraping webtoons with ease."
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version_info__ = (3, 2, 0)
