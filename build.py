@@ -1,6 +1,10 @@
-"""Automate build.
+"""Build a package that works on PyPI.
 
-v.2023-01-24(6)
+Replace relative links with GitHub links and add warning 
+
+This program is not meant to be used as module.
+
+Last modified at 2023-03-26; 7th edition.
 """
 import os
 import shutil
@@ -45,9 +49,9 @@ pyproject_data = tomlkit.parse(pyproject_path.read_text())
 pyproject_data['tool']['poetry']['version'] = __version__  # type: ignore
 pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding='utf-8')
 
-long_description = f'이 설명은 최신 버전이 아닐 수 있습니다. 만약 최신 버전을 확인하고 싶으시다면 [이 깃허브 링크]({github_project_url})를 참고하세요.\n'
+long_description = f'Check lastest version on [here]({github_project_url}).\n'
 long_description += Path('README.md').read_text(encoding='utf-8')
-long_description = re.sub(r'[[](?P<description>.*?)[]][(](..\/)*(?P<path>(?P<directory_type>images|docs).*?)[)]',
+long_description = re.sub(r'\[(?P<description>.*?)\]\((..\/)*(?P<path>(?P<directory_type>images|docs).*?)\)',
                           make_relative_link_work, long_description)
 
 try:
