@@ -422,8 +422,8 @@ class Scraper(Generic[WebtoonId]):
     def headers(self) -> dict[str, str]:
         """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
         headers = self.hxoptions.headers
-        assert isinstance(headers, dict), "Invalid subclassing could cause this error. Content developer."
         if TYPE_CHECKING:
+            assert isinstance(headers, dict)
             headers = {k: v for k, v in headers.items() if isinstance(k, str) and isinstance(v, str)}
         return headers
 
