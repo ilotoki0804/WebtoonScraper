@@ -7,7 +7,7 @@ __github_project_name__ = __title__ = "WebtoonScraper"
 __github_user_name__ = __author__ = "ilotoki0804"
 __description__ = "Scraping webtoons with ease."
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
-__version_info__ = (3, 2, 0)
+__version_info__ = (3, 2, 1)
 __version__ = str.join(".", map(str, __version_info__))
 
 WebtoonId: TypeAlias = (
