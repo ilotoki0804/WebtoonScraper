@@ -136,9 +136,9 @@ HTML_TEMPLATE = """\
         const resetButton = document.getElementById("delete-history");
         const commentsBox = document.getElementById("comments");
         const showComments = document.getElementById("show-comments");
-        let commentsShowed = false;
-        let episodeNo = getEpisodeNo();
         let viewedEpisodes = [];
+        let episodeNo;
+        episodeNo = getEpisodeNo();
 
         function getEpisodeNo() {
             const urlParams = new URLSearchParams(window.location.search);

@@ -221,19 +221,3 @@ def download_webtoon(
         add_viewer=True,
     )
 
-
-def download_webtoons_getting_paid(
-    noticeid: int,
-    merge_number: int | None = 5,
-) -> None:
-    res = hxsoup.get(f"https://comic.naver.com/api/notice/detail?noticeId={noticeid}")
-    raw_html = res.json().get("notice").get("content")
-
-    titleids = (int(tag.get("href").removeprefix("https://comic.naver.com/webtoon/list?titleId=").partition("&")[0]) for tag in hxsoup.SoupTools(raw_html).soup_select("a"))  # type: ignore
-
-    for titleid in titleids:
-        try:
-            download_webtoon(titleid, NAVER_WEBTOON, merge_number=merge_number)
-        except UnsupportedRatingError as e:
-            print(e)
-        time.sleep(10)
