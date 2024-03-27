@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import time
+import warnings
 from multiprocessing import pool
 from pathlib import Path
 from typing import Literal
-import warnings
 
 import hxsoup
 
@@ -220,4 +220,3 @@ def download_webtoon(
         merge_number=merge_number,
         add_viewer=True,
     )
-

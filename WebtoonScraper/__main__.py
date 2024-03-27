@@ -3,13 +3,13 @@ from __future__ import annotations
 import argparse
 import contextlib
 import functools
+import logging
 import os
 import re
 import sys
 from importlib.resources import files
 from pathlib import Path
 from typing import Literal
-import logging
 
 from rich.console import Console
 from rich.table import Table
@@ -110,11 +110,7 @@ subparsers = parser.add_subparsers(title="Commands", help="Choose command you wa
 download_subparser = subparsers.add_parser("download", help="Download webtoons.")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
-    "webtoon_ids",
-    type=str_to_webtoon_id,
-    metavar="webtoon_ids",
-    help="Webtoon ID or URL.",
-    nargs="+"
+    "webtoon_ids", type=str_to_webtoon_id, metavar="webtoon_ids", help="Webtoon ID or URL.", nargs="+"
 )
 download_subparser.add_argument(
     "-p",

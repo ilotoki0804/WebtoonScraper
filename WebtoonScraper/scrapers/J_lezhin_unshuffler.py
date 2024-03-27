@@ -1,13 +1,13 @@
 """Unshuffles Lezhin Comics Webtoon."""
 
 from __future__ import annotations
-from contextlib import suppress
-import json
 
+import json
 import multiprocessing
 import os
 import re
 import shutil
+from contextlib import suppress
 from pathlib import Path
 
 from PIL import Image
@@ -16,9 +16,9 @@ from tqdm import tqdm
 from ..directory_merger import (
     NORMAL_EPISODE_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,
+    _iterdir_seperating_directories_and_files,
     check_container_state,
     check_filename_state,
-    _iterdir_seperating_directories_and_files,
     webtoon_regexes,
 )
 from ..exceptions import DirectoryStateUnmatchedError

@@ -1,4 +1,4 @@
-from .A_scraper import ExistingEpisodePolicy, Scraper, CommentsDownloadOption
+from .A_scraper import CommentsDownloadOption, ExistingEpisodePolicy, Scraper
 from .B_naver_webtoon import (
     BestChallengeSpecificScraper,
     ChallengeSpecificScraper,

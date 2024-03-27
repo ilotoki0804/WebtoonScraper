@@ -2,7 +2,6 @@ import contextlib
 import logging
 from typing import Any, Callable, Generic, Iterable, TypeAlias, TypeVar
 
-
 __github_project_name__ = __title__ = "WebtoonScraper"
 __github_user_name__ = __author__ = "ilotoki0804"
 __description__ = "Scraping webtoons with ease."

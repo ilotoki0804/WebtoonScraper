@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, NamedTuple, TypeV
 
 if TYPE_CHECKING:
     from typing import Self
+
 from urllib import parse
 
 import hxsoup
@@ -58,6 +59,7 @@ class CommentsDownloadOption(NamedTuple):
 
     hard: bool = False
     """Stop when failed to download comments."""
+
 
 def reload_manager(f):
     """
@@ -252,8 +254,10 @@ class Scraper(Generic[WebtoonId]):
     ) -> None:
         """download_webtoon의 문서를 참조하세요."""
         if not self.COMMENTS_DOWNLOAD_SUPPORTED and self.comments_option:
-            logger.warning("Comments downloading is not supported in this scraper. "
-                           "comments_option will be ignored and comments won't be downloaded.")
+            logger.warning(
+                "Comments downloading is not supported in this scraper. "
+                "comments_option will be ignored and comments won't be downloaded."
+            )
 
         with self._send_context_callback_message("setup"):
             self.fetch_all()
@@ -315,9 +319,7 @@ class Scraper(Generic[WebtoonId]):
                     webtoon_viewer_name="webtoon.html",
                 )
                 information["contents"].append("webtoon_viewer")
-            information_file.write_text(
-                json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+            information_file.write_text(json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8")
 
         if add_viewer:
             add_html_webtoon_viewer(webtoon_directory)
@@ -533,8 +535,9 @@ class Scraper(Generic[WebtoonId]):
                         if self.comments_option.hard:
                             raise
 
-                        logger.warning(f"Failed to download comments of episode #{episode_no}.\n"
-                                       f"{type(e).__name__}: {e}")
+                        logger.warning(
+                            f"Failed to download comments of episode #{episode_no}.\n" f"{type(e).__name__}: {e}"
+                        )
 
                 if not self.use_tqdm_while_download:
                     self.callback(

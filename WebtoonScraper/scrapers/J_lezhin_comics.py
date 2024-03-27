@@ -1,16 +1,16 @@
 """Download Webtoons from Lezhin Comics."""
 
 from __future__ import annotations
-from contextlib import suppress
 
 import itertools
 import json
+import os
 import random
 import re
 import shutil
+from contextlib import suppress
 from json import JSONDecodeError
 from pathlib import Path
-import os
 
 from hxsoup.exceptions import EmptyResultError
 

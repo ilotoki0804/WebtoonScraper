@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from itertools import count
 import json
+import re
 import time
 from datetime import datetime
+from itertools import count
 from json.decoder import JSONDecodeError
-import re
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 import hxsoup
 
 from ..exceptions import InvalidPlatformError, InvalidURLError, UnsupportedRatingError
-from .A_scraper import Scraper, reload_manager, CommentsDownloadOption
+from .A_scraper import CommentsDownloadOption, Scraper, reload_manager
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
@@ -31,7 +31,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
     def __init__(self, webtoon_id: int) -> None:
         super().__init__(webtoon_id)
-        self.headers.update(Referer='https://comic.naver.com/webtoon/')
+        self.headers.update(Referer="https://comic.naver.com/webtoon/")
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
@@ -44,7 +44,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         webtoon_thumbnail = webtoon_json_info["sharedThumbnailUrl"]  # 실제로 웹툰 페이지에 사용되는 썸네일
         title = webtoon_json_info["titleName"]  # 제목
         webtoon_type = webtoon_json_info["webtoonLevelCode"]  # BEST_CHALLENGE or WEBTOON
-        authors = "/".join(author["name"] for author in webtoon_json_info['communityArtists'])
+        authors = "/".join(author["name"] for author in webtoon_json_info["communityArtists"])
 
         if webtoon_json_info["age"]["type"] == "RATE_18":
             raise UnsupportedRatingError(
@@ -114,7 +114,10 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         script = response.soup_select_one("body > script")
         if script is not None:
             information_script = script.text
-            search_result = re.search(r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,', information_script)
+            search_result = re.search(
+                r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,',
+                information_script,
+            )
             if search_result is None:
                 raise ValueError
             self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
@@ -159,6 +162,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             "created": comment_data["regTime"],
             "replies": [],
         }
+
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     """네이버 정식 연재만 다운로드받을 수 있는 스크래퍼입니다.

@@ -1,8 +1,8 @@
 """Download Webtoons from `webtoons.com/en`."""
 
 from __future__ import annotations
-import re
 
+import re
 from typing import TYPE_CHECKING
 
 from ..exceptions import InvalidWebtoonIdError

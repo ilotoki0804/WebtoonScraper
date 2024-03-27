@@ -20,8 +20,8 @@ from .miscs import (
     __url__,
     __version__,
     __version_info__,
+    logger,
 )
-from .miscs import logger
 
 if _sys.version_info < (3, 11, 0):
     logger.warning(
