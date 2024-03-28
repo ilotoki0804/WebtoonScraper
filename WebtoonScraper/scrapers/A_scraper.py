@@ -86,7 +86,7 @@ def reload_manager(f):
         try:
             return_value = f(self, *args, reload=reload, **kwargs)
         except Exception:
-            logger.info("Exception is occured while function is executed. " "So function is not marked as loaded.")
+            logger.info("Exception is occured while function is executed. So function is not marked as loaded.")
             raise
 
         self._return_cache[f] = return_value

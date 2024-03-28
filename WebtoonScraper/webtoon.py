@@ -27,6 +27,7 @@ from .scrapers import (
     TistoryScraper,
     TistoryWebtoonId,
     WebtoonsDotcomScraper,
+    CommentsDownloadOption,
 )
 
 NAVER_WEBTOON = "naver_webtoon"
@@ -167,26 +168,24 @@ def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]
     return platform_class
 
 
-def download_webtoon(
+def setup_instance(
     webtoon_id_or_url: WebtoonId,
     webtoon_platform: WebtoonPlatforms | None = None,
-    merge_number: int | None = None,
     *,
     cookie: str | None = None,
-    episode_no_range: EpisodeNoRange = None,
     bearer: str | None = None,
-    list_episodes: bool = False,
     download_directory: str | Path = "webtoon",
     get_paid_episode: bool = False,
-) -> None:
+    comments_option: CommentsDownloadOption | None = None,
+) -> Scraper:
     # 스크래퍼 불러오기
     if webtoon_platform:
-        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
+        scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
     elif isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
-        webtoon_scraper = get_webtoon_platform_from_url(webtoon_id_or_url)
-        if webtoon_scraper is None:
+        scraper = get_webtoon_platform_from_url(webtoon_id_or_url)
+        if scraper is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_id_or_url}")
-        webtoon_scraper = webtoon_scraper
+        scraper = scraper
     else:
         warnings.warn(
             "Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.", DeprecationWarning
@@ -194,29 +193,22 @@ def download_webtoon(
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
-        webtoon_scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
+        scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
 
     # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
     if cookie:
-        if not isinstance(webtoon_scraper, (LezhinComicsScraper, BufftoonScraper)):
+        if not isinstance(scraper, (LezhinComicsScraper, BufftoonScraper)):
             raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
-        webtoon_scraper.cookie = cookie
+        scraper.cookie = cookie
     if bearer:
-        if not isinstance(webtoon_scraper, LezhinComicsScraper):
+        if not isinstance(scraper, LezhinComicsScraper):
             raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
-        webtoon_scraper.bearer = bearer
-    if get_paid_episode and isinstance(webtoon_scraper, LezhinComicsScraper):
-        webtoon_scraper.get_paid_episode = get_paid_episode
+        scraper.bearer = bearer
+    if get_paid_episode and isinstance(scraper, LezhinComicsScraper):
+        scraper.get_paid_episode = get_paid_episode
 
-    # list_episodes 출력하기
-    if list_episodes:
-        webtoon_scraper.list_episodes()
-        return
+    # attribute 형식 설정 설정
+    scraper.comments_option = comments_option
+    scraper.base_directory = download_directory
 
-    # 다운로드
-    webtoon_scraper.base_directory = download_directory
-    webtoon_scraper.download_webtoon(
-        episode_no_range,
-        merge_number=merge_number,
-        add_viewer=True,
-    )
+    return scraper

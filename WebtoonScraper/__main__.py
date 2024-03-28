@@ -16,6 +16,7 @@ from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
+from WebtoonScraper.scrapers import CommentsDownloadOption
 from WebtoonScraper.directory_merger import (
     MERGED_WEBTOON_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,
@@ -32,8 +33,8 @@ from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 acceptable_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 
 
-def remove_space_and_parentheses(value):
-    return value.replace(" ", "").removeprefix("(").removesuffix(")")  # noqa
+def cleanup_string(value: str) -> str:
+    return value.replace(" ", "").removeprefix("(").removesuffix(")")
 
 
 def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
@@ -78,11 +79,11 @@ def str_to_episode_no_range(episode_no_range: str) -> EpisodeNoRange:
     with contextlib.suppress(ValueError):
         return int(episode_no_range)
 
-    def make_none_if_value_is_none_or_make_int(value):
+    def nonesafe_int(value):
         return int(value) if value and value.lower() != "none" else None
 
     start, end = (
-        make_none_if_value_is_none_or_make_int(remove_space_and_parentheses(i)) for i in episode_no_range.split("~")
+        nonesafe_int(cleanup_string(i)) for i in episode_no_range.split("~")
     )
 
     return start, end
@@ -161,6 +162,13 @@ download_subparser.add_argument(
     action="store_true",
     help="Get paid episode. Lezhin Comics only.",
 )
+download_subparser.add_argument(
+    "--comments", "--comment",
+    metavar="option",
+    help="Download comments.",
+    nargs="*",
+    choices=["all", "reply", "hard"]
+)
 
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
 merge_subparser.set_defaults(subparser_name="merge")
@@ -200,16 +208,34 @@ def parse_download(args: argparse.Namespace) -> None:
         if args.platform == webtoon.TISTORY and isinstance(webtoon_id[0], int):
             webtoon_id = str(webtoon_id[0]), str(webtoon_id[1])
 
-        webtoon.download_webtoon(
+        if args.comments is None:
+            comment_download_option = None
+        else:
+            options = set(args.comments)
+            comment_download_option = CommentsDownloadOption(
+                top_comments_only="all" not in options,
+                reply="reply" in options,
+                hard="hard" in options,
+            )
+
+        scraper = webtoon.setup_instance(
             webtoon_id,
             args.platform,
-            args.merge_number,
             cookie=args.cookie,
             bearer=args.bearer,
-            episode_no_range=args.range,
             download_directory=args.download_directory,
-            list_episodes=args.list_episodes,
             get_paid_episode=args.get_paid_episode,
+            comments_option=comment_download_option,
+        )
+
+        if args.list_episodes:
+            scraper.list_episodes()
+            return
+
+        scraper.download_webtoon(
+            args.range,
+            merge_number=args.merge_number,
+            add_viewer=True,
         )
 
 
