@@ -163,7 +163,7 @@ download_subparser.add_argument(
     help="Get paid episode. Lezhin Comics only.",
 )
 download_subparser.add_argument(
-    "--comments", "--comment",
+    "-c", "--comments", "--comment",
     metavar="option",
     help="Download comments.",
     nargs="*",
