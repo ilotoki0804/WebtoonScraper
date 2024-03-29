@@ -167,7 +167,7 @@ download_subparser.add_argument(
     metavar="option",
     help="Download comments.",
     nargs="*",
-    choices=["all", "reply", "hard"]
+    choices=["all", "reply"]
 )
 
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
@@ -215,7 +215,6 @@ def parse_download(args: argparse.Namespace) -> None:
             comment_download_option = CommentsDownloadOption(
                 top_comments_only="all" not in options,
                 reply="reply" in options,
-                hard="hard" in options,
             )
 
         scraper = webtoon.setup_instance(

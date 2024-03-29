@@ -57,9 +57,6 @@ class CommentsDownloadOption(NamedTuple):
     reply: bool = False
     """Download replies of comments."""
 
-    hard: bool = False
-    """Stop when failed to download comments."""
-
 
 def reload_manager(f):
     """
@@ -532,9 +529,6 @@ class Scraper(Generic[WebtoonId]):
                     except NotImplementedError:
                         pass
                     except Exception as e:
-                        if self.comments_option.hard:
-                            raise
-
                         logger.warning(
                             f"Failed to download comments of episode #{episode_no}.\n" f"{type(e).__name__}: {e}"
                         )
