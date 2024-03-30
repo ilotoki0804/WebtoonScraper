@@ -259,8 +259,9 @@ HTML_TEMPLATE = """\
             function createCommentBox(information) {
                 comment = document.createElement("div");
                 comment.classList.add("comment-box");
+                let created_time = (new Date(information.created)).toLocaleString();
                 comment.innerHTML = `
-                    <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${information.created}</small></div>
+                    <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${created_time}</small></div>
                     <div class="comment-body">${escapeHTML(information.comment)}</div>
                     <div class="created-date"></div>
                     <div class="buttons">
