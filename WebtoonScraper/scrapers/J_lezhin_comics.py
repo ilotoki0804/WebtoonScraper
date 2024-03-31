@@ -388,7 +388,7 @@ class LezhinComicsScraper(Scraper[str]):
         target_webtoon_directory = unshuffle_typical_webtoon(base_webtoon_directory, self.episode_int_ids)
         if self.delete_shuffled_file:
             shutil.rmtree(base_webtoon_directory)
-            print("Shuffled webtoon directory is deleted.")
+            logger.info("Shuffled webtoon directory is deleted.")
 
         self._webtoon_directory = base_webtoon_directory
         self._unshuffled_webtoon_directory = target_webtoon_directory

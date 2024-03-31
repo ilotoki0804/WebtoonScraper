@@ -293,7 +293,6 @@ def list_directories(parent_directory: Path) -> None:
             directory_state,
             CONTAINER_STATE_TO_DO_STATE.get(directory_state),
         )
-    # self.rich_console.print(table)
     Console().print(table)
 
 

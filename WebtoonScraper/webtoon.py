@@ -115,7 +115,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     else:
         raise TypeError(f"Unknown type of titleid({type(webtoon_id)})")
 
-    print(f"Checking these platforms: {', '.join(test_queue)}")
+    logger.info(f"Checking these platforms: {', '.join(test_queue)}")
 
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
@@ -123,10 +123,10 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     results = [(platform, title) for platform, title in results_raw if title is not None]
 
     if (webtoon_length := len(results)) == 1:
-        print(f"Webtoon's platform is assumed to be {results[0][0]}")
+        logger.info(f"Webtoon's platform is assumed to be {results[0][0]}")
         return results[0][0]
     if webtoon_length == 0:
-        print(f"There's no webtoon that webtoon ID is {webtoon_id}.")
+        logger.warning(f"There's no webtoon that webtoon ID is {webtoon_id}.")
         return None
 
     for i, (platform, name) in enumerate(results, 1):

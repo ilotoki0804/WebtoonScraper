@@ -111,7 +111,7 @@ def select_from_directory(
     )
 
     if not normal_webtoon_directories and not merged_webtoon_directories:
-        print("There's no webtoon directories.")
+        logger.warning("There's no webtoon directories.")
         return
 
     options: dict[int, str | Path] = {}
@@ -157,7 +157,7 @@ def select_from_directory(
         case "merge_all":
             merge_number = get_merge_number()
             for normal_webtoon_directory in normal_webtoon_directories:
-                print(f"Merging {normal_webtoon_directory.name}...")
+                logger.info(f"Merging {normal_webtoon_directory.name}...")
                 operated_paths.append(normal_webtoon_directory)
                 merge_webtoon(
                     normal_webtoon_directory,
@@ -166,7 +166,7 @@ def select_from_directory(
                 )
         case "restore_all":
             for merged_webtoon_directory in merged_webtoon_directories:
-                print(f"Restoring {merged_webtoon_directory.name}...")
+                logger.info(f"Restoring {merged_webtoon_directory.name}...")
                 operated_paths.append(merged_webtoon_directory)
                 restore_webtoon(
                     merged_webtoon_directory,
@@ -180,14 +180,14 @@ def select_from_directory(
 
             if container_state == NORMAL_WEBTOON_DIRECTORY:
                 merge_number = get_merge_number()
-                print(f"Merging {path.name}...")
+                logger.info(f"Merging {path.name}...")
                 merge_webtoon(
                     path,
                     target_parent_directory and target_parent_directory / path.name,
                     merge_number,
                 )
             elif container_state == MERGED_WEBTOON_DIRECTORY:
-                print(f"Restoring {path.name}...")
+                logger.info(f"Restoring {path.name}...")
                 restore_webtoon(
                     path,
                     target_parent_directory and target_parent_directory / path.name,

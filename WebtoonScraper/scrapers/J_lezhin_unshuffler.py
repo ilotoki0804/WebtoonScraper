@@ -78,7 +78,7 @@ def unshuffle(
 
         unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
 
-    print(
+    logger.warning(
         "Unshuffling is started. It takes a while and it's very CPU-intensive task. "
         "So keep patient and wait until the process end."
     )
