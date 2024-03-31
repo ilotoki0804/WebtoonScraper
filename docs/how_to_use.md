@@ -59,7 +59,7 @@ Download webtoons with ease!
 
 * 웹툰 플랫폼
 * 웹툰 ID 혹은 URL
-* 일부 로그인이 필요한 플랫폼이 경우 cookie와 bearer를 필요로 할 수 있습니다.
+* 일부 로그인이 필요한 플랫폼이 경우 cookie또는 bearer를 필요로 할 수 있습니다.
 
 각각에 대해서는 각자의 플랫폼에 대해서는 [아래](how_to_use.md#플랫폼별-다운로드-방법-및-예시)에서 각자 안내됩니다.
 
@@ -74,7 +74,7 @@ webtoon download 809590 -p naver_webtoon -m 5
 
 #### --cookie cookie, --bearer bearer 옵션
 
-일부 플랫폼은 다운로드를 위해 로그인을 필요로 하기도 합니다. 이럴 경우 적절한 값을 웹 브라우저에서 찾아서 보내야 합니다. 각각의 플랫폼 다운로드에서 더욱 자세히 설명합니다.
+일부 플랫폼은 다운로드를 위해 로그인을 필요로 하기도 합니다. 이럴 경우 적절한 값을 웹 브라우저에서 찾아서 보내야 합니다. `플랫폼별 다운로드 방법 및 예시`를 참고하세요.
 
 #### -r [start]~[end], --range [start]~[end] 옵션
 
@@ -142,6 +142,41 @@ C:\Users>webtoon download 809590 -p naver_webtoon --list-episodes
 
 레진코믹스에서 유료 회차를 다운로드받는 옵션입니다. 이때 다량의 경고가 나타날 수 있는데, 정상 과정이니 신경쓰지 않으셔도 됩니다.
 
+#### -c, --comments, --comment 옵션
+
+이 옵션을 설정하면 댓글을 다운로드받을 수 있습니다.
+
+예를 들어 웹툰에서 댓글을 다운로드받고 싶은 경우 다음과 같이 작성할 수 있습니다.
+
+```console
+webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" -c
+webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" --comments
+```
+
+기본적으로는 베스트 댓글을 대댓글 없이 다운로드하고 댓글을 불러오는 데에 실패했을 때 다운로드를 중단하지 않도록 설정되어 있습니다.
+
+만약 이러한 기본 설정을 바꾸고 싶을 경우 옵션 뒤에 몇 가지 인자를 덧붙여줄 수 있습니다.
+
+댓글을 전체 댓글을 다운로드받고 싶은 경우 `all`을 붙여 사용할 수 있습니다.
+
+```console
+webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" -c all
+```
+
+대댓글까지 다운로드하고 싶은 경우 `reply`를 붙여 사용할 수 있습니다.
+
+이 인자들은 여려 개가 한번에 올 수 있으며 순서는 고려되지 않습니다.
+
+```console
+webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" -c all reply
+webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" -c reply all
+```
+
+> [!WARNING]
+> 댓글 다운로드 기능은 현재 네이버 웹툰에서만 지원됩니다. 향후 더 다양한 플랫폼에서 지원을 확대할 예정입니다.
+> 또한 웹툰 플랫폼에 따라 일부 댓글 옵션은 사용할 수 없을 수 있습니다.
+> 현재 유일하게 지원되는 네이버 웹툰에서는 all 옵션과 reply 옵션 모두 지원하지 _않으며_ 향우 지원을 확대할 예정입니다.
+
 ### `merge` 커맨드
 
 merge 커맨드는 웹툰 모아서 보기를 지원하기 위한 기능입니다.
@@ -156,11 +191,11 @@ webtoon merge webtoon
 
 이 과정에서 `webtoon.html`이 다시 제작됩니다.
 
-## 실행 파일 다운로드
+## 실행 파일로 사용
 
 실행 파일로 사용 시에는 CLI와 같은 명령어를 사용합니다.
 
-[설치 가이드](../README.md#실행-파일로-이용하기베타)에 설명된 방식으로 설치 후 실행한 뒤 `CLI 사용 방법` 가이드에 나와 있는 데로 사용하면 됩니다.
+[설치 가이드](../README.md#실행-파일로-이용하기)에 설명된 방식으로 설치 후 실행한 뒤 `CLI 사용 방법` 가이드에 나와 있는 데로 사용하면 됩니다.
 
 ```console
 usage: Download or merge webtoons in CLI
@@ -174,7 +209,7 @@ Type 'exit' to quit
 >>> (여기에 CLI 명령어를 입력하세요)
 ```
 
-## 파이썬으로 다운로드
+## 파이썬으로 사용
 
 파이썬으로 접근해 더욱 다양한 이 패키지의 기능들을 사용하고 싶다면 `WebtoonScraper.scrapers`에 있는 여러 스크래퍼 클래스를 사용할 수 있습니다.
 
@@ -217,7 +252,7 @@ scraper = NaverWebtoonScraper(819217)
 scraper.download_webtoon()
 ```
 
-이 값의 타입은 스크래퍼마다 차이가 있는데, 일반적으로는 int이지만, str이거나 tuple인 경우도 있습니다. 자세한 내용은 위의 표에서 확인하실 수 있습니다.
+이 값의 타입은 스크래퍼마다 차이가 있는데, 일반적으로는 int이지만, str이거나 tuple인 경우도 있습니다. 자세한 내용은 `웹툰 플랫폼` 파트에 있는 표에서 확인하실 수 있습니다.
 
 ```python
 from WebtoonScraper.scrapers import NaverBlogScraper
@@ -273,7 +308,7 @@ scraper = NaverWebtoonScraper(819217)
 asyncio.run(scraper.async_download_webtoon())
 ```
 
-Jupyter나 `python -m asyncio` 등 async 환경인 경우 다음과 같이도 사용할 수 있습니다.
+Jupyter 등 async 환경인 경우 다음과 같이 사용해야 합니다.
 
 ```python
 import asyncio
@@ -460,7 +495,7 @@ restore_webtoon(source_webtoon_directory)
 
 ## 플랫폼별 다운로드 방법 및 예시
 
-상세한 기능에 대해선 위를 참고하세요.
+플랫폼마다 다른 점이 아닌 공통적인 기능을 알고 싶은 경우 문서의 상단 부분을 확인하세요.
 
 ### 네이버 웹툰
 
