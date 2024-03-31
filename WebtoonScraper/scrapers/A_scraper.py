@@ -278,7 +278,7 @@ class Scraper(Generic[WebtoonId]):
         else:
             webtoon_directory.mkdir(parents=True, exist_ok=True)
 
-        with self._send_context_callback_message("download_thubnail"):
+        with self._send_context_callback_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
@@ -353,23 +353,21 @@ class Scraper(Generic[WebtoonId]):
         """
         match situation:
             case "download_episode_end":
-                print(f"The webtoon {self.title} download ended.")
+                logger.info(f"The webtoon {self.title} download ended.")
             case "merge_webtoon_end":
-                print("Merging webtoon ended.")
+                logger.info("Merging webtoon ended.")
             case "merge_webtoon_start":
-                print("Merging webtoon has started...")
+                logger.info("Merging webtoon has started...")
             case "setup_end":
                 if contexts.get("is_successful", True):
-                    print("Webtoon data are fetched. Download has been started...")
+                    logger.info("Webtoon data are fetched. Download has been started...")
             case "description":
-                print(contexts["description"])
+                logger.info(contexts["description"])
             case "episode_download_complete":
                 # index = contexts["index"]
-                is_download_sucessful = contexts["is_download_sucessful"]
-                if is_download_sucessful:
-                    episode_no = contexts["episode_no"]
-                    episode_title = self.episode_titles[episode_no]
-                    print(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
+                episode_no = contexts["episode_no"]
+                episode_title = self.episode_titles[episode_no]
+                logger.info(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
             case the_others:
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
@@ -440,13 +438,8 @@ class Scraper(Generic[WebtoonId]):
     def _send_context_callback_message(self, base_message: str, **contexts):
         self.callback(base_message + "_start", **contexts)
         end_contexts = {}
-        try:
-            yield end_contexts
-        except Exception:
-            if not self.callback(base_message + "_end", is_successful=False, **end_contexts):
-                raise
-        else:
-            self.callback(base_message + "_end", is_successful=True)
+        yield end_contexts
+        self.callback(base_message + "_end", is_successful=True, **end_contexts)
 
     def _episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
         """
