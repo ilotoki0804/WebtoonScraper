@@ -399,22 +399,20 @@ class Scraper(Generic[WebtoonId]):
     @base_directory.setter
     def base_directory(self, base_directory: str | Path) -> None:
         """
-        웹툰을 다운로드할 디렉토리입니다. str이나 Path로 값을 받아 Path를 저장합니다.
+        웹툰 폴더가 위치할 디렉토리입니다. str이나 Path로 값을 받아 Path를 저장합니다.
 
         많은 이 변수의 사용처에서는 pathlib.Path를 필요로 합니다.
         이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
-        이것을 이용하기 전에 안전한 파일명으로 바꾸는 것을 잊지 마세요!
         """
         self._base_directory = Path(base_directory)
 
     @property
     def cookie(self) -> str:
         """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
-        return self._cookie
+        return self.headers["Cookie"]
 
     @cookie.setter
     def cookie(self, value: str) -> None:
-        self._cookie = value
         self.headers.update(Cookie=value)
 
     @property
