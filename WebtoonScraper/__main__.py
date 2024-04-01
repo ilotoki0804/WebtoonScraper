@@ -16,7 +16,6 @@ from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.scrapers import CommentsDownloadOption
 from WebtoonScraper.directory_merger import (
     MERGED_WEBTOON_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,
@@ -28,16 +27,25 @@ from WebtoonScraper.directory_merger import (
 )
 from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
+from WebtoonScraper.scrapers import CommentsDownloadOption
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
-acceptable_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
+ACCEPTABLE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 
 
-def cleanup_string(value: str) -> str:
-    return value.replace(" ", "").removeprefix("(").removesuffix(")")
+def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
+    """CLI로 입력된 문자열 webtoon ID를 실재하는 타입이 있는 webtoon ID로 변경합니다.
 
+    Arguments:
+        webtoon_id: 실재하는 webtoon ID로 변경할 문자열입니다.
 
-def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
+    Raises:
+        ValueError: webtoon ID로 해석될 수 없는 문자열이 webtoon_id를 통해 전달되었을 때 발현합니다.
+
+    Returns:
+        WebtoonId 타입을 리턴합니다.
+    """
+
     # URL인 경우
     if "." in webtoon_id:
         return webtoon_id
@@ -45,52 +53,50 @@ def str_to_webtoon_id(webtoon_id: str) -> WebtoonId:
     if webtoon_id.isdigit():
         # all others
         return int(webtoon_id)
-    if all(char in acceptable_chars for char in webtoon_id):
+    if all(char in ACCEPTABLE_CHARS for char in webtoon_id):
         # Lezhin
         return webtoon_id
     if "," not in webtoon_id:
-        raise ValueError("Invalid webtoon id.")
+        raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
 
-    match_result = re.match(r""" * *[(]? *(['"]?(.+?)['"]?) *, *(['"]?(.+?)['"]?) *[)]? *$""", webtoon_id)
-    assert match_result is not None, "Invalid webtoon id."
-    is_arg1_quoted = match_result.group(2)[0] in {
-        '"',
-        "'",
-    }
-    is_arg2_quoted = match_result.group(3)[0] in {'"', "'"}
-    arg1, arg2 = match_result.group(2), match_result.group(4)
+    match_result = re.match(r""" *[(]? *(?P<id1>['"]?.+?['"]?) *, *(?P<id2>['"]?.+?['"]?) *[)]? *$""", webtoon_id)
+    if not match_result:
+        raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
 
-    if arg1.isdigit() and not is_arg1_quoted:
+    id1 = match_result["id1"]
+    id2 = match_result["id2"]
+
+    if id1.isdigit() and id2.isdigit():
         # 네이버 포스트
-        return int(arg1), int(arg2)
-    elif arg2.isdigit() and not is_arg2_quoted:
+        return int(id1), int(id2)
+    elif id2.isdigit():
         # 네이버 블로그
-        blog_id = match_result.group(2)
-        assert isinstance(blog_id, str)
-        return blog_id, int(arg2)
+        return id1, int(id2)
     else:
+        # quote 제거
+        if id1[0] == id1[-1] == "'" or id1[0] == id1[-1] == '"':
+            id1 = id1[1:-1]
+        elif id2[0] == id2[-1] == "'" or id2[0] == id2[-1] == '"':
+            id2 = id2[1:-1]
+
         # 티스토리
-        assert isinstance(arg1, str)
-        assert isinstance(arg2, str)
-        return arg1, arg2
+        return id1, id2
 
 
-def str_to_episode_no_range(episode_no_range: str) -> EpisodeNoRange:
-    with contextlib.suppress(ValueError):
-        return int(episode_no_range)
+def _to_range(episode_no_range: str) -> EpisodeNoRange:
+    """CLI로 입력된 문자열로 된 웹툰 회차 범위를 실재적인 타입으로 변환합니다."""
 
     def nonesafe_int(value):
         return int(value) if value and value.lower() != "none" else None
 
+    with contextlib.suppress(ValueError):
+        return int(episode_no_range)
+
     start, end = (
-        nonesafe_int(cleanup_string(i)) for i in episode_no_range.split("~")
+        nonesafe_int(i.strip()) for i in episode_no_range.split("~")
     )
 
     return start, end
-
-
-def case_insensitive(string: str) -> str:
-    return string.lower()
 
 
 parser = argparse.ArgumentParser(
@@ -111,7 +117,7 @@ subparsers = parser.add_subparsers(title="Commands", help="Choose command you wa
 download_subparser = subparsers.add_parser("download", help="Download webtoons.")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
-    "webtoon_ids", type=str_to_webtoon_id, metavar="webtoon_ids", help="Webtoon ID or URL.", nargs="+"
+    "webtoon_ids", type=_to_webtoon_id, metavar="webtoon_ids", help="Webtoon ID or URL.", nargs="+"
 )
 download_subparser.add_argument(
     "-p",
@@ -144,7 +150,7 @@ download_subparser.add_argument(
 download_subparser.add_argument(
     "-r",
     "--range",
-    type=str_to_episode_no_range,
+    type=_to_range,
     metavar="[start]~[end]",
     help="Episode number range you want to download.",
 )
@@ -197,6 +203,7 @@ merge_subparser.add_argument(
 
 
 def parse_download(args: argparse.Namespace) -> None:
+    # 축약형 플랫폼명을 일반적인 플랫폼명으로 변환 (nw -> naver_webtoon)
     args.platform = webtoon.SHORT_NAMES.get(args.platform, args.platform)
 
     for webtoon_id in args.webtoon_ids:
@@ -209,6 +216,7 @@ def parse_download(args: argparse.Namespace) -> None:
             webtoon_id = str(webtoon_id[0]), str(webtoon_id[1])
 
         if args.comments is None:
+            # 사용자가 -c 옵션을 넘기지 않았다면 옵션을 None으로 둠.
             comment_download_option = None
         else:
             options = set(args.comments)
@@ -306,17 +314,31 @@ def parse_merge(args: argparse.Namespace) -> None:
 
 
 def main(argv=None) -> Literal[0, 1]:
+    """모든 CLI 명령어를 처리하는 함수입니다.
+
+    Arguments:
+        argv: 커맨드라인 명령어입니다. None이라면 sys.argv[1:]를 값으로 삼습니다.
+
+    Returns:
+        정상적으로 프로그램이 종료했다면 0을, 비정상적으로 종료되었다면 1을 반환합니다.
+
+    Raises:
+        이 함수는 KeyboardInterrupt를 제외한 어떠한 오류도 발생시키지 않습니다.
+        그 대신 성공했을 때는 0을, 실패했을 때에는 1을 반환합니다.
+    """
     args = parser.parse_args(argv)  # 주어진 argv가 None이면 sys.argv[1:]을 기본값으로 삼음
 
+    # --mock 인자가 포함된 경우 실제 다운로드까지 가지 않고 표현된 인자를 보여주고 종료.
     if args.mock:
         print("Arguments:", str(args).removeprefix("Namespace(").removesuffix(")"))
         return 0
 
+    # 어떠한 command도 입력하지 않았을 경우 도움말을 표시함.
     if not hasattr(args, "subparser_name"):
         return main(argv=["--help"])
 
     if args.verbose:
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
 
     try:
         if args.subparser_name == "download":

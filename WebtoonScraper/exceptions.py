@@ -9,20 +9,20 @@ if TYPE_CHECKING:
 
 
 class WebtoonScraperError(Exception):
-    """Base class of every error of WebtoonScraper."""
+    """Base class of every error of custom WebtoonScraper error."""
 
 
 class DirectoryStateUnmatchedError(WebtoonScraperError):
-    """Directory state recieved from check_directory_state is not wanted."""
+    """Directory state recieved from check_directory_state is not desired."""
 
 
 class InvalidWebtoonIdError(WebtoonScraperError):
-    """Webtoon id is invalid. Or it can be adult webtoon, which is currently not supported in most platform."""
+    """Webtoon ID is invalid."""
 
     @classmethod
     def from_webtoon_id(cls, webtoon_id, scraper=None, rating_notice: bool = False) -> InvalidWebtoonIdError:
         rating_message = (
-            " It might be because rating of the webtoon is not supported. " "Check if the webtoon is adult-only."
+            " It might be because rating of the webtoon is not supported. Check if the webtoon is adult-only."
             if rating_notice
             else ""
         )
@@ -44,7 +44,7 @@ class InvalidURLError(WebtoonScraperError):
 
 
 class UnsupportedRatingError(InvalidWebtoonIdError):
-    """The weboon can't be downloaded due to rating."""
+    """The webtoon can't be downloaded due to rating."""
 
 
 class InvalidAuthenticationError(WebtoonScraperError):

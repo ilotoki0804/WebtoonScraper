@@ -13,12 +13,18 @@ from abc import abstractmethod
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Generic, Iterable, NamedTuple, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    Generic,
+    Iterable,
+    NamedTuple,
+    TypeVar,
+)
+from urllib import parse
 
 if TYPE_CHECKING:
     from typing import Self
-
-from urllib import parse
 
 import hxsoup
 import pyfilename as pf
@@ -37,18 +43,18 @@ from ..directory_merger import (
     webtoon_regexes,
 )
 from ..exceptions import DirectoryStateUnmatchedError, InvalidURLError, UseFetchEpisode
-from ..miscs import EpisodeNoRange
+from ..miscs import EpisodeNoRange, logger
 from ..miscs import __version__ as version
-from ..miscs import logger
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
 
 
 class CommentsDownloadOption(NamedTuple):
-    """Some option can be not supported by scaper.
+    """댓글을 다운로드할 때 어떤 방식으로 다운로드할지 결정합니다.
 
-    Default setting(top comments only, no reply, not hard) are always supported and strongly recommended.
+    Some option can be not supported by scraper.
+    Default setting(top comments only, no reply) are always supported and strongly recommended.
     """
 
     top_comments_only: bool = True
@@ -59,41 +65,37 @@ class CommentsDownloadOption(NamedTuple):
 
 
 def reload_manager(f):
-    """
-    reload를 인자로 가지는 어떤 함수를 받아 reload가 True라면 cache가 있다면 제거하고
-    다시 정보를 불러오도록 하는 decorator.
+    """함수의 결과값을 캐싱합니다. 단, reload 파라미터를 True로 둘 경우 다시 함수를 호출에 값을 받아옵니다.
+
+    이 함수는 클래스의 메소드에만 적용시킬 수 있습니다.
+    `__slots__`가 있다면 제대로 작동하지 않을 수 있는데, 그럴 경우 `__slots__`에 `_reload_cache`를 추가해 주세요.
     """
 
     # __slots__가 필요하다면 Scraper에 _return_cache를 구현하면 됨!
     @functools.wraps(f)
     def wrapper(self, *args, reload: bool = False, **kwargs):
         try:
-            self._return_cache
+            self._reload_cache
         except AttributeError:
-            self._return_cache = {}
+            self._reload_cache = {}
 
-        if f in self._return_cache:
+        if f in self._reload_cache:
             if not reload:
                 logger.debug(
-                    f"{f} is already loaded, so loading is skipped. In order to reload, set parameter by reload=True."
+                    f"{f} is already loaded, so loading is skipped. In order to reload, set `reload` parameter to True."
                 )
-                return self._return_cache[f]
-            logger.warning("Refreshing webtoon_information")
+                return self._reload_cache[f]
+            logger.info("Refreshing webtoon_information")
 
-        try:
-            return_value = f(self, *args, reload=reload, **kwargs)
-        except Exception:
-            logger.info("Exception is occured while function is executed. So function is not marked as loaded.")
-            raise
-
-        self._return_cache[f] = return_value
+        return_value = f(self, *args, reload=reload, **kwargs)
+        self._reload_cache[f] = return_value
         return return_value
 
     return wrapper
 
 
 class ExistingEpisodePolicy(Enum):
-    """다운로드받을 에피소드와 이름이 같은 폴더가 존재할 때의 대처법입니다."""
+    """다운로드받을 에피소드와 이름이 같은 폴더가 존재할 때의 처리 방식을 결정합니다."""
 
     SKIP = "skip"
     """폴더가 이미 존재한다면 스킵합니다(기본값)."""
@@ -112,7 +114,7 @@ class Scraper(Generic[WebtoonId]):
     """Abstract base class of all scrapers.
 
     전반적인 로직은 모두 이 페이지에서 관리하고, 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 방식은
-    각자 scraper들에 구현합니다.
+    각자의 scraper들에서 구현합니다.
     """
 
     # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
@@ -127,10 +129,6 @@ class Scraper(Generic[WebtoonId]):
     COMMENTS_DOWNLOAD_SUPPORTED: bool = False
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
-        """
-        webtoon_id를 전달하고, 만약 cookie가 bearer와 같은 추가 인증이 필요하다면
-        그 또한 인자로 전달하세요.
-        """
         self.hxoptions = hxsoup.MutableClientOptions(
             attempts=3,
             timeout=10,
@@ -186,6 +184,7 @@ class Scraper(Generic[WebtoonId]):
         *args,  # cookie나 bearer같은 optional parameter를 잡기 위해 필요.
         **kwargs,
     ) -> Self:
+        """Raw URL에서 자동으로 웹툰 ID를 추출합니다."""
         matched = cls.URL_REGEX.match(url)
         if matched is None:
             raise InvalidURLError.from_url(url, cls)
@@ -202,11 +201,7 @@ class Scraper(Generic[WebtoonId]):
         return self._get_safe_file_name(f"{self.title}({self.webtoon_id})")
 
     def fetch_all(self, reload: bool = False) -> None:
-        """웹툰에 관련한 정보를 불러옵니다.
-
-        Args:
-            reload (bool, False): 만약 참이라면 기존에 이미 불러와진 값을 무시하고 다시 값을 불러옵니다.
-        """
+        """웹툰 다운로드에 필요한 모든 필수적인 정보를 불러옵니다."""
         with suppress(UseFetchEpisode):
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_information(reload=reload)
@@ -217,7 +212,10 @@ class Scraper(Generic[WebtoonId]):
         merge_number: int | None = None,
         add_viewer: bool = True,
     ) -> None:
-        """웹툰 전체를 다운로드합니다.
+        """웹툰을 다운로드합니다.
+
+        Jupyter 등 async 환경에서는 제대로 동작하지 않을 수 있습니다. 그럴 경우 async_download_webtoon을 사용하세요.
+
         기본적으로는 별다른 인자를 필요로 하지 않으며 다운로드받을 범위와 웹툰 모아서 보기를 할 때는
         추가적인 파라미터를 이용할 수 있습니다.
 
@@ -226,6 +224,7 @@ class Scraper(Generic[WebtoonId]):
                 Scraper._episode_no_range_to_real_range의 문서를 참고하세요.
             merge_number: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
                 None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
+            add_viewer: 웹툰 뷰어인 webtoon.html을 추가합니다. 기본값은 True입니다.
         """
         try:
             asyncio.run(
@@ -249,7 +248,15 @@ class Scraper(Generic[WebtoonId]):
         add_viewer: bool = True,
         manual_container_state: ContainerStates | None = None,
     ) -> None:
-        """download_webtoon의 문서를 참조하세요."""
+        """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
+
+        Example:
+            ```python
+            >>> scraper = NaverWebtoonScraper(819217)
+            >>> await scraper.async_download_webtoon()
+            ...
+            ```
+        """
         if not self.COMMENTS_DOWNLOAD_SUPPORTED and self.comments_option:
             logger.warning(
                 "Comments downloading is not supported in this scraper. "
@@ -288,6 +295,7 @@ class Scraper(Generic[WebtoonId]):
 
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
 
+        # 모아서 보기 적용
         if merge_number is not None:
             with self._send_context_callback_message(
                 "merge_webtoon",
@@ -296,6 +304,7 @@ class Scraper(Generic[WebtoonId]):
             ):
                 merge_webtoon(webtoon_directory, None, merge_number)
 
+        # information.json 추가
         if self.does_store_information:
             information_file = webtoon_directory / "information.json"
             if information_file.is_file():
@@ -318,11 +327,12 @@ class Scraper(Generic[WebtoonId]):
                 information["contents"].append("webtoon_viewer")
             information_file.write_text(json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8")
 
+        # webtoon.html 추가
         if add_viewer:
             add_html_webtoon_viewer(webtoon_directory)
 
     def list_episodes(self) -> None:
-        """웹툰 에피소드 목록을 프린트합니다."""
+        """웹툰 에피소드 목록을 출력합니다."""
         self.fetch_all()
         table = Table(show_header=True, header_style="bold blue", box=None)
         table.add_column("Episode number [dim](ID)[/dim]", width=12)
@@ -359,8 +369,7 @@ class Scraper(Generic[WebtoonId]):
             case "merge_webtoon_start":
                 logger.info("Merging webtoon has started...")
             case "setup_end":
-                if contexts.get("is_successful", True):
-                    logger.info("Webtoon data are fetched. Download has been started...")
+                logger.info("Webtoon data are fetched. Download has been started...")
             case "description":
                 logger.info(contexts["description"])
             case "episode_download_complete":
@@ -375,6 +384,10 @@ class Scraper(Generic[WebtoonId]):
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
     def get_information(self, old_information: dict):
+        """`information.json`에 탑재할 정보를 추가합니다.
+
+        이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼-한정적 정보를 추가할 수 있습니다.
+        """
         return {
             "version": version,
             "title": self.title,
@@ -399,7 +412,7 @@ class Scraper(Generic[WebtoonId]):
         """
         웹툰 폴더가 위치할 디렉토리입니다. str이나 Path로 값을 받아 Path를 저장합니다.
 
-        많은 이 변수의 사용처에서는 pathlib.Path를 필요로 합니다.
+        많은 이 변수의 사용처에서는 Path를 필요로 합니다.
         이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
         """
         self._base_directory = Path(base_directory)
@@ -415,7 +428,7 @@ class Scraper(Generic[WebtoonId]):
 
     @property
     def headers(self) -> dict[str, str]:
-        """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
+        """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 사용 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
         headers = self.hxoptions.headers
         if TYPE_CHECKING:
             assert isinstance(headers, dict)
@@ -442,22 +455,30 @@ class Scraper(Generic[WebtoonId]):
         self.callback(base_message + "_end", is_successful=True, **end_contexts)
 
     def _episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
-        """
+        """여러 형태와 타입으로 주어진 에피소드 다운로드 범위를 일관된 iterable로 변환합니다.
+
         Args:
             episode_no_range:
+                웹툰을 다운로드받을 범위를 결정합니다.
+                **범위가 1부터 시작하고 끝 수를 포함한다는 점을 주의하세요.**
+                범위를 벗어나는 경우 무시됩니다.
+
                 None인 경우(기본값): 웹툰의 모든 회차를 다운로드 받습니다.
-                tuple인 경우: `(처음, 끝)`의 튜플로 값을 받습니다. 이때 1부터 시작하고 끝 숫자를 포함합니다.
+                tuple인 경우: `(처음, 끝)`의 튜플로 값을 받습니다. 이때 1부터 시작하고 끝 수를 포함합니다.
                         두 값 중 None인 것이 있다면 처음이나 끝으로 평가됩니다.
-                    예1) (1, 10): 1회차부터 10회차까지를 다운로드함.
-                    예2) (None, 20): 1회차부터 20회차까지를 다운로드함.
-                    예2) (3, None): 3회차부터 끝까지 다운로드함.
+                    예1) (1, 10): 1회차부터 10회차까지를 다운로드합니다.
+                    예2) (None, 20): 1회차부터 20회차까지를 다운로드합니다.
+                    예3) (3, None): 3회차부터 끝까지 다운로드합니다.
+                    예4) (1, 100000000): 만약 웹툰 회차 수가 100000000보다 작은 경우 끝까지 다운로드됩니다.
                 int인 경우: 해당 회차 하나만 다운로드 받습니다.
-                slice인 경우: slice객체인 경우 해당 회차만큼 다운로드됩니다.
-                    예) slice(None, None, 5): 5화, 10화, 15화 등 5의 배수 만큼 다운로드
-                tuple이 아닌 iterable(예: 리스트)인 경우:
-                    tuple이 아닌 iterable이 값으로 들어왔다면 해당 iterable에 있는 회차를 다운로드받습니다.
-                    이때 회차 범위를 넘어서는 경우 무시됩니다.
-                        예) [3, 5, 7, 8]: 3화, 5화, 7화, 8화를 다운로드함.
+                slice인 경우: slice객체인 경우 해당 회차만큼 다운로드합니다.
+                    예1) slice(None, None, 5): 5화, 10화, 15화 등 5의 배수 만큼 다운로드합니다.
+                    예2) slice(3, None): 3화부터 끝까지 다운로드합니다.
+                    예3) slice(None, 10): 1~10화를 다운로드합니다. 끝 수를 포함합니다.
+                tuple이 아닌 iterable(예: 리스트)인 경우: \
+                        tuple이 아닌 iterable이 값으로 들어왔다면 해당 iterable에 있는 회차를 다운로드받습니다. \
+                        이때 회차 범위를 넘어서는 경우 무시됩니다.
+                    예) [3, 5, 7, 8]: 3화, 5화, 7화, 8화를 다운로드함.
         """
         episode_length = len(self.episode_ids)
 
@@ -485,7 +506,7 @@ class Scraper(Generic[WebtoonId]):
         if isinstance(episode_no_range, Iterable):
             return sorted(i - 1 for i in episode_no_range if i <= episode_length)
 
-        raise TypeError(f"Unknown type for episode_no_range({type(episode_no_range)}). Please check again.")
+        raise TypeError(f"Unknown type for episode_no_range({type(episode_no_range).__name__}). Please check again.")
 
     async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.
@@ -534,7 +555,7 @@ class Scraper(Generic[WebtoonId]):
                     )
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
-        """다운로드할 디렉토리를 재안내합니다.
+        """모아서 보기나 information.json, webtoon.html 등이 위차할 디렉토리를 재안내합니다.
 
         레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
         """
@@ -546,7 +567,6 @@ class Scraper(Generic[WebtoonId]):
         image_urls: list,
     ) -> bool:
         """episode_directory를 생성하고 이미 있다면 해당 폴더 내 내용물이 적합한지 조사합니다.
-        episode_no는 사용되지 않지만 혹시 모를 경우를 위해 남겨져 있습니다. 필요한 경우 제거하셔도 됩니다.
 
         False를 return한다면 회차를 다운로드해야 한다는 의미입니다.
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
@@ -559,7 +579,11 @@ class Scraper(Generic[WebtoonId]):
         return does_filename_inappropriate or does_file_count_inappropriate
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> bool:
-        """한 회차를 다운로드받습니다. 주의: 이 함수의 episode_no는 0부터 시작합니다."""
+        """한 회차를 다운로드받습니다.
+
+        이 함수는 일반적으로 사용됩니다. 각 스크래퍼의 구현이 궁금하다면 get_episode_image_urls을 대신 참고하세요.
+        주의: 이 함수의 episode_no는 0부터 시작합니다.
+        """
         episode_title = self.episode_titles[episode_no]
         safe_episode_title = self._get_safe_file_name(episode_title)
         episode_directory = webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
@@ -625,31 +649,32 @@ class Scraper(Generic[WebtoonId]):
 
     async def _download_image(
         self,
-        episode_directory: Path,
+        image_directory: Path,
         url: str,
         image_no: int,
         client: hxsoup.AsyncClient,
         *,
         file_extension: str | None = None,
     ) -> None:
-        """
-        Download image from url and returns to {episode_directory}/{file_name(translated to accactable name)}.
+        """url에서 이미지를 다운로드받아 image_directory에 저장합니다.
 
         Args:
+            image_directory: 다운로드할 이미지가 위치할 디렉토리입니다.
+            url: 이미지를 다운로드할 URL입니다.
+            image_no: 이미지의 이름을 결정할 때 사용할 정보 중 하나입니다. 이미지의 이름이 됩니다.
+            client: 사용할 AsyncClient입니다.
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
         file_extension = file_extension or self._get_file_extension(url)
-
         file_name = f"{image_no:03d}.{file_extension}"
-
         image_raw: bytes = (await client.get(url)).content
 
-        file_directory = episode_directory / file_name
+        file_directory = image_directory / file_name
         file_directory.write_bytes(image_raw)
 
     def _download_webtoon_thumbnail(self, webtoon_directory: Path, file_extension: str | None = None) -> str:
-        """
-        웹툰의 썸네일을 불러오고 thumbnail_directory에 저장합니다.
+        """self.webtoon_thumbnail_url에 정의되어 있는 웹툰의 썸네일의 정보로부터 다운로드해 webtoon_directory에 저장합니다.
+
         Args:
             webtoon_directory (Path): 썸네일을 저장할 디렉토리입니다.
             file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
@@ -661,12 +686,11 @@ class Scraper(Generic[WebtoonId]):
         return thumbnail_name
 
     def _set_progress_indication(self, description: str) -> None:
-        """진행사항을 표시할 곳을 tqdm의 description과 print 중 어떤 것을 사용할지 결정합니다.
+        """진행사항을 표시할 곳을 tqdm의 description과 logger 중 어떤 것을 사용할지 결정합니다.
 
-        self.use_tqdm_while_download가 False라면 print를 사용하고, True라면 pbar를 이용합니다.
+        self.use_tqdm_while_download가 False라면 logger를 사용하고, True라면 pbar를 이용합니다.
         이는 self.use_tqdm_while_download 설정을 변경해 사용할 수 있습니다. 기본값은 True입니다.
-        만약 사용자에게 꼭 알려야 하는 중요한 것이 있다면 이 함수가 아닌 직접 print나 logging을 사용하는 것을 권장합니다.
-        단, 만약 self.pbar가 없어 AttributeError가 난다면 무조건 print를 사용합니다.
+        단, 만약 self.pbar가 없어 AttributeError가 난다면 무조건 logger를 사용합니다.
 
         Args:
             description: 에피소드를 다운로드할 때 내보낼 메시지.
@@ -693,16 +717,17 @@ class Scraper(Generic[WebtoonId]):
         if extension_name is not None:
             return extension_name.group(0)
 
+        # 만약 파일 확장자를 파일 이름에서 찾는 것에 실패하였을 경우 DEFAULT_IMAGE_FILE_EXTENSION를 사용함.
         if cls.DEFAULT_IMAGE_FILE_EXTENSION is not None:
             return cls.DEFAULT_IMAGE_FILE_EXTENSION
 
-        raise ValueError(f"File extension not detected of {filename_or_url}(path: {url_path}).")
+        raise ValueError(f"The file extension is not detected: `{filename_or_url}`")
 
     @staticmethod
     def _get_safe_file_name(file_or_diretory_name: str) -> str:
         """Convert file or diretory "name" to accaptable name.
 
         Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
-        Otherwise this will smash slashes and backslashes.
+        Otherwise this function will smash slashes and backslashes.
         """
         return pf.to_safe_name(file_or_diretory_name)

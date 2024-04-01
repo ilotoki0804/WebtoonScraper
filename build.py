@@ -4,12 +4,18 @@ Replace relative path links with GitHub links and add warning in front of the lo
 Last modified at 2023-03-26; 7th edition.
 """
 import os
+import re
 import shutil
 from pathlib import Path
-import re
 
 import tomlkit
-from WebtoonScraper import __version__, __url__, __github_user_name__, __github_project_name__
+
+from WebtoonScraper import (
+    __github_project_name__,
+    __github_user_name__,
+    __url__,
+    __version__,
+)
 
 LEAVE_README_BUILD_VERSION = False
 PUBLISH = True

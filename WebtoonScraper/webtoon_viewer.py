@@ -1,3 +1,5 @@
+"""HTML로 된 웹툰을 볼 수 있는 뷰어를 제공합니다."""
+
 import json
 import os
 import re
@@ -5,7 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 from html import escape
 from pathlib import Path
-from typing import Sequence, TypeVar
+from typing import Any, Sequence, TypeVar
 
 from .directory_merger import _iterdir_seperating_directories_and_files
 from .miscs import __version__ as version
@@ -377,27 +379,70 @@ HTML_TEMPLATE = """\
 T = TypeVar("T")
 
 
-def _select_from_sequence(sequence_to_select: Sequence[T], message: str | None) -> T:
+def _select_from_sequence(choices: Sequence[T], message: str | None) -> T:
+    """사용자에게 여러 개의 선택지를 보여주고 결정할 수 있도록 하는 CLI용 선택 시 사용할 수 있는 툴입니다.
+
+    Arguments:
+        choices: 사용자가 고를 수 있는 선택지입니다. Sequence여야 제대로 동작합니다.
+        message: 선택지들을 보여주기 전 사용자에게 어떤 선택지를 골라야 하는지 설명합니다.
+
+    Returns:
+        choices 중 사용자가 고른 선택지의 값을 반환합니다.
+
+    Raises:
+        TypeError: choices가 Sequence가 아닌 경우 발생합니다.
+        ValueError: 사용자의 입력이 올바르지 않은 경우 발생합니다.
+        IndexError: 사용자가 범위를 벗어나는 선택을 했을 때 발생합니다.
+
+    Example:
+        ```python
+        >>> user_choice = _select_from_sequence(["첫번째", "두번째", "세번째"], "웹툰을 선택하세요.")
+        웹툰을 선택하세요.
+        1. 첫번째
+        2. 두번째
+        3. 세번째
+        Enter number: 2
+        >>> print(user_choice)
+        두번째
+        ```
+    """
     if message is not None:
         print(message)
-    if len(sequence_to_select) < 10:
-        for i, item in enumerate(sequence_to_select, 1):
+    if len(choices) < 10:
+        for i, item in enumerate(choices, 1):
             print(f"{i}. {item}")
     else:
-        for i, item in enumerate(sequence_to_select, 1):
+        for i, item in enumerate(choices, 1):
             print(f"{i:02d}. {item}")
 
     user_answer = int(input("Enter number: "))
-    return sequence_to_select[user_answer - 1]
+    return choices[user_answer - 1]
 
 
 def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
-    """information.json의 데이터보다 인자로 주어진 데이터를 더 우선 순위로 잡습니다."""
+    """웹툰 디렉토리에 사용할 수 있는 `webtoon.html`이라는 웹툰 뷰어를 추가합니다.
+
+    Arguments:
+        webtoon_directory: 일반적인 웹툰 디렉토리입니다. 이때 이 디렉토리에는 웹툰이 있어야 하며 \
+            손상되지 않은 information.json 파일이 존재하여야 합니다.
+
+    Raises:
+        ValueError: 웹툰 디렉토리에 information.json이 없을 경우 발생합니다.
+
+    Example:
+        ```python
+        >>> from pathlib import Path
+        >>> from WebtoonScraper.webtoon_viewer import add_html_webtoon_viewer
+        >>> add_html_webtoon_viewer(Path("./webtoon/웹툰 이름(1234567)"))
+        ```
+    """
+
+    # 웹툰 정보 불러옴. 이때 선택적 정보가 없는 경우 빈 값으로 설정함.
     directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
     for file in files:
         if file.name == "information.json":
             with file.open("r", encoding="utf-8") as f:
-                information = json.load(f)
+                information: dict[str, Any] = json.load(f)
             webtoon_title = information["title"]
             thumbnail_name = information["thumbnail_name"]
             comments = information.get("comments", {})
@@ -409,12 +454,15 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
     else:
         raise ValueError("There's no information.json, thus cannot create webtoon viewer.")
 
+    # 에피소드 디렉토리 이름 및 이미지 이름 추출.
+    # 후에 webtoon.html에서 드롭다운 메뉴에 에피소드 이름을 표시하고 이미지를 출력하는 데에 사용됨.
     episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
     images_of_episode_directories = json.dumps(
         [os.listdir(episode_directory_name) for episode_directory_name in directories],
         ensure_ascii=False,
     )
 
+    # HTML 제작 및 파일에 작성.
     html = (
         HTML_TEMPLATE.replace(
             r"{webtoon_thumbnail_name_repr}",
@@ -433,34 +481,3 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{merge_number}", "null" if merge_number is None else str(merge_number))
     )
     (webtoon_directory / "webtoon.html").write_text(html, encoding="utf-8")
-
-
-def infer_webtoon_infomations(
-    webtoon_directory: Path,
-    webtoon_title: str | None = None,
-    thumbnail_name: str | None = None,
-) -> tuple[str, str]:
-    """webtoon_title이나 thumbnail_name에 None이 아닌 것이 오면 그대로 패스합니다."""
-    directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
-    if thumbnail_name is None:
-        with suppress(ValueError):
-            files.remove(webtoon_directory / "webtoon.html")
-        with suppress(ValueError):
-            files.remove(webtoon_directory / "information.json")
-        if len(files) == 1:
-            thumbnail_path = files[0]
-        else:
-            for file in files:
-                if file.name.startswith(webtoon_directory.name):
-                    thumbnail_path = file
-                    break
-            else:
-                thumbnail_path = _select_from_sequence(files, "Please select thumbnail in this list.")
-        thumbnail_name = thumbnail_path.name
-
-    if webtoon_title is None:
-        webtoon_title_re = re.search("^.+(?=[.])", thumbnail_name)
-        assert webtoon_title_re is not None
-        webtoon_title = webtoon_title_re.group(0)
-
-    return webtoon_title, thumbnail_name

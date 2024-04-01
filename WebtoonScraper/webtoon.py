@@ -1,4 +1,4 @@
-"""Download webtoons automatiallly or easily"""
+"""CLI로 웹툰을 다운로드할 때 사용하기 위해 작성된 코드들입니다. 파이썬으로 사용할 때는 `WebtoonScraper.scrapers` 이용을 권장합니다."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from .exceptions import InvalidPlatformError, InvalidURLError, UnsupportedRating
 from .miscs import EpisodeNoRange, WebtoonId, logger
 from .scrapers import (
     BufftoonScraper,
+    CommentsDownloadOption,
     KakaopageScraper,
     KakaoWebtoonScraper,
     LezhinComicsScraper,
@@ -27,7 +28,6 @@ from .scrapers import (
     TistoryScraper,
     TistoryWebtoonId,
     WebtoonsDotcomScraper,
-    CommentsDownloadOption,
 )
 
 NAVER_WEBTOON = "naver_webtoon"
@@ -81,18 +81,49 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
 }
 
 
+def instantiatie(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId) -> Scraper:
+    """웹툰 플랫폼 코드와 웹툰 ID로부터 스크레퍼를 인스턴스화하여 반환합니다. cookie, bearer 등의 추가적인 설정이 필요할 수도 있습니다."""
+
+    Scraper: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
+    if Scraper is None:
+        raise ValueError(f'webtoon_type should be among {", ".join(PLATFORMS)}')
+    return Scraper(webtoon_id)
+
+
+def instantiatie_from_url(webtoon_url: str) -> Scraper:
+    """웹툰 URL로부터 자동으로 알맞은 스크래퍼를 인스턴스화합니다. cookie, bearer 등의 추가적인 설정이 필요할 수 있습니다."""
+
+    for platform_name, PlatformClass in PLATFORMS.items():
+        try:
+            platform = PlatformClass.from_url(webtoon_url)
+        except InvalidURLError:
+            continue
+        return platform
+    raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_url}")
+
+
 def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
-    """titleid가 어디에서 나왔는지 확인합니다. 적합하지 않은 titleid는 포함되지 않습니다. 잘못된 타입을 입력할 경우 결과가 제대로 나오지 않을 수 있습니다."""
+    """웹툰 ID를 추측합니다.
+
+    Threading을 활용해 빠르게 모든 플랫폼의 결과를 확인합니다.
+    잘못된 타입을 입력할 경우 결과가 제대로 나오지 않을 수 있습니다.
+
+    Raises:
+        TypeError: WebtoonId에 해당하지 않는 타입이 webtoon_id 인자에 왔을 때 발생합니다.
+        ValueError: 사용자가 정수가 아닌 인덱스를 사용했을 때 발생합니다.
+        IndexError: 사용자가 범위를 벗어나는 선택을 했을 때 발생합니다.
+    """
 
     def get_platform(
         platform_name: WebtoonPlatforms,
     ) -> tuple[WebtoonPlatforms, str | None]:
-        WebtoonScraperClass = get_scraper_class(platform_name)
+        scraper = instantiatie(platform_name, webtoon_id)
         return (
             platform_name,
-            WebtoonScraperClass(webtoon_id).check_if_legitimate_webtoon_id(),
+            scraper.check_if_legitimate_webtoon_id(),
         )
 
+    # 타입에 따른 테스트할 플랫폼 결정
     test_queue: tuple[WebtoonPlatforms, ...]
     if isinstance(webtoon_id, tuple):
         if isinstance(webtoon_id[0], int):
@@ -113,59 +144,32 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
             KAKAO_WEBTOON,
         )
     else:
-        raise TypeError(f"Unknown type of titleid({type(webtoon_id)})")
+        raise TypeError(f"Unknown type of titleid({type(webtoon_id).__name__})")
 
-    logger.info(f"Checking these platforms: {', '.join(test_queue)}")
-
+    # 테스트 실행
+    logger.info(f"Checking platforms: {', '.join(test_queue)}")
     with pool.ThreadPool(len(test_queue)) as p:
         results_raw = p.map(get_platform, test_queue)
-
     results = [(platform, title) for platform, title in results_raw if title is not None]
 
-    if (webtoon_length := len(results)) == 1:
-        logger.info(f"Webtoon's platform is assumed to be {results[0][0]}")
-        return results[0][0]
-    if webtoon_length == 0:
+    # 같은 웹툰 ID의 서로 다른 웹툰을 가지고 잇는 플랫폼들의 개수에 따라 결과 결정
+    if not results:
         logger.warning(f"There's no webtoon that webtoon ID is {webtoon_id}.")
         return None
+    if len(results) == 1:
+        return results[0][0]
 
+    # 같은 웹툰 ID를 서로 다른 플랫폼에서 각자 가지고 있을 경우 사용자에게 질문해서 플랫폼 결정
     for i, (platform, name) in enumerate(results, 1):
         print(f"#{i} {platform}: {name}")
 
-    platform_no = input(
-        "Multiple webtoon is found. Please type number of webtoon you want to download(enter nothing to select #1): "
-    )
+    platform_no = input("Multiple webtoon is found. "
+                        "Please type number of webtoon you want to download: ")
+    platform_no = int(platform_no)
 
-    try:
-        platform_no = 1 if platform_no == "" else int(platform_no)
-    except ValueError:
-        raise ValueError(
-            "Webtoon ID should be integer. " f"{platform_no!r} is cannot be converted to integer."
-        ) from None
-
-    try:
-        selected_platform, selected_webtoon = results[platform_no - 1]
-    except IndexError:
-        raise ValueError(f"Exceeded the range of webtoons(length of results was {results}).") from None
+    selected_platform, selected_webtoon = results[platform_no - 1]
     logger.info(f"Webtoon {selected_webtoon} is selected.")
     return selected_platform
-
-
-def get_webtoon_platform_from_url(webtoon_url: str) -> Scraper | None:
-    for platform_name, platform_class in PLATFORMS.items():
-        try:
-            platform = platform_class.from_url(webtoon_url)
-        except InvalidURLError:
-            continue
-        return platform
-    return None
-
-
-def get_scraper_class(webtoon_platform: str | WebtoonPlatforms) -> type[Scraper]:
-    platform_class: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
-    if platform_class is None:
-        raise ValueError(f'webtoon_type should be among {", ".join(PLATFORMS)}')
-    return platform_class
 
 
 def setup_instance(
@@ -178,31 +182,24 @@ def setup_instance(
     get_paid_episode: bool = False,
     comments_option: CommentsDownloadOption | None = None,
 ) -> Scraper:
+    """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
+
     # 스크래퍼 불러오기
-    if webtoon_platform:
-        scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
-    elif isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
-        scraper = get_webtoon_platform_from_url(webtoon_id_or_url)
-        if scraper is None:
-            raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_id_or_url}")
-        scraper = scraper
+    if isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
+        scraper = instantiatie_from_url(webtoon_id_or_url)
+    elif webtoon_platform:
+        scraper = instantiatie(webtoon_platform, webtoon_id_or_url)
     else:
-        warnings.warn(
-            "Inferring webtoon platform is deprecated. set `-p` flag to explicitly set platform.", DeprecationWarning
-        )
+        logger.error("Inferring webtoon platform is deprecated. Set `-p` flag to explicitly set platform.")
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
-        scraper = get_scraper_class(webtoon_platform)(webtoon_id_or_url)
+        scraper = instantiatie(webtoon_platform, webtoon_id_or_url)
 
     # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
-    if cookie:
-        if not isinstance(scraper, (LezhinComicsScraper, BufftoonScraper)):
-            raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
+    if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper)):
         scraper.cookie = cookie
-    if bearer:
-        if not isinstance(scraper, LezhinComicsScraper):
-            raise InvalidPlatformError(f"Webtoon scraper {webtoon_platform} does not accept cookie.")
+    if bearer and isinstance(scraper, LezhinComicsScraper):
         scraper.bearer = bearer
     if get_paid_episode and isinstance(scraper, LezhinComicsScraper):
         scraper.get_paid_episode = get_paid_episode

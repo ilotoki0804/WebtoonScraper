@@ -58,7 +58,7 @@ FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
     WEBTOON_DIRECTORY: WEBTOON_DIRECTORY_CONTAINER,
 }
 
-CONTAINER_TO_FILE: Final[dict[str, str]] = {value: key for key, value in FILE_TO_CONTAINER.items()}
+CONTAINER_TO_FILE: Final[dict[ContainerStates, FileStates]] = {value: key for key, value in FILE_TO_CONTAINER.items()}
 
 
 # 각 라인 끝 주석 처리된 부분: 덜 예민한 버전(거의 대부분 매치 개수 관련임)의 regex; 만약 현재 regex가 잘 작동하지 않을 경우 사용할 것. 없을 수도 있음.

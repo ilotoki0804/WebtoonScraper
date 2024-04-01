@@ -7,7 +7,12 @@ from contextlib import suppress
 from itertools import count
 from typing import NamedTuple
 
-from ..exceptions import InvalidBlogIdError, InvalidCategoryNoError, InvalidWebtoonIdError, UseFetchEpisode
+from ..exceptions import (
+    InvalidBlogIdError,
+    InvalidCategoryNoError,
+    InvalidWebtoonIdError,
+    UseFetchEpisode,
+)
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
 

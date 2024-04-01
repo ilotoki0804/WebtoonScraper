@@ -1,5 +1,5 @@
-from contextlib import suppress
 import shlex
+from contextlib import suppress
 
 from WebtoonScraper.__main__ import main
 
