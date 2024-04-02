@@ -373,10 +373,11 @@ class Scraper(Generic[WebtoonId]):
             case "description":
                 logger.info(contexts["description"])
             case "episode_download_complete":
-                # index = contexts["index"]
-                episode_no = contexts["episode_no"]
-                episode_title = self.episode_titles[episode_no]
-                logger.info(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
+                is_download_sucessful = contexts["is_download_sucessful"]
+                if is_download_sucessful:
+                    episode_no = contexts["episode_no"]
+                    episode_title = self.episode_titles[episode_no]
+                    logger.info(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
             case the_others:
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
