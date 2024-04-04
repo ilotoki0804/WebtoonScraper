@@ -72,15 +72,15 @@ def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
     elif id2.isdigit():
         # 네이버 블로그
         return id1, int(id2)
-    else:
-        # quote 제거
-        if id1[0] == id1[-1] == "'" or id1[0] == id1[-1] == '"':
-            id1 = id1[1:-1]
-        elif id2[0] == id2[-1] == "'" or id2[0] == id2[-1] == '"':
-            id2 = id2[1:-1]
 
-        # 티스토리
-        return id1, id2
+    # quote 제거
+    if id1[0] == id1[-1] == "'" or id1[0] == id1[-1] == '"':
+        id1 = id1[1:-1]
+    elif id2[0] == id2[-1] == "'" or id2[0] == id2[-1] == '"':
+        id2 = id2[1:-1]
+
+    # 티스토리
+    return id1, id2
 
 
 def _to_range(episode_no_range: str) -> EpisodeNoRange:
@@ -92,9 +92,7 @@ def _to_range(episode_no_range: str) -> EpisodeNoRange:
     with contextlib.suppress(ValueError):
         return int(episode_no_range)
 
-    start, end = (
-        nonesafe_int(i.strip()) for i in episode_no_range.split("~")
-    )
+    start, end = (nonesafe_int(i.strip()) for i in episode_no_range.split("~"))
 
     return start, end
 
@@ -169,11 +167,7 @@ download_subparser.add_argument(
     help="Get paid episode. Lezhin Comics only.",
 )
 download_subparser.add_argument(
-    "-c", "--comments", "--comment",
-    metavar="option",
-    help="Download comments.",
-    nargs="*",
-    choices=["all", "reply"]
+    "-c", "--comments", "--comment", metavar="option", help="Download comments.", nargs="*", choices=["all", "reply"]
 )
 
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")

@@ -163,8 +163,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     for i, (platform, name) in enumerate(results, 1):
         print(f"#{i} {platform}: {name}")
 
-    platform_no = input("Multiple webtoon is found. "
-                        "Please type number of webtoon you want to download: ")
+    platform_no = input("Multiple webtoon is found. Please type number of webtoon you want to download: ")
     platform_no = int(platform_no)
 
     selected_platform, selected_webtoon = results[platform_no - 1]
