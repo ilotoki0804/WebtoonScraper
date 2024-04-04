@@ -24,7 +24,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     WEBTOON_TYPE: ClassVar[Literal["WEBTOON", "BEST_CHALLENGE", "CHALLENGE"]]
     URL_REGEX: re.Pattern[str]
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
-    IS_CONNECTION_STABLE = True
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
     PLATFORM = "naver_webtoon"
     COMMENTS_DOWNLOAD_SUPPORTED = True

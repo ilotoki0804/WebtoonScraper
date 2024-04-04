@@ -23,7 +23,6 @@ class BufftoonScraper(Scraper[int]):
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
     BASE_URL = "https://bufftoon.plaync.com"
     TEST_WEBTOON_ID = 1001216  # 비트
-    IS_CONNECTION_STABLE = True
     URL_REGEX = re.compile(r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "png"
     PLATFORM = "bufftoon"

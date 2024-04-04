@@ -27,7 +27,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     """Scrape webtoons from Naver Post."""
 
     TEST_WEBTOON_ID = NaverPostWebtoonId(597061, 19803452)  # 겜덕겜소
-    IS_CONNECTION_STABLE = True
     BASE_URL = "https://post.naver.com"
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"

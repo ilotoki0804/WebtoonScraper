@@ -13,7 +13,6 @@ class WebtoonsDotcomScraper(Scraper[int]):
     """Scrape webtoons from Webtoon Originals."""
 
     BASE_URL = "https://www.webtoons.com/en/action/jungle-juice"
-    IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 5291  # Wumpus
     TEST_WEBTOON_IDS = (
         5291,  # Wumpus
@@ -45,11 +44,7 @@ class WebtoonsDotcomScraper(Scraper[int]):
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self), rating_notice=True)
 
         title = response.soup_select_one('meta[property="og:title"]', no_empty_result=True).get("content")
-        assert isinstance(title, str), f"Title is not string. webtoon_id: {self.webtoon_id}"
-
-        # # 자세한 건 잘 모르겠지만 네이버 오리지날은 webtoon thumbnail이 2개고 이 방식으로는 다른 형식의 thumbnail을 이용할 수 있음.
-        # url = f'{self.BASE_URL}/rss?title_no={self.webtoon_id}'
-        # webtoon_thumbnail = self.requests.get(url).soup_select_one('channel > image > url', no_empty_result=True).text
+        assert isinstance(title, str)
 
         webtoon_thumbnail = response.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
         assert isinstance(
@@ -77,7 +72,7 @@ class WebtoonsDotcomScraper(Scraper[int]):
         subtitles = []
         episode_ids = []
         for element in selected:
-            episode_no_str = element.get("data-episode-no")
+            episode_no_str = element["data-episode-no"]
             assert isinstance(episode_no_str, str)
             episode_no = int(episode_no_str)
             subtitles.append(element.select_one("span.subj").text)  # type: ignore

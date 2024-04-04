@@ -119,7 +119,6 @@ class Scraper(Generic[WebtoonId]):
 
     # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
     BASE_URL: ClassVar[str]
-    IS_CONNECTION_STABLE: ClassVar[bool]
     TEST_WEBTOON_ID: ClassVar
     TEST_WEBTOON_IDS: ClassVar[tuple] = ()
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS: ClassVar[int | float] = 0

@@ -16,7 +16,6 @@ class KakaopageScraper(Scraper[int]):
     """Scrape webtoons from Kakaopage."""
 
     BASE_URL = "https://page.kakao.com"
-    IS_CONNECTION_STABLE = False
     TEST_WEBTOON_ID = 53397318  # 부기영화
     URL_REGEX = re.compile(r"(?:https?:\/\/)?page[.]kakao[.]com\/content\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"

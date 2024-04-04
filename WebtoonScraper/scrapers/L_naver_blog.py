@@ -26,7 +26,6 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     """Scrape webtoons from Naver Blog."""
 
     TEST_WEBTOON_ID = NaverBlogWebtoonId("bkid4", 55)  # 상덕
-    IS_CONNECTION_STABLE = True
     BASE_URL = "https://m.blog.naver.com"
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?m[.]blog[.]naver[.]com\/(?P<blog_id>\w+)\?(?:.*&)*categoryNo=(?P<category_no>\d+)(?:&.*)*"

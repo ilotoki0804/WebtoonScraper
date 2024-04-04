@@ -42,7 +42,6 @@ class LezhinComicsScraper(Scraper[str]):
         "noway",  # general test
         "brianoslab",  # shuffle test
     )
-    IS_CONNECTION_STABLE = True
     URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     PLATFORM = "lezhin_comics"
