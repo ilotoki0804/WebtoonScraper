@@ -386,7 +386,7 @@ class Scraper(Generic[WebtoonId]):
     def get_information(self, old_information: dict):
         """`information.json`에 탑재할 정보를 추가합니다.
 
-        이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼-한정적 정보를 추가할 수 있습니다.
+        이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼에 한정적인 정보를 추가할 수 있습니다.
         """
         return {
             "version": version,

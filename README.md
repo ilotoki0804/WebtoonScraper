@@ -1,8 +1,11 @@
 # WebtoonScraper
-<!-- [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) -->
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/WebtoonScraper)](https://pypi.org/project/WebtoonScraper/)
 [![Gitbook Link](https://img.shields.io/badge/Gitbook-Link-blue?link=https%3A%2F%2Filotoki0804.gitbook.io%2Fwebtoonscraper%2F)](https://ilotoki0804.gitbook.io/webtoonscraper/)
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Filotoki0804%2FWebtoonScraper&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/ilotoki0804/WebtoonScraper)
+
+**English documentation is available [here](docs/README_eng.md).**
 
 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
@@ -30,7 +33,7 @@
 
 ## Installation
 
-1. 파이썬(3.10 이상, 최신 버전 권장)을 설치합니다. 꼭 Path에 파이썬이 포함되도록 설치하세요.
+1. 파이썬(3.10 이상, 최신 버전 권장)을 설치합니다. 꼭 PATH에 파이썬이 포함되도록 설치하세요.
 1. 터미널에서 다음과 같은 명령어를 실행합니다.
 
     ```console
@@ -43,31 +46,29 @@
     pip3 install -U WebtoonScraper
     ```
 
-1. 자신의 환경에서 잘 설치되었는지 확인해 보세요.
+CLI가 잘 설치되었는지를 확인하려면 다음의 명령어를 사용해 보세요.
 
-    CLI가 잘 설치되었는지를 확인하려면 다음의 명령어를 사용해 보세요.
+```console
+webtoon --version
+```
 
-    ```console
-    webtoon --version
-    ```
+> 만약 `webtoon` 명령어가 잘 실행되지 않는다면 다음의 코드를 사용해 보세요.
+>
+> ```console
+> python -m WebtoonScraper --version
+> ```
+>
+> 자신의 환경에 따라 `python` 대신 `python3`나 `py -3.12`과 같은 코드를 적절히 사용해야 할 수 있습니다.
 
-    > 만약 `webtoon` 명령어가 잘 실행되지 않는다면 다음의 코드를 사용해 보세요.
-    >
-    > ```console
-    > python -m WebtoonScraper --version
-    > ```
-    >
-    > 자신의 환경에 따라 `python` 대신 `python3`나 `py -3.12`과 같은 코드를 적절히 사용해야 할 수 있습니다.
+자신의 파이썬 환경에 잘 설치되었는지를 확인하려면 다음의 코드를 실행해 보세요.
 
-    자신의 파이썬 환경에 잘 설치되었는지를 확인하려면 다음의 코드를 실행해 보세요.
-
-    ```python
-    from WebtoonScraper import webtoon as wt
-    ```
+```python
+from WebtoonScraper import webtoon
+```
 
 ## How to use
 
-대부분의 웹툰은 다음과 같이 `webtoon download`를 치고 큰따옴표로 감싼 URL을 뒤에 위치하면 작동합니다.
+대부분의 웹툰은 다음과 같이 터미널에 `webtoon download`를 치고 큰따옴표로 감싼 URL을 뒤에 위치하면 작동합니다.
 
 ```console
 webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
