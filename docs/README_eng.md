@@ -11,7 +11,7 @@ It supports **Naver Webtoon (including Best Challenge, Challenge Comics), webtoo
 
 If you want to know more about copyright and responsibility, please refer to [this document(Korean)](copyright.md).
 
-* I apologize that only the README is available in English. Most of our users, including myself, are Korean, so I don't pay much attention to English documentation. But the browser translation tool is pretty good! Give it a try.
+* I apologize that only the README is available in English. Most of our users, including myself, are Korean, so I can't pay much attention to English documentation. But the browser translation tool is pretty good! Give it a try.
 
 ## Using as an executable file
 
