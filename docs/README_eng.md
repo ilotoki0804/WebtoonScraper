@@ -5,13 +5,13 @@
 [![Gitbook Link](https://img.shields.io/badge/Gitbook-Link-blue?link=https%3A%2F%2Filotoki0804.gitbook.io%2Fwebtoonscraper%2F)](https://ilotoki0804.gitbook.io/webtoonscraper/)
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Filotoki0804%2FWebtoonScraper&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/ilotoki0804/WebtoonScraper)
 
-I apologize that only the README is available in English. Most of our users, including myself, are Korean, so I don't pay much attention to English documentation. But the browser translation tool is pretty good! Give it a try.
-
-The largest open-source webtoon scraper in world.
+The largest open source webtoon scraper in world.
 
 It supports **Naver Webtoon (including Best Challenge, Challenge Comics), webtoons.com, Bufftoon, Naver Post, Naver Game, Lezhin Comics, KakaoPage, Naver Blog, Tistory, Kakao Webtoon**, and possibly more in future.
 
 If you want to know more about copyright and responsibility, please refer to [this document(Korean)](copyright.md).
+
+* I apologize that only the README is available in English. Most of our users, including myself, are Korean, so I don't pay much attention to English documentation. But the browser translation tool is pretty good! Give it a try.
 
 ## Using as an executable file
 
