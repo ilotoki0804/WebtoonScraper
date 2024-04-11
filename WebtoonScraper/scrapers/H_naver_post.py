@@ -77,7 +77,10 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
                 break
 
             subtitle_list += [tag.text.strip() for tag in soup.select("ul > li > a > div > span.ell")]
-            episode_id_list += [next(map(int, tag.get("data-cid").split("_"))) for tag in soup.select("ul > li > a > div > span.spot_post_like")]  # type: ignore
+            episode_id_list += [
+                next(map(int, tag["data-cid"].split("_")))  # type: ignore
+                for tag in soup.select("ul > li > a > div > span.spot_post_like")
+            ]
 
             prev_data = decoded_response_data
 

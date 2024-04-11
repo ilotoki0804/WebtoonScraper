@@ -59,7 +59,10 @@ def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
     if "," not in webtoon_id:
         raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
 
-    match_result = re.match(r""" *[(]? *(?P<id1>['"]?.+?['"]?) *, *(?P<id2>['"]?.+?['"]?) *[)]? *$""", webtoon_id)
+    match_result = re.match(
+        r""" *[(]? *(?P<id1>['"]?.+?['"]?) *, *(?P<id2>['"]?.+?['"]?) *[)]? *$""",
+        webtoon_id,
+    )
     if not match_result:
         raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
 
@@ -108,14 +111,23 @@ parser.add_argument(
     action="version",
     version=f"WebtoonScraper {__version__} of Python {sys.version} from {str(files(WebtoonScraper))}",
 )
-parser.add_argument("-v", "--verbose", action="store_true", help="Set logger level to INFO and show detailed error.")
+parser.add_argument(
+    "-v",
+    "--verbose",
+    action="store_true",
+    help="Set logger level to INFO and show detailed error.",
+)
 subparsers = parser.add_subparsers(title="Commands", help="Choose command you want.")
 
 # 'download' subparsers
 download_subparser = subparsers.add_parser("download", help="Download webtoons.")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
-    "webtoon_ids", type=_to_webtoon_id, metavar="webtoon_ids", help="Webtoon ID or URL.", nargs="+"
+    "webtoon_ids",
+    type=_to_webtoon_id,
+    metavar="webtoon_ids",
+    help="Webtoon ID or URL.",
+    nargs="+",
 )
 download_subparser.add_argument(
     "-p",
@@ -167,7 +179,13 @@ download_subparser.add_argument(
     help="Get paid episode. Lezhin Comics only.",
 )
 download_subparser.add_argument(
-    "-c", "--comments", "--comment", metavar="option", help="Download comments.", nargs="*", choices=["all", "reply"]
+    "-c",
+    "--comments",
+    "--comment",
+    metavar="option",
+    help="Download comments.",
+    nargs="*",
+    choices=["all", "reply"],
 )
 
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")

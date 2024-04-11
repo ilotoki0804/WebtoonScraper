@@ -128,4 +128,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         try:
             return (matched_url.group("blog_id"), int(matched_url.group("category_no")))
         except (TypeError, ValueError):
-            return (matched_url.group("blog_id2"), int(matched_url.group("category_no2")))
+            return (
+                matched_url.group("blog_id2"),
+                int(matched_url.group("category_no2")),
+            )

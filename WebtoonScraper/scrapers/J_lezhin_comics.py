@@ -139,7 +139,10 @@ class LezhinComicsScraper(Scraper[str]):
         assert "src" not in webtoon_raw_data.attrs, f"Invalid {self.webtoon_id=}."
 
         try:
-            product_start = re.search(r"__LZ_PRODUCT__ *= *{\n? *productType: *'comic',\n? *product: *", webtoon_raw_data.text).end()  # type: ignore
+            product_start = re.search(
+                r"__LZ_PRODUCT__ *= *{\n? *productType: *'comic',\n? *product: *",
+                webtoon_raw_data.text,
+            ).end()  # type: ignore
             product_end, departure_start = re.search(",\n? *departure: *'',\n? *all: *", webtoon_raw_data.text).span()  # type: ignore
             # departure_end = re.search(",\n *prefree", webtoon_raw_data.text).start()  # type: ignore
 
