@@ -586,8 +586,8 @@ class Scraper(Generic[WebtoonId]):
         주의: 이 함수의 episode_no는 0부터 시작합니다.
         """
         episode_title = self.episode_titles[episode_no]
-        safe_episode_title = self._get_safe_file_name(episode_title)
-        episode_directory = webtoon_directory / f"{episode_no + 1:04d}. {safe_episode_title}"
+        directory_name = self._get_safe_file_name(f"{episode_no + 1:04d}. {episode_title}")
+        episode_directory = webtoon_directory / directory_name
 
         if episode_directory.is_file():
             raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
@@ -629,7 +629,7 @@ class Scraper(Generic[WebtoonId]):
                 shutil.rmtree(episode_directory)
                 episode_directory.mkdir()
 
-            self._set_progress_indication(f"downloading {safe_episode_title}")
+            self._set_progress_indication(f"downloading {episode_title}")
         except BaseException:
             if not os.listdir(episode_directory):
                 episode_directory.rmdir()
