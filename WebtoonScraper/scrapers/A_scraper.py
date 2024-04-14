@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import html
 import json
 import os
 import re
@@ -730,4 +731,4 @@ class Scraper(Generic[WebtoonId]):
         Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
         Otherwise this function will smash slashes and backslashes.
         """
-        return pf.to_safe_name(file_or_diretory_name)
+        return pf.to_safe_name(html.unescape(file_or_diretory_name))
