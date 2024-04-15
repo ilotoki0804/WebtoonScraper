@@ -12,11 +12,6 @@
 import sys as _sys
 
 from .miscs import (
-    __author__,
-    __description__,
-    __github_project_name__,
-    __github_user_name__,
-    __title__,
     __url__,
     __version__,
     __version_info__,
