@@ -731,4 +731,4 @@ class Scraper(Generic[WebtoonId]):
         Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
         Otherwise this function will smash slashes and backslashes.
         """
-        return pf.to_safe_name(html.unescape(file_or_diretory_name))
+        return pf.convert(html.unescape(file_or_diretory_name))
