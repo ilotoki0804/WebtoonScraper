@@ -22,9 +22,7 @@ PUBLISH = True
 
 
 def match_url(url: str) -> tuple[str, str]:
-    result = re.match(
-        r"(https?:\/\/)?github[.]com\/(?P<user>\w+)\/(?P<project>\w+)", url
-    )
+    result = re.match(r"(https?:\/\/)?github[.]com\/(?P<user>\w+)\/(?P<project>\w+)", url)
     if result is None:
         raise ValueError("URL is invalid or not a github URL.")
     return result["user"], result["project"]
@@ -43,10 +41,7 @@ def make_relative_link_work(match: re.Match) -> str:
             f'{match.group("path")})'
         )
 
-    return (
-        f'[{match.group("description")}]'
-        f'({github_project_url}/blob/master/{match.group("path")})'
-    )
+    return f'[{match.group("description")}]' f'({github_project_url}/blob/master/{match.group("path")})'
 
 
 def main():

@@ -324,7 +324,7 @@ def _iterdir_seperating_directories_and_files(
 
 def check_filename_state(file_or_directory_name: str) -> FileStates:
     """한 파일(혹은 디렉토리) 이름의 상태를 확인합니다."""
-    # sourcery skip: use-next; for simplicity and extensibility, decide not to apply 'use-next'
+    # sourcery skip: use-next; for simplicity and extensibility, I decide to not apply 'use-next'
     for state_name, regex in webtoon_regexes.items():
         if regex.match(file_or_directory_name):
             return state_name
