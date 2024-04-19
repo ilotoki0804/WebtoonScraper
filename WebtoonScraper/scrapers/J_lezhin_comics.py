@@ -17,9 +17,9 @@ from hxsoup.exceptions import EmptyResultError
 from ..exceptions import (
     InvalidAuthenticationError,
     InvalidWebtoonIdError,
+    Unreachable,
     UnsupportedRatingError,
     UseFetchEpisode,
-    WebtoonScraperError,
 )
 from ..miscs import logger
 from .A_scraper import Scraper, reload_manager
@@ -353,7 +353,7 @@ class LezhinComicsScraper(Scraper[str]):
                 case False, True:
                     warning_message = "Not for free episode will be skipped."
                 case _:
-                    raise WebtoonScraperError("Contect developer if this error is presented.")
+                    raise Unreachable
 
             warning_message += " Following epsodes will be skipped: "
             warning_message += ", ".join(
