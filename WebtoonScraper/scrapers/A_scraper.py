@@ -11,6 +11,7 @@ import re
 import shutil
 import time
 from abc import abstractmethod
+from collections import defaultdict
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
@@ -20,12 +21,10 @@ from typing import (
     Generic,
     Iterable,
     NamedTuple,
+    TypedDict,
     TypeVar,
 )
 from urllib import parse
-
-if TYPE_CHECKING:
-    from typing import Self
 
 import hxsoup
 import pyfilename as pf
@@ -53,7 +52,29 @@ from ..miscs import EpisodeNoRange, logger
 from ..miscs import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
+if TYPE_CHECKING:
+    from typing import Required, Self
+
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
+
+
+class Comment(TypedDict, total=False):
+    comments_id: int | str
+    reply_count: int | None
+    comment: Required[str]
+    username: Required[str]
+    likes: int
+    dislikes: int
+    last_modified: str
+    created: str
+    replies: list[Comment]
+
+
+class EpisodeComments(TypedDict, total=False):
+    download_option: dict
+    comments: list[Comment]
+    comment_count: int
+    author_comment: str
 
 
 class CommentsDownloadOption(NamedTuple):
@@ -148,9 +169,7 @@ class Scraper(Generic[WebtoonId]):
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
         self._end_downloading_when_error_occured = False
         self.comments_option: CommentsDownloadOption | None = None
-        self.comments = {}
-        self.comment_counts = {}
-        self.author_comments = {}
+        self.comments_data: defaultdict[int, EpisodeComments] = defaultdict(dict)  # type: ignore
         self.author = None
 
     # PUBLIC METHODS
@@ -401,9 +420,7 @@ class Scraper(Generic[WebtoonId]):
             "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
             "episode_ids": self.episode_ids,
             "episode_titles": self.episode_titles,
-            "comments": old_information.get("comments", {}) | self.comments,
-            "comment_counts": old_information.get("comment_counts", {}) | self.comment_counts,
-            "author_comments": old_information.get("author_comments", {}) | self.author_comments,
+            "comments_data": old_information.get("comments_data", {}) | self.comments_data,
             "author": self.author,
         }
 

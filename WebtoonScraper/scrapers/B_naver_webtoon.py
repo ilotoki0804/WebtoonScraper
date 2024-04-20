@@ -12,8 +12,14 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 
 import hxsoup
 
-from ..exceptions import InvalidPlatformError, InvalidURLError, UnsupportedRatingError
-from .A_scraper import CommentsDownloadOption, Scraper, reload_manager
+from ..exceptions import (
+    CommentsDownloadOptionError,
+    InvalidPlatformError,
+    InvalidURLError,
+    NotImplementedCommentsDownloadOptionError,
+    UnsupportedRatingError,
+)
+from .A_scraper import Comment, CommentsDownloadOption, EpisodeComments, Scraper, reload_manager
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
@@ -119,36 +125,81 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             )
             if search_result is None:
                 raise ValueError
-            self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
+            self.comments_data[episode_no]["author_comment"] = json.loads(search_result.group("author_comments_raw"))
 
         return episode_image_urls
 
     def get_episode_comments(self, episode_no) -> None:
-        if self.comments_option != CommentsDownloadOption():
-            raise ValueError("Only default option is supported.")
+        if self.comments_option is None:
+            raise CommentsDownloadOptionError("comments_option is None. Set a proper option to proceed.")
+        if self.comments_option.reply:
+            raise NotImplementedCommentsDownloadOptionError("The `reply' option is currently unavailable.")
 
         episode_id = self.episode_ids[episode_no]
+        top = self.comments_option.top_comments_only
 
-        formatted_time = datetime.now().strftime("%Y%m%d%H%M%S")
-        url = (
-            "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json"
-            f"?ticket=comic&templateId=webtoon&pool=cbox3&_cv={formatted_time}&lang=ko&country=KR"
-            f"&objectId={self.webtoon_id}_{episode_id}&categoryId=&pageSize=30&indexSize=10&groupId={self.webtoon_id}"
-            "&listType=OBJECT&pageType=more&page=1&currentPage=1&refresh=true&sort=BEST"
-        )
+        def fetch(data: dict | None = None, reply_of: str | int | None = None):
+            formatted_time = datetime.now().strftime("%Y%m%d%H%M%S")
+            url = (
+                "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json"
+                f"?ticket=comic&templateId=webtoon&pool=cbox3&_cv={formatted_time}&lang=ko&country=KR"
+                f"&objectId={self.webtoon_id}_{episode_id}&categoryId=&pageSize=30&indexSize=10&groupId={self.webtoon_id}"
+                f"&listType=OBJECT&pageType=more&page=1&currentPage=1&refresh=true&sort={'BEST' if top else 'NEW'}"
+            )
+            if reply_of:
+                url += "&parentCommentNo={reply_of}"
+            if data:
+                lastest_comment_id: str = data["lastest_comment_id"]
+                current_last_comment_id: str = data["current_last_comment_id"]
+                prev_pointer: str = data["prev_pointer"]
+                next_pointer: str = data["next_pointer"]
+                # url += f"current={'466686102'}&prev={'466692684'}&moreParam.direction=next&moreParam.prev={'0695nz43m35m1'}&moreParam.next={'0695gpq00mnoi'}"
+                url += f"&current={current_last_comment_id}&prev={lastest_comment_id}&moreParam.direction=next&moreParam.prev={prev_pointer}&moreParam.next={next_pointer}"
+            res = self.hxoptions.get(url)
+            return json.loads(res.text[10:-2])["result"]
 
-        res = self.hxoptions.get(url)
-        data = json.loads(res.text[10:-2])["result"]
-        comments = data["commentList"]
-        comments_total_counts = data["count"]["total"]
-        self.comments[episode_no] = [self._extract_comment_infomation(comment) for comment in comments]
-        self.comment_counts[episode_no] = comments_total_counts
+        if top:
+            data = fetch()
+
+            comments_count = data["count"]["total"]
+            comments = [self._extract_comment_infomation(comment) for comment in data["commentList"]]
+        else:
+            lastest_comment_id = None
+            comments = []
+            while True:
+                if lastest_comment_id:
+                    data = fetch(
+                        {
+                            "lastest_comment_id": lastest_comment_id,
+                            "current_last_comment_id": current_last_comment_id,  # noqa: F821
+                            "prev_pointer": prev_pointer,  # noqa: F821
+                            "next_pointer": next_pointer,  # noqa: F821
+                        }
+                    )
+                else:
+                    data = fetch()
+
+                prev_pointer = data["morePage"]["prev"]  # noqa: F841
+                next_pointer = data["morePage"]["next"]
+                end_pointer = data["morePage"]["end"]
+                comments_count = data["count"]["total"]
+                lastest_comment_id = lastest_comment_id or data["commentList"][0]["commentNo"]
+                current_last_comment_id = data["commentList"][-1]["commentNo"]  # noqa: F841
+                comments += [self._extract_comment_infomation(comment) for comment in data["commentList"]]
+                if next_pointer == end_pointer:
+                    break
+
+        episode_comments: EpisodeComments = {
+            "download_option": self.comments_option._asdict(),
+            "comment_count": comments_count,
+            "comments": comments,
+        }
+        self.comments_data[episode_no].update(episode_comments)
 
     def check_if_legitimate_webtoon_id(self) -> str | None:
         return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
 
-    @staticmethod
-    def _extract_comment_infomation(comment_data: dict):
+    def _extract_comment_infomation(self, comment_data: dict) -> Comment:
         return {
             "comments_id": comment_data["commentNo"],
             # "reply_to": comment_data["parentCommentNo"],

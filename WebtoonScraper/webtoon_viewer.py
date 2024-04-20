@@ -123,9 +123,7 @@ HTML_TEMPLATE = """\
         const episodeDirectories = {episode_directories};
         const webtoonImagesOfDirectories = {images_of_episode_directories};
         const createdTime = {created_time};
-        const comments = {comments};
-        const commentCounts = {comment_counts};
-        const authorComments = {author_comments};
+        const commentsData = {comments_data};
         const authorName = {author_name};
         const mergeNumber = {merge_number};
 
@@ -138,6 +136,7 @@ HTML_TEMPLATE = """\
         const resetButton = document.getElementById("delete-history");
         const commentsBox = document.getElementById("comments");
         const showComments = document.getElementById("show-comments");
+        let commentsShowed = false;
         let viewedEpisodes = [];
         let episodeNo;
         episodeNo = getEpisodeNo();
@@ -250,7 +249,7 @@ HTML_TEMPLATE = """\
         function updateComments() {
             refreshCommentsButton();
 
-            let episode_comments = comments[episodeNo];
+            let episode_comments = commentsData[episodeNo]["comments"];
             if (!episode_comments) {
                 console.log("There's no comments to show.");
                 commentsBox.style.display = "none";
@@ -261,9 +260,9 @@ HTML_TEMPLATE = """\
             function createCommentBox(information) {
                 comment = document.createElement("div");
                 comment.classList.add("comment-box");
-                let created_time = (new Date(information.created)).toLocaleString();
+                let createdTime = (new Date(information.created)).toLocaleString();
                 comment.innerHTML = `
-                    <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${created_time}</small></div>
+                    <div class="username"><strong>${escapeHTML(information.username)}</strong> <small>${createdTime}</small></div>
                     <div class="comment-body">${escapeHTML(information.comment)}</div>
                     <div class="created-date"></div>
                     <div class="buttons">
@@ -279,7 +278,7 @@ HTML_TEMPLATE = """\
                 commentsBox.removeChild(commentsBox.lastChild);
             }
 
-            let authorComment = authorComments[episodeNo];
+            let authorComment = commentsData[episodeNo]["author_comment"];
             if (authorComment && authorComment != ".") {
                 let authorCommentDiv = document.createElement("div");
                 authorCommentDiv.classList.add("author-comment-box");
@@ -290,23 +289,12 @@ HTML_TEMPLATE = """\
             }
 
             episode_comments.forEach((comment) => commentsBox.appendChild(createCommentBox(comment)));
-            // commentsBox.appendChild(createCommentBox({
-            //     "comments_id": "1234",
-            //     "reply_count": 50,
-            //     "comment": "진돌진돌진돌 세끼진돌진돌 번식진돌진돌 가족진돌진돌 진돌진돌진돌",
-            //     "username": "진돌",
-            //     "likes": 1000,
-            //     "dislikes": 23,
-            //     "last_modified": "2023-01-10",
-            //     "created": "2023-01-10",
-            //     "replies": [],
-            // }));
         }
 
         function refreshCommentsButton() {
-            let episodeCommentCount = commentCounts[episodeNo];
+            let episodeCommentCount = commentsData[episodeNo]["comment_count"];
             if (episodeCommentCount) {
-                if (commentsShowed) {
+                if (!commentsShowed) {
                     commentsBox.style.display = "none";
                     showComments.innerText = `Show ${episodeCommentCount} comment(s)`;
                 } else {
@@ -314,7 +302,7 @@ HTML_TEMPLATE = """\
                     showComments.innerText = `Hide ${episodeCommentCount} comment(s)`;
                 }
             } else {
-                if (commentsShowed) {
+                if (!commentsShowed) {
                     commentsBox.style.display = "none";
                     showComments.innerText = "Show comments";
                 } else {
@@ -445,9 +433,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
                 information: dict[str, Any] = json.load(f)
             webtoon_title = information["title"]
             thumbnail_name = information["thumbnail_name"]
-            comments = information.get("comments", {})
-            comment_counts = information.get("comment_counts", {})
-            author_comments = information.get("author_comments", {})
+            comments_data = information.get("comments_data", {})
             author_name = information.get("author", "author")
             merge_number = information["merge_number"]
             break
@@ -474,9 +460,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
         .replace(r"{images_of_episode_directories}", images_of_episode_directories)
         .replace(r"{version}", version)
         .replace(r"{created_time}", json.dumps(datetime.now().isoformat()))
-        .replace(r"{comments}", json.dumps(comments, ensure_ascii=False))
-        .replace(r"{comment_counts}", json.dumps(comment_counts))
-        .replace(r"{author_comments}", json.dumps(author_comments, ensure_ascii=False))
+        .replace(r"{comments_data}", json.dumps(comments_data, ensure_ascii=False))
         .replace(r"{author_name}", json.dumps(author_name, ensure_ascii=False))
         .replace(r"{merge_number}", "null" if merge_number is None else str(merge_number))
     )
