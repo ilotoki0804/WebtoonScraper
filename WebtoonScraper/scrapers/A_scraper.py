@@ -43,7 +43,12 @@ from ..directory_merger import (
     restore_webtoon,
     webtoon_regexes,
 )
-from ..exceptions import DirectoryStateUnmatchedError, InvalidURLError, UseFetchEpisode
+from ..exceptions import (
+    DirectoryStateUnmatchedError,
+    InvalidURLError,
+    NotImplementedCommentsDownloadOptionError,
+    UseFetchEpisode,
+)
 from ..miscs import EpisodeNoRange, logger
 from ..miscs import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
@@ -158,7 +163,7 @@ class Scraper(Generic[WebtoonId]):
     @abstractmethod
     def get_episode_comments(self, episode_no: int) -> None:
         """해당 회차의 댓글을 모두 불러옵니다. 웹툰 플랫폼에 따라 지원하지 않을 수 있습니다."""
-        raise NotImplementedError("Downloading comments is not supported in this scraper.")
+        raise NotImplementedCommentsDownloadOptionError("Downloading comments is not supported in this scraper.")
 
     @reload_manager
     @abstractmethod

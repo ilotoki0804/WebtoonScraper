@@ -98,3 +98,19 @@ class Unreachable(WebtoonScraperError):
             "This code is meant to be unreachable. If you saw this message, it's clearly error. "
             "Please contect developer or make a issue for this." + ("\n" + message if message else "")
         )
+
+
+class CommentError(WebtoonScraperError):
+    """Errors related to comments."""
+
+
+class CommentsDownloadOptionError(CommentError):
+    """Comment download option is not supported or implemented."""
+
+
+class UnsupportedCommentsDownloadOptionError(CommentsDownloadOptionError):
+    """The comment download option cannot be implemented due to technical difficulties."""
+
+
+class NotImplementedCommentsDownloadOptionError(CommentsDownloadOptionError, NotImplementedError):
+    """This option is not currently implemented, but may be implemented in the future."""
