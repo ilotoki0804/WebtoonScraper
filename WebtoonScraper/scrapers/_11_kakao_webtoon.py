@@ -9,6 +9,7 @@ import json
 import random
 import re
 import time
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -17,13 +18,12 @@ from urllib import parse
 if TYPE_CHECKING:
     from typing import Self
 
-from Cryptodome.Cipher import AES
 from hxsoup import AsyncClient
 from hxsoup.exceptions import EmptyResultError
 
 from WebtoonScraper.miscs import EpisodeNoRange
 
-from ..exceptions import InvalidURLError, InvalidWebtoonIdError, UnsupportedRatingError
+from ..exceptions import InvalidURLError, InvalidWebtoonIdError, MissingOptionalDependencyError, UnsupportedRatingError
 from ..miscs import logger
 from ._01_scraper import Scraper, reload_manager
 
@@ -173,8 +173,19 @@ class KakaoWebtoonScraper(Scraper[int]):
 
         return [(i["url"], key, iv) for i in data["media"]["files"]]
 
-    @staticmethod
-    def _decrypt(data: bytes, key: bytes, iv: bytes) -> bytes:
+    @classmethod
+    def get_aes(cls):
+        with suppress(AttributeError):
+            return cls.AES
+
+        with MissingOptionalDependencyError.importing("pycryptodomex", "kakao_webtoon"):
+            from Cryptodome.Cipher import AES
+        cls.AES = AES
+        return cls.AES
+
+    @classmethod
+    def _decrypt(cls, data: bytes, key: bytes, iv: bytes) -> bytes:
+        AES = cls.get_aes()
         cipher = AES.new(key, AES.MODE_CBC, iv)
         return cipher.decrypt(data)
 

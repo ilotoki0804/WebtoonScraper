@@ -10,7 +10,6 @@ import shutil
 from contextlib import suppress
 from pathlib import Path
 
-from PIL import Image
 from tqdm import tqdm
 
 from ..directory_merger import (
@@ -21,8 +20,19 @@ from ..directory_merger import (
     check_filename_state,
     webtoon_regexes,
 )
-from ..exceptions import DirectoryStateUnmatchedError
+from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
 from ..miscs import logger
+
+Image = None
+
+
+def get_image():
+    global Image
+    if Image:
+        return Image
+    with MissingOptionalDependencyError.importing("Pillow", "lezhin_comics"):
+        from PIL import Image
+    return Image
 
 
 def unshuffle_typical_webtoon(
@@ -158,6 +168,7 @@ def calculate_image_order(random_numbers: list[int]) -> list[int]:
 
 
 def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_order: list[int]) -> None:
+    Image = get_image()
     with Image.open(base_image_path) as image:
         image_x, image_y = image.size
         margin = image_y % 5

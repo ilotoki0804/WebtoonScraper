@@ -9,11 +9,10 @@ from collections import defaultdict, deque
 from itertools import count
 from typing import TYPE_CHECKING, NamedTuple
 
-import demjson3
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ..exceptions import InvalidFetchResultError
+from ..exceptions import InvalidFetchResultError, MissingOptionalDependencyError
 from ..miscs import logger
 from ._01_scraper import Scraper, reload_manager
 
@@ -55,6 +54,9 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
 
     @reload_manager
     def fetch_episode_information(self, *, reload: bool = False) -> None:
+        with MissingOptionalDependencyError.importing("demjson3", "naver_post"):
+            import demjson3
+
         series_no, member_no = self.webtoon_id
         subtitle_list: list[str] = []
         episode_id_list: list[int] = []

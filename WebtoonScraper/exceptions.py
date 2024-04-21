@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -98,6 +99,26 @@ class Unreachable(WebtoonScraperError):
             "This code is meant to be unreachable. If you saw this message, it's clearly error. "
             "Please contect developer or make a issue for this." + ("\n" + message if message else "")
         )
+
+
+class MissingOptionalDependencyError(WebtoonScraperError):
+    @classmethod
+    @contextmanager
+    def importing(cls, package_name: str, install_through: str | None = None):
+        try:
+            yield
+        except ImportError as e:
+            error_message = (
+                f"Package {package_name!r} is not installed in Python environment. "
+                f"Please install {package_name!r} thourgh one of following command:\n"
+            )
+            if install_through:
+                error_message += (
+                    "pip install -U WebtoonScraper[full]  (RECOMMENDED; download every extra dependency)\n"
+                    f"pip install -U WebtoonScraper[{install_through}]  (minimal; download required dependency for this particular download)\n"
+                )
+            error_message += f"pip install -U {package_name}  (download manually, not recommended since it could install incompatible version)"
+            raise cls(error_message) from e
 
 
 class CommentError(WebtoonScraperError):
