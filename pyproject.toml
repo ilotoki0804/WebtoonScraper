@@ -6,7 +6,13 @@ description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "Apache-2.0"
 readme = "README_build.md"
-keywords = ["Webtoon", "Webtoon Scraper", "Naver Webtoon", "Webtoon Downloader", "Download Webtoon"]
+keywords = [
+    "Webtoon",
+    "Webtoon Scraper",
+    "Naver Webtoon",
+    "Webtoon Downloader",
+    "Download Webtoon",
+]
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
@@ -31,11 +37,11 @@ webtoon = "WebtoonScraper.__main__:main"
 python = ">=3.10,<3.13"
 tqdm = "^4.66.1"
 rich = "^13.6.0"
-demjson3 = "^3.0.6"
-Pillow = ">=9.2.0,<11.0.0"
 pyfilename = "==0.5.1"
 hxsoup = "==0.3.0"
-pycryptodomex = "^3.0.0"
+demjson3 = { version = "^3.0.6", optional = true }
+Pillow = { version = ">=9.2.0,<11.0.0", optional = true }
+pycryptodomex = { version = "^3.0.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
@@ -43,8 +49,14 @@ ipykernel = "^6.28.0"
 pyinstaller = "^6.3.0"
 nest-asyncio = "^1.5.8"
 coloredlogs = "^15.0.1"
-black = {extras = ["full"], version = "^24.2.0"}
+black = { extras = ["full"], version = "^24.2.0" }
 ruff = "^0.3.5"
+
+[tool.poetry.extras]
+naver_post = ["demjson3"]
+lezhin_comics = ["Pillow"]
+kakao_webtoon = ["pycryptodomex"]
+full = ["demjson3", "Pillow", "pycryptodomex"]
 
 [tool.ruff]
 line-length = 120
