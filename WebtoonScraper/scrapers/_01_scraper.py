@@ -137,7 +137,7 @@ class ExistingEpisodePolicy(Enum):
     """항상 해당 폴더를 지우고 다시 다운로드합니다."""
 
 
-class Scraper(Generic[WebtoonId]):
+class Scraper(Generic[WebtoonId]):  # MARK: Scraper
     """Abstract base class of all scrapers.
 
     전반적인 로직은 모두 이 페이지에서 관리하고, 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 방식은
@@ -172,7 +172,7 @@ class Scraper(Generic[WebtoonId]):
         self.comments_data: defaultdict[int, EpisodeComments] = defaultdict(dict)  # type: ignore
         self.author = None
 
-    # PUBLIC METHODS
+    # MARK: PUBLIC METHODS
 
     @abstractmethod
     def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
@@ -424,7 +424,7 @@ class Scraper(Generic[WebtoonId]):
             "author": self.author,
         }
 
-    # PROPERTIES
+    # MARK: PROPERTIES
 
     @property
     def base_directory(self) -> Path:
@@ -463,7 +463,7 @@ class Scraper(Generic[WebtoonId]):
         self.headers.clear()
         self.headers.update(value)
 
-    # PRIVATE METHODS
+    # MARK: PRIVATE METHODS
 
     @classmethod
     @abstractmethod
