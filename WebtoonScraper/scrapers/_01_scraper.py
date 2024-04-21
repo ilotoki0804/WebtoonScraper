@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     NamedTuple,
     TypedDict,
+    TypeGuard,
     TypeVar,
 )
 from urllib import parse
@@ -53,10 +54,9 @@ from ..miscs import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 if TYPE_CHECKING:
-    from typing import Required, Self
+    from typing import Required, Self, TypeAlias
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
-
 
 class Comment(TypedDict, total=False):
     comments_id: int | str
@@ -464,6 +464,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: Scraper
         self.headers.update(value)
 
     # MARK: PRIVATE METHODS
+
+    @staticmethod
+    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[WebtoonId]:
+        """주의: 만약 WebtoonId가 int가 아닐 경우 이 메소드를 반드시 구현해야 합니다. 아닐 경우 오류가 발생합니다."""
+        return isinstance(webtoon_id, int)
 
     @classmethod
     @abstractmethod

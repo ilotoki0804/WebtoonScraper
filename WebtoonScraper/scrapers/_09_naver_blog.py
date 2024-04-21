@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from contextlib import suppress
 from itertools import count
-from typing import NamedTuple
+from typing import NamedTuple, TypeGuard
 
 from ..exceptions import (
     InvalidBlogIdError,
@@ -131,3 +131,12 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
                 matched_url.group("blog_id2"),
                 int(matched_url.group("category_no2")),
             )
+
+    @staticmethod
+    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[tuple[str, int]]:
+        return (
+            isinstance(webtoon_id, tuple)
+            and len(webtoon_id) == 2
+            and isinstance(webtoon_id[0], str)
+            and isinstance(webtoon_id[1], int)
+        )

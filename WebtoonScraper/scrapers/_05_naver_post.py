@@ -7,7 +7,7 @@ import re
 import time
 from collections import defaultdict, deque
 from itertools import count
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeGuard
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -114,6 +114,15 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return self._get_safe_file_name(f"{self.title}{tuple(self.webtoon_id)}")
+
+    @staticmethod
+    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[tuple[int, int]]:
+        return (
+            isinstance(webtoon_id, tuple)
+            and len(webtoon_id) == 2
+            and isinstance(webtoon_id[0], int)
+            and isinstance(webtoon_id[1], int)
+        )
 
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
         episode_no_list = list(episode_no_list)

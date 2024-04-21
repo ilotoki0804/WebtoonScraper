@@ -11,6 +11,7 @@ import shutil
 from contextlib import suppress
 from json import JSONDecodeError
 from pathlib import Path
+from typing import TypeGuard
 
 from hxsoup.exceptions import EmptyResultError
 
@@ -294,6 +295,10 @@ class LezhinComicsScraper(Scraper[str]):
             self.headers.update(Authorization=value)
 
     # PRIVATE METHODS
+
+    @staticmethod
+    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[str]:
+        return isinstance(webtoon_id, int)
 
     @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
