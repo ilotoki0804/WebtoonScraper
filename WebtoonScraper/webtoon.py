@@ -81,7 +81,7 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
 }
 
 
-def instantiatie(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId) -> Scraper:
+def instantiate(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId) -> Scraper:
     """웹툰 플랫폼 코드와 웹툰 ID로부터 스크레퍼를 인스턴스화하여 반환합니다. cookie, bearer 등의 추가적인 설정이 필요할 수도 있습니다."""
 
     Scraper: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
@@ -90,7 +90,7 @@ def instantiatie(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId
     return Scraper(webtoon_id)
 
 
-def instantiatie_from_url(webtoon_url: str) -> Scraper:
+def instantiate_from_url(webtoon_url: str) -> Scraper:
     """웹툰 URL로부터 자동으로 알맞은 스크래퍼를 인스턴스화합니다. cookie, bearer 등의 추가적인 설정이 필요할 수 있습니다."""
 
     for platform_name, PlatformClass in PLATFORMS.items():
@@ -117,7 +117,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     def get_platform(
         platform_name: WebtoonPlatforms,
     ) -> tuple[WebtoonPlatforms, str | None]:
-        scraper = instantiatie(platform_name, webtoon_id)
+        scraper = instantiate(platform_name, webtoon_id)
         return (
             platform_name,
             scraper.check_if_legitimate_webtoon_id(),
@@ -185,15 +185,15 @@ def setup_instance(
 
     # 스크래퍼 불러오기
     if isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
-        scraper = instantiatie_from_url(webtoon_id_or_url)
+        scraper = instantiate_from_url(webtoon_id_or_url)
     elif webtoon_platform:
-        scraper = instantiatie(webtoon_platform, webtoon_id_or_url)
+        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
     else:
         logger.error("Inferring webtoon platform is deprecated. Set `-p` flag to explicitly set platform.")
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
-        scraper = instantiatie(webtoon_platform, webtoon_id_or_url)
+        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
 
     # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
     if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper)):
