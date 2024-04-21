@@ -9,6 +9,8 @@ import re
 import shutil
 from contextlib import suppress
 from pathlib import Path
+from types import ModuleType
+from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
@@ -23,10 +25,13 @@ from ..directory_merger import (
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
 from ..miscs import logger
 
-Image = None
+if TYPE_CHECKING:
+    from PIL import Image
+else:
+    Image = None
 
 
-def get_image():
+def get_image() -> ModuleType:
     global Image
     if Image:
         return Image
@@ -168,7 +173,7 @@ def calculate_image_order(random_numbers: list[int]) -> list[int]:
 
 
 def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_order: list[int]) -> None:
-    Image = get_image()
+    get_image()
     with Image.open(base_image_path) as image:
         image_x, image_y = image.size
         margin = image_y % 5
