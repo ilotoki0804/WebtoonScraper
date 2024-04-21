@@ -396,8 +396,3 @@ class LezhinComicsScraper(Scraper[str]):
         self._unshuffled_webtoon_directory = target_webtoon_directory
 
         return target_webtoon_directory
-
-    def _download_episode_int_ids_as_file(self, webtoon_directory: Path) -> None:
-        file_content = "\n".join(map(str, self.episode_int_ids))
-        file_path = webtoon_directory / f"{self.webtoon_id}_ids.txt"
-        file_path.write_text(file_content, encoding="utf-8")
