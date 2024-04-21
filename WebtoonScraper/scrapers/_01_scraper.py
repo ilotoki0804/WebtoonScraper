@@ -635,9 +635,7 @@ class Scraper(Generic[WebtoonId]):
             episode_images_url = self.get_episode_image_urls(episode_no)
 
             if not episode_images_url:
-                logger.warning(
-                    f"this episode is not free or not yet created. This episode won't be loaded. {episode_no=}"
-                )
+                logger.warning(f"Failed to download: {episode_no + 1}. {episode_title}")
                 self._set_progress_indication(f"Failed to download {episode_title}")
                 if not os.listdir(episode_directory):
                     episode_directory.rmdir()
