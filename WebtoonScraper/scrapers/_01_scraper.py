@@ -46,6 +46,7 @@ from ..directory_merger import (
 from ..exceptions import (
     DirectoryStateUnmatchedError,
     InvalidURLError,
+    InvalidWebtoonIdError,
     NotImplementedCommentsDownloadOptionError,
     UseFetchEpisode,
 )
@@ -57,6 +58,7 @@ if TYPE_CHECKING:
     from typing import Required, Self, TypeAlias
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
+
 
 class Comment(TypedDict, total=False):
     comments_id: int | str
@@ -137,7 +139,7 @@ class ExistingEpisodePolicy(Enum):
     """항상 해당 폴더를 지우고 다시 다운로드합니다."""
 
 
-class Scraper(Generic[WebtoonId]):  # MARK: Scraper
+class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     """Abstract base class of all scrapers.
 
     전반적인 로직은 모두 이 페이지에서 관리하고, 썸네일을 받아오거나 한 회차의 이미지 URL을 불러오는 등의 방식은
@@ -155,6 +157,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: Scraper
     COMMENTS_DOWNLOAD_SUPPORTED: bool = False
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
+        if __debug__ and not self._check_webtoon_id_type(webtoon_id):
+            raise InvalidWebtoonIdError.from_webtoon_id(webtoon_id, type(Scraper), additional=" The type of webtoon_id is invalid.")
+
         self.hxoptions = hxsoup.MutableClientOptions(
             attempts=3,
             timeout=10,

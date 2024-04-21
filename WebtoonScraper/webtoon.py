@@ -86,7 +86,7 @@ def instantiate(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId)
 
     Scraper: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
     if Scraper is None:
-        raise ValueError(f'webtoon_type should be among {", ".join(PLATFORMS)}')
+        raise ValueError(f'Invalid webtoon platform: {webtoon_platform}')
     return Scraper(webtoon_id)
 
 
@@ -102,6 +102,18 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
     raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_url}")
 
 
+def check_platform(webtoon_id, platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
+    if not PLATFORMS[platform_name]._check_webtoon_id_type(webtoon_id):
+        return platform_name, None
+
+    logger.debug(f"Checking {platform_name}...")
+    scraper = instantiate(platform_name, webtoon_id)
+    return (
+        platform_name,
+        scraper.check_if_legitimate_webtoon_id(),
+    )
+
+
 def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     """웹툰 ID를 추측합니다.
 
@@ -114,47 +126,13 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
         IndexError: 사용자가 범위를 벗어나는 선택을 했을 때 발생합니다.
     """
 
-    def get_platform(
-        platform_name: WebtoonPlatforms,
-    ) -> tuple[WebtoonPlatforms, str | None]:
-        scraper = instantiate(platform_name, webtoon_id)
-        return (
-            platform_name,
-            scraper.check_if_legitimate_webtoon_id(),
-        )
-
-    # 타입에 따른 테스트할 플랫폼 결정
-    test_queue: tuple[WebtoonPlatforms, ...]
-    if isinstance(webtoon_id, tuple):
-        if isinstance(webtoon_id[0], int):
-            test_queue = (NAVER_POST,)
-        elif isinstance(webtoon_id[1], int):
-            test_queue = (NAVER_BLOG,)
-        else:
-            test_queue = (TISTORY,)
-    elif isinstance(webtoon_id, str):
-        test_queue = (LEZHIN_COMICS,)
-    elif isinstance(webtoon_id, int):
-        test_queue = (
-            NAVER_WEBTOON,
-            WEBTOONS_DOTCOM,
-            BUFFTOON,
-            NAVER_GAME,
-            KAKAOPAGE,
-            KAKAO_WEBTOON,
-        )
-    else:
-        raise TypeError(f"Unknown type of titleid({type(webtoon_id).__name__})")
-
     # 테스트 실행
-    logger.info(f"Checking platforms: {', '.join(test_queue)}")
-    with pool.ThreadPool(len(test_queue)) as p:
-        results_raw = p.map(get_platform, test_queue)
+    with pool.ThreadPool(len(PLATFORMS)) as p:
+        results_raw = p.starmap(check_platform, ((webtoon_id, platform) for platform in PLATFORMS))
     results = [(platform, title) for platform, title in results_raw if title is not None]
 
-    # 같은 웹툰 ID의 서로 다른 웹툰을 가지고 잇는 플랫폼들의 개수에 따라 결과 결정
+    # 같은 웹툰 ID의 서로 다른 웹툰을 가지고 있는 플랫폼들의 개수에 따라 결과 결정
     if not results:
-        logger.warning(f"There's no webtoon that webtoon ID is {webtoon_id}.")
         return None
     if len(results) == 1:
         return results[0][0]
