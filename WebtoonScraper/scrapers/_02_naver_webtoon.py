@@ -19,7 +19,7 @@ from ..exceptions import (
     NotImplementedCommentsDownloadOptionError,
     UnsupportedRatingError,
 )
-from .A_scraper import Comment, CommentsDownloadOption, EpisodeComments, Scraper, reload_manager
+from ._01_scraper import Comment, CommentsDownloadOption, EpisodeComments, Scraper, reload_manager
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):

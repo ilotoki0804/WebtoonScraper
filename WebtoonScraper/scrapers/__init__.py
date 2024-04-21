@@ -4,19 +4,19 @@
 각각의 플랫폼에 대한 상세한 정의는 여러 파일이 나누어져 각각 정의되어 있습니다.
 """
 
-from .A_scraper import CommentsDownloadOption, ExistingEpisodePolicy, Scraper
-from .B_naver_webtoon import (
+from ._01_scraper import CommentsDownloadOption, ExistingEpisodePolicy, Scraper
+from ._02_naver_webtoon import (
     BestChallengeSpecificScraper,
     ChallengeSpecificScraper,
     NaverWebtoonScraper,
     NaverWebtoonSpecificScraper,
 )
-from .D_webtoon_originals import WebtoonsDotcomScraper
-from .G_bufftoon import BufftoonScraper
-from .H_naver_post import NaverPostScraper, NaverPostWebtoonId
-from .I_naver_game import NaverGameScraper
-from .J_lezhin_comics import LezhinComicsScraper
-from .K_kakaopage import KakaopageScraper
-from .L_naver_blog import NaverBlogScraper, NaverBlogWebtoonId
-from .M_tistory import TistoryScraper, TistoryWebtoonId
-from .N_kakao_webtoon import KakaoWebtoonScraper
+from ._03_webtoon_originals import WebtoonsDotcomScraper
+from ._04_bufftoon import BufftoonScraper
+from ._05_naver_post import NaverPostScraper, NaverPostWebtoonId
+from ._06_naver_game import NaverGameScraper
+from ._07_lezhin_comics import LezhinComicsScraper
+from ._08_kakaopage import KakaopageScraper
+from ._09_naver_blog import NaverBlogScraper, NaverBlogWebtoonId
+from ._10_tistory import TistoryScraper, TistoryWebtoonId
+from ._11_kakao_webtoon import KakaoWebtoonScraper

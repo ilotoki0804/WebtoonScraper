@@ -14,7 +14,7 @@ from ..exceptions import (
     UseFetchEpisode,
 )
 from ..miscs import logger
-from .A_scraper import Scraper, reload_manager
+from ._01_scraper import Scraper, reload_manager
 
 
 class NaverBlogWebtoonId(NamedTuple):

@@ -7,7 +7,7 @@ import json
 import re
 from itertools import count
 
-from .A_scraper import Scraper, reload_manager
+from ._01_scraper import Scraper, reload_manager
 
 
 class NaverGameScraper(Scraper[int]):

@@ -7,7 +7,7 @@ from itertools import count
 from typing import NamedTuple
 from urllib.parse import unquote
 
-from .A_scraper import Scraper, reload_manager
+from ._01_scraper import Scraper, reload_manager
 
 
 class TistoryWebtoonId(NamedTuple):

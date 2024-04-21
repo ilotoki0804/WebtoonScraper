@@ -8,8 +8,8 @@ from pathlib import Path
 from hxsoup.client import AsyncClient
 
 from ..exceptions import InvalidWebtoonIdError
-from .A_scraper import Scraper, reload_manager
-from .K_kakaopage_queries import EPISODE_IMAGES_QUERY, WEBTOON_DATA_QUERY
+from ._01_scraper import Scraper, reload_manager
+from ._08_kakaopage_queries import EPISODE_IMAGES_QUERY, WEBTOON_DATA_QUERY
 
 
 class KakaopageScraper(Scraper[int]):
