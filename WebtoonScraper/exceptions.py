@@ -101,7 +101,7 @@ class Unreachable(WebtoonScraperError):
         )
 
 
-class MissingOptionalDependencyError(WebtoonScraperError):
+class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
     @classmethod
     @contextmanager
     def importing(cls, package_name: str, install_through: str | None = None):
