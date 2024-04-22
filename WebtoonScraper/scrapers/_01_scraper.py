@@ -159,7 +159,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         if __debug__ and not self._check_webtoon_id_type(webtoon_id):
-            raise InvalidWebtoonIdError.from_webtoon_id(webtoon_id, type(Scraper), additional=" The type of webtoon_id is invalid.")
+            raise InvalidWebtoonIdError.from_webtoon_id(webtoon_id, type(self), additional=" The type of webtoon_id is invalid.")
 
         self.hxoptions = hxsoup.MutableClientOptions(
             attempts=3,
