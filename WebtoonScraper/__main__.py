@@ -7,9 +7,11 @@ import logging
 import os
 import re
 import sys
+from argparse import ArgumentParser, Namespace
+from collections.abc import Sequence
 from importlib.resources import files
 from pathlib import Path
-from typing import Literal
+from typing import Any, Callable, Literal
 
 from rich.console import Console
 from rich.table import Table
@@ -100,16 +102,66 @@ def _to_range(episode_no_range: str) -> EpisodeNoRange:
     return start, end
 
 
+class LazyVersionAction(argparse._VersionAction):
+    version: Callable[[], str] | str | None
+    def __call__(self, parser: ArgumentParser, namespace: Namespace, values: str | Sequence[Any] | None, option_string: str | None = None) -> None:
+        if callable(self.version):
+            self.version = self.version()
+        return super().__call__(parser, namespace, values, option_string)
+
+
+def _version_info() -> str:
+    def check_imported():
+        ALL_DEPENDENCIES = {"naver_post": "Naver Post", "lezhin_comics": "Lezhin Comics (partially)", "kakao_webtoon": "Kakao Webtoon"}
+        installed = set()
+
+        with contextlib.suppress(Exception):
+            import demjson3
+            installed.add("naver_post")
+
+        with contextlib.suppress(Exception):
+            from PIL import Image
+            installed.add("lezhin_comics")
+
+        with contextlib.suppress(Exception):
+            from Cryptodome.Cipher import AES
+            installed.add("kakao_webtoon")
+
+        missing_dependencies = ALL_DEPENDENCIES.keys() - installed
+        match len(missing_dependencies):
+            case 0:
+                return "✅ Every extra dependencies are installed!"
+
+            case 1:
+                missing = missing_dependencies.pop()
+                return (
+                    f"⚠️  Extra dependency '{missing}' is not installed. "
+                    f"You won't be able to download webtoons from {ALL_DEPENDENCIES[missing]}."
+                )
+
+            case _:
+                SEP = "', '"
+                return (
+                    f"⚠️  Extra dependencies '{SEP.join(missing_dependencies)}' are not installed.\n"
+                    "You won't be able to download webtoons from following platforms: "
+                    f"'{SEP.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
+                )
+
+    return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
+
 parser = argparse.ArgumentParser(
     prog="WebtoonScraper",
     usage="Download or merge webtoons in CLI",
     description="Download webtoons with ease!",
+    formatter_class=argparse.RawTextHelpFormatter,
 )
+parser.register('action', 'version', LazyVersionAction)
+
 parser.add_argument("--mock", action="store_true", help="No actual action.")
 parser.add_argument(
     "--version",
     action="version",
-    version=f"WebtoonScraper {__version__} of Python {sys.version} from {str(files(WebtoonScraper))}",
+    version=_version_info,  # type: ignore
 )
 parser.add_argument(
     "-v",
