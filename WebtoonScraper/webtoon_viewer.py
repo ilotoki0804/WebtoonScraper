@@ -2,8 +2,6 @@
 
 import json
 import os
-import re
-from contextlib import suppress
 from datetime import datetime
 from html import escape
 from pathlib import Path

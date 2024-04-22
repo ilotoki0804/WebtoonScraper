@@ -55,7 +55,7 @@ from ..miscs import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 if TYPE_CHECKING:
-    from typing import Required, Self, TypeAlias
+    from typing import Required, Self
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
 

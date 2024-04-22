@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import time
 from datetime import datetime
 from itertools import count
 from json.decoder import JSONDecodeError
@@ -19,7 +18,7 @@ from ..exceptions import (
     NotImplementedCommentsDownloadOptionError,
     UnsupportedRatingError,
 )
-from ._01_scraper import Comment, CommentsDownloadOption, EpisodeComments, Scraper, reload_manager
+from ._01_scraper import Comment, EpisodeComments, Scraper, reload_manager
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):

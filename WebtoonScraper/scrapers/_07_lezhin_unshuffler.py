@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import re
 import shutil
 from contextlib import suppress
 from pathlib import Path
@@ -19,7 +18,6 @@ from ..directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     _iterdir_seperating_directories_and_files,
     check_container_state,
-    check_filename_state,
     webtoon_regexes,
 )
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError

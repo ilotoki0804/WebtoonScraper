@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 import re
-import time
-from pathlib import Path
 from typing import TYPE_CHECKING
-
-import hxsoup
 
 from WebtoonScraper.miscs import EpisodeNoRange
 

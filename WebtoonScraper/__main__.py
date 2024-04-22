@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import functools
 import logging
-import os
 import re
 import sys
 from argparse import ArgumentParser, Namespace
@@ -23,11 +21,8 @@ from WebtoonScraper.directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     ContainerStates,
     check_container_state,
-    merge_webtoon,
-    restore_webtoon,
     select_from_directory,
 )
-from WebtoonScraper.exceptions import DirectoryStateUnmatchedError
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 

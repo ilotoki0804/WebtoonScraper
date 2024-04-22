@@ -8,7 +8,6 @@ from itertools import count
 from typing import NamedTuple, TypeGuard
 
 from ..exceptions import (
-    InvalidBlogIdError,
     InvalidCategoryNoError,
     InvalidWebtoonIdError,
     UseFetchEpisode,

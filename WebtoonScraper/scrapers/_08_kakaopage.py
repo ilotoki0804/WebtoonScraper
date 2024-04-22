@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 from typing import Final
-
-from hxsoup.client import AsyncClient
 
 from ..exceptions import InvalidWebtoonIdError
 from ._01_scraper import Scraper, reload_manager

@@ -5,12 +5,11 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Final, Literal, Sequence, TypeAlias, TypeVar
+from typing import Final, Literal, TypeAlias
 
-from .exceptions import DirectoryStateUnmatchedError, Unreachable, UserCanceledError
+from .exceptions import DirectoryStateUnmatchedError, Unreachable
 from .miscs import logger
 
 # container는 file을 담고 있는 것을 의미합니다.
