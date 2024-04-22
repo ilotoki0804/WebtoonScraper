@@ -2,7 +2,7 @@
 
 시작하기 전에 [설치](../README.md#Installation)는 제대로 되었는지 확인하세요.
 
-WebtoonScraper는 CLI로도, 파이썬으로도 사용할 수 있습니다. 만약 자신이 간단한 사용을 원하는 것이라면 CLI를, 고급 기능을 사용하고 싶다면 파이썬을 사용하는 것을 추천합니다.
+WebtoonScraper는 CLI로도, 파이썬 패키지로도 사용할 수 있습니다. 만약 자신이 간단한 사용을 원하는 것이라면 CLI를, 고급 기능을 사용하고 싶다면 파이썬을 사용하는 것을 추천합니다.
 
 간단하게 각 플랫폼별 다운로드 예시를 알고 싶다면 아래의 [플랫폼별 다운로드 방법 및 예시](how_to_use.md#플랫폼별-다운로드-방법-및-예시) 항목을 참고하세요.
 
@@ -175,7 +175,6 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" -c reply 
 > [!WARNING]
 > 댓글 다운로드 기능은 현재 네이버 웹툰에서만 지원됩니다. 향후 더 다양한 플랫폼에서 지원을 확대할 예정입니다.
 > 또한 웹툰 플랫폼에 따라 일부 댓글 옵션은 사용할 수 없을 수 있습니다.
-> 현재 유일하게 지원되는 네이버 웹툰에서는 all 옵션과 reply 옵션 모두 지원하지 _않으며_ 향후 지원을 확대할 예정입니다.
 
 ### `merge` 커맨드
 
@@ -206,7 +205,7 @@ Download webtoons with ease!
 
 Welcome to WebtoonScraper shell!
 Type 'exit' to quit
->>> (여기에 CLI 명령어를 입력하세요)
+>>> [여기에 CLI 명령어를 입력하세요]
 ```
 
 ## 파이썬으로 사용

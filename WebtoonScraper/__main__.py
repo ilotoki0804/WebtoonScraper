@@ -130,7 +130,7 @@ def _version_info() -> str:
         missing_dependencies = ALL_DEPENDENCIES.keys() - installed
         match len(missing_dependencies):
             case 0:
-                return "✅ Every extra dependencies are installed!"
+                return "✅ All extra dependencies are installed!"
 
             case 1:
                 missing = missing_dependencies.pop()

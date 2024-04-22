@@ -22,13 +22,6 @@
 1. zip파일을 풀고 사용하세요.
 
 > [!WARNING]
-> 실행 파일은 한 폴더 내에 들어 있는데, 다운로드되는 웹툰들은 기본적으로 해당 폴더 내 `webtoon` 디렉토리에 다운로드되도록 되어 있습니다. 이 기본값은 `-d` 플래그로 변경 가능합니다. 자세한 내용은 [사용법](docs/how_to_use.md#d-directory---download-directory-directory-옵션)을 참고하세요.
->
-> ```console
-> webtoon download 809590 -p naver_webtoon -d ..
-> ```
-
-> [!WARNING]
 > 윈도우의 경우 "Windows의 PC 보호" 창이 뜨면서 실행이 안 될 수 있습니다. 그런 경우에는 `추가 정보`(왼쪽 중간에 있습니다.)를 클릭하고 `실행`을 누르세요.
 
 ## Installation
@@ -37,16 +30,10 @@
 1. 터미널에서 다음과 같은 명령어를 실행합니다.
 
     ```console
-    pip install -U WebtoonScraper
+    pip install -U WebtoonScraper[full]
     ```
 
-    대체적으로, 자신이 사용하는 운영 체제가 POSIX 기반(Mac이나 Linux)라면 다음의 명령어를 사용해야 할 수도 있습니다.
-
-    ```console
-    pip3 install -U WebtoonScraper
-    ```
-
-CLI가 잘 설치되었는지를 확인하려면 다음의 명령어를 사용해 보세요.
+잘 설치되었는지를 확인하려면 다음의 명령어를 사용해 보세요.
 
 ```console
 webtoon --version
@@ -60,11 +47,28 @@ webtoon --version
 >
 > 자신의 환경에 따라 `python` 대신 `python3`나 `py -3.12`과 같은 코드를 적절히 사용해야 할 수 있습니다.
 
-자신의 파이썬 환경에 잘 설치되었는지를 확인하려면 다음의 코드를 실행해 보세요.
+아래와 같거나 비슷한 메시지가 출력된다면 제대로 설치된 것입니다.
 
-```python
-from WebtoonScraper import webtoon
+```console
+WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
+✅ All extra dependencies are installed!
 ```
+
+> 다음과 같은 경고 메시지가 나올 수 있습니다.
+>
+> ```console
+> WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
+> ⚠️  Extra dependencies 'kakao_webtoon', 'lezhin_comics', 'naver_post' are not installed.
+> You won't be able to download webtoons from following platforms: 'Kakao Webtoon', 'Lezhin Comics (partially)', 'Naver Post'.
+> ```
+>
+> 이 경우 표시된 플랫폼들(이 오류 메시지의 경우 카카오 웹툰, 레진 코믹스(부분적), 네이버 포스트)에 대한 추가적인 의존성이 설치되지 않는 것인데, 따라서 이 플랫폼들의 웹툰을 다운로드할 수 없게 됩니다.
+>
+> 다음과 같이 명령어를 짜면 모든 플랫폼에서 웹툰을 다운로드할 수 있습니다.
+>
+> ```console
+> pip install -U WebtoonScraper[full]
+> ```
 
 ## How to use
 
@@ -104,7 +108,7 @@ poetry를 설치하고 의존성을 설치하세요.
 
 ```console
 pip install poetry
-poetry install --no-root
+poetry install --extras full --no-root
 ```
 
 `build.py`를 실행하세요.

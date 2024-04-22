@@ -22,13 +22,6 @@ This package can be used as an executable file on Windows, macOS, and Linux.
 1. Unzip the file and use it.
 
 > [!WARNING]
-> The executable file is located in a folder, and the webtoons are basically downloaded to the `webtoon` directory in that folder. This default can be changed with the `-d` flag. For more details, please refer to the [usage(Korean)](how_to_use.md#d-directory---download-directory-directory-option).
->
-> ```console
-> webtoon download 809590 -p naver_webtoon -d ..
-> ```
-
-> [!WARNING]
 > In the case of Windows, the "Windows protected your PC" window may pop up and prevent execution. In that case, click on `More Info` (located in the middle left) and press `Run`.
 
 ## Installation
@@ -37,16 +30,10 @@ This package can be used as an executable file on Windows, macOS, and Linux.
 2. Run the following command in the terminal:
 
     ```console
-    pip install -U WebtoonScraper
+    pip install -U WebtoonScraper[full]
     ```
 
-    If your operating system is POSIX-based (Mac or Linux), you may need to use the following command:
-
-    ```console
-    pip3 install -U WebtoonScraper
-    ```
-
-To check if the CLI has been installed correctly, use the following command:
+To check if the program has been installed correctly, use the following command:
 
 ```console
 webtoon --version
@@ -60,11 +47,30 @@ webtoon --version
 >
 > Depending on your environment, you may need to use `python3` or `py -3.12` instead of `python`.
 
-To verify the successful installation in your Python environment, run the following code:
+If you get a message like or similar to the one below, you're good to go.
 
-```python
-from WebtoonScraper import webtoon
+```console
+WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
+✅ All extra dependencies are installed!
 ```
+
+> You might get a warning message like this.
+>
+> ```console
+> WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
+> ⚠️ Extra dependencies 'kakao_webtoon', 'lezhin_comics', 'naver_post' are not installed.
+> You won't be able to download webtoons from following platforms: 'Kakao Webtoon', 'Lezhin Comics (partially)', 'Naver Post'.
+> ```
+>
+> In this case, additional dependencies for the indicated platforms (in the case of this error message, Kakao Webtoon, Lezhin Comics (partially), and Naver Post) are not installed, so you won't be able to download webtoons from them.
+>
+> You can download webtoons on all platforms by writing the command as follows.
+>
+> ```console
+> pip install -U WebtoonScraper[full]
+> ```
+
+Translated with DeepL.com (free version)
 
 ## How to Use
 
@@ -104,7 +110,7 @@ Install poetry and the dependencies.
 
 ```console
 pip install poetry
-poetry install --no-root
+poetry install --extras full --no-root
 ```
 
 Run `build.py`.
