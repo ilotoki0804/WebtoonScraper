@@ -18,7 +18,7 @@ from .miscs import (
     logger,
 )
 
-if _sys.version_info < (3, 11, 0):
+if _sys.version_info < (3, 10, 0):
     logger.warning(
         f"Python version ({_sys.version}) is too low. Program may be run but not tested. "
         "Upgrade Python if program not works well."
