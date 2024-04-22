@@ -201,18 +201,18 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
     def _extract_comment_infomation(self, comment_data: dict) -> Comment:
         return {
+            # "sort_value": comment_data["sortValue"],
             "comments_id": comment_data["commentNo"],
-            # "reply_to": comment_data["parentCommentNo"],
             "reply_count": int(comment_data["replyCount"]),
-            "comment": comment_data["contents"],
             "username": comment_data["userName"],  # or "shareCommentUserName"
+            "user_id": comment_data["userIdNo"],  # or "idNo" or "profileUserId"
             "likes": int(comment_data["sympathyCount"]),
             "dislikes": int(comment_data["antipathyCount"]),
             "last_modified": comment_data["modTime"],
             "created": comment_data["regTime"],
+            "comment": comment_data["contents"],
             "replies": [],
         }
-
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     """네이버 정식 연재만 다운로드받을 수 있는 스크래퍼입니다.

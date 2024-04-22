@@ -63,12 +63,13 @@ WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tup
 class Comment(TypedDict, total=False):
     comments_id: int | str
     reply_count: int | None
-    comment: Required[str]
     username: Required[str]
+    user_id: object
     likes: int
     dislikes: int
     last_modified: str
     created: str
+    comment: Required[str]
     replies: list[Comment]
 
 
