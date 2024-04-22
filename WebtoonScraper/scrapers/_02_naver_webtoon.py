@@ -170,9 +170,9 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                     data = fetch(
                         {
                             "lastest_comment_id": lastest_comment_id,
-                            "current_last_comment_id": current_last_comment_id,  # noqa: F821
-                            "prev_pointer": prev_pointer,  # noqa: F821
-                            "next_pointer": next_pointer,  # noqa: F821
+                            "current_last_comment_id": current_last_comment_id,  # noqa: F821 # type: ignore
+                            "prev_pointer": prev_pointer,  # noqa: F821 # type: ignore
+                            "next_pointer": next_pointer,  # noqa: F821 # type: ignore
                         }
                     )
                 else:
