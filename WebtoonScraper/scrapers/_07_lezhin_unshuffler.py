@@ -50,7 +50,7 @@ def unshuffle_typical_webtoon(
     elif str_source_webtoon_directory.endswith(", shuffled, HD)"):
         str_target_webtoon_directory = str_source_webtoon_directory.removesuffix(", shuffled, HD)") + ", HD)"
     else:
-        raise ValueError(f"webtoon directory {source_webtoon_directory} is not typical. Use `unshuffle`.")
+        raise ValueError(f"webtoon directory {source_webtoon_directory} is not typical. Use `unshuffle` instead.")
     target_webtoon_directory = Path(str_target_webtoon_directory)
 
     unshuffle(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
@@ -58,14 +58,14 @@ def unshuffle_typical_webtoon(
 
 
 def unshuffle(
-    source_webtoon_directory,
-    target_webtoon_directory,
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path,
     episode_int_ids: list[int] | None,
     process_number: int | None = None,
     check_directory_state: bool = True,
 ) -> None:
     if episode_int_ids is None:
-        episode_int_ids = find_episode_int_ids(source_webtoon_directory)
+        episode_int_ids = _search_episode_int_ids(source_webtoon_directory)
 
     target_webtoon_directory.mkdir(exist_ok=True)
 
@@ -98,7 +98,7 @@ def unshuffle(
         "So keep patient and wait until the process end."
     )
     with multiprocessing.Pool(process_number) as p:
-        unshuffled_episode_ids = p.imap_unordered(unshuffle_episode_packed, unshuffle_parameters)
+        unshuffled_episode_ids = p.imap_unordered(_unshuffle_episode_packed, unshuffle_parameters)
         progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
         for episode_name in progress_bar:
             progress_bar.set_description(f"Episode {episode_name} unshuffle ended")
@@ -106,22 +106,19 @@ def unshuffle(
     logger.info("Unshuffling ended successfully.")
 
 
-def find_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
+def _search_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
     # sourcery skip: extract-method
     information_file = source_webtoon_directory / "information.json"
     if information_file.exists():
         with suppress(json.JSONDecodeError):
             information = json.loads(information_file.read_text("utf-8"))
-        with suppress(KeyError):
-            return information["episode_int_ids"]
+            with suppress(KeyError):
+                return information["episode_int_ids"]
 
-    raise ValueError(
-        "There's no information.json(or lack of information about episode_id_ints on it) "
-        "and episode_id_ints is not provided."
-    )
+    raise ValueError("There's no information.json, or there's no information about episode_int_ids.")
 
 
-def unshuffle_episode_packed(args) -> str | None:
+def _unshuffle_episode_packed(args) -> str | None:
     """
     Equevalent to `lambda x: unshuffle_episode(*x)`,
     but it doesn't work well with multiprocessing.Pool,
