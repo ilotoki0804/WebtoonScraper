@@ -21,7 +21,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        python3.11 -m pip install WebtoonScraper poetry
+        python3.11 -m pip install WebtoonScraper[full] poetry
 
     - name: Build and release the package to PyPI
       run: |
@@ -42,7 +42,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        python3.11 -m pip install pyinstaller WebtoonScraper
+        python3.11 -m pip install pyinstaller WebtoonScraper[full]
 
     - name: Build PyInstaller
       run: |
@@ -67,7 +67,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        py -3.11 -m pip install pyinstaller WebtoonScraper
+        py -3.11 -m pip install pyinstaller WebtoonScraper[full]
 
     - name: Build PyInstaller
       run: |
@@ -92,7 +92,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        python3.11 -m pip install pyinstaller WebtoonScraper
+        python3.11 -m pip install pyinstaller WebtoonScraper[full]
   
     - name: Build PyInstaller
       run: |
