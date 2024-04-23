@@ -99,7 +99,14 @@ def _to_range(episode_no_range: str) -> EpisodeNoRange:
 
 class LazyVersionAction(argparse._VersionAction):
     version: Callable[[], str] | str | None
-    def __call__(self, parser: ArgumentParser, namespace: Namespace, values: str | Sequence[Any] | None, option_string: str | None = None) -> None:
+
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
         if callable(self.version):
             self.version = self.version()
         return super().__call__(parser, namespace, values, option_string)
@@ -107,8 +114,14 @@ class LazyVersionAction(argparse._VersionAction):
 
 def _version_info() -> str:
     def check_imported():
-        ALL_DEPENDENCIES = {"naver_post": "Naver Post", "lezhin_comics": "Lezhin Comics (partially)", "kakao_webtoon": "Kakao Webtoon"}
+        ALL_DEPENDENCIES = {
+            "naver_post": "Naver Post",
+            "lezhin_comics": "Lezhin Comics (partially)",
+            "kakao_webtoon": "Kakao Webtoon",
+        }
         installed = set()
+
+        # fmt: off
 
         with contextlib.suppress(Exception):
             import demjson3
@@ -121,6 +134,8 @@ def _version_info() -> str:
         with contextlib.suppress(Exception):
             from Cryptodome.Cipher import AES
             installed.add("kakao_webtoon")
+
+        # fmt: on
 
         missing_dependencies = ALL_DEPENDENCIES.keys() - installed
         match len(missing_dependencies):
@@ -144,13 +159,14 @@ def _version_info() -> str:
 
     return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
 
+
 parser = argparse.ArgumentParser(
     prog="WebtoonScraper",
     usage="Download or merge webtoons in CLI",
     description="Download webtoons with ease!",
     formatter_class=argparse.RawTextHelpFormatter,
 )
-parser.register('action', 'version', LazyVersionAction)
+parser.register("action", "version", LazyVersionAction)
 
 parser.add_argument("--mock", action="store_true", help="No actual action.")
 parser.add_argument(

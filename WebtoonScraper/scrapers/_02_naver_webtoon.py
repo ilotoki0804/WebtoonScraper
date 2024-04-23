@@ -146,7 +146,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 f"&listType=OBJECT&pageType=more&page=1&currentPage=1&refresh=true&sort={'BEST' if top else 'NEW'}"
             )
             if reply_of:
-                url += "&parentCommentNo={reply_of}"
+                url += f"&parentCommentNo={reply_of}"
             if data:
                 lastest_comment_id: str = data["lastest_comment_id"]
                 current_last_comment_id: str = data["current_last_comment_id"]
@@ -239,7 +239,7 @@ class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     """
 
     BASE_URL = "https://comic.naver.com/bestChallenge"
-    TEST_WEBTOON_ID = 809971  # 까마귀
+    TEST_WEBTOON_ID = 816046  # 집
     WEBTOON_TYPE = "BEST_CHALLENGE"
     EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
     URL_REGEX = re.compile(

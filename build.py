@@ -5,7 +5,6 @@ This file replaces relative path links with GitHub links and add warning in fron
 Last modified at 2023-04-22; 10th edition.
 """
 
-
 import contextlib
 import os
 import re

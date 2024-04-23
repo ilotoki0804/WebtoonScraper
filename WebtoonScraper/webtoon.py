@@ -79,7 +79,7 @@ def instantiate(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId)
 
     Scraper: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
     if Scraper is None:
-        raise ValueError(f'Invalid webtoon platform: {webtoon_platform}')
+        raise ValueError(f"Invalid webtoon platform: {webtoon_platform}")
     return Scraper(webtoon_id)
 
 
