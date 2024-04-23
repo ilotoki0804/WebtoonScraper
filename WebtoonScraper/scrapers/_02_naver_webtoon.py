@@ -134,27 +134,53 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         if self.comments_option.reply:
             raise NotImplementedCommentsDownloadOptionError("The `reply' option is currently unavailable.")
 
+        is_official = self.WEBTOON_TYPE == "WEBTOON"
+
         episode_id = self.episode_ids[episode_no]
         top = self.comments_option.top_comments_only
 
-        def fetch(data: dict | None = None, reply_of: str | int | None = None):
-            formatted_time = datetime.now().strftime("%Y%m%d%H%M%S")
-            url = (
-                "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json"
-                f"?ticket=comic&templateId=webtoon&pool=cbox3&_cv={formatted_time}&lang=ko&country=KR"
-                f"&objectId={self.webtoon_id}_{episode_id}&categoryId=&pageSize=30&indexSize=10&groupId={self.webtoon_id}"
-                f"&listType=OBJECT&pageType=more&page=1&currentPage=1&refresh=true&sort={'BEST' if top else 'NEW'}"
+        def fetch(parameter_data: dict | None = None, reply_of: str | int | None = None):
+            parameters = dict(
+                ticket="comic" if is_official else "comic_challenge",
+                templateId="webtoon" if is_official else "creators",
+                pool="cbox3",
+                _cv=datetime.now().strftime("%Y%m%d%H%M%S"),
+                lang="ko",
+                country="KR",
+                objectId=f"{self.webtoon_id}_{episode_id}",
+                pageSize="30",
+                indexSize="10",
+                groupId=self.webtoon_id,
+                listType="OBJECT",
+                pageType="more",
+                page="1",
+                currentPage="1",
+                refresh="true",
+                sort="BEST" if top else "NEW",
             )
-            if reply_of:
-                url += f"&parentCommentNo={reply_of}"
-            if data:
-                lastest_comment_id: str = data["lastest_comment_id"]
-                current_last_comment_id: str = data["current_last_comment_id"]
-                prev_pointer: str = data["prev_pointer"]
-                next_pointer: str = data["next_pointer"]
-                # url += f"current={'466686102'}&prev={'466692684'}&moreParam.direction=next&moreParam.prev={'0695nz43m35m1'}&moreParam.next={'0695gpq00mnoi'}"
-                url += f"&current={current_last_comment_id}&prev={lastest_comment_id}&moreParam.direction=next&moreParam.prev={prev_pointer}&moreParam.next={next_pointer}"
-            res = self.hxoptions.get(url)
+            if reply_of is not None:
+                parameters.update(parentCommentNo=str(reply_of))
+            if parameter_data:
+                lastest_comment_id: str = parameter_data["lastest_comment_id"]
+                current_last_comment_id: str = parameter_data["current_last_comment_id"]
+                prev_pointer: str = parameter_data["prev_pointer"]
+                next_pointer: str = parameter_data["next_pointer"]
+
+                parameters.update(
+                    {
+                        "current": current_last_comment_id,
+                        "prev": lastest_comment_id,
+                        "moreParam.direction": "next",
+                        "moreParam.prev": prev_pointer,
+                        "moreParam.next": next_pointer,
+                        "page": str(parameter_data["index"] + 1),
+                        "currentPage": str(parameter_data["index"] or 1),
+                    }
+                )
+
+            res = self.hxoptions.get(
+                "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json", params=parameters
+            )
             return json.loads(res.text[10:-2])["result"]
 
         if top:
@@ -165,7 +191,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         else:
             lastest_comment_id = None
             comments = []
-            while True:
+            for i in count(0):
                 if lastest_comment_id:
                     data = fetch(
                         {
@@ -173,6 +199,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                             "current_last_comment_id": current_last_comment_id,  # noqa: F821 # type: ignore
                             "prev_pointer": prev_pointer,  # noqa: F821 # type: ignore
                             "next_pointer": next_pointer,  # noqa: F821 # type: ignore
+                            "index": i,
                         }
                     )
                 else:
@@ -181,16 +208,18 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 prev_pointer = data["morePage"]["prev"]  # noqa: F841
                 next_pointer = data["morePage"]["next"]
                 end_pointer = data["morePage"]["end"]
+                start_pointer = data["morePage"]["start"]
                 comments_count = data["count"]["total"]
                 lastest_comment_id = lastest_comment_id or data["commentList"][0]["commentNo"]
                 current_last_comment_id = data["commentList"][-1]["commentNo"]  # noqa: F841
                 comments += [self._extract_comment_infomation(comment) for comment in data["commentList"]]
-                if next_pointer == end_pointer:
+                if next_pointer == end_pointer or end_pointer == start_pointer:
+                    # end_pointer와 start_pointer가 같을 때 next_pointer가 이상한 값을 지시할 수 있음.
                     break
 
         episode_comments: EpisodeComments = {
             "download_option": self.comments_option._asdict(),
-            "comment_count": comments_count,
+            "comment_count": comments_count,  # type: ignore
             "comments": comments,
         }
         self.comments_data[episode_no].update(episode_comments)
@@ -212,6 +241,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             "comment": comment_data["contents"],
             "replies": [],
         }
+
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     """네이버 정식 연재만 다운로드받을 수 있는 스크래퍼입니다.
