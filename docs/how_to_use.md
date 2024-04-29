@@ -51,7 +51,7 @@ Download webtoons with ease!
 ...
 ```
 
-이 뒤부터는 `webtoon` 명령어를 사용합니다. 만약 오류가 난다면 모든 `webtoon`를 `python -m WebtoonScraper`로 바꿔서 진행하세요. 그래도 오류가 반복된다면 path를 포함한 파이썬 설치가 제대로 되었는지, 패키지 설치가 제대로 되었는지, 가상 환경 내에서만 설치된 것은 아닌지 확인하세요.
+이 뒤부터는 `webtoon` 명령어를 사용합니다. 만약 오류가 난다면 모든 `webtoon`를 `python -m WebtoonScraper`로 바꿔서 진행하세요. 그래도 오류가 반복된다면 path를 포함한 파이썬 설치가 제대로 되었는지, 패키지 설치가 제대로 되었는지, 가상 환경이 잘못 설정된 것은 아닌지 확인하세요.
 
 ### `download` 커맨드
 
@@ -74,7 +74,21 @@ webtoon download 809590 -p naver_webtoon -m 5
 
 #### --cookie cookie, --bearer bearer 옵션
 
-일부 플랫폼은 다운로드를 위해 로그인을 필요로 하기도 합니다. 이럴 경우 적절한 값을 웹 브라우저에서 찾아서 보내야 합니다. `플랫폼별 다운로드 방법 및 예시`를 참고하세요.
+일부 플랫폼은 다운로드를 위해 로그인을 필요로 하기도 합니다. 이럴 경우 적절한 값을 웹 브라우저에서 찾아서 보내야 합니다.
+
+쿠키를 얻는 방법은 다음과 같습니다.
+
+다음의 링크를 드래그해서 즐겨찾기 바에 올려놓아 즐겨찾기에 추가하세요.
+
+<a href="javascript:prompt%28%22here%20is%20the%20cookie%20string%22%2Cdocument.cookie%29%3B">get cookie</a>
+
+**해당 사이트에 들어가 로그인을 한 후** 추가한 즡겨찾기를 누르면 나오는 창에 나오는 문자열을 복사합니다.
+
+해당 문자열이 쿠키로, 그 값을 큰따옴표로 감싸 `--cookie` 뒤에 추가합니다.
+
+```console
+webtoon download ...... --cookie "YOUR COOKIE HERE"
+```
 
 #### -r [start]~[end], --range [start]~[end] 옵션
 
@@ -567,15 +581,15 @@ scraper.download_webtoon()
 콘솔 및 실행 파일:
 
 ```console
-webtoon download 1001216 -p bufftoon
+webtoon download 1001216 -p bufftoon --cookie "YOUR COOKIE HERE"
 ```
 
 ```console
-webtoon download 1001216 -p bt
+webtoon download 1001216 -p bt --cookie "YOUR COOKIE HERE"
 ```
 
 ```console
-webtoon download "https://bufftoon.plaync.com/series/1007888"
+webtoon download "https://bufftoon.plaync.com/series/1007888" --cookie "YOUR COOKIE HERE"
 ```
 
 파이썬:
@@ -583,7 +597,7 @@ webtoon download "https://bufftoon.plaync.com/series/1007888"
 ```python
 from WebtoonScraper.scrapers import BufftoonScraper
 
-cookie = "YOUR COOKIE HERE 쿠키를 여기에 위치시키세요.\"
+cookie = "YOUR COOKIE HERE 쿠키를 여기에 위치시키세요."
 
 # 예시 웹툰 URL: https://bufftoon.plaync.com/series/1007888
 scraper = BufftoonScraper(1001216, cookie=cookie)
@@ -593,7 +607,7 @@ scraper.download_webtoon()
 ```python
 from WebtoonScraper.scrapers import BufftoonScraper
 
-cookie = "YOUR COOKIE HERE 쿠키를 여기에 위치시키세요.\"
+cookie = "YOUR COOKIE HERE 쿠키를 여기에 위치시키세요."
 
 scraper = BufftoonScraper.from_url("https://bufftoon.plaync.com/series/1007888", cookie=cookie)
 scraper.download_webtoon()
@@ -603,32 +617,7 @@ scraper.download_webtoon()
 
 로그인하지 않으면 cookie를 얻을 수 없는데, 이 경우 다운로드할 수는 있지만 약 3화 정도로 다운로드받을 수 있는 웹툰이 폭이 심하게 제한됩니다. 그럼에도 쿠키 없이 다운로드하고 싶다면 아래 튜토리얼에서 쿠키와 관련된 부분을 무시하고 쿠키 인자는 넘기지 마세요.
 
-이 과정은 PC를 기준으로 설명합니다. 만약 모바일이라면 Kiwi Browser 등을 통해 다음의 과정을 수행할 수 있습니다.
-
-##### ID 복사
-
-웹툰 페이지에 들어가 주소창의 맨 마지막 수를 복사합니다. 이 예시에서는 1007888입니다.
-
-![겜덕툰(버프툰) by 돈미니](../images/bufftoon1.png)
-
-##### cookie 찾기
-
-**로그인을 한 후** f12를 누르고 네트워크 창을 연 뒤 웹툰 페이지에 들어갑니다.
-
-![겜덕툰(버프툰) by 돈미니](../images/bufftoon2.png)
-
-새로고침을 한 뒤 '이름'에 있는 favicon.ico 요청을 클릭하고 나온 창에 '헤더' 탭을 엽니다.
-
-![img](../images/bufftoon3.png)
-
-내려서 Cookie: 라고 되어 있는 모든 내용을 복사합니다.
-
-![img](../images/bufftoon4.png)
-
-#### 버프툰 다운로드 시 주의사항
-
-* download_webtoon에서 cookie를 입력하면 자동으로 버프툰으로 인식합니다.
-* favicon.ico가 요청에 뜨지 않는다면 ctrl+R을 해보고, 그래도 없다면 `필터`에서 `모두`로 설정되어 있는지 다시 확인하세요.
+쿠키를 얻는 방법에 대해선 [--cookie 옵션에 대한 설명](how_to_use.md#c---comments---comment-옵션)에서 확인하세요.
 
 ### 네이버 포스트
 
@@ -812,16 +801,7 @@ if __name__ == "__main__":
 모든 종류의 웹툰을 다운로드받으려면 자신의 성인이어야 합니다. 만약 아닐 경우에는 어떤 방식으로든 다운로드가 지원되지 않습니다.
 아래의 방식은 자신이 성인이고 이미 레진코믹스 웹/앱에서 성인 웹툰을 열람할 수 있다는 전제가 성립되어야 다운로드가 가능합니다.
 
-쿠키를 찾는 방법은 다음과 같습니다.
-
-1. 웹툰 페이지로 갑니다.
-1. 우선 f12를 누르고 `네트워크` 탭으로 갑니다.
-1. f5를 누릅니다.
-1. 스크롤을 맨 위로 올려서 첫 번째 request를 클릭합니다.
-1. 아래로 내려서 `요청 헤더`로 갑니다(주의: '응답 헤더'가 아닙니다!)
-1. 요청 헤더에서 아래로 스크롤하다 보면 `Cookie:`라고 되어 있는 란이 뜹니다.
-1. 쿠키를 복사합니다.
-1. 다음과 같이 코드를 짭니다.
+쿠키를 얻는 방법에 대해선 [--cookie 옵션에 대한 설명](how_to_use.md#c---comments---comment-옵션)에서 확인하세요.
 
 ```python
 from WebtoonScraper.scrapers import LezhinComicsScraper
@@ -836,8 +816,8 @@ if __name__ == "__main__":
 
 #### 레진코믹스 다운로드 시 주의사항
 
-* 다른 웹툰 플랫폼과는 다르게 titleid가 문자열입니다.
-* 다른 웹툰 플랫폼들에 비해 다운로드 속도가 비교적 느린 편입니다.
+* 다른 웹툰 플랫폼과는 다르게 Webtoon ID가 문자열입니다.
+* 다른 웹툰 플랫폼들에 비해 다운로드 속도가 무척 느린 편입니다.
 * 일부 웹툰은 셔플링이 되어 있습니다. 따라서 웹툰을 다 다운로드받은 후 언셔플링을 하는 과정이 필요하며, 이 과정에 상당히 많은 시간과 컴퓨터 연산이 필요하다는 점 참고 바랍니다.
 * get_paid_episode를 True로 했을 때는 다량의 경고 메시지가 뜰 수 있습니다. 정상 과정이므로 신경쓰지 않아도 됩니다.
 
