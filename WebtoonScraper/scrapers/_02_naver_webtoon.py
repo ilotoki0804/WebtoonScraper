@@ -33,9 +33,11 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     PLATFORM = "naver_webtoon"
     COMMENTS_DOWNLOAD_SUPPORTED = True
 
-    def __init__(self, webtoon_id: int) -> None:
+    def __init__(self, webtoon_id: int, cookie: str | None) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="https://comic.naver.com/webtoon/")
+        if cookie is not None:
+            self.cookie = cookie
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:

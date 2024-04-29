@@ -167,7 +167,7 @@ def setup_instance(
         scraper = instantiate(webtoon_platform, webtoon_id_or_url)
 
     # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
-    if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper)):
+    if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper, NaverWebtoonScraper)):
         scraper.cookie = cookie
     if bearer and isinstance(scraper, LezhinComicsScraper):
         scraper.bearer = bearer
