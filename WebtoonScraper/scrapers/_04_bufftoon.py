@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import ssl
 from typing import TYPE_CHECKING
 
 from WebtoonScraper.miscs import EpisodeNoRange
@@ -26,18 +27,16 @@ class BufftoonScraper(Scraper[int]):
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.cookie = "" if cookie is None else cookie
-        self.avoid_sslerror = True
+        self.hxoptions.verify = self._create_ssl_context()
 
-    async def async_download_webtoon(
-        self, episode_no_range: EpisodeNoRange = None, merge_number: int | None = None
-    ) -> None:
+    async def async_download_webtoon(self, *args, **kwargs) -> None:
         if not self.cookie:
             logger.warning(
                 "Without setting cookie extremely limiting the range of downloadable episodes. "
                 "Please set cookie to valid download. "
                 "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
             )
-        return await super().async_download_webtoon(episode_no_range, merge_number)
+        return await super().async_download_webtoon(*args, **kwargs)
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -60,8 +59,7 @@ class BufftoonScraper(Scraper[int]):
     @reload_manager
     def fetch_episode_information(
         self,
-        get_payment_required_episode: bool = False,
-        get_login_requiered_episode: bool | None = None,
+        get_payment_required_episode: bool = True,
         limit: int = 500,
         *,
         reload: bool = False,
@@ -70,18 +68,14 @@ class BufftoonScraper(Scraper[int]):
         raw_data = self.hxoptions.get(url).json()
         subtitles = []
         episode_ids = []
-        if get_login_requiered_episode is None:
-            get_login_requiered_episode = bool(self.cookie)
+        not_free_episodes = []
+        not_opened_for_non_login_users_episodes = []
         for raw_episode in raw_data["result"]["episodes"]:
             if not get_payment_required_episode and raw_episode["isPaymentEpisode"]:
-                logger.warning(
-                    f"Episode '{raw_episode['title']}' is not free of charge episode. It won't be downloaded."
-                )
+                not_free_episodes.append(raw_episode["title"])
                 continue
-            if not get_login_requiered_episode and not raw_episode["isOpenFreeEpisode"]:
-                logger.warning(
-                    f"Episode '{raw_episode['title']}' is not opened for non-login users. It'll be not downloaded."
-                )
+            if not self.cookie and not raw_episode["isOpenFreeEpisode"]:
+                not_opened_for_non_login_users_episodes.append(raw_episode["title"])
                 continue
             # episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode["listImgPath"]
@@ -90,6 +84,15 @@ class BufftoonScraper(Scraper[int]):
             episode_id = int(raw_episode_id_processed[1])
             episode_ids.append(episode_id)
             subtitles.append(raw_episode["title"])
+
+        if not_free_episodes:
+            logger.warning(
+                f"Following episodes won't be downloaded because they're not free: {', '.join(not_free_episodes)}"
+            )
+        if not_opened_for_non_login_users_episodes:
+            logger.warning(
+                f"Following episodes won't be downloaded because they're not free: {', '.join(not_opened_for_non_login_users_episodes)}"
+            )
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
@@ -105,3 +108,9 @@ class BufftoonScraper(Scraper[int]):
             episode_images_url = [element for element in episode_images_url if isinstance(element, str)]
 
         return episode_images_url
+
+    @staticmethod
+    def _create_ssl_context():
+        context = ssl.create_default_context()
+        context.options |= 0x4
+        return context
