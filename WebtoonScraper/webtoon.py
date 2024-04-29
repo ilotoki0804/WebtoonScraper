@@ -160,7 +160,7 @@ def setup_instance(
     elif webtoon_platform:
         scraper = instantiate(webtoon_platform, webtoon_id_or_url)
     else:
-        logger.error("Inferring webtoon platform is deprecated. Set `-p` flag to explicitly set platform.")
+        logger.error("Inferring webtoon platform is deprecated. Set `-p` flag or use URL to explicitly set platform.")
         webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
         if webtoon_platform is None:
             raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
