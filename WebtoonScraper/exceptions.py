@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from typing import Self
 
 
@@ -15,6 +16,13 @@ class WebtoonScraperError(Exception):
 
 class DirectoryStateUnmatchedError(WebtoonScraperError):
     """Directory state recieved from check_directory_state is not desired."""
+
+    @classmethod
+    def from_state(cls, container_state, directory: Path | str | None = None):
+        message = f"State of directory is {container_state}, which cannot be downloaded."
+        if directory:
+            message += f"\nDirectory path: {directory if isinstance(directory, str) else directory.absolute()}"
+        return cls(message)
 
 
 class InvalidWebtoonIdError(WebtoonScraperError):

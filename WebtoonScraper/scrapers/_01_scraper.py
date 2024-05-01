@@ -311,9 +311,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.warning("Webtoon directory was merged. Restoring...")
                 restore_webtoon(webtoon_directory, None)
             elif container_state != NORMAL_WEBTOON_DIRECTORY:
-                raise DirectoryStateUnmatchedError(
-                    f"State of directory is {container_state}, which cannot be downloaded."
-                )
+                raise DirectoryStateUnmatchedError.from_state(container_state, webtoon_directory)
         else:
             webtoon_directory.mkdir(parents=True, exist_ok=True)
 

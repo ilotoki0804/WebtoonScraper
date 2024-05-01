@@ -74,7 +74,7 @@ def unshuffle(
     if check_directory_state:
         directory_state = check_container_state(source_webtoon_directory)
         if directory_state != NORMAL_WEBTOON_DIRECTORY:
-            raise DirectoryStateUnmatchedError(f"Directory state is {directory_state}, which is not supported.")
+            raise DirectoryStateUnmatchedError.from_state(directory_state, source_webtoon_directory)
 
     unshuffle_parameters = []
     for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):
