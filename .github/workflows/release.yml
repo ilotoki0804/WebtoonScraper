@@ -2,9 +2,9 @@ name: Release PyPI & Build a package by PyInstaller
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   linux-pyinstaller-build:
