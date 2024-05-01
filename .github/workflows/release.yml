@@ -7,27 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.head_commit.message, 'Release')
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: install dependencies
-      run: |
-        python3.11 -m pip install WebtoonScraper[full] poetry
-
-    - name: Build and release the package to PyPI
-      run: |
-        export PYPI_TOKEN="${{secrets.PYPI_TOKEN}}"
-        python3.11 build.py
-
   linux-pyinstaller-build:
     runs-on: ubuntu-latest
     if: startsWith(github.event.head_commit.message, 'Release') || startsWith(github.event.head_commit.message, 'Build')

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "WebtoonScraper"
 # Do not change this version manually. This will be matched with WebtoonScraper.__version__ automatically.
-version = "3.2.2"
+version = "3.3.0"
 description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "Apache-2.0"
