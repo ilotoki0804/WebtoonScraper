@@ -48,7 +48,7 @@ README.md
 * `directory_merger`: 디렉토리 관리와 관련된 사항들과 모아서 보기 관련 기능들이 존재합니다.
 * `exceptions`: WebtoonScraper에서 사용되는 모든 커스텀 예외들이 정의되어 있습니다.
 * `miscs`(miscellaneous): 여러 프로젝트에서 사용되어 한 모듈에 놓고 import하기 곤란한 것이나 잡다한 것들이 있습니다.
-* `py.typed`: 정적 타입 체커들에게 이 라이브러리가 타입 힌트를 지원한다는 것을 선언한 것입니다. 특별한 내용물은 없습니다.
+* `py.typed`: 정적 타입 체커들에게 이 패키지가 타입 힌트를 지원한다는 것을 선언한 것입니다. 특별한 내용물은 없습니다.
 * `webtoon`: CLI에서 사용되는 코드 중 웹툰과 관련된 실재적인 코드가 모여 있습니다.
 
 ### 스크래퍼 파일들의 앞 수의 의미
@@ -57,7 +57,7 @@ README.md
 
 ## hxsoup
 
-httpx는 requests와 많은 부분 호환되지만 async 지원 등 더욱 발전된 기능을 가지고 있는 라이브러리입니다. `hxsoup`는 이러한 `httpx`와 `BeatifulSoup`를 간편하게 사용할 수 있도록 통합해서 사용할 수 있도록 만든 자작 라이브러리로 사용 방법은 httpx와 호환되기에 매우 간단합니다. 전체 문서는 [여기](https://github.com/ilotoki0804/hxsoup)에서 확인할 수 있습니다.
+httpx는 requests와 많은 부분 호환되지만 async 지원 등 더욱 발전된 기능을 가지고 있는 패키지입니다. `hxsoup`는 이러한 `httpx`와 `BeatifulSoup`를 간편하게 사용할 수 있도록 통합해서 사용할 수 있도록 만든 자작 패키지로 사용 방법은 httpx와 호환되기에 매우 간단합니다. 전체 문서는 [여기](https://github.com/ilotoki0804/hxsoup)에서 확인할 수 있습니다.
 
 ## 스크래퍼의 구조
 

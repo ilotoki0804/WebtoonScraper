@@ -80,9 +80,9 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
 
 만약 더 많은 WebtoonScraper의 기능(범위 설정 다운로드, 모아서 보기, 다운로드할 디렉토리 설정, 에피소드 리스팅, 파이썬으로 사용 등)을 알고 싶거나 위에서 소개한 방식으로는 잘 작동하지 않는 경우(특히 버프툰, 레진코믹스의 경우 추가적인 설정이 필수적입니다.)에는 [`사용 방법` 문서](docs/how_to_use.md)를 참고해 주세요.
 
-## 이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류
+## 다운로드 가능한 웹툰/에피소드의 종류
 
-[이 라이브러리가 다운로드 가능한 웹툰/에피소드의 종류 문서](docs/download_availability.md)를 참고하세요.
+[다운로드 가능한 웹툰/에피소드의 종류 문서](docs/download_availability.md)를 참고하세요.
 
 ## Build from source
 
