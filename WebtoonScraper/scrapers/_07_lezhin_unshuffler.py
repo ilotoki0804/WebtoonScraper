@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING
 from tqdm import tqdm
 
 from ..directory_merger import (
+    DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,
-    _iterdir_seperating_directories_and_files,
+    _directories_and_files_of,
     check_container_state,
-    webtoon_regexes,
 )
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
 from ..miscs import logger
@@ -67,7 +67,7 @@ def unshuffle(
 
     target_webtoon_directory.mkdir(exist_ok=True)
 
-    directories, files = _iterdir_seperating_directories_and_files(source_webtoon_directory)
+    directories, files = _directories_and_files_of(source_webtoon_directory)
     for file in files:
         shutil.copy(file, target_webtoon_directory / file.name)
 
@@ -81,7 +81,7 @@ def unshuffle(
         source_episode_directory = source_webtoon_directory / episode_directory_name
         target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        processed_directory_name = webtoon_regexes[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
+        processed_directory_name = DIRECTORY_PATTERNS[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
         if processed_directory_name is None:
             logger.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
             continue

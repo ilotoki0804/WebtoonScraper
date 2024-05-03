@@ -34,6 +34,7 @@ from rich.table import Table
 from tqdm import tqdm
 
 from ..directory_merger import (
+    DIRECTORY_PATTERNS,
     MERGED_WEBTOON_DIRECTORY,
     NORMAL_IMAGE,
     NORMAL_WEBTOON_DIRECTORY,
@@ -41,7 +42,6 @@ from ..directory_merger import (
     check_container_state,
     merge_webtoon,
     restore_webtoon,
-    webtoon_regexes,
 )
 from ..exceptions import (
     DirectoryStateUnmatchedError,
@@ -607,7 +607,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """
 
         does_filename_inappropriate = any(
-            not webtoon_regexes[NORMAL_IMAGE].match(file) for file in os.listdir(episode_directory)
+            not DIRECTORY_PATTERNS[NORMAL_IMAGE].match(file) for file in os.listdir(episode_directory)
         )
         does_file_count_inappropriate = len(image_urls) != len(os.listdir(episode_directory))
         return does_filename_inappropriate or does_file_count_inappropriate

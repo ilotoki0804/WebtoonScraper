@@ -7,7 +7,7 @@ from html import escape
 from pathlib import Path
 from typing import Any, Sequence, TypeVar
 
-from .directory_merger import _iterdir_seperating_directories_and_files
+from .directory_merger import _directories_and_files_of
 from .miscs import __version__ as version
 
 HTML_TEMPLATE = """\
@@ -424,7 +424,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
     """
 
     # 웹툰 정보 불러옴. 이때 선택적 정보가 없는 경우 빈 값으로 설정함.
-    directories, files = _iterdir_seperating_directories_and_files(webtoon_directory)
+    directories, files = _directories_and_files_of(webtoon_directory)
     for file in files:
         if file.name == "information.json":
             with file.open("r", encoding="utf-8") as f:

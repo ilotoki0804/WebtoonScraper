@@ -16,13 +16,7 @@ from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.directory_merger import (
-    MERGED_WEBTOON_DIRECTORY,
-    NORMAL_WEBTOON_DIRECTORY,
-    ContainerStates,
-    check_container_state,
-    select_from_directory,
-)
+from WebtoonScraper.directory_merger import select_from_directory
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
@@ -154,7 +148,7 @@ def _version_info() -> str:
                 return (
                     f"⚠️  Extra dependencies '{SEP.join(missing_dependencies)}' are not installed.\n"
                     "You won't be able to download webtoons from following platforms: "
-                    f"'{SEP.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
+                    f"'{', '.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
                 )
 
     return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
@@ -319,64 +313,6 @@ def parse_download(args: argparse.Namespace) -> None:
             merge_number=args.merge_number,
             add_viewer=True,
         )
-
-
-CONTAINER_STATE_PER_ARGS: dict[str, ContainerStates] = {
-    "m": NORMAL_WEBTOON_DIRECTORY,
-    "merge": NORMAL_WEBTOON_DIRECTORY,
-    "r": MERGED_WEBTOON_DIRECTORY,
-    "restore": MERGED_WEBTOON_DIRECTORY,
-}
-
-ABBR_TO_FULL_STATE: dict[str, Literal["merge", "restore", "auto"]] = {
-    "m": "merge",
-    "r": "restore",
-    "a": "auto",
-}
-
-
-CONTAINER_STATE_TO_DO_STATE: dict[ContainerStates, Literal["merge", "restore"]] = {
-    NORMAL_WEBTOON_DIRECTORY: "merge",
-    MERGED_WEBTOON_DIRECTORY: "restore",
-}
-
-
-def get_state(source_directory: Path) -> ContainerStates:
-    states: dict[Path, ContainerStates] = {
-        webtoon_directory: check_container_state(webtoon_directory) for webtoon_directory in source_directory.iterdir()
-    }
-    all_unique_states = set(states.values())
-    if len(all_unique_states) != 1:
-        raise ValueError(
-            "All webtoons in source directory should have same state when using 'auto' action.\n"
-            "Please specify --action(-a) or check directory state."
-            f"States: {all_unique_states}"
-        )
-
-    (directories_state,) = all_unique_states
-    return directories_state
-
-
-def get_string_todo(state: ContainerStates) -> Literal["merge", "restore"]:
-    try:
-        return CONTAINER_STATE_TO_DO_STATE[state]
-    except KeyError:
-        raise ValueError(f"State {state} is not supported.")
-
-
-def list_directories(parent_directory: Path) -> None:
-    table = Table(show_header=True, header_style="bold blue", box=None)
-    table.add_column("Webtoon Directory Name", style="bold")
-    table.add_column("Directory State")
-    table.add_column("Action If Auto")
-    for webtoon_directory in parent_directory.iterdir():
-        directory_state = check_container_state(webtoon_directory)
-        table.add_row(
-            webtoon_directory.name,
-            directory_state,
-            CONTAINER_STATE_TO_DO_STATE.get(directory_state),
-        )
-    Console().print(table)
 
 
 def parse_merge(args: argparse.Namespace) -> None:
