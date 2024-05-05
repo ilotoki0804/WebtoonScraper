@@ -5,7 +5,7 @@
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Filotoki0804%2FWebtoonScraper&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/ilotoki0804/WebtoonScraper)
 [![Sponsoring](https://img.shields.io/badge/Sponsoring-Toss-blue?logo=GitHub%20Sponsors&logoColor=white)](https://toss.me/ilotoki)
 
-The largest open source webtoon scraper in world.
+The largest open source webtoon scraper.
 
 It supports **Naver Webtoon (including Best Challenge, Challenge Comics), webtoons.com, Bufftoon, Naver Post, Naver Game, Lezhin Comics, KakaoPage, Naver Blog, Tistory, Kakao Webtoon**, and possibly more in future.
 
