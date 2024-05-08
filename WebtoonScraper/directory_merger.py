@@ -348,11 +348,12 @@ def check_container_state(directory: PathOrStr, *, warn: bool = False) -> Contai
             logger.warning(f"It looks like the file({directory}) is not a directory.")
         return NOT_MATCHED
 
-    directories, _ = _directories_and_files_of(directory)
+    directories, files = _directories_and_files_of(directory)
 
     if not directories:
-        if warn:
-            logger.warning(f"It looks like the directory({directory}) is empty. It cannot be something")
+        states: set[FileStates] = {check_filename_state(file.name) for file in files if not file.name.startswith("_")}
+        if len(states) == 1:
+            return FILE_TO_CONTAINER.get(states.pop(), NOT_MATCHED)
         return NOT_MATCHED
 
     for state_name, regex in DIRECTORY_PATTERNS.items():
