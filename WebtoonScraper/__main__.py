@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from rich.console import Console
-from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon

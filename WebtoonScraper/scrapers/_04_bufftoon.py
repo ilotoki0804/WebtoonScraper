@@ -6,8 +6,6 @@ import re
 import ssl
 from typing import TYPE_CHECKING
 
-from WebtoonScraper.miscs import EpisodeNoRange
-
 from ..miscs import logger
 from ._01_scraper import Scraper, reload_manager
 

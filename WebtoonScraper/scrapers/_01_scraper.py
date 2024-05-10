@@ -743,11 +743,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         이 방식으로 이미지를 묶으면 더 이상 merge를 활용할 수 없습니다.
         """
         from PIL import Image
+
         image_names = sorted(os.listdir(episode))
         images = [Image.open(episode / image_name) for image_name in image_names]
         width = max(image.width for image in images)
         height = sum(image.height for image in images)
-        composite = Image.new('RGB', (width, height))
+        composite = Image.new("RGB", (width, height))
         y = 0
         for image in images:
             composite.paste(image, (0, y))
