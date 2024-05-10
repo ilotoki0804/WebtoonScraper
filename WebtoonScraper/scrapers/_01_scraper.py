@@ -734,6 +734,28 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         self.callback("description", description=description)
 
+    def _concat_images(self, episode: Path) -> None:
+        """이미지를 한 개의 파일로 연결합니다.
+
+        일반적으로 유용하지 않으며 매우 느립니다.
+        하지만 유용하게 사용될 수 있는 가능성이 있어 남겨둡니다.
+
+        이 방식으로 이미지를 묶으면 더 이상 merge를 활용할 수 없습니다.
+        """
+        from PIL import Image
+        image_names = sorted(os.listdir(episode))
+        images = [Image.open(episode / image_name) for image_name in image_names]
+        width = max(image.width for image in images)
+        height = sum(image.height for image in images)
+        composite = Image.new('RGB', (width, height))
+        y = 0
+        for image in images:
+            composite.paste(image, (0, y))
+            y += image.height
+        for image_name in image_names:
+            os.remove(episode / image_name)
+        composite.save(episode / "000.png")
+
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
         """Get file extionsion from filename or URL.
