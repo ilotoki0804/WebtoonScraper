@@ -41,6 +41,7 @@ def get_image() -> ModuleType:
 def unshuffle_typical_webtoon(
     source_webtoon_directory: Path,
     episode_int_ids: list[int] | None = None,
+    use_tqdm: bool = True,
 ) -> Path:
     str_source_webtoon_directory = str(source_webtoon_directory)
     if str_source_webtoon_directory.endswith(", shuffled)"):
@@ -51,7 +52,7 @@ def unshuffle_typical_webtoon(
         raise ValueError(f"webtoon directory {source_webtoon_directory} is not typical. Use `unshuffle` instead.")
     target_webtoon_directory = Path(str_target_webtoon_directory)
 
-    unshuffle(source_webtoon_directory, target_webtoon_directory, episode_int_ids)
+    unshuffle(source_webtoon_directory, target_webtoon_directory, episode_int_ids, use_tqdm=use_tqdm)
     return target_webtoon_directory
 
 
@@ -61,6 +62,7 @@ def unshuffle(
     episode_int_ids: list[int] | None,
     process_number: int | None = None,
     check_directory_state: bool = True,
+    use_tqdm: bool = True,
 ) -> None:
     if episode_int_ids is None:
         episode_int_ids = _search_episode_int_ids(source_webtoon_directory)
@@ -97,9 +99,13 @@ def unshuffle(
     )
     with multiprocessing.Pool(process_number) as p:
         unshuffled_episode_ids = p.imap_unordered(_unshuffle_episode_packed, unshuffle_parameters)
-        progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
-        for episode_name in progress_bar:
-            progress_bar.set_description(f"Episode {episode_name} unshuffle ended")
+        if use_tqdm:
+            progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
+            for episode_name in progress_bar:
+                progress_bar.set_description(f"Episode {episode_name} unshuffle ended")
+        else:
+            for i, episode_name in enumerate(unshuffled_episode_ids, 1):
+                logger.info(f"Episode {episode_name} unshuffle ended ({i:02d}/{len(unshuffle_parameters):02d})")
 
     logger.info("Unshuffling ended successfully.")
 
