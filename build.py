@@ -2,13 +2,14 @@
 
 This file replaces relative path links with GitHub links and add warning in front of the long description.
 
-Last modified at 2023-04-22; 10th edition.
+Last modified at 2023-05-15; 11th edition.
 """
 
 import contextlib
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 import tomlkit
@@ -16,8 +17,12 @@ import tomlkit
 from WebtoonScraper import __url__ as url
 from WebtoonScraper import __version__ as version
 
-LEAVE_README_BUILD_VERSION = False
-PUBLISH = True
+if args := set(sys.argv[1:]):
+    LEAVE_README_BUILD_VERSION = "--readme" in args
+    PUBLISH = "--no-publish" not in args
+else:
+    LEAVE_README_BUILD_VERSION = False
+    PUBLISH = True
 
 # LEAVE_README_BUILD_VERSION = True
 # PUBLISH = False
