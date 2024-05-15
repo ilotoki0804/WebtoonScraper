@@ -78,9 +78,7 @@ webtoon download 809590 -p naver_webtoon -m 5
 
 쿠키를 얻는 방법은 다음과 같습니다.
 
-다음의 링크를 드래그해서 즐겨찾기 바에 올려놓아 즐겨찾기에 추가하세요.
-
-<a href="javascript:prompt%28%22here%20is%20the%20cookie%20string%22%2Cdocument.cookie%29%3B">get cookie</a>
+[링크](https://htmlpreview.github.io/?https://github.com/ilotoki0804/WebtoonScraper/blob/main/docs/get_cookie.html)로 가 설명을 따르세요.
 
 **해당 사이트에 들어가 로그인을 한 후** 추가한 즡겨찾기를 누르면 나오는 창에 나오는 문자열을 복사합니다.
 
