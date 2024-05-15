@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import html
+import itertools
 import json
 import os
 import re
@@ -744,18 +745,25 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """
         from PIL import Image
 
+        BATCH_SIZE = 3
         image_names = sorted(os.listdir(episode))
         images = [Image.open(episode / image_name) for image_name in image_names]
-        width = max(image.width for image in images)
-        height = sum(image.height for image in images)
-        composite = Image.new("RGB", (width, height))
-        y = 0
-        for image in images:
-            composite.paste(image, (0, y))
-            y += image.height
+        for i, start_index in enumerate(range(0, len(images), BATCH_SIZE)):
+            partial_images = images[start_index:start_index + BATCH_SIZE]
+
+            width = max(image.width for image in partial_images)
+            height = sum(image.height for image in partial_images)
+
+            y = 0
+            composite = Image.new("RGB", (width, height))
+            for image in partial_images:
+                composite.paste(image, (0, y))
+                y += image.height
+
+            composite.save(episode / f"a{i:02d}.png")
+
         for image_name in image_names:
             os.remove(episode / image_name)
-        composite.save(episode / "000.png")
 
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
