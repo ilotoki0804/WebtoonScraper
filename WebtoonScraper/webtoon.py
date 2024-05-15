@@ -144,7 +144,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
 
 def setup_instance(
     webtoon_id_or_url: WebtoonId,
-    webtoon_platform: WebtoonPlatforms | None = None,
+    webtoon_platform: WebtoonPlatforms | Literal["url"] | None = None,
     *,
     cookie: str | None = None,
     bearer: str | None = None,
@@ -155,8 +155,10 @@ def setup_instance(
     """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
 
     # 스크래퍼 불러오기
-    if isinstance(webtoon_id_or_url, str) and "." in webtoon_id_or_url:  # URL인지 확인
+    if isinstance(webtoon_id_or_url, str) and (webtoon_platform == "url" or "." in webtoon_id_or_url):  # URL인지 확인
         scraper = instantiate_from_url(webtoon_id_or_url)
+    elif webtoon_platform == "url":
+        raise TypeError(f"{type(webtoon_id_or_url).__name__!r} is not valid type of URL.")
     elif webtoon_platform:
         scraper = instantiate(webtoon_platform, webtoon_id_or_url)
     else:
