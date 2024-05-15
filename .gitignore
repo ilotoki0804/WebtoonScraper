@@ -3,7 +3,7 @@
 ####################
 
 # Exclude all files that starts with "_ignore"
-_ignore*.*
+_ignore*
 
 # venv for this repository
 .webtoon/
