@@ -86,10 +86,11 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
 
 ## Build from source
 
-우선 git과 python을 설치하고 레포지토리를 클론하세요.
+우선 git과 python을 설치하고 레포지토리를 클론하고 해당 디렉토리로 이동하세요.
 
 ```console
 git clone https://github.com/ilotoki0804/WebtoonScraper.git
+cd WebtoonScraper
 ```
 
 그런 다음 가상 환경을 생성하고 활성화하세요.
