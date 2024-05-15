@@ -28,6 +28,7 @@ Documentation = "https://github.com/ilotoki0804/WebtoonScraper"
 Repository = "https://github.com/ilotoki0804/WebtoonScraper"
 Issues = "https://github.com/ilotoki0804/WebtoonScraper/issues"
 Changelog = "https://github.com/ilotoki0804/WebtoonScraper#relese-note"
+Funding = "https://toss.me/ilotoki"
 
 [tool.poetry.scripts]
 WebtoonScraper = "WebtoonScraper:__main__.main"
