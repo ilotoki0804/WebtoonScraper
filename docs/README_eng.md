@@ -70,8 +70,6 @@ WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
 > pip install -U WebtoonScraper[full]
 > ```
 
-Translated with DeepL.com (free version)
-
 ## How to Use
 
 Most webtoons can be downloaded by typing `webtoon download` in terminal followed by the URL enclosed in double quotes.
