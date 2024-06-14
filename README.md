@@ -102,7 +102,7 @@ py -3.12 -m venv .venv
 
 echo UNIX인 경우
 python3.12 -m venv .venv
-.venv/Scripts/activate
+.venv/bin/activate
 ```
 
 poetry를 설치하고 의존성을 설치하세요.

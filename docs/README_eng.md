@@ -101,7 +101,7 @@ py -3.12 -m venv .venv
 
 echo For UNIX
 python3.12 -m venv .venv
-.venv/Scripts/activate
+.venv/bin/activate
 ```
 
 Install poetry and the dependencies.
