@@ -65,7 +65,7 @@ DIRECTORY_PATTERNS: dict[FileStates, re.Pattern[str]] = {
     # 0001~0005
     MERGED_EPISODE_DIRECTORY: re.compile(r"^(?P<from>\d{4})~(?P<to>\d{4})$"),
     # webtoon_name(titleid[, HD][, shuffled])
-    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<titleid>.+?)(?:, (?:HD|shuffled))*[)]$"),
+    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<titleid>.+?)(?:, (?:HD|shuffled|concatenated))*[)]$"),
 }
 DIRECTORY_PATTERNS_TOLERANT: dict[FileStates, re.Pattern[str]] = {
     # 023.jpg
@@ -162,9 +162,9 @@ def select_from_directory(
         case _:
             print(f"({len(not_webtoon_directories)} directories are hidden because they are not webtoon directories.)")
 
-    result = input("Enter number: ")
+    choice = input("Enter number: ")
     try:
-        selected = options[int(result)]
+        selected = options[int(choice)]
     except (IndexError, ValueError) as e:
         raise ValueError("User input is invalid.") from e
 

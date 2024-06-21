@@ -15,7 +15,8 @@ from rich.console import Console
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.directory_merger import merge_or_restore_webtoon, select_from_directory
+from WebtoonScraper.directory_merger import _directories_and_files_of, merge_or_restore_webtoon, select_from_directory
+from WebtoonScraper.image_concatenator import concat_webtoon
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
@@ -175,7 +176,7 @@ parser.add_argument(
 )
 subparsers = parser.add_subparsers(title="Commands", help="Choose command you want.")
 
-# 'download' subparsers
+# download subparser
 download_subparser = subparsers.add_parser("download", help="Download webtoons.")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
@@ -244,12 +245,13 @@ download_subparser.add_argument(
     choices=["all", "reply"],
 )
 
+# merge subparser
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
 merge_subparser.set_defaults(subparser_name="merge")
 merge_subparser.add_argument(
-    "webtoon_directory_name",
+    "webtoon_directory_path",
     type=Path,
-    metavar="webtoon_directory_name|webtoons_directory_name(if -s option enabled)",
+    metavar="webtoon_directory_path",
     help="A webtoon folder to merge or restore.",
 )
 merge_subparser.add_argument(
@@ -262,11 +264,11 @@ merge_subparser.add_argument(
 )
 merge_subparser.add_argument(
     "-t",
-    "--target-parent-directory",
+    "--target-webtoon-directory",
     type=Path,
-    metavar="target_parent_directory",
+    metavar="target_webtoon_directory",
     default=None,
-    help="The directory that the result of merge/restore will be located. Defaults to source directory itself.",
+    help="The destination of output webtoon directory.",
 )
 merge_subparser.add_argument(
     "-s",
@@ -288,6 +290,56 @@ merge_subparser.add_argument(
         "Ignored if the `s` option is used.",
 )
 
+# concat subparser
+concat_subparser = subparsers.add_parser("concat", help="Concatenate images of episodes.")
+concat_subparser.set_defaults(subparser_name="concat")
+concat_subparser.add_argument(
+    "webtoon_directory_path",
+    type=Path,
+    metavar="webtoon_directory_path",
+    help="The name of folder that contains webtoon folders to concatenate.",
+)
+concat_subparser.add_argument(
+    "-s",
+    "--select",
+    action="store_true",
+    help="Instead of typing the webtoon directory directly, open the webtoon directory selector.",
+)
+concat_subparser.add_argument(
+    "--all",
+    action="store_true",
+    help="Merge all images of each episode."
+)
+concat_subparser.add_argument(
+    "--count",
+    type=int,
+    help="Concatenate based on image count.",
+)
+concat_subparser.add_argument(
+    "--height",
+    type=int,
+    help="Concatenate based on the height of concatenated images",
+)
+concat_subparser.add_argument(
+    "--ratio",
+    type=float,
+    help="Concatenate based on the ratio of concatenated images",
+)
+concat_subparser.add_argument(
+    "-t",
+    "--target-webtoon-directory",
+    type=Path,
+    metavar="target_webtoon_directory",
+    default=None,
+    help="The destination of output webtoon directory.",
+)
+concat_subparser.add_argument(
+    "-p",
+    "--process-number",
+    type=int,
+    default=None,
+    help="Multiprocessing process number."
+)
 
 def parse_download(args: argparse.Namespace) -> None:
     # 축약형 플랫폼명을 일반적인 플랫폼명으로 변환 (nw -> naver_webtoon)
@@ -336,19 +388,55 @@ def parse_download(args: argparse.Namespace) -> None:
 def parse_merge(args: argparse.Namespace) -> None:
     if args.select:
         select_from_directory(
-            args.webtoon_directory_name,
-            args.target_parent_directory,
+            args.webtoon_directory_path,
+            args.target_webtoon_directory,
             True,
             args.merge_number,
         )
     else:
         action = {"r": "restore", "m": "merge", "a": "auto"}.get(args.action, args.action)
         merge_or_restore_webtoon(
-            args.webtoon_directory_name,
-            args.target_parent_directory,
+            args.webtoon_directory_path,
+            args.target_webtoon_directory or args.webtoon_directory_path.parent,
             args.merge_number,
             action,  # type: ignore
         )
+
+
+def _directory_seletor(source_parent_directory: Path) -> Path:
+    directories, _ = _directories_and_files_of(source_parent_directory, False)
+    number_length = len(str(len(directories)))
+    for i, directory in enumerate(directories, 1):
+        print(f"{i:0{number_length}}. Concat {directory.name}")
+    choice = int(input("Enter number: "))
+    return directories[choice]
+
+
+def parse_concat(args: argparse.Namespace) -> None:
+    if args.select:
+        webtoon_dir = _directory_seletor(args.webtoon_directory_path)
+        target_dir = args.target_webtoon_directory
+    else:
+        webtoon_dir = args.webtoon_directory_path
+        target_dir = args.target_webtoon_directory
+
+    if args.all:
+        batch_mode = "all"
+    elif args.count:
+        batch_mode = "count", args.count
+    elif args.height:
+        batch_mode = "height", args.height
+    elif args.ratio:
+        batch_mode = "ratio", args.ratio
+    else:
+        raise ValueError("You must provide one of following options: --all/--count/--height/--ratio")
+
+    concat_webtoon(
+        webtoon_dir,
+        target_dir,
+        batch_mode,
+        process_number=args.process_number
+    )
 
 
 def main(argv=None) -> Literal[0, 1]:
@@ -383,6 +471,8 @@ def main(argv=None) -> Literal[0, 1]:
             parse_download(args)
         elif args.subparser_name == "merge":
             parse_merge(args)
+        elif args.subparser_name == "concat":
+            parse_concat(args)
         else:
             raise NotImplementedError(f"Subparser {args.subparser_name} is not implemented.")
     except BaseException as e:

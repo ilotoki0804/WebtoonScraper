@@ -2,31 +2,66 @@ import logging
 import multiprocessing
 import os
 import shutil
-from itertools import count
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator, Iterator, Literal
 
 from PIL import Image, UnidentifiedImageError
 from tqdm import tqdm
 
-from . import directory_merger, webtoon_viewer
+from . import webtoon_viewer
+from .directory_merger import ContainerStates, _directories_and_files_of, ensure_normal
 from .miscs import logger
 
+BatchMode = tuple[Literal["count", "height"], int] | tuple[Literal["ratio"], float] | Literal["all"]
 
 def concat_webtoon(
     source_webtoon_directory: Path,
-    target_webtoon_directory: Path,
-    batch_count: int,
+    target_webtoon_directory: Path | None,
+    batch: BatchMode,
     rebuild_webtoon_viewer: bool = True,
+    manual_container_state: ContainerStates | None = None,
     process_number: int | None = None,
     use_tqdm: bool = True,
-):
-    """batch_count가 0이면 전체를 묶습니다. process_number가 1이라면 멀티프로세싱을 활용하지 않습니다."""
-    directories, files = directory_merger._directories_and_files_of(source_webtoon_directory)
+) -> None:
+    """여러 그림 파일을 하나로 연결합니다.
+
+    Args:
+        source_webtoon_directory: 연결할 사진 파일이 있는 에피소드를 포함하는 웹툰 디렉토리입니다.
+        target_webtoon_directory: 결과물을 저장할 웹툰 디렉토리입니다.
+            만약에 None이면 자동으로 이름을 선정하는데, 예를 들어 디렉토리 이름이
+            `webtoon(webtoonid)`이면 `webtoon(webtoonid, concatenated)`로 설정합니다.
+        batch_size: 하나로 연결하는 방식의 기준입니다.
+        batch_mode: 어떤 수치를 기준으로 그림을 묶을지 결정합니다.
+            batch_size가 -1이면 모드에 상관없이 전체를 묶습니다.
+            * 만약 "count"이면 그림 개수를 기준으로 결정됩니다.
+                예를 들어 batch_size가 3이라면 그림 파일 3개를 한 파일로 연결합니다.
+            * 만약 "height"이면 그림의 총 세로 픽셀 수로 결정합니다.
+                예를 들어 batch_size가 8000이면 그림 파일의 세로 픽셀 수가 최소 8000이 되도록
+                한 파일로 연결합니다. 이때 해당 에피소드의 마지막 파일은 8000보다 작을 수 있으며 멱등적입니다.
+            * 만약 "ratio"이면 `세로 픽셀 수 / 가로 픽셀 수`를 기준으로 파일을 연결합니다.
+                예를 들어 batch_size가 `11.5`이면 `세로 픽셀 수 / 가로 픽셀 수`가 11.5와 같거나 크도록
+                한 파일로 연결됩니다. 이때 해당 에피소드의 마지막 파일은 8000보다 작을 수 있으며 멱등적입니다.
+        rebuild_webtoon_viewer: 이미지를 연결하면 기존의 웹툰 뷰어를 사용할 수 없습니다.
+            이 옵션을 켜면 웹툰 뷰어를 사용할 수 있도록 다시 만듭니다.
+        process_number: 멀티프로세싱을 활용하여 더욱 빠르게 작업을 수행합니다.
+            process_number가 1이라면 멀티프로세싱을 활용하지 않습니다.
+            만약 멀티프로세싱을 안전하게 사용할 수 없는 환경이라면 1로 설정하세요.
+    """
+    directories, files = _directories_and_files_of(source_webtoon_directory)
+
+    ensure_normal(source_webtoon_directory, empty_ok=False, manual_container_state=manual_container_state)
+
+    if target_webtoon_directory is None:
+        name = source_webtoon_directory.name
+        if name.endswith(")"):
+            target_name = name.removesuffix(")") + ", concatenated)"
+        else:
+            target_name = name + "(concatenated)"
+        target_webtoon_directory = source_webtoon_directory.parent / target_name
 
     target_webtoon_directory.mkdir(parents=True, exist_ok=True)
 
-    # careless한 사용자들을 위한 편의 기능.
+    # careless한 사용자들을 위한 편의기능.
     # 한 웹툰 디렉토리는 한 함수만 접근 가능하게 만듦.
     # multiprocessing 사용 시 나오는 일부 오류를 해결함.
     working_indicator = target_webtoon_directory / "WORKING"
@@ -37,18 +72,19 @@ def concat_webtoon(
     try:
         working_indicator.write_bytes(b"")
         logger.warning(
-            "Unshuffling is started. It takes a while and it's very CPU-intensive task. "
+            "Concatenating is started. It takes a while and it's very CPU-intensive task. "
             "So keep patient and wait until the process end."
         )
 
+        # 멀티프로세싱 활용하지 않음
         if process_number == 1:
             if use_tqdm:
                 directories = tqdm(directories, total=len(directories))
 
             for i, episode_directory in enumerate(directories, 1):
                 episode_name = episode_directory.name
-                target_directory = target_webtoon_directory / episode_name
-                _concat_episode(episode_directory, target_directory, batch_count)
+                target = target_webtoon_directory / episode_name
+                _concat_episode(episode_directory, target, batch)
 
                 if use_tqdm:
                     if TYPE_CHECKING:
@@ -57,9 +93,10 @@ def concat_webtoon(
                 else:
                     logger.info(f"Episode {episode_name} concatenation ended ({i:02d}/{len(directories):02d})")
 
+        # 멀티프로세싱 활용
         else:
             parameters = [
-                (episode_directory, target_webtoon_directory / episode_directory.name, batch_count)
+                (episode_directory, target_webtoon_directory / episode_directory.name, batch)
                 for episode_directory in directories
             ]
 
@@ -84,7 +121,7 @@ def concat_webtoon(
         webtoon_viewer.add_html_webtoon_viewer(target_webtoon_directory)
 
 
-def _concat_episode_packed(args: tuple[Path, Path, int]):
+def _concat_episode_packed(args: tuple[Path, Path, BatchMode]):
     _concat_episode(*args)
     return args[1].name  # Directory name
 
@@ -92,39 +129,55 @@ def _concat_episode_packed(args: tuple[Path, Path, int]):
 def _concat_episode(
     source_episode_directory: Path,
     target_episode_directory: Path,
-    batch_count: int,
-):
+    batch: BatchMode,
+) -> None:
     target_episode_directory.mkdir(exist_ok=True)
 
     image_names = sorted(os.listdir(source_episode_directory))
-    images = _get_images(source_episode_directory, image_names)
-    # next(images)
-    images.send(None)
+    match batch:
+        case "all":
+            fetcher = _get_images_by_count(source_episode_directory, image_names, -1)
 
-    for i in count(0):
-        try:
-            batched_images = images.send(batch_count)
-        except StopIteration:
-            break
+        case "count", int(count):
+            fetcher = _get_images_by_count(source_episode_directory, image_names, count)
 
-        width = max(image.width for image in batched_images)
-        height = sum(image.height for image in batched_images)
+        case "height", int(height):
+            fetcher = _get_images_by_height(source_episode_directory, image_names, height)
+
+        case "ratio", (int(ratio) | float(ratio)):
+            fetcher = _get_images_by_ratio(source_episode_directory, image_names, ratio)
+
+        case _:
+            raise ValueError(f"Unknown batch mode or invalid type. batch: {batch}")
+
+    for i, images in enumerate(fetcher):
+        if not images:
+            continue
+
+        if len(images) == 1:
+            image, = images
+            image.save(target_episode_directory / f"{i:03d}.png")
+            image.close()
+            continue
+
+        width = max(image.width for image in images)
+        height = sum(image.height for image in images)
 
         y = 0
-        composite = Image.new("RGB", (width, height))
-        for image in batched_images:
-            composite.paste(image, (0, y))
-            y += image.height
+        with Image.new("RGB", (width, height)) as composite:
+            for image in images:
+                composite.paste(image, (0, y))
+                y += image.height
 
-        composite.save(target_episode_directory / f"{i:03d}.png")
+            composite.save(target_episode_directory / f"{i:03d}.png")
 
-        for image in batched_images:
+        for image in images:
             image.close()
 
-def _get_images(directory: Path, image_names: list[str]):
+
+def _get_images_by_count(directory: Path, image_names: list[str], count: int) -> Iterator[list[Image.Image]]:
     result: list[Image.Image] = []
-    pointer = 0
-    goal = 0
+    pointer = goal = 0
     while pointer < len(image_names):
         while goal and pointer < len(image_names) and pointer < goal:
             image_dir = directory / image_names[pointer]
@@ -138,7 +191,56 @@ def _get_images(directory: Path, image_names: list[str]):
 
             pointer += 1
 
-        batch_count = yield result
-        batch_count = batch_count or len(image_names)
-        goal = pointer + batch_count
+        yield result
+        if count == -1:
+            count = len(image_names)
+        goal = pointer + count
+        result.clear()
+
+def _get_images_by_height(directory: Path, image_names: list[str], height: int) -> Iterator[list[Image.Image]]:
+    result: list[Image.Image] = []
+    pointer = sum_of_image_height = 0
+    while pointer < len(image_names):
+        while pointer < len(image_names) and (height == -1 or sum_of_image_height < height):
+            image_dir = directory / image_names[pointer]
+
+            try:
+                image = Image.open(image_dir)
+            except UnidentifiedImageError:
+                # 이미지가 아니어서 실패할 경우 오류를 내는 것이 아닌 해당 이미지를 무시하고
+                # 다음 이미지를 불러오는 것을 시도함.
+                continue
+            else:
+                result.append(image)
+                sum_of_image_height += image.height
+
+            pointer += 1
+
+        sum_of_image_height = 0
+        yield result
+        result.clear()
+
+def _get_images_by_ratio(directory: Path, image_names: list[str], ratio: int | float) -> Iterator[list[Image.Image]]:
+    result: list[Image.Image] = []
+    pointer = sum_of_image_height = image_width = 0
+    while pointer < len(image_names):
+        while pointer < len(image_names) and ratio and (ratio == -1 or image_width == 0 or sum_of_image_height / image_width < ratio):
+            image_dir = directory / image_names[pointer]
+
+            try:
+                image = Image.open(image_dir)
+            except UnidentifiedImageError:
+                # 이미지가 아니어서 실패할 경우 오류를 내는 것이 아닌 해당 이미지를 무시하고
+                # 다음 이미지를 불러오는 것을 시도함.
+                continue
+            else:
+                result.append(image)
+                sum_of_image_height += image.height
+                image_width = max(image_width, image.width)
+
+            pointer += 1
+
+        sum_of_image_height = 0
+        image_width = 0
+        yield result
         result.clear()
