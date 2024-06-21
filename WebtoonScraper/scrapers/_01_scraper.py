@@ -745,9 +745,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             파일 확장자를 반환합니다.
         """
         url_path = parse.urlparse(filename_or_url).path  # 놀랍게도 일반 filename(file.jpg 등)에서도 동작함.
-        extension_name = re.search(r"(?<=[.])\w+?$", url_path)
+        extension_name = re.search(r"(?<=[.])\w+?$", url_path, flags=re.IGNORECASE)
         if extension_name is not None:
-            return extension_name.group(0)
+            return extension_name.group(0).lower()
 
         # 만약 파일 확장자를 파일 이름에서 찾는 것에 실패하였을 경우 DEFAULT_IMAGE_FILE_EXTENSION를 사용함.
         if cls.DEFAULT_IMAGE_FILE_EXTENSION is not None:
