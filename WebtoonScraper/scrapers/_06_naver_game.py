@@ -7,6 +7,7 @@ import json
 import re
 from itertools import count
 
+from ..miscs import logger
 from ._01_scraper import Scraper, reload_manager
 
 
@@ -19,6 +20,7 @@ class NaverGameScraper(Scraper[int]):
         r"(?:https?:\/\/)?game[.]naver[.]com\/original_series\/(?P<webtoon_id>\d+)(\?(?:.*&)*season=(?P<season>\d+))?"
     )
     PLATFORM = "naver_game"
+    DEFAULT_IMAGE_FILE_EXTENSION = "png"
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -47,23 +49,34 @@ class NaverGameScraper(Scraper[int]):
 
         # 부제목, 이미지 데이터 불러옴
         subtitles = []
-        episode_image_urls = []
+        episodes_image_urls = []
         episode_ids = []
+        episodes_contents = []
         for i, episode in enumerate(content_raw_data, 1):
             subtitle = episode["feed"]["title"]
-            content_json_data = json.loads(episode["feed"]["contents"])
+            contents_raw = episode["feed"]["contents"]
+            contents = json.loads(contents_raw)
             image_urls = []
-            for image_url in content_json_data["document"]["components"]:
-                with contextlib.suppress(KeyError):
-                    image_urls.append(image_url["src"])
+            for component in contents["document"]["components"]:
+                ctype = component["@ctype"]
+                if ctype == "image":
+                    image_urls.append(component["src"])
+                elif ctype == "imageGroup":
+                    for image in component["images"]:
+                        image_urls.append(image["src"])
+                else:
+                    if "src" in component:
+                        logger.error(f"A component with ctype: {ctype} has `src` key with value {component["src"]!r}. It won't be downloaded and need to be checked.")
 
             episode_ids.append(i)
             subtitles.append(subtitle)
-            episode_image_urls.append(image_urls)
+            episodes_image_urls.append(image_urls)
+            episodes_contents.append(contents_raw)
 
         self.episode_titles = subtitles
-        self.episodes_image_urls = episode_image_urls
+        self.episodes_image_urls = episodes_image_urls
         self.episode_ids = episode_ids
+        self.episodes_contents = episodes_contents
 
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
