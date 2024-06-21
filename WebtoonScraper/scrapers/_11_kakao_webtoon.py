@@ -32,6 +32,12 @@ class KakaoWebtoonScraper(Scraper[int]):
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
     PLATFORM = "kakao_webtoon"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        episodes_free_status=None,
+        seo_ids=None,
+        readablities=None,
+        is_adult=None,
+    )  # type: ignore
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)

@@ -21,6 +21,10 @@ class NaverGameScraper(Scraper[int]):
     )
     PLATFORM = "naver_game"
     DEFAULT_IMAGE_FILE_EXTENSION = "png"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        episodes_image_urls=None,
+        episodes_contents=None,
+    )  # type: ignore
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:

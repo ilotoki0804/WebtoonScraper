@@ -21,6 +21,9 @@ class KakaopageScraper(Scraper[int]):
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
     PLATFORM = "kakaopage"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        episodes_free_status=None,
+    )  # type: ignore
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)
@@ -92,16 +95,17 @@ class KakaopageScraper(Scraper[int]):
 
         # urls: list[str] = []
         episode_ids: list[int] = []
-        is_free: list[bool] = []
+        episodes_free_status: list[bool] = []
         subtitles: list[str] = []
         for webtoon_episode_data in webtoon_episodes_data:
             # urls += "https://page.kakao.com/" + raw_url.removeprefix("kakaopage://open/")
             episode_ids.append(webtoon_episode_data["node"]["single"]["productId"])  # 에피소드 id
-            is_free.append(webtoon_episode_data["node"]["single"]["isFree"])  # 무료인지 여부
+            episodes_free_status.append(webtoon_episode_data["node"]["single"]["isFree"])  # 무료인지 여부
             subtitles.append(webtoon_episode_data["node"]["single"]["title"])
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
+        self.episodes_free_status = episodes_free_status
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]

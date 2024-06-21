@@ -12,11 +12,14 @@ import shutil
 import time
 from abc import abstractmethod
 from collections import defaultdict
+from collections.abc import Mapping
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Callable,
     ClassVar,
     Generic,
     Iterable,
@@ -156,6 +159,15 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
     PLATFORM: ClassVar[str]
     COMMENTS_DOWNLOAD_SUPPORTED: bool = False
+    INFORMATION_VARS: ClassVar[dict[str, None | str | Callable[[Self, str], Any]]] = dict(
+        title=None,
+        platform="PLATFORM",
+        webtoon_thumbnail_url=None,
+        episode_ids=None,
+        episode_titles=None,
+        comments_data=None,
+        author=None,
+    )
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         if __debug__ and not self._check_webtoon_id_type(webtoon_id):
@@ -418,17 +430,30 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """`information.json`에 탑재할 정보를 추가합니다.
 
         이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼에 한정적인 정보를 추가할 수 있습니다.
+        None일 경우에는 1) dict일 경우 update가 사용됩니다. 2) 정보가 존재하지 않을 경우 오류가 나지 않고 스킵됩니다.
         """
-        return {
-            "version": version,
-            "title": self.title,
-            "platform": self.PLATFORM,
-            "webtoon_thumbnail_url": self.webtoon_thumbnail_url,
-            "episode_ids": self.episode_ids,
-            "episode_titles": self.episode_titles,
-            "comments_data": old_information.get("comments_data", {}) | self.comments_data,
-            "author": self.author,
-        }
+        information = {}
+        for name, value in self.INFORMATION_VARS.items():
+            if value is None:
+                _ABSENT = object()
+                value = getattr(self, name, _ABSENT)
+                old_value = old_information.get(name, _ABSENT)
+                if value is _ABSENT:
+                    if old_value is not _ABSENT:
+                        continue
+                    raise ValueError(f"{self}.{name} does not exist.")
+                if isinstance(value, Mapping):
+                    value = dict(value)
+                    if old_value is not _ABSENT:
+                        value.update(old_value)
+                information[name] = value
+            elif isinstance(value, str):
+                information[name] = getattr(self, value)
+            elif callable(value):
+                information[name] = value(self, name)
+            else:
+                raise ValueError(f"Unexpected information value: {value!r}")
+        return information
 
     # MARK: PROPERTIES
 

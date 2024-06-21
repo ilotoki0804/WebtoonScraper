@@ -31,6 +31,9 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         r"|(?:https?:\/\/)?m[.]blog[.]naver[.]com\/PostList[.]naver\?blogId=(?P<blog_id2>\w+)&(?:.*&)*categoryNo=(?P<category_no2>\d+)(?:&.*)*"
     )
     PLATFORM = "naver_blog"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        episodes_image_urls=None,
+    )  # type: ignore
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)
@@ -81,7 +84,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         def get_integer_picture_name(image_full_name: str) -> int:  # noqa: E306
             result = image_full_name_regex.search(image_full_name)
             if result is None:
-                raise ValueError
+                raise ValueError()
             return int(result.group(1))
 
         self.episode_titles: list[str] = []

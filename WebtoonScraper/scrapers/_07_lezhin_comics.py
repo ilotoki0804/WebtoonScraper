@@ -46,6 +46,15 @@ class LezhinComicsScraper(Scraper[str]):
     URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     PLATFORM = "lezhin_comics"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        is_shuffled=None,
+        webtoon_int_id=None,
+        episode_int_ids=None,
+        information_chars=None,
+        free_episodes=None,
+        shuffled_webtoon_directory_name=lambda self, _: None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name,
+        is_adult=None,
+    )  # type: ignore
 
     def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
         """
@@ -264,21 +273,6 @@ class LezhinComicsScraper(Scraper[str]):
         except Exception:
             return None
         return title.text if title else None
-
-    def get_information(self, old_information: dict):
-        result = super().get_information(old_information)
-        result.update(
-            is_shuffled=self.is_shuffled,
-            webtoon_int_id=self.webtoon_int_id,
-            episode_int_ids=self.episode_int_ids,
-            information_chars=self.information_chars,
-            free_episodes=self.free_episodes,
-            shuffled_webtoon_directory_name=(
-                None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name
-            ),
-            is_adult=self.is_adult,
-        )
-        return result
 
     # PROPERTIES
 

@@ -21,6 +21,9 @@ class BufftoonScraper(Scraper[int]):
     URL_REGEX = re.compile(r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "png"
     PLATFORM = "bufftoon"
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
+        login_required_episodes=None,
+    )  # type: ignore
 
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
@@ -67,13 +70,13 @@ class BufftoonScraper(Scraper[int]):
         subtitles = []
         episode_ids = []
         not_free_episodes = []
-        not_opened_for_non_login_users_episodes = []
+        login_required_episodes = []
         for raw_episode in raw_data["result"]["episodes"]:
             if not get_payment_required_episode and raw_episode["isPaymentEpisode"]:
                 not_free_episodes.append(raw_episode["title"])
                 continue
             if not self.cookie and not raw_episode["isOpenFreeEpisode"]:
-                not_opened_for_non_login_users_episodes.append(raw_episode["title"])
+                login_required_episodes.append(raw_episode["title"])
                 continue
             # episode_no = raw_episode['episodeOrder']
             raw_episode_id = raw_episode["listImgPath"]
@@ -87,13 +90,14 @@ class BufftoonScraper(Scraper[int]):
             logger.warning(
                 f"Following episodes won't be downloaded because they're not free: {', '.join(not_free_episodes)}"
             )
-        if not_opened_for_non_login_users_episodes:
+        if login_required_episodes:
             logger.warning(
-                f"Following episodes won't be downloaded because they're not free: {', '.join(not_opened_for_non_login_users_episodes)}"
+                f"Following episodes won't be downloaded because they're not free: {', '.join(login_required_episodes)}"
             )
 
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
+        self.login_required_episodes = login_required_episodes
 
     def get_episode_image_urls(self, episode_no) -> list[str]:
         episode_id = self.episode_ids[episode_no]
