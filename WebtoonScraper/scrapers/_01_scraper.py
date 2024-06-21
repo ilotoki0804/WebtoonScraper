@@ -43,6 +43,7 @@ from ..directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     ContainerStates,
     check_container_state,
+    ensure_normal,
     merge_webtoon,
     restore_webtoon,
 )
@@ -313,19 +314,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         webtoon_directory_name = self.get_webtoon_directory_name()
         webtoon_directory = self.base_directory / webtoon_directory_name
 
-        if webtoon_directory.exists() and os.listdir(webtoon_directory):
-            if manual_container_state is None:
-                container_state = check_container_state(webtoon_directory)
-            else:
-                container_state = manual_container_state
-
-            if container_state == MERGED_WEBTOON_DIRECTORY:
-                logger.warning("Webtoon directory was merged. Restoring...")
-                restore_webtoon(webtoon_directory, None)
-            elif container_state != NORMAL_WEBTOON_DIRECTORY:
-                raise DirectoryStateUnmatchedError.from_state(container_state, webtoon_directory)
-        else:
-            webtoon_directory.mkdir(parents=True, exist_ok=True)
+        ensure_normal(webtoon_directory, empty_ok=True, manual_container_state=manual_container_state)
 
         with self._send_context_callback_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
