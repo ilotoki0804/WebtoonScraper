@@ -112,10 +112,10 @@ pip install poetry
 poetry install --extras full --no-root
 ```
 
-`build.py`를 실행하세요.
+`simplebuilder`를 실행하세요.
 
 ```console
-python build.py --no-publish
+python -m simplebuilder
 ```
 
 이제 `dist`에 빌드된 `whl` 파일과 `tar.gz` 파일이 나타납니다.

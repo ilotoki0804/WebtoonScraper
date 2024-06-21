@@ -31,7 +31,7 @@ Changelog = "https://github.com/ilotoki0804/WebtoonScraper#relese-note"
 Funding = "https://toss.me/ilotoki"
 
 [tool.poetry.scripts]
-WebtoonScraper = "WebtoonScraper:__main__.main"
+WebtoonScraper = "WebtoonScraper.__main__:main"
 webtoon = "WebtoonScraper.__main__:main"
 
 [tool.poetry.dependencies]
@@ -52,6 +52,7 @@ nest-asyncio = "^1.5.8"
 coloredlogs = "^15.0.1"
 black = { extras = ["full"], version = "^24.2.0" }
 ruff = "^0.3.5"
+simplebuilder = "^0.2.0"
 
 [tool.poetry.extras]
 naver_post = ["demjson3"]
