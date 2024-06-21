@@ -17,5 +17,5 @@ WebtoonId: TypeAlias = (
 EpisodeNoRange: TypeAlias = "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
 
 logger = logging.getLogger("webtoonscraper_logger")
-logger.handlers = [RichHandler(show_time=False)]
+logger.handlers = [RichHandler(show_time=False, show_path=False)]
 logger.setLevel(logging.INFO)
