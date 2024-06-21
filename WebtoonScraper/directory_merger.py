@@ -226,6 +226,43 @@ def select_from_directory(
                 add_html_webtoon_viewer(operated_path)
 
 
+def merge_or_restore_webtoon(
+    source_webtoon_directory: Path,
+    target_webtoon_directory: Path | None,
+    merge_number: int,
+    action: Literal["merge", "restore", "auto"],
+):
+    def get_merge_number():
+        # 혹시 merge_number가 0일 경우를 대비해 is None 사용.
+        return int(input("merge number: ")) if merge_number is None else merge_number
+
+    if action == "auto":
+        container_state = check_container_state(source_webtoon_directory)
+    elif action == "merge":
+        container_state = NORMAL_WEBTOON_DIRECTORY
+    elif action == "restore":
+        container_state = MERGED_WEBTOON_DIRECTORY
+    else:
+        raise ValueError(f"Invalid action: {action}")
+
+    if container_state == NORMAL_WEBTOON_DIRECTORY:
+        merge_number = get_merge_number()
+        logger.info(f"Merging {source_webtoon_directory.name}...")
+        merge_webtoon(
+            source_webtoon_directory,
+            target_webtoon_directory and target_webtoon_directory / source_webtoon_directory.name,
+            merge_number,
+        )
+    elif container_state == MERGED_WEBTOON_DIRECTORY:
+        logger.info(f"Restoring {source_webtoon_directory.name}...")
+        restore_webtoon(
+            source_webtoon_directory,
+            target_webtoon_directory and target_webtoon_directory / source_webtoon_directory.name,
+        )
+    else:
+        raise DirectoryStateUnmatchedError.from_state(container_state, source_webtoon_directory)
+
+
 def _get_episode_no(directory_name: str) -> int:
     directory_name_matched = DIRECTORY_PATTERNS[NORMAL_EPISODE_DIRECTORY].match(directory_name)
     assert directory_name_matched is not None, f"Directory state is invalid. {directory_name = }"

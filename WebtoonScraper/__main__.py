@@ -15,7 +15,7 @@ from rich.console import Console
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.directory_merger import select_from_directory
+from WebtoonScraper.directory_merger import merge_or_restore_webtoon, select_from_directory
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
@@ -247,10 +247,10 @@ download_subparser.add_argument(
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
 merge_subparser.set_defaults(subparser_name="merge")
 merge_subparser.add_argument(
-    "webtoons_directory_name",
-    type=str,
-    metavar="webtoons_directory_name",
-    help="The name of folder that contains webtoon folders to merge or restore.",
+    "webtoon_directory_name",
+    type=Path,
+    metavar="webtoon_directory_name|webtoons_directory_name(if -s option enabled)",
+    help="A webtoon folder to merge or restore.",
 )
 merge_subparser.add_argument(
     "-m",
@@ -267,6 +267,25 @@ merge_subparser.add_argument(
     metavar="target_parent_directory",
     default=None,
     help="The directory that the result of merge/restore will be located. Defaults to source directory itself.",
+)
+merge_subparser.add_argument(
+    "-s",
+    "--select",
+    action="store_true",
+    help="Instead of typing the webtoon directory directly, open the webtoon directory selector."
+)
+merge_subparser.add_argument(
+    "-a",
+    "--action",
+    choices=["m", "merge", "r", "restore", "a", "auto"],
+    default="auto",
+    help=
+        "Determines whether to merge or restore the directories. "
+        "The [m]erge option will merge the webtoon directory. "
+        "The [r]estore option restores the webtoon directory. "
+        "The [a]uto option restores the directory, "
+        "merging it if it is already in the default state. "
+        "Ignored if the `s` option is used.",
 )
 
 
@@ -315,12 +334,21 @@ def parse_download(args: argparse.Namespace) -> None:
 
 
 def parse_merge(args: argparse.Namespace) -> None:
-    select_from_directory(
-        args.webtoons_directory_name,
-        args.target_parent_directory,
-        True,
-        args.merge_number,
-    )
+    if args.select:
+        select_from_directory(
+            args.webtoon_directory_name,
+            args.target_parent_directory,
+            True,
+            args.merge_number,
+        )
+    else:
+        action = {"r": "restore", "m": "merge", "a": "auto"}.get(args.action, args.action)
+        merge_or_restore_webtoon(
+            args.webtoon_directory_name,
+            args.target_parent_directory,
+            args.merge_number,
+            action,  # type: ignore
+        )
 
 
 def main(argv=None) -> Literal[0, 1]:
