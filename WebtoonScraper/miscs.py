@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Iterable, TypeAlias
 from rich.logging import RichHandler
 
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
-__version_info__ = (3, 4, 0, "b1")
+__version_info__ = (3, 4, 0, "b2")
 __version__ = str.join(".", map(str, __version_info__[:3])) + "".join(map(str, __version_info__[3:]))
 
 if TYPE_CHECKING:
