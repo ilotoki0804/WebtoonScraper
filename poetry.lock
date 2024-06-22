@@ -380,8 +380,6 @@ files = [
     {file = "frozendict-2.4.4-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:d13b4310db337f4d2103867c5a05090b22bc4d50ca842093779ef541ea9c9eea"},
     {file = "frozendict-2.4.4-cp39-cp39-win_amd64.whl", hash = "sha256:b3b967d5065872e27b06f785a80c0ed0a45d1f7c9b85223da05358e734d858ca"},
     {file = "frozendict-2.4.4-cp39-cp39-win_arm64.whl", hash = "sha256:4ae8d05c8d0b6134bfb6bfb369d5fa0c4df21eabb5ca7f645af95fdc6689678e"},
-    {file = "frozendict-2.4.4-py311-none-any.whl", hash = "sha256:705efca8d74d3facbb6ace80ab3afdd28eb8a237bfb4063ed89996b024bc443d"},
-    {file = "frozendict-2.4.4-py312-none-any.whl", hash = "sha256:d9647563e76adb05b7cde2172403123380871360a114f546b4ae1704510801e5"},
     {file = "frozendict-2.4.4.tar.gz", hash = "sha256:3f7c031b26e4ee6a3f786ceb5e3abf1181c4ade92dce1f847da26ea2c96008c7"},
 ]
 
@@ -419,13 +417,13 @@ trio = ["trio (>=0.22.0,<0.26.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.26.0"
+version = "0.27.0"
 description = "The next generation HTTP client."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "httpx-0.26.0-py3-none-any.whl", hash = "sha256:8915f5a3627c4d47b73e8202457cb28f1266982d1159bd5779d86a80c0eab1cd"},
-    {file = "httpx-0.26.0.tar.gz", hash = "sha256:451b55c30d5185ea6b23c2c793abf9bb237d2a7dfb901ced6ff69ad37ec1dfaf"},
+    {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
+    {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
 ]
 
 [package.dependencies]
@@ -457,19 +455,19 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hxsoup"
-version = "0.3.0"
+version = "0.5.0"
 description = "Various convenient features related to httpx and BeautifulSoup."
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = "<4.0,>=3.8"
 files = [
-    {file = "hxsoup-0.3.0-py3-none-any.whl", hash = "sha256:7f4e007594ba0744f04bcd1e0f31ac267cf644d8e6aa01a0b660503d57a0f610"},
-    {file = "hxsoup-0.3.0.tar.gz", hash = "sha256:709ffeb5cda76eb8fb25f21eb80bac2072c830bc88d53da461e4c4811cc39729"},
+    {file = "hxsoup-0.5.0-py3-none-any.whl", hash = "sha256:de63f2dad462f0355104ff923aa6f50abe8ecfaec03a3ce9c571e920833c0e4b"},
+    {file = "hxsoup-0.5.0.tar.gz", hash = "sha256:448fb0dab485e20a0a826c511d5bd7f2d2a8c81c07c346c194715a2ab1869a84"},
 ]
 
 [package.dependencies]
-beautifulsoup4 = ">=4.12.2,<5.0.0"
-frozendict = ">=2.3.10,<3.0.0"
-httpx = ">=0.26.0,<0.27.0"
+beautifulsoup4 = ">=4.12.3,<5.0.0"
+frozendict = ">=2.4.4,<3.0.0"
+httpx = ">=0.27.0,<0.28.0"
 
 [[package]]
 name = "idna"
@@ -1441,6 +1439,7 @@ files = [
 ]
 
 [extras]
+concat = ["Pillow"]
 full = ["Pillow", "demjson3", "pycryptodomex"]
 kakao-webtoon = ["pycryptodomex"]
 lezhin-comics = ["Pillow"]
@@ -1449,4 +1448,4 @@ naver-post = ["demjson3"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "e03fcdb0468e9faeaf0efa861929a3987685099602fc83ab70d6c5910e7f41c4"
+content-hash = "f1d59692ac615910b39adde332271d9de642f992d50863f7d70d5001ea56cfd7"
