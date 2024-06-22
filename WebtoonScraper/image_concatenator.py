@@ -3,16 +3,33 @@ import multiprocessing
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Iterator, Literal
+from typing import TYPE_CHECKING, Iterator, Literal
 
-from PIL import Image, UnidentifiedImageError
 from tqdm import tqdm
+
+from WebtoonScraper.exceptions import MissingOptionalDependencyError
 
 from . import webtoon_viewer
 from .directory_merger import ContainerStates, _directories_and_files_of, ensure_normal
 from .miscs import logger
 
 BatchMode = tuple[Literal["count", "height"], int] | tuple[Literal["ratio"], float] | Literal["all"]
+
+if TYPE_CHECKING:
+    from PIL import Image, UnidentifiedImageError
+else:
+    Image = UnidentifiedImageError = None
+
+
+def _load_pillow():
+    global Image, UnidentifiedImageError
+    if Image is None:
+        with MissingOptionalDependencyError.importing("Pillow", "concat"):
+            from PIL import Image
+    if UnidentifiedImageError is None:
+        with MissingOptionalDependencyError.importing("Pillow", "concat"):
+            from PIL import UnidentifiedImageError
+
 
 def concat_webtoon(
     source_webtoon_directory: Path,
@@ -57,6 +74,8 @@ def concat_webtoon(
     Returns:
         연결된 이미지들이 들어 있는 웹툰 디렉토리를 반환합니다. 만약 WORKING 파일로 인해 비정상 종료되었다면 None을 반환합니다.
     """
+    _load_pillow()
+
     ensure_normal(source_webtoon_directory, empty_ok=False, manual_container_state=manual_container_state)
 
     directories, files = _directories_and_files_of(source_webtoon_directory)

@@ -59,6 +59,7 @@ naver_post = ["demjson3"]
 lezhin_comics = ["Pillow"]
 kakao_webtoon = ["pycryptodomex"]
 full = ["demjson3", "Pillow", "pycryptodomex"]
+concat = ["Pillow"]
 
 [tool.ruff]
 line-length = 120
