@@ -57,9 +57,9 @@ def concat_webtoon(
     Returns:
         연결된 이미지들이 들어 있는 웹툰 디렉토리를 반환합니다. 만약 WORKING 파일로 인해 비정상 종료되었다면 None을 반환합니다.
     """
-    directories, files = _directories_and_files_of(source_webtoon_directory)
-
     ensure_normal(source_webtoon_directory, empty_ok=False, manual_container_state=manual_container_state)
+
+    directories, files = _directories_and_files_of(source_webtoon_directory)
 
     if target_webtoon_directory is None:
         name = source_webtoon_directory.name

@@ -416,18 +416,18 @@ def parse_merge(args: argparse.Namespace) -> None:
         )
 
 
-def _directory_seletor(source_parent_directory: Path) -> Path:
+def _directory_selector(source_parent_directory: Path) -> Path:
     directories, _ = _directories_and_files_of(source_parent_directory, False)
     number_length = len(str(len(directories)))
     for i, directory in enumerate(directories, 1):
         print(f"{i:0{number_length}}. Concat {directory.name}")
     choice = int(input("Enter number: "))
-    return directories[choice]
+    return directories[choice - 1]
 
 
 def parse_concat(args: argparse.Namespace) -> None:
     if args.select:
-        webtoon_dir = _directory_seletor(args.webtoon_directory_path)
+        webtoon_dir = _directory_selector(args.webtoon_directory_path)
         target_dir = args.target_webtoon_directory
     else:
         webtoon_dir = args.webtoon_directory_path
