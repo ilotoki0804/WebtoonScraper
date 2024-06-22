@@ -1,5 +1,21 @@
 # Relese Note
 
+## 3.4.0b2 (2024-06-22)
+
+* 여러 버그를 수정했습니다.
+* 문서를 보강했습니다.
+
+## 3.4.0b1 (2024-06-22)
+
+* `concat` command와 `image_concatenator` 모듈이 새로 생겼습니다.
+* `merge` command의 `--target-parent-directory` 옵션이 `--target-webtoon-directory`으로 이름이 변경되었습니다.
+* `merge` command의 작동이 변경되었습니다. 기존에는 웹툰 선택기로 갔지만 지금은 `--select` 옵션을 명시적으로 부과해야만 합니다.
+* 여러 모듈이 `__all__`을 정의합니다. 따라서 pylance 등에서 보내는 일부 오류를 해결할 수 있습니다.
+* `build.py` 대신 `simplebuild`를 이용해 빌드합니다.
+* `INFORMATION_VARS`가 `get_informations`를 대체합니다.
+* `ensure_normal` 함수가 추가되었습니다. 웹툰 디렉토리가 기본 상태인지 점검합니다.
+* 다양한 코드 및 문서 개선이 있었습니다.
+
 ## 3.3.0 (2024-04-30)
 
 * 거대 코드 퀄리티 개선이 있었습니다. 문서들이 개선되거나 추가되고 isort도 적용되었습니다.
