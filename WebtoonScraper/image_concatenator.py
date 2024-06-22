@@ -22,8 +22,15 @@ def concat_webtoon(
     manual_container_state: ContainerStates | None = None,
     process_number: int | None = None,
     use_tqdm: bool = True,
-) -> None:
+) -> Path | None:
     """여러 그림 파일을 하나로 연결합니다.
+
+    웹툰 디렉토리를 생성할 때 내부적으로 WORKING이라는 파일을 생성하는데,
+    이는 일종의 mutex로 한 함수만 연결 작업을 수행할 수 있도록 합니다.
+    이 파일을 통해 일부 잘 설계되지 않은 프로그램의 멀티프로세싱의 오류를 해결할 수 있습니다.
+    이 WORKING 파일이 존재하는 경우 함수는 None을 반환하며 종료됩니다.
+    이 함수 자체가 잘 설계되지 않은 프로그램을 보조하기 위한 기능이기 때문에
+    logging을 통해 error를 내보내기는 하지만 예외를 올리지는 않습니다.
 
     Args:
         source_webtoon_directory: 연결할 사진 파일이 있는 에피소드를 포함하는 웹툰 디렉토리입니다.
@@ -46,6 +53,9 @@ def concat_webtoon(
         process_number: 멀티프로세싱을 활용하여 더욱 빠르게 작업을 수행합니다.
             process_number가 1이라면 멀티프로세싱을 활용하지 않습니다.
             만약 멀티프로세싱을 안전하게 사용할 수 없는 환경이라면 1로 설정하세요.
+
+    Returns:
+        연결된 이미지들이 들어 있는 웹툰 디렉토리를 반환합니다. 만약 WORKING 파일로 인해 비정상 종료되었다면 None을 반환합니다.
     """
     directories, files = _directories_and_files_of(source_webtoon_directory)
 
@@ -119,6 +129,8 @@ def concat_webtoon(
 
     if rebuild_webtoon_viewer:
         webtoon_viewer.add_html_webtoon_viewer(target_webtoon_directory)
+
+    return target_webtoon_directory
 
 
 def _concat_episode_packed(args: tuple[Path, Path, BatchMode]):

@@ -15,7 +15,13 @@ from rich.console import Console
 
 import WebtoonScraper
 from WebtoonScraper import __version__, webtoon
-from WebtoonScraper.directory_merger import _directories_and_files_of, merge_or_restore_webtoon, select_from_directory
+from WebtoonScraper.directory_merger import (
+    NORMAL_WEBTOON_DIRECTORY,
+    _directories_and_files_of,
+    merge_or_restore_webtoon,
+    merge_webtoon,
+    select_from_directory,
+)
 from WebtoonScraper.image_concatenator import concat_webtoon
 from WebtoonScraper.miscs import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
@@ -340,6 +346,13 @@ concat_subparser.add_argument(
     default=None,
     help="Multiprocessing process number."
 )
+concat_subparser.add_argument(
+    "-m",
+    "--merge-number",
+    type=int,
+    default=None,
+    help="Merge after concatenation."
+)
 
 def parse_download(args: argparse.Namespace) -> None:
     # 축약형 플랫폼명을 일반적인 플랫폼명으로 변환 (nw -> naver_webtoon)
@@ -431,12 +444,22 @@ def parse_concat(args: argparse.Namespace) -> None:
     else:
         raise ValueError("You must provide one of following options: --all/--count/--height/--ratio")
 
-    concat_webtoon(
+    concatenated_webtoon_directory = concat_webtoon(
         webtoon_dir,
         target_dir,
         batch_mode,
         process_number=args.process_number
     )
+    assert concatenated_webtoon_directory is not None
+
+    if args.merge_number:
+        print(f"merging {concatenated_webtoon_directory}...")
+        merge_webtoon(
+            concatenated_webtoon_directory,
+            None,
+            args.merge_number,
+            NORMAL_WEBTOON_DIRECTORY,
+        )
 
 
 def main(argv=None) -> Literal[0, 1]:
