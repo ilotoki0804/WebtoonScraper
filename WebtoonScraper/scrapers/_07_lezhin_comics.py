@@ -22,7 +22,7 @@ from ..exceptions import (
     UnsupportedRatingError,
     UseFetchEpisode,
 )
-from ..miscs import logger
+from ..misc import logger
 from ._01_scraper import Scraper, reload_manager
 
 

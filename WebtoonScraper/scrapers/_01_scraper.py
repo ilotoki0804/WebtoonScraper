@@ -54,8 +54,8 @@ from ..exceptions import (
     NotImplementedCommentsDownloadOptionError,
     UseFetchEpisode,
 )
-from ..miscs import EpisodeNoRange, logger
-from ..miscs import __version__ as version
+from ..misc import EpisodeNoRange, logger
+from ..misc import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 if TYPE_CHECKING:

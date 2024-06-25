@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ..exceptions import InvalidFetchResultError, MissingOptionalDependencyError
-from ..miscs import logger
+from ..misc import logger
 from ._01_scraper import Scraper, reload_manager
 
 

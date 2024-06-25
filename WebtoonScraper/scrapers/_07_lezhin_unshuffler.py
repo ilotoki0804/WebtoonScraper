@@ -21,7 +21,7 @@ from ..directory_merger import (
     check_container_state,
 )
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
-from ..miscs import logger
+from ..misc import logger
 
 if TYPE_CHECKING:
     from PIL import Image
