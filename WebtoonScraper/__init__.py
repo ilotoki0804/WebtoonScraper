@@ -9,17 +9,8 @@
 웹툰 다운로드에 특화된 오픈 소스 웹툰 스크래퍼입니다. 다양한 플랫폼의 웹툰을 다운로드할 수 있습니다.
 """
 
-import sys as _sys
-
 from .miscs import (
     __url__,
     __version__,
     __version_info__,
-    logger,
 )
-
-if _sys.version_info < (3, 10, 0):
-    logger.warning(
-        f"Python version ({_sys.version}) is too low. Program may be run but not tested. "
-        "Upgrade Python if program not works well."
-    )
