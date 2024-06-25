@@ -29,8 +29,9 @@ else:
 
 def _load_cryptodome():
     global AES
-    with MissingOptionalDependencyError.importing("pycryptodomex", "kakao_webtoon"):
-        from Cryptodome.Cipher import AES
+    if AES is None:
+        with MissingOptionalDependencyError.importing("pycryptodomex", "kakao_webtoon"):
+            from Cryptodome.Cipher import AES
     return AES
 
 
