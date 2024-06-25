@@ -13,7 +13,7 @@ from ._01_scraper import Scraper, reload_manager
 class BufftoonScraper(Scraper[int]):
     """Scrape webtoons from Bufftoon."""
 
-    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
+    DOWNLOAD_INTERVAL = 1
     BASE_URL = "https://bufftoon.plaync.com"
     TEST_WEBTOON_ID = 1001216  # 비트
     URL_REGEX = re.compile(r"(?:https?:\/\/)?bufftoon[.]plaync[.]com\/series\/(?P<webtoon_id>\d+)")

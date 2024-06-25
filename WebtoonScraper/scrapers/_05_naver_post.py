@@ -30,7 +30,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
         r"\?(?:.*&)*seriesNo=(?P<series_no>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )
-    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 1
+    DOWNLOAD_INTERVAL = 1
     PLATFORM = "naver_post"
 
     def __init__(self, webtoon_id) -> None:
@@ -131,7 +131,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         async with self.hxoptions.build_async_client() as client:
             while True:
                 episode_no = episode_ids_to_try.popleft()
-                time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
+                time.sleep(self.DOWNLOAD_INTERVAL)
 
                 try:
                     await self._download_episode(episode_no, webtoon_directory, client)

@@ -42,7 +42,7 @@ class KakaoWebtoonScraper(Scraper[int]):
     TEST_WEBTOON_ID = 2343  # 부기
     URL_REGEX = re.compile(r"(?:https?:\/\/)?webtoon[.]kakao[.]com\/content\/(?P<seo_id>[^\/]+)\/(?P<webtoon_id>\d+)")
     DEFAULT_IMAGE_FILE_EXTENSION = "webp"
-    INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS = 0.5
+    DOWNLOAD_INTERVAL = 0.5
     PLATFORM = "kakao_webtoon"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         episodes_free_status=None,
