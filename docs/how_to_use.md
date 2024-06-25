@@ -483,8 +483,8 @@ scraper.download_webtoon()
 ```
 Situation: setup_start
 Situation: setup_end
-Situation: download_thubnail_start
-Situation: download_thubnail_end
+Situation: download_thumbnail_start
+Situation: download_thumbnail_end
 Situation: download_episode_start
 downloading 21화. ㅅㄱㅂㅉ: 100%|██████████| 22/22 [00:02<00:00,  7.69it/s]                               
 Situation: download_episode_end

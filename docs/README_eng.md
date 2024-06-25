@@ -78,7 +78,7 @@ Most webtoons can be downloaded by typing `webtoon download` in terminal followe
 webtoon download "https://www.webtoons.com/en/action/omniscient-reader/list?title_no=2154"
 ```
 
-If you want to know more about the features of WebtoonScraper (set range of epidsodes to download, merge episode, set download directory, episode listing, use with Python, etc.) or if it does not work well with the method introduced above (Bufftoon and Lezhin Comics, additional steps are essential), please refer to the [`Usage Guide(Korean)`](how_to_use.md).
+If you want to know more about the features of WebtoonScraper (set range of episodes to download, merge episode, set download directory, episode listing, use with Python, etc.) or if it does not work well with the method introduced above (Bufftoon and Lezhin Comics, additional steps are essential), please refer to the [`Usage Guide(Korean)`](how_to_use.md).
 
 ## Types of Webtoons/Episodes that This Library Can Download
 

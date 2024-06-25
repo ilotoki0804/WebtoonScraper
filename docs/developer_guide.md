@@ -47,7 +47,7 @@ README.md
 * `__main__`: CLI와 관련된 코드가 있습니다.
 * `directory_merger`: 디렉토리 관리와 관련된 사항들과 모아서 보기 관련 기능들이 존재합니다.
 * `exceptions`: WebtoonScraper에서 사용되는 모든 커스텀 예외들이 정의되어 있습니다.
-* `miscs`(miscellaneous): 여러 프로젝트에서 사용되어 한 모듈에 놓고 import하기 곤란한 것이나 잡다한 것들이 있습니다.
+* `misc`(miscellaneous): 여러 프로젝트에서 사용되어 한 모듈에 놓고 import하기 곤란한 것이나 잡다한 것들이 있습니다.
 * `py.typed`: 정적 타입 체커들에게 이 패키지가 타입 힌트를 지원한다는 것을 선언한 것입니다. 특별한 내용물은 없습니다.
 * `webtoon`: CLI에서 사용되는 코드 중 웹툰과 관련된 실재적인 코드가 모여 있습니다.
 

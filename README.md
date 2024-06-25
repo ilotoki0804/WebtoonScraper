@@ -120,6 +120,6 @@ python -m simplebuilder
 
 이제 `dist`에 빌드된 `whl` 파일과 `tar.gz` 파일이 나타납니다.
 
-## Relese Note
+## Release Note
 
-[Relese Note 문서](docs/releases.md)를 참고하세요.
+[Release Note 문서](docs/releases.md)를 참고하세요.
