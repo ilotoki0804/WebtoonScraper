@@ -1,5 +1,7 @@
 """HTML로 된 웹툰을 볼 수 있는 뷰어를 제공합니다."""
 
+from __future__ import annotations
+
 import json
 import os
 from datetime import datetime

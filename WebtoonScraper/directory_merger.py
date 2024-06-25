@@ -1,6 +1,5 @@
 """This module provides FolderMerger class."""
 
-# 디렉토리 복구 함수 제작
 from __future__ import annotations
 
 import os
@@ -20,8 +19,8 @@ MERGED_IMAGE: Final = "merged_image"
 MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
 MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
 
-# 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 대신 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용함
 WEBTOON_DIRECTORY: Final = "webtoon_directory"
+# 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 대신 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용함
 WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 
 NOT_MATCHED: Final = "not_matched"
