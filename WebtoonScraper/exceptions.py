@@ -15,7 +15,7 @@ class WebtoonScraperError(Exception):
 
 
 class DirectoryStateUnmatchedError(WebtoonScraperError):
-    """Directory state recieved from check_directory_state is not desired."""
+    """Directory state received from check_directory_state is not desired."""
 
     @classmethod
     def from_state(cls, container_state, directory: Path | str | None = None):
@@ -87,7 +87,7 @@ class InvalidCategoryNoError(InvalidWebtoonIdError):
 
 
 class InvalidPlatformError(WebtoonScraperError):
-    """Invalid platfrom error.
+    """Invalid platform error.
 
     Maybe you didn't select platform or typed invalid parameter.
     """
@@ -107,7 +107,7 @@ class Unreachable(WebtoonScraperError):
     def __init__(self, message: str | None = None):
         super().__init__(
             "This code is meant to be unreachable. If you saw this message, it's clearly error. "
-            "Please contect developer or make a issue for this." + ("\n" + message if message else "")
+            "Please contact developer or make a issue for this." + ("\n" + message if message else "")
         )
 
 
@@ -120,7 +120,7 @@ class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
         except ImportError as e:
             error_message = (
                 f"Package {package_name!r} is not installed in Python environment. "
-                f"Please install {package_name!r} thourgh one of following command:\n"
+                f"Please install {package_name!r} though one of following command:\n"
             )
             if install_through:
                 error_message += (

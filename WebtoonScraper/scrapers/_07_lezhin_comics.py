@@ -160,7 +160,7 @@ class LezhinComicsScraper(Scraper[str]):
             # # departure는 product["episodes"]와 완전히 같기 때문에 굳이 사용할 이유가 없다.
             # departure = json.loads(webtoon_raw_data.text[departure_start:departure_end])
         except (AttributeError, JSONDecodeError) as e:
-            raise ValueError("Parsing error. Contect developer.") from e
+            raise ValueError("Parsing error. Contact developer.") from e
 
         # webtoon 정보를 받아옴.
         title = product["display"]["title"]
@@ -353,7 +353,7 @@ class LezhinComicsScraper(Scraper[str]):
                 case _:
                     raise Unreachable
 
-            warning_message += " Following epsodes will be skipped: "
+            warning_message += " Following episodes will be skipped: "
             warning_message += ", ".join(
                 subtitle for to_download, subtitle in zip(to_downloads, episode_titles) if not to_download
             )

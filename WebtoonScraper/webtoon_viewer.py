@@ -188,7 +188,7 @@ HTML_TEMPLATE = """\
                     if (/Android|iPad|iPhone|iPod/.test(navigator.userAgent)) {
                         document.getElementById("platform-warning").innerText = "This may not work well in mobile platforms."
                     } else {
-                        document.getElementById("platform-warning").innerText = "Check whether your files are intect or not."
+                        document.getElementById("platform-warning").innerText = "Check whether your files are intact or not."
                     }
                 };
                 imageContainer.appendChild(image);

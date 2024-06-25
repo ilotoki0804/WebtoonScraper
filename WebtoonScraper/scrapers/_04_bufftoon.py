@@ -35,7 +35,7 @@ class BufftoonScraper(Scraper[int]):
             logger.warning(
                 "Without setting cookie extremely limiting the range of downloadable episodes. "
                 "Please set cookie to valid download. "
-                "The tutoral is avilable in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
+                "The tutorial is available in https://github.com/ilotoki0804/WebtoonScraper#레진코믹스-다운로드하기"
             )
         return await super().async_download_webtoon(*args, **kwargs)
 

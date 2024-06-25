@@ -163,7 +163,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             if reply_of is not None:
                 parameters.update(parentCommentNo=str(reply_of))
             if parameter_data:
-                lastest_comment_id: str = parameter_data["lastest_comment_id"]
+                latest_comment_id: str = parameter_data["lastest_comment_id"]
                 current_last_comment_id: str = parameter_data["current_last_comment_id"]
                 prev_pointer: str = parameter_data["prev_pointer"]
                 next_pointer: str = parameter_data["next_pointer"]
@@ -171,7 +171,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 parameters.update(
                     {
                         "current": current_last_comment_id,
-                        "prev": lastest_comment_id,
+                        "prev": latest_comment_id,
                         "moreParam.direction": "next",
                         "moreParam.prev": prev_pointer,
                         "moreParam.next": next_pointer,
@@ -189,15 +189,15 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             data = fetch()
 
             comments_count = data["count"]["total"]
-            comments = [self._extract_comment_infomation(comment) for comment in data["commentList"]]
+            comments = [self._extract_comment_information(comment) for comment in data["commentList"]]
         else:
-            lastest_comment_id = None
+            latest_comment_id = None
             comments = []
             for i in count(0):
-                if lastest_comment_id:
+                if latest_comment_id:
                     data = fetch(
                         {
-                            "lastest_comment_id": lastest_comment_id,
+                            "latest_comment_id": latest_comment_id,
                             "current_last_comment_id": current_last_comment_id,  # noqa: F821 # type: ignore
                             "prev_pointer": prev_pointer,  # noqa: F821 # type: ignore
                             "next_pointer": next_pointer,  # noqa: F821 # type: ignore
@@ -212,9 +212,9 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
                 end_pointer = data["morePage"]["end"]
                 start_pointer = data["morePage"]["start"]
                 comments_count = data["count"]["total"]
-                lastest_comment_id = lastest_comment_id or data["commentList"][0]["commentNo"]
+                latest_comment_id = latest_comment_id or data["commentList"][0]["commentNo"]
                 current_last_comment_id = data["commentList"][-1]["commentNo"]  # noqa: F841
-                comments += [self._extract_comment_infomation(comment) for comment in data["commentList"]]
+                comments += [self._extract_comment_information(comment) for comment in data["commentList"]]
                 if next_pointer == end_pointer or end_pointer == start_pointer:
                     # end_pointer와 start_pointer가 같을 때 next_pointer가 이상한 값을 지시할 수 있음.
                     break
@@ -229,7 +229,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     def check_if_legitimate_webtoon_id(self) -> str | None:
         return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
 
-    def _extract_comment_infomation(self, comment_data: dict) -> Comment:
+    def _extract_comment_information(self, comment_data: dict) -> Comment:
         return {
             # "sort_value": comment_data["sortValue"],
             "comments_id": comment_data["commentNo"],
@@ -326,7 +326,7 @@ class NaverWebtoonScraper(
             case "CHALLENGE":
                 return ChallengeSpecificScraper(*args, **kwargs)
             case webtoon_type:
-                raise ValueError(f"Unexpacted webtoon type {webtoon_type}. Please contect developer.")
+                raise ValueError(f"Unexpected webtoon type {webtoon_type}. Please contact developer.")
 
     @classmethod
     def from_url(
@@ -354,4 +354,4 @@ class NaverWebtoonScraper(
             case "challenge":
                 return ChallengeSpecificScraper(webtoon_id)
             case _:
-                raise ValueError(f"Unexpacted webtoon type {webtoon_type}. Please contect developer.")
+                raise ValueError(f"Unexpected webtoon type {webtoon_type}. Please contact developer.")

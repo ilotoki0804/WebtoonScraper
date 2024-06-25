@@ -124,7 +124,7 @@ def _search_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
 
 def _unshuffle_episode_packed(args) -> str | None:
     """
-    Equevalent to `lambda x: unshuffle_episode(*x)`,
+    Equivalent to `lambda x: unshuffle_episode(*x)`,
     but it doesn't work well with multiprocessing.Pool,
     so this is defined separately.
     """
@@ -186,8 +186,8 @@ def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_
                 image_index = index_x + index_y * 5
                 cropped_images[image_order.index(image_index)] = cropped_image
 
-        assambled_image = image
+        assembled_image = image
         for image_index, cropped_image in enumerate(cropped_images):
             index_y, index_x = divmod(image_index, 5)
-            assambled_image.paste(cropped_image, (index_x * image_x // 5, index_y * image_y // 5))
-        assambled_image.save(alt_image_path)
+            assembled_image.paste(cropped_image, (index_x * image_x // 5, index_y * image_y // 5))
+        assembled_image.save(alt_image_path)

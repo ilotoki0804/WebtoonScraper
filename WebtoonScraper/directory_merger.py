@@ -350,7 +350,7 @@ def _get_merged_image_name(image_name: str, episode_name: str) -> str:
             )
         raise ValueError(f"Episode name is not valid. Episode name: {episode_name}")
     if not image_name_processed:
-        raise ValueError(f"Image name is not vaild. Image name: {image_name}")
+        raise ValueError(f"Image name is not valid. Image name: {image_name}")
 
     image_no = image_name_processed.group("image_no")
     image_extension = image_name_processed.group("extension")
@@ -430,7 +430,7 @@ def restore_webtoon(
         raise DirectoryStateUnmatchedError(
             f"State of directory is {directory_state}, which cannot be restored."
             + (" Maybe what you need was merge_webtoon." if directory_state == NORMAL_WEBTOON_DIRECTORY else "")
-            + f"\nsorce webtoon directory: {source_webtoon_directory}"
+            + f"\nsource webtoon directory: {source_webtoon_directory}"
         )
 
     directories, files = _directories_and_files_of(source_webtoon_directory)

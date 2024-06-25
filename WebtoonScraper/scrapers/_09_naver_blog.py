@@ -41,7 +41,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
 
     def get_webtoon_directory_name(self) -> str:
         # string은 tuple()을 이용해면 quote가 제거되지 않아서 이 방식을 이용함.
-        # 예를 들어 ('hello', 123)을 stringfy하면 "('hello', 123)"이 됨.
+        # 예를 들어 ('hello', 123)을 stringify하면 "('hello', 123)"이 됨.
         blog_id, category_no = self.webtoon_id
         return self._get_safe_file_name(f"{self.title}({blog_id}, {category_no})")
 

@@ -188,7 +188,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.use_tqdm_while_download = True
         self.does_store_information = True
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
-        self._end_downloading_when_error_occured = False
+        self._end_downloading_when_error_occurred = False
         self.comments_option: CommentsDownloadOption | None = None
         self.comments_data: defaultdict[int, EpisodeComments] = defaultdict(dict)  # type: ignore
         self.author = None
@@ -404,11 +404,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             case "description":
                 logger.info(contexts["description"])
             case "episode_download_complete":
-                is_download_sucessful = contexts["is_download_sucessful"]
-                if is_download_sucessful:
+                is_download_successful = contexts["is_download_successful"]
+                if is_download_successful:
                     episode_no = contexts["episode_no"]
                     episode_title = self.episode_titles[episode_no]
-                    logger.info(f"Episode {episode_no} `{episode_title}` sucessfully downloaded.")
+                    logger.info(f"Episode {episode_no} `{episode_title}` successfully downloaded.")
             case the_others:
                 if contexts:
                     logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
@@ -574,11 +574,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     # if를 붙이는 게 interval이 0인 경우 빨라짐.
                     time.sleep(self.INTERVAL_BETWEEN_EPISODE_DOWNLOAD_SECONDS)
 
-                is_download_sucessful = await self._download_episode(episode_no, webtoon_directory, client)
-                if not is_download_sucessful and self._end_downloading_when_error_occured:
+                is_download_successful = await self._download_episode(episode_no, webtoon_directory, client)
+                if not is_download_successful and self._end_downloading_when_error_occurred:
                     logger.warning(
-                        "Downloading is stopped since downloading prevous episode was unsuccessful. "
-                        "Set `self.end_downloading_when_error_occured` to False if you want to "
+                        "Downloading is stopped since downloading previous episode was unsuccessful. "
+                        "Set `self.end_downloading_when_error_occurred` to False if you want to "
                         "proceed download."
                     )
                     break
@@ -599,7 +599,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         index=i,
                         episode_no=episode_no,
                         episodes=episodes,
-                        is_download_sucessful=is_download_sucessful,
+                        is_download_successful=is_download_successful,
                     )
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
@@ -723,7 +723,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         Args:
             webtoon_directory (Path): 썸네일을 저장할 디렉토리입니다.
-            file_extionsion (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
+            file_extension (str | None): 파일 확장자입니다. 만약 None이라면(기본값) 자동으로 값을 확인합니다.
         """
         file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
@@ -750,7 +750,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
-        """Get file extionsion from filename or URL.
+        """Get file extension from filename or URL.
 
         Args:
             filename_or_url: 파일 확장자가 궁금한 파일명이나 URL. 이때 URL 쿼리는 무시됩니다.
@@ -770,10 +770,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         raise ValueError(f"The file extension is not detected: `{filename_or_url}`")
 
     @staticmethod
-    def _get_safe_file_name(file_or_diretory_name: str) -> str:
-        """Convert file or diretory "name" to accaptable name.
+    def _get_safe_file_name(file_or_directory_name: str) -> str:
+        """Convert file or directory "name" to acceptable name.
 
-        Caution: Do NOT put a diretory path(e.g. webtoon/ep1/001.jpg) here.
+        Caution: Do NOT put a directory path(e.g. webtoon/ep1/001.jpg) here.
         Otherwise this function will smash slashes and backslashes.
         """
-        return pf.convert(html.unescape(file_or_diretory_name))
+        return pf.convert(html.unescape(file_or_directory_name))

@@ -35,7 +35,7 @@ class KakaoWebtoonScraper(Scraper[int]):
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         episodes_free_status=None,
         seo_ids=None,
-        readablities=None,
+        readabilities=None,
         is_adult=None,
     )  # type: ignore
 
@@ -109,14 +109,14 @@ class KakaoWebtoonScraper(Scraper[int]):
         seo_ids: list[str] = []
         numbers: list[int] = []
         episode_titles: list[str] = []
-        readablities: list[bool] = []
+        readabilities: list[bool] = []
         is_adult: bool = False
         for information in reversed(webtoon_episodes_data):
             episode_ids.append(information["id"])
             seo_ids.append(information["seoId"])
             numbers.append(information["no"])
             episode_titles.append(information["title"])
-            readablities.append(information["readable"])
+            readabilities.append(information["readable"])
             is_adult = information["adult"]
 
         if is_adult:
@@ -139,7 +139,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         self.episode_ids = episode_ids
         self.seo_ids = seo_ids
         self.episode_titles = episode_titles
-        self.readablities = readablities
+        self.readabilities = readabilities
         self.is_adult = is_adult
 
     def get_episode_image_urls(
@@ -147,7 +147,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         episode_no,
     ) -> list[tuple[str, bytes, bytes]] | None:
         episode_id = self.episode_ids[episode_no]
-        is_readable = self.readablities[episode_no]
+        is_readable = self.readabilities[episode_no]
 
         if not is_readable:
             return None
@@ -170,7 +170,7 @@ class KakaoWebtoonScraper(Scraper[int]):
 
         aid = data["media"]["aid"]
         zid = data["media"]["zid"]
-        key, iv = self._get_decrypt_infomations(episode_id, aid, zid)
+        key, iv = self._get_decrypt_information(episode_id, aid, zid)
 
         return [(i["url"], key, iv) for i in data["media"]["files"]]
 
@@ -190,7 +190,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         cipher = AES.new(key, AES.MODE_CBC, iv)
         return cipher.decrypt(data)
 
-    def _get_decrypt_infomations(self, episode_id, aid: str, zid: str) -> tuple[bytes, bytes]:
+    def _get_decrypt_information(self, episode_id, aid: str, zid: str) -> tuple[bytes, bytes]:
         user_id = episode_id
 
         temp_key = hashlib.sha256(f"{user_id}{episode_id}{self._timestamp}".encode()).digest()
