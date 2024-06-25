@@ -131,7 +131,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         async with self.hxoptions.build_async_client() as client:
             while True:
                 episode_no = episode_ids_to_try.popleft()
-                time.sleep(self.DOWNLOAD_INTERVAL)
 
                 try:
                     await self._download_episode(episode_no, webtoon_directory, client)

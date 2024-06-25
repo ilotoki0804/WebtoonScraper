@@ -583,10 +583,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             episodes = tuple(episode_no_list)
         async with self.hxoptions.build_async_client() as client:
             for i, episode_no in enumerate(episodes):
-                if self.DOWNLOAD_INTERVAL:
-                    # if를 붙이는 게 interval이 0인 경우 빨라짐.
-                    time.sleep(self.DOWNLOAD_INTERVAL)
-
                 is_download_successful = await self._download_episode(episode_no, webtoon_directory, client)
                 if not is_download_successful and self._end_downloading_when_error_occurred:
                     logger.warning(
@@ -670,6 +666,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 episode_directory.mkdir()
                 check_integrity = False
 
+            time.sleep(self.DOWNLOAD_INTERVAL)  # 실제로 요청을 보내기 직전에 interval을 넣음.
             episode_images_url = self.get_episode_image_urls(episode_no)
 
             if not episode_images_url:
