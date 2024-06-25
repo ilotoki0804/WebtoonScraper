@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import time
 from collections import defaultdict, deque
 from itertools import count
 from typing import TYPE_CHECKING, NamedTuple, TypeGuard

@@ -7,7 +7,6 @@ import hashlib
 import random
 import re
 import time
-from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib import parse

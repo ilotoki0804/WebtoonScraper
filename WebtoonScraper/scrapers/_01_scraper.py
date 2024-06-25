@@ -39,24 +39,18 @@ from tqdm import tqdm
 
 from ..directory_merger import (
     DIRECTORY_PATTERNS,
-    MERGED_WEBTOON_DIRECTORY,
     NORMAL_IMAGE,
-    NORMAL_WEBTOON_DIRECTORY,
     ContainerStates,
-    check_container_state,
     ensure_normal,
     merge_webtoon,
-    restore_webtoon,
 )
 from ..exceptions import (
-    DirectoryStateUnmatchedError,
     InvalidURLError,
     InvalidWebtoonIdError,
     NotImplementedCommentsDownloadOptionError,
     UseFetchEpisode,
 )
 from ..misc import EpisodeNoRange, logger
-from ..misc import __version__ as version
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 if TYPE_CHECKING:
