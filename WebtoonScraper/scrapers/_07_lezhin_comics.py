@@ -121,7 +121,6 @@ class LezhinComicsScraper(Scraper[str]):
 
     @reload_manager
     def fetch_episode_information(self, *, reload: bool = False) -> None:
-        """Default titleid is titleid_str, and default episode_id is episode_id_str, which is displayed to users."""
         res = self.hxoptions.get(f"{self.BASE_URL}/{self.webtoon_id}")
         if res.status_code == 404:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))

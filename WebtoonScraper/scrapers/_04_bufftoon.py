@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 from ..misc import logger
 from ._01_scraper import Scraper, reload_manager
 
-TitleId = int
-
 
 class BufftoonScraper(Scraper[int]):
     """Scrape webtoons from Bufftoon."""

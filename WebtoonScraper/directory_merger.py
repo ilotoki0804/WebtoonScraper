@@ -64,8 +64,8 @@ DIRECTORY_PATTERNS: dict[FileStates, re.Pattern[str]] = {
     MERGED_IMAGE: re.compile(r"^(?P<episode_no>\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$"),
     # 0001~0005
     MERGED_EPISODE_DIRECTORY: re.compile(r"^(?P<from>\d{4})~(?P<to>\d{4})$"),
-    # webtoon_name(titleid[, HD][, shuffled])
-    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<titleid>.+?)(?:, (?:HD|shuffled|concatenated))*[)]$"),
+    # webtoon_name(webtoon_id[, HD][, shuffled])
+    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:HD|shuffled|concatenated))*[)]$"),
 }
 DIRECTORY_PATTERNS_TOLERANT: dict[FileStates, re.Pattern[str]] = {
     # 023.jpg
@@ -76,8 +76,8 @@ DIRECTORY_PATTERNS_TOLERANT: dict[FileStates, re.Pattern[str]] = {
     MERGED_IMAGE: re.compile(r"^(?P<episode_no>\d+)[.](?P<image_no>\d+)[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]+)$"),
     # 0001~0005
     MERGED_EPISODE_DIRECTORY: re.compile(r"^(?P<from>\d+)~(?P<to>\d+)$"),
-    # webtoon_name(titleid[, meta]*)
-    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<titleid>.+?)(?:, (?:\w+))*[)]$"),
+    # webtoon_name(webtoon_id[, meta]*)
+    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:\w+))*[)]$"),
 }
 # fmt: on
 
