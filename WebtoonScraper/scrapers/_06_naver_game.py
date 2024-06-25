@@ -69,7 +69,9 @@ class NaverGameScraper(Scraper[int]):
                         image_urls.append(image["src"])
                 else:
                     if "src" in component:
-                        logger.error(f"A component with ctype: {ctype} has `src` key with value {component['src']!r}. It won't be downloaded and need to be checked.")
+                        logger.error(
+                            f"A component with ctype: {ctype} has `src` key with value {component['src']!r}. It won't be downloaded and need to be checked."
+                        )
 
             episode_ids.append(i)
             subtitles.append(subtitle)

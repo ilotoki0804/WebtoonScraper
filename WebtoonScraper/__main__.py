@@ -280,20 +280,21 @@ merge_subparser.add_argument(
     "-s",
     "--select",
     action="store_true",
-    help="Instead of typing the webtoon directory directly, open the webtoon directory selector."
+    help="Instead of typing the webtoon directory directly, open the webtoon directory selector.",
 )
 merge_subparser.add_argument(
     "-a",
     "--action",
     choices=["m", "merge", "r", "restore", "a", "auto"],
     default="auto",
-    help=
+    help=(
         "Determines whether to merge or restore the directories. "
         "The [m]erge option will merge the webtoon directory. "
         "The [r]estore option restores the webtoon directory. "
         "The [a]uto option restores the directory, "
         "merging it if it is already in the default state. "
-        "Ignored if the `s` option is used.",
+        "Ignored if the `s` option is used."
+    ),
 )
 
 # concat subparser
@@ -311,11 +312,7 @@ concat_subparser.add_argument(
     action="store_true",
     help="Instead of typing the webtoon directory directly, open the webtoon directory selector.",
 )
-concat_subparser.add_argument(
-    "--all",
-    action="store_true",
-    help="Merge all images of each episode."
-)
+concat_subparser.add_argument("--all", action="store_true", help="Merge all images of each episode.")
 concat_subparser.add_argument(
     "--count",
     type=int,
@@ -339,20 +336,9 @@ concat_subparser.add_argument(
     default=None,
     help="The destination of output webtoon directory.",
 )
-concat_subparser.add_argument(
-    "-p",
-    "--process-number",
-    type=int,
-    default=None,
-    help="Multiprocessing process number."
-)
-concat_subparser.add_argument(
-    "-m",
-    "--merge-number",
-    type=int,
-    default=None,
-    help="Merge after concatenation."
-)
+concat_subparser.add_argument("-p", "--process-number", type=int, default=None, help="Multiprocessing process number.")
+concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, help="Merge after concatenation.")
+
 
 def parse_download(args: argparse.Namespace) -> None:
     # 축약형 플랫폼명을 일반적인 플랫폼명으로 변환 (nw -> naver_webtoon)
@@ -445,10 +431,7 @@ def parse_concat(args: argparse.Namespace) -> None:
         raise ValueError("You must provide one of following options: --all/--count/--height/--ratio")
 
     concatenated_webtoon_directory = concat_webtoon(
-        webtoon_dir,
-        target_dir,
-        batch_mode,
-        process_number=args.process_number
+        webtoon_dir, target_dir, batch_mode, process_number=args.process_number
     )
     assert concatenated_webtoon_directory is not None
 

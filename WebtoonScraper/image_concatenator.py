@@ -188,7 +188,7 @@ def _concat_episode(
             continue
 
         if len(images) == 1:
-            image, = images
+            (image,) = images
             image.save(target_episode_directory / f"{i:03d}.png")
             image.close()
             continue
@@ -230,6 +230,7 @@ def _get_images_by_count(directory: Path, image_names: list[str], count: int) ->
         goal = pointer + count
         result.clear()
 
+
 def _get_images_by_height(directory: Path, image_names: list[str], height: int) -> Iterator[list[Image.Image]]:
     result: list[Image.Image] = []
     pointer = sum_of_image_height = 0
@@ -253,11 +254,16 @@ def _get_images_by_height(directory: Path, image_names: list[str], height: int) 
         yield result
         result.clear()
 
+
 def _get_images_by_ratio(directory: Path, image_names: list[str], ratio: int | float) -> Iterator[list[Image.Image]]:
     result: list[Image.Image] = []
     pointer = sum_of_image_height = image_width = 0
     while pointer < len(image_names):
-        while pointer < len(image_names) and ratio and (ratio == -1 or image_width == 0 or sum_of_image_height / image_width < ratio):
+        while (
+            pointer < len(image_names)
+            and ratio
+            and (ratio == -1 or image_width == 0 or sum_of_image_height / image_width < ratio)
+        ):
             image_dir = directory / image_names[pointer]
 
             try:

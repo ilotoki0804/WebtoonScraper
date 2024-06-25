@@ -52,7 +52,11 @@ class LezhinComicsScraper(Scraper[str]):
         episode_int_ids=None,
         information_chars=None,
         free_episodes=None,
-        shuffled_webtoon_directory_name=lambda self, _: None if self._unshuffled_webtoon_directory is None else self._unshuffled_webtoon_directory.name,
+        shuffled_webtoon_directory_name=(
+            lambda self, _: None
+            if self._unshuffled_webtoon_directory is None
+            else self._unshuffled_webtoon_directory.name
+        ),
         is_adult=None,
     )  # type: ignore
 
@@ -385,9 +389,7 @@ class LezhinComicsScraper(Scraper[str]):
             return base_webtoon_directory
 
         target_webtoon_directory = unshuffle_typical_webtoon(
-            base_webtoon_directory,
-            self.episode_int_ids,
-            use_tqdm=self.use_tqdm_while_download
+            base_webtoon_directory, self.episode_int_ids, use_tqdm=self.use_tqdm_while_download
         )
         if self.delete_shuffled_file:
             shutil.rmtree(base_webtoon_directory)
