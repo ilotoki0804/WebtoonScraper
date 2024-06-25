@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+import textwrap
 import time
 from abc import abstractmethod
 from collections import defaultdict
@@ -126,6 +127,11 @@ def reload_manager(f):
         return return_value
 
     return wrapper
+
+
+def _shorten(text: str):
+    shortened = textwrap.shorten(text, width=15, placeholder="...")
+    return f"'{shortened}'"
 
 
 class ExistingEpisodePolicy(Enum):
@@ -386,7 +392,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         except exception_type:
             return None
 
-    def callback(self, situation: str, **contexts) -> None:
+    def callback(self, situation: str, **context) -> None:
         """웹툰 다운로드의 중요한 순간들을 알림받습니다.
 
         주의: callback은 다운로드 과정을 멈추고 작업합니다.
@@ -401,17 +407,24 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.info("Merging webtoon has started...")
             case "setup_end":
                 logger.info("Webtoon data are fetched. Download has been started...")
+            case "indicate":
+                description = context["description"]
+                if self.use_tqdm_while_download:
+                    with suppress(AttributeError):
+                        self.pbar.set_description(description)
+                        return
+                self.callback("description", **context)
             case "description":
-                logger.info(contexts["description"])
+                logger.info(context["description"])
             case "episode_download_complete":
-                is_download_successful = contexts["is_download_successful"]
+                is_download_successful = context["is_download_successful"]
                 if is_download_successful:
-                    episode_no = contexts["episode_no"]
+                    episode_no = context["episode_no"]
                     episode_title = self.episode_titles[episode_no]
-                    logger.info(f"Episode {episode_no} `{episode_title}` successfully downloaded.")
+                    logger.info(f"Downloaded: #{episode_no} {_shorten(episode_title)}")
             case the_others:
-                if contexts:
-                    logger.debug(f"WebtoonScraper status: {the_others}, context: {contexts}")
+                if context:
+                    logger.debug(f"WebtoonScraper status: {the_others}, context: {context}")
                 else:
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
@@ -603,7 +616,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     )
 
     def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
-        """모아서 보기나 information.json, webtoon.html 등이 위차할 디렉토리를 재안내합니다.
+        """모아서 보기나 information.json, webtoon.html 등이 위치할 디렉토리를 재안내합니다.
 
         레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
         """
@@ -643,7 +656,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
                     case ExistingEpisodePolicy.SKIP:
-                        self._set_progress_indication(f"downloading {episode_title} is skipped")
+                        self.callback("indicate", description=f"{_shorten(episode_title)} skipped")
                         return True
                     case ExistingEpisodePolicy.INTERRUPT:
                         raise FileExistsError(
@@ -661,20 +674,20 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
             if not episode_images_url:
                 logger.warning(f"Failed to download: {episode_no + 1}. {episode_title}")
-                self._set_progress_indication(f"Failed to download {episode_title}")
+                self.callback("indicate", description=f"{_shorten(episode_title)} download failed")
                 if not os.listdir(episode_directory):
                     episode_directory.rmdir()
                 return False
 
             if check_integrity:
                 if not self._check_directory_integrity(episode_directory, episode_images_url):
-                    self._set_progress_indication(f"Downloading {episode_title} is skipped after integrity check")
+                    self.callback("indicate", description=f"{_shorten(episode_title)} skipped after integrity check")
                     return True
 
                 shutil.rmtree(episode_directory)
                 episode_directory.mkdir()
 
-            self._set_progress_indication(f"downloading {episode_title}")
+            self.callback("indicate", description=f"downloading {_shorten(episode_title)}")
         except BaseException:
             if not os.listdir(episode_directory):
                 episode_directory.rmdir()
@@ -730,23 +743,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
         (webtoon_directory / thumbnail_name).write_bytes(image_raw)
         return thumbnail_name
-
-    def _set_progress_indication(self, description: str) -> None:
-        """진행사항을 표시할 곳을 tqdm의 description과 logger 중 어떤 것을 사용할지 결정합니다.
-
-        self.use_tqdm_while_download가 False라면 logger를 사용하고, True라면 pbar를 이용합니다.
-        이는 self.use_tqdm_while_download 설정을 변경해 사용할 수 있습니다. 기본값은 True입니다.
-        단, 만약 self.pbar가 없어 AttributeError가 난다면 무조건 logger를 사용합니다.
-
-        Args:
-            description: 에피소드를 다운로드할 때 내보낼 메시지.
-        """
-        if self.use_tqdm_while_download:
-            with suppress(AttributeError):
-                self.pbar.set_description(description)
-                return
-
-        self.callback("description", description=description)
 
     @classmethod
     def _get_file_extension(cls, filename_or_url: str) -> str:
