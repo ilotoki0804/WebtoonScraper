@@ -76,8 +76,6 @@ def concat_webtoon(
     Returns:
         연결된 이미지들이 들어 있는 웹툰 디렉토리를 반환합니다. 만약 WORKING 파일로 인해 비정상 종료되었다면 None을 반환합니다.
     """
-    _load_pillow()
-
     ensure_normal(source_webtoon_directory, empty_ok=False, manual_container_state=manual_container_state)
 
     directories, files = _directories_and_files_of(source_webtoon_directory)
@@ -164,6 +162,8 @@ def _concat_episode(
     target_episode_directory: Path,
     batch: BatchMode,
 ) -> None:
+    _load_pillow()  # concat_webtoon에 이 옵션을 사용하면 multiprocessing을 이용할 때 문제가 발생할 수 있음!!
+
     target_episode_directory.mkdir(exist_ok=True)
 
     image_names = sorted(os.listdir(source_episode_directory))
