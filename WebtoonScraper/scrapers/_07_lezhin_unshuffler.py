@@ -29,7 +29,7 @@ else:
     Image = None
 
 
-def get_image() -> ModuleType:
+def _load_pillow():
     global Image
     if Image:
         return Image
@@ -174,7 +174,7 @@ def calculate_image_order(random_numbers: list[int]) -> list[int]:
 
 
 def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_order: list[int]) -> None:
-    get_image()
+    _load_pillow()
     with Image.open(base_image_path) as image:
         image_x, image_y = image.size
         margin = image_y % 5
