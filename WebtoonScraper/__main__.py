@@ -198,8 +198,12 @@ download_subparser.add_argument(
     type=lambda x: str(x).lower(),
     metavar="webtoon_platform",
     choices=set(webtoon.PLATFORMS) | set(webtoon.SHORT_NAMES) | {"url"},
-    help="Webtoon platform to download. "
-    f"All choices: {', '.join(f'{webtoon.SHORT_NAMES[short_name]}({short_name})' for short_name in webtoon.SHORT_NAMES)}, url",
+    default="url",
+    help=(
+        "Webtoon platform to download. "
+        "Defaults to url. "
+        f"All choices: url, {', '.join(f'{platform}({short_name})' for short_name, platform in webtoon.SHORT_NAMES.items())}"
+    ),
 )
 download_subparser.add_argument(
     "-m",

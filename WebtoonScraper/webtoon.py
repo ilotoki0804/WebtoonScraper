@@ -1,4 +1,4 @@
-"""CLI로 웹툰을 다운로드할 때 사용하기 위해 작성된 코드들입니다. 파이썬으로 사용할 때는 `WebtoonScraper.scrapers` 이용을 권장합니다."""
+"""WebtoonScraper의 CLI 구현을 위한 코드들"""
 
 from __future__ import annotations
 
@@ -92,7 +92,7 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
         except InvalidURLError:
             continue
         return platform
-    raise InvalidPlatformError(f"Cannot get webtoon platform from URL: {webtoon_url}")
+    raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
 
 
 def check_platform(webtoon_id, platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
@@ -144,7 +144,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
 
 def setup_instance(
     webtoon_id_or_url: WebtoonId,
-    webtoon_platform: WebtoonPlatforms | Literal["url"] | None = None,
+    webtoon_platform: WebtoonPlatforms | Literal["url"],
     *,
     cookie: str | None = None,
     bearer: str | None = None,
@@ -162,11 +162,7 @@ def setup_instance(
     elif webtoon_platform:
         scraper = instantiate(webtoon_platform, webtoon_id_or_url)
     else:
-        logger.error("Inferring webtoon platform is deprecated. Set `-p` flag or use URL to explicitly set platform.")
-        webtoon_platform = get_webtoon_platform(webtoon_id_or_url)
-        if webtoon_platform is None:
-            raise InvalidPlatformError(f"Cannot get webtoon platform from webtoon ID: {webtoon_id_or_url}")
-        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
+        raise InvalidPlatformError(f"Unknown platform: {webtoon_platform}")
 
     # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
     if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper, NaverWebtoonScraper)):
