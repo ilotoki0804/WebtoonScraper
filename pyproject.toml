@@ -1,5 +1,8 @@
 [tool.poetry]
 name = "WebtoonScraper"
+packages = [
+    { include = "WebtoonScraper" },
+]
 # Do not change this version manually. This will be matched with WebtoonScraper.__version__ automatically.
 version = "3.4.0"
 description = "Scraping webtoons with ease."
