@@ -6,7 +6,7 @@ import re
 import ssl
 from typing import TYPE_CHECKING
 
-from ..misc import logger
+from ..base import logger
 from ._01_scraper import Scraper, reload_manager
 
 

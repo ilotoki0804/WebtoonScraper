@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Final, Literal, TypeAlias
 
 from .exceptions import DirectoryStateUnmatchedError, Unreachable
-from .misc import logger
+from .base import logger
 
 NORMAL_IMAGE: Final = "normal_image"
 NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"

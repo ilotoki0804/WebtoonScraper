@@ -6,7 +6,7 @@ import json
 import re
 from itertools import count
 
-from ..misc import logger
+from ..base import logger
 from ._01_scraper import Scraper, reload_manager
 
 

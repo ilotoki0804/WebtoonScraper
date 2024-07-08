@@ -12,7 +12,7 @@ from ..exceptions import (
     InvalidWebtoonIdError,
     UseFetchEpisode,
 )
-from ..misc import logger
+from ..base import logger
 from ._01_scraper import Scraper, reload_manager
 
 

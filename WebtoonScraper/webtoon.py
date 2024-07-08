@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 from .exceptions import InvalidPlatformError, InvalidURLError
-from .misc import WebtoonId, logger
+from .base import WebtoonId, logger
 from .scrapers import (
     BufftoonScraper,
     CommentsDownloadOption,

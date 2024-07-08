@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Sequence, TypeVar
 
 from .directory_merger import _directories_and_files_of
-from .misc import __version__ as version
+from .base import __version__ as version
 
 HTML_TEMPLATE = """\
 <!-- With WebtoonScraper {version} at {created_time} -->

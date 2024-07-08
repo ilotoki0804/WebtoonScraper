@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ..exceptions import InvalidFetchResultError, MissingOptionalDependencyError
-from ..misc import logger
+from ..base import logger
 from ._01_scraper import Scraper, reload_manager
 
 
