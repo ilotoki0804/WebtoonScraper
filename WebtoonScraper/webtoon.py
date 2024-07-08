@@ -6,8 +6,8 @@ from multiprocessing import pool
 from pathlib import Path
 from typing import Literal
 
-from .exceptions import InvalidPlatformError, InvalidURLError
 from .base import WebtoonId, logger
+from .exceptions import InvalidPlatformError, InvalidURLError
 from .scrapers import (
     BufftoonScraper,
     CommentsDownloadOption,

@@ -14,8 +14,8 @@ from urllib import parse
 from hxsoup import AsyncClient
 from hxsoup.exceptions import EmptyResultError
 
-from ..exceptions import InvalidURLError, InvalidWebtoonIdError, MissingOptionalDependencyError, UnsupportedRatingError
 from ..base import logger
+from ..exceptions import InvalidURLError, InvalidWebtoonIdError, MissingOptionalDependencyError, UnsupportedRatingError
 from ._01_scraper import Scraper, reload_manager
 
 if TYPE_CHECKING:

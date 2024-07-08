@@ -15,6 +15,7 @@ from typing import TypeGuard
 
 from hxsoup.exceptions import EmptyResultError
 
+from ..base import logger
 from ..exceptions import (
     InvalidAuthenticationError,
     InvalidWebtoonIdError,
@@ -22,7 +23,6 @@ from ..exceptions import (
     UnsupportedRatingError,
     UseFetchEpisode,
 )
-from ..base import logger
 from ._01_scraper import Scraper, reload_manager
 
 

@@ -9,8 +9,8 @@ from html import escape
 from pathlib import Path
 from typing import Any, Sequence, TypeVar
 
-from .directory_merger import _directories_and_files_of
 from .base import __version__ as version
+from .directory_merger import _directories_and_files_of
 
 HTML_TEMPLATE = """\
 <!-- With WebtoonScraper {version} at {created_time} -->

@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, NamedTuple, TypeGuard
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ..exceptions import InvalidFetchResultError, MissingOptionalDependencyError
 from ..base import logger
+from ..exceptions import InvalidFetchResultError, MissingOptionalDependencyError
 from ._01_scraper import Scraper, reload_manager
 
 

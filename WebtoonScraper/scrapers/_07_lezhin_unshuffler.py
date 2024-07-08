@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
+from ..base import logger
 from ..directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
@@ -21,7 +22,6 @@ from ..directory_merger import (
     check_container_state,
 )
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
-from ..base import logger
 
 if TYPE_CHECKING:
     from PIL import Image

@@ -8,8 +8,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Final, Literal, TypeAlias
 
-from .exceptions import DirectoryStateUnmatchedError, Unreachable
 from .base import logger
+from .exceptions import DirectoryStateUnmatchedError, Unreachable
 
 NORMAL_IMAGE: Final = "normal_image"
 NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"

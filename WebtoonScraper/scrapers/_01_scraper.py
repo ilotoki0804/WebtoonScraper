@@ -37,6 +37,7 @@ from rich.console import Console
 from rich.table import Table
 from tqdm import tqdm
 
+from ..base import EpisodeNoRange, logger
 from ..directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_IMAGE,
@@ -50,7 +51,6 @@ from ..exceptions import (
     NotImplementedCommentsDownloadOptionError,
     UseFetchEpisode,
 )
-from ..base import EpisodeNoRange, logger
 from ..webtoon_viewer import add_html_webtoon_viewer
 
 if TYPE_CHECKING:
