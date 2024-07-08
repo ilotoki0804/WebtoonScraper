@@ -453,7 +453,7 @@ def main(argv=None) -> Literal[0, 1]:
     """모든 CLI 명령어를 처리하는 함수입니다.
 
     Arguments:
-        argv: 커맨드라인 명령어입니다. None이라면 sys.argv[1:]를 값으로 삼습니다.
+        argv: 커맨드라인 명령어입니다. None이라면 자동으로 인자를 인식합니다.
 
     Returns:
         정상적으로 프로그램이 종료했다면 0을, 비정상적으로 종료되었다면 1을 반환합니다.
