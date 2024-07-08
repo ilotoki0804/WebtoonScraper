@@ -154,7 +154,7 @@ def _version_info() -> str:
                 return (
                     f"⚠️  Extra dependencies '{SEP.join(missing_dependencies)}' are not installed.\n"
                     "You won't be able to download webtoons from following platforms: "
-                    f"'{', '.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
+                    f"'{SEP.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
                 )
 
     return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
