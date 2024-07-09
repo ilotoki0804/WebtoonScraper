@@ -94,7 +94,7 @@ def unshuffle(
         unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
 
     logger.warning(
-        "Unshuffling is started. It takes a while and it's very CPU-intensive task. "
+        "The webtoon is being unshuffled. It takes a while and it's very CPU-intensive task. "
         "So keep patient and wait until the process end."
     )
     with multiprocessing.Pool(process_number) as p:
@@ -107,7 +107,7 @@ def unshuffle(
             for i, episode_name in enumerate(unshuffled_episode_ids, 1):
                 logger.info(f"Episode {episode_name} unshuffle ended ({i:02d}/{len(unshuffle_parameters):02d})")
 
-    logger.info("Unshuffling ended successfully.")
+    logger.info("The webtoon unshuffled successfully.")
 
 
 def _search_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
