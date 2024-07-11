@@ -44,7 +44,6 @@ class KakaoWebtoonScraper(Scraper[int]):
     DOWNLOAD_INTERVAL = 0.5
     PLATFORM = "kakao_webtoon"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
-        episodes_free_status=None,
         seo_ids=None,
         readabilities=None,
         is_adult=None,
