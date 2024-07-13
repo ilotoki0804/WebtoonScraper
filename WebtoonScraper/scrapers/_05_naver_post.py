@@ -27,7 +27,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     BASE_URL = "https://post.naver.com"
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m|www)[.]post[.]naver[.]com\/my\/series\/detail[.]naver"
-        r"\?(?:.*&)*seriesNo=(?P<series_no>\d+)(?:&.*)*(?:.*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
+        r"\?(?:[^&]*&)*seriesNo=(?P<series_no>\d+)(?:&.*)*(?:[^&]*&)*memberNo=(?P<memberNo>\d+)(?:&.*)*"
     )
     DOWNLOAD_INTERVAL = 1
     PLATFORM = "naver_post"
