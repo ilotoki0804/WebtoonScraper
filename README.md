@@ -5,13 +5,13 @@
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Filotoki0804%2FWebtoonScraper&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/ilotoki0804/WebtoonScraper)
 [![Sponsoring](https://img.shields.io/badge/Sponsoring-Toss-blue?logo=GitHub%20Sponsors&logoColor=white)](https://toss.me/ilotoki)
 
-**English documentation is available [here](docs/README_eng.md).**
+**English documentation is available [here](./docs/README_eng.md).**
 
 최대 규모 오픈 소스 웹툰 스크래퍼입니다.
 
 **네이버 웹툰(베스트 도전, 도전만화 포함), webtoons.com, 버프툰, 네이버 포스트, 네이버 게임, 레진 코믹스, 카카오페이지, 네이버 블로그, 티스토리, 카카오 웹툰**을 지원하고, 계속해서 지원 목록을 확대할 계획입니다.
 
-저작권과 책임에 대한 내용을 더욱 자세히 알고 싶다면 [이 문서](docs/copyright.md)를 참고해 주세요.
+저작권과 책임에 대한 내용을 더욱 자세히 알고 싶다면 [이 문서](./docs/copyright.md)를 참고해 주세요.
 
 ## 실행 파일로 이용하기
 
@@ -78,11 +78,11 @@ WebtoonScraper 3.2.2 of Python 3.11.4 ... at ...
 webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
 ```
 
-만약 더 많은 WebtoonScraper의 기능(범위 설정 다운로드, 모아서 보기, 다운로드할 디렉토리 설정, 에피소드 리스팅, 파이썬으로 사용 등)을 알고 싶거나 위에서 소개한 방식으로는 잘 작동하지 않는 경우(특히 버프툰, 레진코믹스의 경우 추가적인 설정이 필수적입니다.)에는 [`사용 방법` 문서](docs/how_to_use.md)를 참고해 주세요.
+만약 더 많은 WebtoonScraper의 기능(범위 설정 다운로드, 모아서 보기, 다운로드할 디렉토리 설정, 에피소드 리스팅, 파이썬으로 사용 등)을 알고 싶거나 위에서 소개한 방식으로는 잘 작동하지 않는 경우(특히 버프툰, 레진코믹스의 경우 추가적인 설정이 필수적입니다.)에는 [`사용 방법` 문서](./docs/how_to_use.md)를 참고해 주세요.
 
 ## 다운로드 가능한 웹툰/에피소드의 종류
 
-[다운로드 가능한 웹툰/에피소드의 종류 문서](docs/download_availability.md)를 참고하세요.
+[다운로드 가능한 웹툰/에피소드의 종류 문서](./docs/download_availability.md)를 참고하세요.
 
 ## Build from source
 
@@ -122,4 +122,4 @@ python -m simplebuilder
 
 ## Release Note
 
-[Release Note 문서](docs/releases.md)를 참고하세요.
+[Release Note 문서](./docs/releases.md)를 참고하세요.
