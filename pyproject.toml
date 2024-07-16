@@ -4,7 +4,7 @@ packages = [
     { include = "WebtoonScraper" },
 ]
 # Do not change this version manually. This will be matched with WebtoonScraper.__version__ automatically.
-version = "3.4.0"
+version = "3.5.0"
 description = "Scraping webtoons with ease."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "Apache-2.0"
