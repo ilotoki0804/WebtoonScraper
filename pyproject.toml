@@ -55,7 +55,7 @@ nest-asyncio = "^1.5.8"
 coloredlogs = "^15.0.1"
 black = { extras = ["full"], version = "^24.2.0" }
 ruff = "^0.3.5"
-simplebuilder = "^0.2.0"
+simplebuilder = "^0.3.0"
 
 [tool.poetry.extras]
 naver_post = ["demjson3"]
