@@ -444,7 +444,7 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
     # 후에 webtoon.html에서 드롭다운 메뉴에 에피소드 이름을 표시하고 이미지를 출력하는 데에 사용됨.
     episode_directories = json.dumps([directory.name for directory in directories], ensure_ascii=False)
     images_of_episode_directories = json.dumps(
-        [os.listdir(episode_directory_name) for episode_directory_name in directories],
+        [sorted(os.listdir(episode_directory_name)) for episode_directory_name in directories],
         ensure_ascii=False,
     )
 
