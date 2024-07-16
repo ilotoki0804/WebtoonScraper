@@ -2,16 +2,18 @@
 # Special Excludes #
 ####################
 
-# Exclude all files that starts with "_ignore"
+# Exclude all files that starts with "_ignore" or "._ignore"
 _ignore*
+._ignore*
 
-# venv for this repository
-.webtoon/
+# venv
 .venv/
-.py310/
 
 # webtoon folder
 webtoon/
+
+# README build file
+README_build.md
 
 ####################
 # Regular Excludes #
