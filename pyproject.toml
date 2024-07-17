@@ -38,7 +38,7 @@ WebtoonScraper = "WebtoonScraper.__main__:main"
 webtoon = "WebtoonScraper.__main__:main"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = "^3.10"
 tqdm = "^4.66.1"
 rich = "^13.6.0"
 pyfilename = "==0.5.1"
@@ -50,7 +50,7 @@ pycryptodomex = { version = "^3.0.0", optional = true }
 [tool.poetry.group.dev.dependencies]
 tomlkit = "^0.12.3"
 ipykernel = "^6.28.0"
-pyinstaller = "^6.3.0"
+pyinstaller = { version = "^6.3.0", python = ">=3.10,<3.13" }
 black = { extras = ["full"], version = "^24.2.0" }
 ruff = "^0.3.5"
 simplebuilder = "^0.3.0"
