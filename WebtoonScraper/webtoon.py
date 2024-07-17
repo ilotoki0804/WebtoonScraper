@@ -164,8 +164,8 @@ def setup_instance(
     else:
         raise InvalidPlatformError(f"Unknown platform: {webtoon_platform}")
 
-    # 특정 스크래퍼에만 존재하는 부가 정보 불러오기
-    if cookie and isinstance(scraper, (LezhinComicsScraper, BufftoonScraper, NaverWebtoonScraper)):
+    # 부가 정보 불러오기
+    if cookie:
         scraper.cookie = cookie
     if bearer and isinstance(scraper, LezhinComicsScraper):
         scraper.bearer = bearer
