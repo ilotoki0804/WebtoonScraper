@@ -468,9 +468,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._base_directory = Path(base_directory)
 
     @property
-    def cookie(self) -> str:
+    def cookie(self) -> str | None:
         """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
-        return self.headers["Cookie"]
+        try:
+            return self.headers["Cookie"]
+        except KeyError:
+            return None
 
     @cookie.setter
     def cookie(self, value: str) -> None:

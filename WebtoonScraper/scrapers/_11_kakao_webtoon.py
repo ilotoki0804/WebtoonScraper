@@ -129,8 +129,8 @@ class KakaoWebtoonScraper(Scraper[int]):
             readabilities.append(information["readable"])
             is_adult = information["adult"]
 
-        if is_adult:
-            raise UnsupportedRatingError("Adult webtoon is not supported.")
+        if is_adult and not self.cookie:
+            raise UnsupportedRatingError("To download ADULT Kakao webtoon, you need cookie value.") from None
 
         # `webtoon_seo_id`가 존재하지 않을 경우에만 webtoon_seo_id를 override함.
         # hasattr보다 더 리팩토링하기 좋아 try-except를 사용.
