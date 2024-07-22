@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
 import random
 import re
 import time
@@ -49,7 +50,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         is_adult=None,
     )  # type: ignore
 
-    def __init__(self, webtoon_id: int):
+    def __init__(self, webtoon_id: int, cookie: str | None = None):
         super().__init__(webtoon_id)
 
         self._client_id = int(random.random() * 2**32)
@@ -57,6 +58,9 @@ class KakaoWebtoonScraper(Scraper[int]):
         chars = [*range(0x30, 0x3A), *range(0x61, 0x7B)]
         self._nonce = "".join(chr(i) for i in random.choices(chars, k=10))
         self._app_id = f"KP.{self._client_id}.{self._timestamp + 1}"
+
+        if cookie:
+            self.cookie = cookie
 
         self.episode_headers = {
             "Accept": "application/json, text/plain, */*",
@@ -88,10 +92,28 @@ class KakaoWebtoonScraper(Scraper[int]):
         try:
             title = res.soup_select_one("#root > main > div > div > div > div > p", True).text
         except EmptyResultError:
-            title = res.soup_select_one('meta[property="og:title"]', True).text.removeprefix(" | 카카오웹툰")
+            try:
+                title = res.soup_select_one('meta[property="og:title"]', True).text.removeprefix(" | 카카오웹툰")
+            except EmptyResultError:
+                try:
+                    json_data = res.soup_select_one("script#__NEXT_DATA__", True).text
+                    title = json.loads(json_data)["props"]["initialState"]["content"]["contentMap"].popitem()[1]["title"]
+                except Exception as e:
+                    logger.error(f"Cannot retrieve webtoon title ({type(e).__name__}). Set webtoon title as `webtoon` and proceed...")
+                    title = "webtoon"
 
         thumbnail_url = res.soup_select_one('meta[property="og:image"]', True).get("content")
         assert isinstance(thumbnail_url, str)
+
+        if self.cookie:
+            # 대신 /auth/v1/auth/user/detail?access_token= 도 사용 가능
+            res = self.hxoptions.get(
+                f"https://gateway-kw.kakao.com/popularity/v1/my-review?episodeId={self.webtoon_id}",
+                headers=self.episode_headers,
+            )
+            self.user_id = res.json()["data"]["userId"]
+        else:
+            self.user_id = None
 
         self.title = title
         self.webtoon_thumbnail_url = thumbnail_url
@@ -192,7 +214,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         return cipher.decrypt(data)
 
     def _get_decrypt_information(self, episode_id, aid: str, zid: str) -> tuple[bytes, bytes]:
-        user_id = episode_id
+        user_id = self.user_id or episode_id
 
         temp_key = hashlib.sha256(f"{user_id}{episode_id}{self._timestamp}".encode()).digest()
         temp_iv = hashlib.sha256(f"{self._nonce}{self._timestamp}".encode()).digest()[:16]
@@ -227,8 +249,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         return super().check_if_legitimate_webtoon_id((InvalidWebtoonIdError, UnsupportedRatingError))
 
     @classmethod
-    def from_url(cls, url: str) -> Self:
-        """후일 cookie 등이 요구될 경우 *args, **kwargs 추가 필요."""
+    def from_url(cls, url: str, cookie: str | None = None) -> Self:
         matched = cls.URL_REGEX.match(url)
         if matched is None:
             raise InvalidURLError.from_url(url, cls)
@@ -239,6 +260,25 @@ class KakaoWebtoonScraper(Scraper[int]):
         except Exception as e:
             raise InvalidURLError.from_url(url, cls) from e
 
-        self = cls(webtoon_id)
+        self = cls(webtoon_id, cookie)
         self.webtoon_seo_id = parse.unquote(seo_id)
         return self
+
+    @property
+    def cookie(self) -> str | None:
+        """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
+        try:
+            return self.headers["Cookie"]
+        except KeyError:
+            return None
+
+    @cookie.setter
+    def cookie(self, cookie: str) -> None:
+        app_id = re.search(r"(?<=_kp_collector=)KP\.\d+\.\d+(?=;)", cookie)
+        if app_id is None:
+            raise ValueError("Not appropriate cookie. Cookie should have _kp_collector.")
+        self._app_id = app_id[0]
+        post_cookie = re.sub(r"__T_=[^;]*|; *__T_=[^;]*|__T_=[^;]*;", "", cookie)
+        self.headers.update(Cookie=cookie)
+        self.post_headers.update(Cookie=post_cookie)
+        self.episode_headers.update(Cookie=post_cookie)
