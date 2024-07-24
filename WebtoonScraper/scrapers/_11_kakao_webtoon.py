@@ -59,9 +59,6 @@ class KakaoWebtoonScraper(Scraper[int]):
         self._nonce = "".join(chr(i) for i in random.choices(chars, k=10))
         self._app_id = f"KP.{self._client_id}.{self._timestamp + 1}"
 
-        if cookie:
-            self.cookie = cookie
-
         self.episode_headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br",
@@ -82,6 +79,9 @@ class KakaoWebtoonScraper(Scraper[int]):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
         }
         self.post_headers = self.episode_headers | {"Content-Type": "application/json;charset=UTF-8"}
+
+        if cookie:
+            self.cookie = cookie
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
