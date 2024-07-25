@@ -37,7 +37,7 @@ from rich.console import Console
 from rich.table import Table
 from tqdm import tqdm
 
-from ..base import EpisodeNoRange, logger
+from .._processors import BatchMode, add_html_webtoon_viewer, concat_webtoon
 from .._processors.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_IMAGE,
@@ -45,14 +45,13 @@ from .._processors.directory_merger import (
     ensure_normal,
     merge_webtoon,
 )
+from ..base import EpisodeNoRange, logger
 from ..exceptions import (
     InvalidURLError,
     InvalidWebtoonIdError,
     NotImplementedCommentsDownloadOptionError,
     UseFetchEpisode,
 )
-from .._processors.webtoon_viewer import add_html_webtoon_viewer
-from .._processors.image_concatenator import BatchMode, concat_webtoon
 
 if TYPE_CHECKING:
     from typing import Required, Self
