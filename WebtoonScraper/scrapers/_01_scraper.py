@@ -52,6 +52,7 @@ from ..exceptions import (
     UseFetchEpisode,
 )
 from .._processors.webtoon_viewer import add_html_webtoon_viewer
+from .._processors.image_concatenator import BatchMode, concat_webtoon
 
 if TYPE_CHECKING:
     from typing import Required, Self
@@ -255,6 +256,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
+        concat: BatchMode | None = None,
         add_viewer: bool = True,
     ) -> None:
         """웹툰을 다운로드합니다.
@@ -276,6 +278,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 self.async_download_webtoon(
                     episode_no_range=episode_no_range,
                     merge_number=merge_number,
+                    concat=concat,
                     add_viewer=add_viewer,
                 )
             )
@@ -290,6 +293,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self,
         episode_no_range: EpisodeNoRange = None,
         merge_number: int | None = None,
+        concat: BatchMode | None = None,
         add_viewer: bool = True,
         manual_container_state: ContainerStates | None = None,
     ) -> None:
@@ -325,6 +329,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self._download_episodes(episode_no_list, webtoon_directory)
 
         webtoon_directory = self._set_directory_to_merge(webtoon_directory)
+
+        if concat is not None:
+            with self._send_context_callback_message(
+                "concat_webtoon",
+                batch=concat,
+                webtoon_directory_prev=webtoon_directory,
+            ) as ctx:
+                webtoon_directory = concat_webtoon(webtoon_directory, None, concat, rebuild_webtoon_viewer=False, use_tqdm=self.use_tqdm_while_download)
+                assert webtoon_directory is not None, "WORKING indicator exists. Program your code properly."
+                ctx["webtoon_directory_after"] = webtoon_directory
 
         # 모아서 보기 적용
         if merge_number is not None:
