@@ -140,7 +140,7 @@ class ExistingEpisodePolicy(Enum):
     INTERRUPT = "interrupt"
     """폴처가 이미 존재한다면 예외를 발생시킵니다."""
 
-    REDOWNLOAD = "redownload"
+    DOWNLOAD_AGAIN = "download_again"
     """항상 해당 폴더를 지우고 다시 다운로드합니다."""
 
 
@@ -655,7 +655,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         raise FileExistsError(
                             f"Directory at {episode_directory} already exists. Please delete the directory."
                         )
-                    case ExistingEpisodePolicy.REDOWNLOAD:
+                    case ExistingEpisodePolicy.DOWNLOAD_AGAIN:
                         check_integrity = False
                     case ExistingEpisodePolicy.HARD_CHECK:
                         check_integrity = True
