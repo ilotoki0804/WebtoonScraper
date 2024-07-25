@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 from WebtoonScraper.exceptions import MissingOptionalDependencyError
 
-from . import webtoon_viewer
 from ..base import logger
+from . import webtoon_viewer
 from .directory_merger import ContainerStates, _directories_and_files_of, ensure_normal
 
 BatchMode = tuple[Literal["count", "height"], int] | tuple[Literal["ratio"], float] | Literal["all"]

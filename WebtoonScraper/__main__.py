@@ -15,7 +15,7 @@ from rich.console import Console
 
 import WebtoonScraper
 from WebtoonScraper import __version__
-from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
+from WebtoonScraper._processors import concat_webtoon, webtoon
 from WebtoonScraper._processors.directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     _directories_and_files_of,
@@ -23,7 +23,7 @@ from WebtoonScraper._processors.directory_merger import (
     merge_webtoon,
     select_from_directory,
 )
-from WebtoonScraper._processors import concat_webtoon, webtoon
+from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
 # currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.

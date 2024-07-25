@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 import os
 import re
 from collections import defaultdict
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final, Literal, TypeAlias
 

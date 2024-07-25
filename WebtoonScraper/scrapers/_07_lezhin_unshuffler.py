@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
-from ..base import logger
 from .._processors.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
@@ -20,6 +19,7 @@ from .._processors.directory_merger import (
     _directories_and_files_of,
     check_container_state,
 )
+from ..base import logger
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
 
 if TYPE_CHECKING:
