@@ -23,6 +23,7 @@ from WebtoonScraper._processors.directory_merger import (
     merge_webtoon,
     select_from_directory,
 )
+from WebtoonScraper._processors.image_concatenator import BatchMode
 from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
@@ -254,6 +255,11 @@ download_subparser.add_argument(
     nargs="*",
     choices=["all", "reply"],
 )
+download_subparser.add_argument(
+    "--concat",
+    help="Concatenating webtoon images. Full specification is on docs.",
+    nargs="+",
+)
 
 # merge subparser
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
@@ -367,6 +373,22 @@ def parse_download(args: argparse.Namespace) -> None:
                 reply="reply" in options,
             )
 
+        concat: BatchMode | None
+        if args.concat is None:
+            concat = None
+        else:
+            match args.concat:
+                case "a" | "all":
+                    concat = "all"
+                case "c" | "count", value:
+                    concat = "count", int(value)
+                case "h" | "height", value:
+                    concat = "height", int(value)
+                case "r" | "ratio", value:
+                    concat = "ratio", float(value)
+                case other:
+                    raise ValueError(f"Invalid concatenation arguments: {' '.join(map(repr, other))}")
+
         scraper = webtoon.setup_instance(
             webtoon_id,
             args.platform,
@@ -384,6 +406,7 @@ def parse_download(args: argparse.Namespace) -> None:
         scraper.download_webtoon(
             args.range,
             merge_number=args.merge_number,
+            concat=concat,
             add_viewer=True,
         )
 
