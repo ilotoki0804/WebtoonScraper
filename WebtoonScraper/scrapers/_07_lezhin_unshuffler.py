@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from tqdm import tqdm
 
 from ..base import logger
-from ..directory_merger import (
+from .._processors.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,
