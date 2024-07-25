@@ -455,7 +455,8 @@ def ensure_normal(
     allow_unknown_state: bool = False,
     manual_container_state: ContainerStates | None = None,
     mkdir_if_empty: bool = True,
-):
+) -> bool:
+    """웹툰 디렉토리가 merge되어 있다면 되돌리고 아니라면 그대로 둡니다. 디렉토리가 merge되어 있었다면 True, 아니라면 False를 리턴합니다."""
     if source_webtoon_directory.exists() and os.listdir(source_webtoon_directory):
         if manual_container_state is None:
             container_state = check_container_state(source_webtoon_directory)
@@ -465,9 +466,12 @@ def ensure_normal(
         if container_state == MERGED_WEBTOON_DIRECTORY:
             logger.warning("Webtoon directory was merged. Restoring...")
             restore_webtoon(source_webtoon_directory, None)
+            return True
         elif container_state != NORMAL_WEBTOON_DIRECTORY and allow_unknown_state:
             raise DirectoryStateUnmatchedError.from_state(container_state, source_webtoon_directory)
     elif not empty_ok:
         raise ValueError(f"The directory was empty. Directory: {source_webtoon_directory}")
     elif mkdir_if_empty:
         source_webtoon_directory.mkdir(parents=True, exist_ok=True)
+
+    return False
