@@ -122,7 +122,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
     # 테스트 실행
     with pool.ThreadPool(len(PLATFORMS)) as p:
         results_raw = p.starmap(check_platform, ((webtoon_id, platform) for platform in PLATFORMS))
-    results = [(platform, title) for platform, title in results_raw if title is not None]
+    results: list[tuple[WebtoonPlatforms, str | None]] = [(platform, title) for platform, title in results_raw if title is not None]
 
     # 같은 웹툰 ID의 서로 다른 웹툰을 가지고 있는 플랫폼들의 개수에 따라 결과 결정
     if not results:

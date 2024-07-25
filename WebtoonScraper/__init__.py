@@ -10,7 +10,7 @@
 """
 
 from .base import (
-    __url__,
-    __version__,
-    __version_info__,
+    __url__,  # noqa
+    __version__,  # noqa
+    __version_info__,  # noqa
 )

@@ -130,7 +130,7 @@ def concat_webtoon(
             ]
 
             with multiprocessing.Pool(process_number) as p:
-                directory_names = p.imap_unordered(_concat_episode_packed, parameters)
+                directory_names = p.imap_unordered(_concat_episode_packed, parameters)  # type: ignore
 
                 if use_tqdm:
                     progress_bar = tqdm(directory_names, total=len(parameters))

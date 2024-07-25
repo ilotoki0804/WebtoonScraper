@@ -8,7 +8,6 @@ import os
 import shutil
 from contextlib import suppress
 from pathlib import Path
-from types import ModuleType
 from typing import TYPE_CHECKING
 
 from tqdm import tqdm

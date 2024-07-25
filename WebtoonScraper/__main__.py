@@ -87,13 +87,13 @@ def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
 def _to_range(episode_no_range: str) -> EpisodeNoRange:
     """CLI로 입력된 문자열로 된 웹툰 회차 범위를 실재적인 타입으로 변환합니다."""
 
-    def nonesafe_int(value):
+    def safe_int(value):
         return int(value) if value and value.lower() != "none" else None
 
     with contextlib.suppress(ValueError):
         return int(episode_no_range)
 
-    start, end = (nonesafe_int(i.strip()) for i in episode_no_range.split("~"))
+    start, end = (safe_int(i.strip()) for i in episode_no_range.split("~"))
 
     return start, end
 
@@ -125,15 +125,15 @@ def _version_info() -> str:
         # fmt: off
 
         with contextlib.suppress(Exception):
-            import demjson3
+            import demjson3  # noqa
             installed.add("naver_post")
 
         with contextlib.suppress(Exception):
-            from PIL import Image
+            from PIL import Image  # noqa
             installed.add("lezhin_comics")
 
         with contextlib.suppress(Exception):
-            from Cryptodome.Cipher import AES
+            from Cryptodome.Cipher import AES  # noqa
             installed.add("kakao_webtoon")
 
         # fmt: on
