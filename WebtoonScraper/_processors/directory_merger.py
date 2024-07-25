@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import os
 import re
 from collections import defaultdict
@@ -400,6 +401,31 @@ def check_container_state(directory: PathOrStr, *, warn: bool = False) -> Contai
     return NOT_MATCHED
 
 
+def guess_merge_number(webtoon_directory: Path) -> int | None:
+    """웹툰 디렉토리가 어떤 값으로 묶였는지 추측합니다. 에피소드 일부가 다운로드되지 않았더라도 그럭저럭 잘 찾아낼 수 있습니다."""
+    directories, _ = _directories_and_files_of(webtoon_directory)
+    regex = DIRECTORY_PATTERNS[MERGED_EPISODE_DIRECTORY]
+    counter = defaultdict(int)
+    for directory in directories:
+        matched = regex.match(directory.name)
+        if not matched:
+            continue
+
+        try:
+            diff = int(matched["to"]) - int(matched["from"])
+        except ValueError:
+            continue
+        else:
+            counter[diff] += 1
+
+    most_occurred_value = max(counter.values())
+    if not most_occurred_value:
+        # raise ValueError(f"Can't guess merge number of {webtoon_directory}. Maybe it's not merged directory?")
+        return None
+    most_occurred = next(key for key, value in counter.items() if value == most_occurred_value)
+    return most_occurred
+
+
 ############### RESTORE FUNCTIONALITY ###############
 
 
@@ -475,3 +501,28 @@ def ensure_normal(
         source_webtoon_directory.mkdir(parents=True, exist_ok=True)
 
     return False
+
+
+@contextmanager
+def restore_after_finished(
+    source_webtoon_directory: Path,
+    empty_ok: bool,
+    allow_unknown_state: bool = False,
+    manual_container_state: ContainerStates | None = None,
+    mkdir_if_empty: bool = True,
+):
+    merge_number = guess_merge_number(source_webtoon_directory)
+    is_restored = ensure_normal(
+        source_webtoon_directory=source_webtoon_directory,
+        empty_ok=empty_ok,
+        allow_unknown_state=allow_unknown_state,
+        manual_container_state=manual_container_state,
+        mkdir_if_empty=mkdir_if_empty,
+    )
+    if bool(merge_number) ^ is_restored:
+        logger.warning(f"Two values are different each other: {bool(merge_number)=}, {is_restored=}")
+
+    yield
+
+    if merge_number:
+        merge_webtoon(source_webtoon_directory, None, merge_number=merge_number)
