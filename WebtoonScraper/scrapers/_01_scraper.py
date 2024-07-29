@@ -37,8 +37,8 @@ from rich.console import Console
 from rich.table import Table
 from tqdm import tqdm
 
-from .._processors import BatchMode, add_html_webtoon_viewer, concat_webtoon
-from .._processors.directory_merger import (
+from ..processing import BatchMode, add_html_webtoon_viewer, concat_webtoon
+from ..processing.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_IMAGE,
     ContainerStates,

@@ -12,7 +12,7 @@ from tqdm import tqdm
 from WebtoonScraper.exceptions import MissingOptionalDependencyError
 
 from ..base import logger
-from . import webtoon_viewer
+from ._webtoon_viewer import add_html_webtoon_viewer
 from .directory_merger import ContainerStates, _directories_and_files_of, ensure_normal
 
 BatchMode = tuple[Literal["count", "height"], int] | tuple[Literal["ratio"], float] | Literal["all"]
@@ -147,7 +147,7 @@ def concat_webtoon(
         shutil.copy(file, target_webtoon_directory / file.name)
 
     if rebuild_webtoon_viewer:
-        webtoon_viewer.add_html_webtoon_viewer(target_webtoon_directory)
+        add_html_webtoon_viewer(target_webtoon_directory)
 
     return target_webtoon_directory
 

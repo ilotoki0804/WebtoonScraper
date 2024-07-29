@@ -15,15 +15,14 @@ from rich.console import Console
 
 import WebtoonScraper
 from WebtoonScraper import __version__
-from WebtoonScraper._processors import concat_webtoon, webtoon
-from WebtoonScraper._processors.directory_merger import (
+from WebtoonScraper.processing import _webtoon as webtoon, concat_webtoon, BatchMode
+from WebtoonScraper.processing.directory_merger import (
     NORMAL_WEBTOON_DIRECTORY,
     _directories_and_files_of,
     merge_or_restore_webtoon,
     merge_webtoon,
     select_from_directory,
 )
-from WebtoonScraper._processors.image_concatenator import BatchMode
 from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 

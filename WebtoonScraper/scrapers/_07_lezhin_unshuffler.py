@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
-from .._processors.directory_merger import (
+from ..processing.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
     NORMAL_WEBTOON_DIRECTORY,

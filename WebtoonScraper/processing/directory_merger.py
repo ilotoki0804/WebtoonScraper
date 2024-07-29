@@ -218,8 +218,8 @@ def select_from_directory(
                 raise Unreachable()
 
     if rebuild_webtoon_viewer:
-        # webtoon_viewer이 이 모듈을 의존하고 있기에 시작 시 import가 불가함.
-        from .webtoon_viewer import add_html_webtoon_viewer
+        # webtoon_viewer 모듈이 이 모듈을 의존하고 있기에 시작 시 import가 불가함.
+        from ._webtoon_viewer import add_html_webtoon_viewer
 
         for operated_path in operated_paths:
             if (operated_path / "webtoon.html").exists():
