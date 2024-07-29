@@ -21,7 +21,7 @@ class BufftoonScraper(Scraper[int]):
     PLATFORM = "bufftoon"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         login_required_episodes=None,
-    )  # type: ignore
+    )
 
     def __init__(self, webtoon_id, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)

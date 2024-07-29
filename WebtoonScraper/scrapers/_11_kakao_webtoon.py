@@ -48,7 +48,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         seo_ids=None,
         readabilities=None,
         is_adult=None,
-    )  # type: ignore
+    )
 
     def __init__(self, webtoon_id: int, cookie: str | None = None):
         super().__init__(webtoon_id)

@@ -23,7 +23,7 @@ class KakaopageScraper(Scraper[int]):
     PLATFORM = "kakaopage"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         episodes_free_status=None,
-    )  # type: ignore
+    )
 
     def __init__(self, webtoon_id: int):
         super().__init__(webtoon_id)

@@ -23,7 +23,7 @@ class NaverGameScraper(Scraper[int]):
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         episodes_image_urls=None,
         episodes_contents=None,
-    )  # type: ignore
+    )
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:

@@ -160,7 +160,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
     PLATFORM: ClassVar[str]
     COMMENTS_DOWNLOAD_SUPPORTED: bool = False
-    INFORMATION_VARS: ClassVar[dict[str, None | str | Callable[[Self, str], Any]]] = dict(
+    INFORMATION_VARS: ClassVar[dict[str, None | str | Callable[[Any, str], Any]]] = dict(
         title=None,
         platform="PLATFORM",
         webtoon_thumbnail_url=None,

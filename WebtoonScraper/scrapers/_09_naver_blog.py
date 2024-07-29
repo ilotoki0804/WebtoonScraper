@@ -33,7 +33,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     PLATFORM = "naver_blog"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         episodes_image_urls=None,
-    )  # type: ignore
+    )
 
     def __init__(self, webtoon_id) -> None:
         super().__init__(webtoon_id)

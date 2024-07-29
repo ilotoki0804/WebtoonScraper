@@ -58,7 +58,7 @@ class LezhinComicsScraper(Scraper[str]):
             else self._unshuffled_webtoon_directory.name
         ),
         is_adult=None,
-    )  # type: ignore
+    )
 
     def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
         """
