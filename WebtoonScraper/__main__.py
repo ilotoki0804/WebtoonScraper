@@ -115,9 +115,10 @@ class LazyVersionAction(argparse._VersionAction):
 def _version_info() -> str:
     def check_imported():
         ALL_DEPENDENCIES = {
-            "naver_post": "Naver Post",
-            "lezhin_comics": "Lezhin Comics (partially)",
-            "kakao_webtoon": "Kakao Webtoon",
+            "naver_post": "download Naver Post",
+            "lezhin_comics": "download Lezhin Comics (partially)",
+            "kakao_webtoon": "download Kakao Webtoon",
+            "concat": "use concatenation feature"
         }
         installed = set()
 
@@ -130,6 +131,7 @@ def _version_info() -> str:
         with contextlib.suppress(Exception):
             from PIL import Image  # noqa
             installed.add("lezhin_comics")
+            installed.add("concat")
 
         with contextlib.suppress(Exception):
             from Cryptodome.Cipher import AES  # noqa
@@ -146,15 +148,16 @@ def _version_info() -> str:
                 missing = missing_dependencies.pop()
                 return (
                     f"⚠️  Extra dependency '{missing}' is not installed. "
-                    f"You won't be able to download webtoons from {ALL_DEPENDENCIES[missing]}."
+                    f"You won't be able to {ALL_DEPENDENCIES[missing]}.\n"
+                    "Download a missing dependency via `pip install -U WebtoonScraper[full]`"
                 )
 
             case _:
                 SEP = "', '"
                 return (
                     f"⚠️  Extra dependencies '{SEP.join(missing_dependencies)}' are not installed.\n"
-                    "You won't be able to download webtoons from following platforms: "
-                    f"'{SEP.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}'."
+                    f"You won't be able to {', '.join(ALL_DEPENDENCIES[missing] for missing in missing_dependencies)}.\n"
+                    "Download missing dependencies via `pip install -U WebtoonScraper[full]`"
                 )
 
     return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
