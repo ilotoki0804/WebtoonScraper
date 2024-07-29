@@ -26,7 +26,7 @@ from WebtoonScraper.processing.directory_merger import (
 from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
 from WebtoonScraper.scrapers import CommentsDownloadOption
 
-# currently Lezhin uses only lower case alphabet, numbers, and underscore. Rest of them are added for just in case.
+# currently Lezhin uses only lowercase alphabet, numbers, and underscore. Uppercase alphabet and dash are added for just in case.
 ACCEPTABLE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 
 
@@ -438,13 +438,6 @@ def _directory_selector(source_parent_directory: Path) -> Path:
 
 
 def parse_concat(args: argparse.Namespace) -> None:
-    if args.select:
-        webtoon_dir = _directory_selector(args.webtoon_directory_path)
-        target_dir = args.target_webtoon_directory
-    else:
-        webtoon_dir = args.webtoon_directory_path
-        target_dir = args.target_webtoon_directory
-
     if args.all:
         batch_mode = "all"
     elif args.count:
@@ -455,6 +448,13 @@ def parse_concat(args: argparse.Namespace) -> None:
         batch_mode = "ratio", args.ratio
     else:
         raise ValueError("You must provide one of following options: --all/--count/--height/--ratio")
+
+    if args.select:
+        webtoon_dir = _directory_selector(args.webtoon_directory_path)
+        target_dir = args.target_webtoon_directory
+    else:
+        webtoon_dir = args.webtoon_directory_path
+        target_dir = args.target_webtoon_directory
 
     concatenated_webtoon_directory = concat_webtoon(
         webtoon_dir, target_dir, batch_mode, process_number=args.process_number
