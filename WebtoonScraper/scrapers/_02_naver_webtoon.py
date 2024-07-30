@@ -163,7 +163,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             if reply_of is not None:
                 parameters.update(parentCommentNo=str(reply_of))
             if parameter_data:
-                latest_comment_id: str = parameter_data["lastest_comment_id"]
+                latest_comment_id: str = parameter_data["latest_comment_id"]
                 current_last_comment_id: str = parameter_data["current_last_comment_id"]
                 prev_pointer: str = parameter_data["prev_pointer"]
                 next_pointer: str = parameter_data["next_pointer"]
