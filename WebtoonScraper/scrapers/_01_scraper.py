@@ -649,7 +649,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if episode_no_range is None:
             return range(len(self.episode_ids))
 
-        return [i for i, episode_id in enumerate(self.episode_ids) if episode_id in episode_no_range]
+        return [i - 1 for i, episode_id in enumerate(self.episode_ids, 1) if episode_id in episode_no_range]
 
     async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.
