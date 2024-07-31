@@ -25,6 +25,7 @@ from typing import (
     Generic,
     Iterable,
     NamedTuple,
+    Sequence,
     TypedDict,
     TypeGuard,
     TypeVar,
@@ -45,7 +46,7 @@ from ..processing.directory_merger import (
     ensure_normal,
     merge_webtoon,
 )
-from ..base import EpisodeNoRange, logger
+from ..base import logger
 from ..exceptions import (
     InvalidURLError,
     InvalidWebtoonIdError,
@@ -57,6 +58,100 @@ if TYPE_CHECKING:
     from typing import Required, Self
 
 WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
+
+
+class EpisodeRange:
+    def __init__(self, *ranges: slice | range | Iterable[int] | int):
+        """range 인스턴스는 기본적으로 체크되지 않으며 나중에 오류가 발현될 수 있습니다."""
+
+        if not ranges:
+            self._ranges = []
+            return
+
+        new_ranges: list[slice | range | set[int]] = []
+        indexes = set()
+        for range_ in ranges:
+            if isinstance(range_, slice | range):
+                new_ranges.append(range_)
+            elif isinstance(range_, Iterable):
+                indexes.update(range_)
+            else:
+                indexes.add(range_)
+        if indexes:
+            new_ranges.append(indexes)
+        self._ranges = new_ranges
+
+    def __contains__(self, index: int):
+        """잘못된 값을 지니는 slice 인스턴스를 가지고 있더라도 순서에 따라 오류 없이 값을 내보낼 수도 있습니다."""
+
+        for range_ in self._ranges:
+            match range_:
+                case set():
+                    if index in range_:
+                        return True
+
+                case slice(start=None, stop=int(stop), step=int() | None as step):
+                    step = 1 if step is None else step
+                    if index in range(1, stop, step):
+                        return True
+
+                case slice(start=int(start), stop=None, step=int() | None as step):
+                    step = 1 if step is None else step
+                    if start <= index and (start - index) % step == 0:
+                        return True
+
+                case slice(start=int(start), stop=int(stop), step=int() | None as step):
+                    step = 1 if step is None else step
+                    if index in range(start, stop, step):
+                        return True
+
+                case slice():
+                    raise ValueError(f"Invalid slice value: {range_!r}")
+
+                case _:
+                    raise ValueError(f"Invalid range value: {range_!r}")
+
+        return False
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({', '.join(repr(range_) for range_ in self._ranges)})"
+
+    @classmethod
+    def from_string(cls, episode_range: str, inclusive: bool) -> Self:
+        """문자열로부터 EpisodeRange 인스턴스를 만듭니다.
+
+        Args:
+            episode_range (str):
+                에피소드 범위가 될 문자열입니다. 규칙은 다음과 같습니다.
+                여러 에피소드를 쉼표로 나누어 병렬하여 나타내면
+                각각의 에피소드를 다운로드받습니다.
+                예를 들어 `1,4,45`는 1화, 4화, 45화가 선택됩니다.
+                에피소드 수를 모두 쓰는 대신 범위를 지정해줄 수 있습니다.
+                예를 들어 `5~20`은 5화부터 20화까지(inclusive=True일때) 범위가 선택됩니다.
+                이때 시작이나 끝을 생략할 수 있습니다.
+                예를 들어 `7~`은 7화부터 끝날 때가지 범위를 선택하며
+                `~31`은 시작부터 31화까지 범위를 선택하며 `1~31`과 같습니다.
+                범위 선택과 에피소드 수 쓰기는 쉼표로 나누어 병렬할 수 있습니다.
+                예를 들어 `2,15,5~10,45~`은 2화, 15화, 5~10화, 45화부터 끝까지 다운로드한다는 의미입니다.
+            inclusive (bool):
+                맨 마지막 인덱스를 포함할지 결정합니다.
+                예를 들어 `5~10`일때 inclusive=True라면 10회차를 포함하고,
+                False라면 포함하지 않아 5회차부터 9회차까지만 포함합니다.
+        """
+        ranges = []
+        for range_str in episode_range.split(","):
+            start, tilde, end = range_str.partition("~")
+            start = start.replace(" ", "")
+            start = int(start) if start else None
+            end = end.replace(" ", "")
+            end = int(end) + inclusive if end else None
+
+            if tilde:
+                ranges.append(slice(start, end))
+            elif start:
+                ranges.append(start)
+
+        return cls(*ranges)
 
 
 class Comment(TypedDict, total=False):
@@ -253,7 +348,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def download_webtoon(
         self,
-        episode_no_range: EpisodeNoRange = None,
+        episode_no_range: EpisodeRange | None = None,
         merge_number: int | None = None,
         concat: BatchMode | None = None,
         add_viewer: bool = True,
@@ -290,7 +385,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     async def async_download_webtoon(
         self,
-        episode_no_range: EpisodeNoRange = None,
+        episode_no_range: EpisodeRange | None = None,
         merge_number: int | None = None,
         concat: BatchMode | None = None,
         add_viewer: bool = True,
@@ -525,7 +620,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         yield end_contexts
         self.callback(base_message + "_end", is_successful=True, **end_contexts)
 
-    def _episode_no_range_to_real_range(self, episode_no_range: EpisodeNoRange) -> Iterable[int]:
+    def _episode_no_range_to_real_range(self, episode_no_range: EpisodeRange | None) -> Sequence[int]:
         """여러 형태와 타입으로 주어진 에피소드 다운로드 범위를 일관된 iterable로 변환합니다.
 
         Args:
@@ -551,33 +646,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         이때 회차 범위를 넘어서는 경우 무시됩니다.
                     예) [3, 5, 7, 8]: 3화, 5화, 7화, 8화를 다운로드함.
         """
-        episode_length = len(self.episode_ids)
-
         if episode_no_range is None:
-            return range(episode_length)
+            return range(len(self.episode_ids))
 
-        if isinstance(episode_no_range, int):
-            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            return (episode_no_range - 1,)
-
-        if isinstance(episode_no_range, tuple):
-            start, end = episode_no_range
-
-            if start is None:
-                start = 1
-            if end is None:
-                end = episode_length
-
-            # 사용자용 숫자는 1이 더해진 상태라 1을 빼는 과정이 필요하다.
-            return range(start - 1, end)
-
-        if isinstance(episode_no_range, slice):
-            return (i - 1 for i in range(1, episode_length + 1)[episode_no_range])
-
-        if isinstance(episode_no_range, Iterable):
-            return sorted(i - 1 for i in episode_no_range if i <= episode_length)
-
-        raise TypeError(f"Unknown type for episode_no_range({type(episode_no_range).__name__}). Please check again.")
+        return [i for i, episode_id in enumerate(self.episode_ids) if episode_id in episode_no_range]
 
     async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.

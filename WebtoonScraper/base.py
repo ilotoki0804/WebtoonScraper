@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 WebtoonId: TypeAlias = (
     "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str] | _NaverPostWebtoonId | _NaverBlogWebtoonId"
 )
-EpisodeNoRange: TypeAlias = "tuple[int | None, int | None] | int | None | Iterable[int] | slice"
 
 logger = logging.getLogger("webtoonscraper_logger")
 logger.handlers = [RichHandler(show_time=False, show_path=False)]

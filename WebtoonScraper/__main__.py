@@ -23,8 +23,8 @@ from WebtoonScraper.processing.directory_merger import (
     merge_webtoon,
     select_from_directory,
 )
-from WebtoonScraper.base import EpisodeNoRange, WebtoonId, logger
-from WebtoonScraper.scrapers import CommentsDownloadOption
+from WebtoonScraper.base import WebtoonId, logger
+from WebtoonScraper.scrapers import CommentsDownloadOption, EpisodeRange
 
 # currently Lezhin uses only lowercase alphabet, numbers, and underscore. Uppercase alphabet and dash are added for just in case.
 ACCEPTABLE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
@@ -81,20 +81,6 @@ def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
 
     # 티스토리
     return id1, id2
-
-
-def _to_range(episode_no_range: str) -> EpisodeNoRange:
-    """CLI로 입력된 문자열로 된 웹툰 회차 범위를 실재적인 타입으로 변환합니다."""
-
-    def safe_int(value):
-        return int(value) if value and value.lower() != "none" else None
-
-    with contextlib.suppress(ValueError):
-        return int(episode_no_range)
-
-    start, end = (safe_int(i.strip()) for i in episode_no_range.split("~"))
-
-    return start, end
 
 
 class LazyVersionAction(argparse._VersionAction):
@@ -230,7 +216,7 @@ download_subparser.add_argument(
 download_subparser.add_argument(
     "-r",
     "--range",
-    type=_to_range,
+    type=lambda episode_range: EpisodeRange.from_string(episode_range, inclusive=True),
     metavar="[start]~[end]",
     help="Episode number range you want to download.",
 )
@@ -301,8 +287,8 @@ merge_subparser.add_argument(
     default="auto",
     help=(
         "Determines whether to merge or restore the directories. "
-        "The [m]erge option will merge the webtoon directory. "
-        "The [r]estore option restores the webtoon directory. "
+        "The [m]erge option will merge the webtoon directory. "  # cspell: ignore erge
+        "The [r]estore option restores the webtoon directory. "  # cspell: ignore estore
         "The [a]uto option restores the directory, "
         "merging it if it is already in the default state. "
         "Ignored if the `s` option is used."
