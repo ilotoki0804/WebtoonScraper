@@ -182,6 +182,12 @@ download_subparser.add_argument(
     help="Concatenating webtoon images. Full specification is on docs.",
     nargs="+",
 )
+download_subparser.add_argument(
+    "--existing-episode",
+    choices=["skip", "raise", "download_again", "hard_check"],
+    default="skip",
+    help="Determine what to do when episode directory already exists",
+)
 
 # merge subparser
 merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
@@ -307,6 +313,7 @@ def parse_download(args: argparse.Namespace) -> None:
             download_directory=args.download_directory,
             options=dict(args.options or {}),
             comments_option=comment_download_option,
+            existing_episode_policy=args.existing_episode
         )
 
         if args.list_episodes:

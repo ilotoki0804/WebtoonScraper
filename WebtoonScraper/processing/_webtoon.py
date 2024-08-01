@@ -133,6 +133,7 @@ def setup_instance(
     webtoon_id_or_url: str,
     webtoon_platform: WebtoonPlatforms | Literal["url"],
     *,
+    existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip",
     cookie: str | None = None,
     download_directory: str | Path | None = None,
     options: dict[str, str] | None = None,
@@ -156,5 +157,6 @@ def setup_instance(
     if download_directory:
         scraper.base_directory = download_directory
     scraper.comments_option = comments_option
+    scraper.existing_episode_policy = existing_episode_policy
 
     return scraper
