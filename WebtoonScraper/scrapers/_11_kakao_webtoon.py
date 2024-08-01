@@ -245,8 +245,8 @@ class KakaoWebtoonScraper(Scraper[int]):
         file_directory = episode_directory / file_name
         file_directory.write_bytes(self._decrypt(image_raw, key, iv))
 
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id((InvalidWebtoonIdError, UnsupportedRatingError))
+    def check_webtoon_id(self) -> str | None:
+        return super().check_webtoon_id((InvalidWebtoonIdError, UnsupportedRatingError))
 
     @classmethod
     def from_url(cls, url: str, cookie: str | None = None) -> Self:

@@ -121,8 +121,8 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
     def get_episode_image_urls(self, episode_no):
         return self.episodes_image_urls[episode_no]
 
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id(InvalidWebtoonIdError)
+    def check_webtoon_id(self) -> str | None:
+        return super().check_webtoon_id(InvalidWebtoonIdError)
 
     @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, int]:

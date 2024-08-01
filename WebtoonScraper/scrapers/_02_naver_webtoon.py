@@ -226,8 +226,8 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         }
         self.comments_data[episode_no].update(episode_comments)
 
-    def check_if_legitimate_webtoon_id(self) -> str | None:
-        return super().check_if_legitimate_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
+    def check_webtoon_id(self) -> str | None:
+        return super().check_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
 
     def _extract_comment_information(self, comment_data: dict) -> Comment:
         return {

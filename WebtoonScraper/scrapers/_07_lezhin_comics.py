@@ -268,7 +268,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         return image_urls
 
-    def check_if_legitimate_webtoon_id(self) -> str | None:
+    def check_webtoon_id(self) -> str | None:
         try:
             title = self.hxoptions.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}").soup_select_one(
                 "h2.comicInfo__title"

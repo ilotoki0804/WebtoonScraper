@@ -103,7 +103,7 @@ def check_platform(webtoon_id, platform_name: WebtoonPlatforms) -> tuple[Webtoon
     scraper = instantiate(platform_name, webtoon_id)
     return (
         platform_name,
-        scraper.check_if_legitimate_webtoon_id(),
+        scraper.check_webtoon_id(),
     )
 
 
