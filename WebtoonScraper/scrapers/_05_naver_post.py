@@ -32,7 +32,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
     DOWNLOAD_INTERVAL = 1
     PLATFORM = "naver_post"
 
-    def __init__(self, webtoon_id) -> None:
+    def __init__(self, webtoon_id, /) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="https://m.post.naver.com/")
 

@@ -35,7 +35,7 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         episodes_image_urls=None,
     )
 
-    def __init__(self, webtoon_id) -> None:
+    def __init__(self, webtoon_id, /) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="https://m.blog.naver.com/")
 

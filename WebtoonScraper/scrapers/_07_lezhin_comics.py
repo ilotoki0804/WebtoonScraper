@@ -60,7 +60,7 @@ class LezhinComicsScraper(Scraper[str]):
         is_adult=None,
     )
 
-    def __init__(self, webtoon_id: str, bearer: str | None = None, cookie: str | None = None) -> None:
+    def __init__(self, webtoon_id: str, /, *, bearer: str | None = None, cookie: str | None = None) -> None:
         """
         * 에피소드를 리스팅만 하고 싶은 경우: webtoon_id만 필요
         * 웹툰을 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요

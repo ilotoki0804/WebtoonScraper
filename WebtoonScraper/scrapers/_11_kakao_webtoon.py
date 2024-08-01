@@ -50,7 +50,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         is_adult=None,
     )
 
-    def __init__(self, webtoon_id: int, cookie: str | None = None):
+    def __init__(self, webtoon_id: int, /, *, cookie: str | None = None):
         super().__init__(webtoon_id)
 
         self._client_id = int(random.random() * 2**32)

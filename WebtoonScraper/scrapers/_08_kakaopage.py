@@ -25,7 +25,7 @@ class KakaopageScraper(Scraper[int]):
         episodes_free_status=None,
     )
 
-    def __init__(self, webtoon_id: int):
+    def __init__(self, webtoon_id: int, /):
         super().__init__(webtoon_id)
         self.headers = {}
         self.graphql_headers = {

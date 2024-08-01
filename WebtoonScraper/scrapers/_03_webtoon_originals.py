@@ -21,10 +21,9 @@ class WebtoonsDotcomScraper(Scraper[int]):
     URL_REGEX = re.compile(
         r"(?:https?:\/\/)?(?:m|www)[.]webtoons[.]com\/(?:[^/]+\/){3}list\?(?:[^&]*&)*title_no=(?P<webtoon_id>\d+)(?:&.*)*"
     )
-    base_url: str
     PLATFORM = "webtoons_dotcom"
 
-    def __init__(self, webtoon_id) -> None:
+    def __init__(self, webtoon_id, /) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="http://www.webtoons.com")
 

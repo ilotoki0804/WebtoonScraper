@@ -34,8 +34,6 @@ from urllib import parse
 
 import hxsoup
 import pyfilename as pf
-from rich.console import Console
-from rich.table import Table
 from tqdm import tqdm
 
 from ..processing import BatchMode, add_html_webtoon_viewer, concat_webtoon
@@ -265,7 +263,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         author=None,
     )
 
-    def __init__(self, webtoon_id: WebtoonId) -> None:
+    def __init__(self, webtoon_id: WebtoonId, /) -> None:
         if __debug__ and not self._check_webtoon_id_type(webtoon_id):
             raise InvalidWebtoonIdError.from_webtoon_id(
                 webtoon_id, type(self), additional=" The type of webtoon_id is invalid."

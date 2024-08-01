@@ -23,7 +23,7 @@ class BufftoonScraper(Scraper[int]):
         login_required_episodes=None,
     )
 
-    def __init__(self, webtoon_id, cookie: str | None = None) -> None:
+    def __init__(self, webtoon_id, /, *, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.cookie = "" if cookie is None else cookie
         self.hxoptions.verify = self._create_ssl_context()
