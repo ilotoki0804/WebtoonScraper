@@ -482,13 +482,30 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.info("Merging webtoon has started...")
             case "setup_end":
                 logger.info("Webtoon data are fetched. Download has been started...")
-            case "indicate":
-                description = context["description"]
-                if self.use_tqdm_while_download:
-                    with suppress(AttributeError):
-                        self.pbar.set_description(description)
-                        return
-                self.callback("description", **context)
+            case "indicate" | "download_skipped" | "download_failed" | "downloading_image":
+                match situation:
+                    case "indicate":
+                        description = context["description"]
+                    case "skip_download":
+                        episode_no = context["episode_no"]
+                        description = f"{_shorten(self.episode_titles[episode_no])} skipped"
+                    case "download_failed":
+                        episode_no = context["episode_no"]
+                        episode_title = self.episode_titles[episode_no]
+                        description = f"{_shorten(episode_title)} download failed"
+                        if context["warning"]:
+                            logger.warning(f"Failed to download: {episode_no + 1}. {episode_title}")
+                    case "downloading_image":
+                        episode_no = context["episode_no"]
+                        episode_title = self.episode_titles[episode_no]
+                        description = f"{_shorten(episode_title)} download failed"
+                    case "download_completed":
+                        episode_no = context["episode_no"]
+                        episode_title = self.episode_titles[episode_no]
+                        description = f"{_shorten(episode_title)} download completed"
+
+                if not self._progress_indication(description):
+                    logger.info(description)
             case "description":
                 logger.info(context["description"])
             case "episode_download_complete":
@@ -685,7 +702,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
                     case "skip":
-                        self.callback("indicate", description=f"{_shorten(episode_title)} skipped")
+                        self.callback("download_skipped", episode_no=episode_no)
                         return True
                     case "raise":
                         raise FileExistsError(
@@ -703,37 +720,36 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             episode_images_url = self.get_episode_image_urls(episode_no)
 
             if not episode_images_url:
-                logger.warning(f"Failed to download: {episode_no + 1}. {episode_title}")
-                self.callback("indicate", description=f"{_shorten(episode_title)} download failed")
+                self.callback("download_failed", episode_no=episode_no, warning=True)
                 if not os.listdir(episode_directory):
                     episode_directory.rmdir()
                 return False
 
             if check_integrity:
                 if not self._check_directory_integrity(episode_directory, episode_images_url):
-                    self.callback("indicate", description=f"{_shorten(episode_title)} skipped after integrity check")
+                    self.callback("download_skipped", episode_no=episode_no, intact=True)
                     return True
 
                 shutil.rmtree(episode_directory)
                 episode_directory.mkdir()
 
-            self.callback("indicate", description=f"downloading {_shorten(episode_title)}")
+            self.callback("downloading_image", episode_no=episode_no)
         except BaseException:
             if not os.listdir(episode_directory):
                 episode_directory.rmdir()
             raise
 
         try:
-            await asyncio.gather(
-                *(
-                    self._download_image(episode_directory, element, i, client)
-                    for i, element in enumerate(episode_images_url)
-                )
+            tasks = (
+                self._download_image(episode_directory, element, i, client)
+                for i, element in enumerate(episode_images_url)
             )
-        except BaseException:  # KeyboardInterrupt 등 원초적 오류들도 잡아야 해서 필요.
+            await asyncio.gather(*tasks)
+        except BaseException:
             shutil.rmtree(episode_directory)
             raise
 
+        self.callback("download_completed", episode_no=episode_no)
         return True
 
     async def _download_image(
@@ -803,3 +819,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         Otherwise this function will smash slashes and backslashes.
         """
         return pf.convert(html.unescape(file_or_directory_name))
+
+    def _progress_indication(self, message: str, fallback: bool = True) -> bool:
+        if self.use_tqdm_while_download:
+            with suppress(AttributeError):
+                self.pbar.set_description(message)
+                return True
+        return False
