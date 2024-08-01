@@ -1,4 +1,7 @@
-"""This module provides FolderMerger class."""
+"""웹툰 디렉토리를 에피소드별로 묶거나 푸는 기능을 하는 모듈입니다.
+
+또한 웹툰 디렉토리의 상태를 파악하는 코드들도 같이 존재합니다.
+"""
 
 from __future__ import annotations
 
