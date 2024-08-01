@@ -24,64 +24,11 @@ from WebtoonScraper.processing.directory_merger import (
     merge_webtoon,
     select_from_directory,
 )
-from WebtoonScraper.base import WebtoonId, logger
+from WebtoonScraper.base import logger
 from WebtoonScraper.scrapers import CommentsDownloadOption, EpisodeRange
 
 # currently Lezhin uses only lowercase alphabet, numbers, and underscore. Uppercase alphabet and dash are added for just in case.
 ACCEPTABLE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
-
-
-def _to_webtoon_id(webtoon_id: str) -> WebtoonId:
-    """CLI로 입력된 문자열 webtoon ID를 실재하는 타입이 있는 webtoon ID로 변경합니다.
-
-    Arguments:
-        webtoon_id: 실재하는 webtoon ID로 변경할 문자열입니다.
-
-    Raises:
-        ValueError: webtoon ID로 해석될 수 없는 문자열이 webtoon_id를 통해 전달되었을 때 발현합니다.
-
-    Returns:
-        WebtoonId 타입을 리턴합니다.
-    """
-
-    # URL인 경우
-    if "." in webtoon_id:
-        return webtoon_id
-
-    if webtoon_id.isdigit():
-        # all others
-        return int(webtoon_id)
-    if all(char in ACCEPTABLE_CHARS for char in webtoon_id):
-        # Lezhin
-        return webtoon_id
-    if "," not in webtoon_id:
-        raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
-
-    match_result = re.match(
-        r""" *[(]? *(?P<id1>['"]?.+?['"]?) *, *(?P<id2>['"]?.+?['"]?) *[)]? *$""",
-        webtoon_id,
-    )
-    if not match_result:
-        raise ValueError(f"Failed to interpret webtoon ID: `{webtoon_id}`")
-
-    id1 = match_result["id1"]
-    id2 = match_result["id2"]
-
-    if id1.isdigit() and id2.isdigit():
-        # 네이버 포스트
-        return int(id1), int(id2)
-    elif id2.isdigit():
-        # 네이버 블로그
-        return id1, int(id2)
-
-    # quote 제거
-    if id1[0] == id1[-1] == "'" or id1[0] == id1[-1] == '"':
-        id1 = id1[1:-1]
-    elif id2[0] == id2[-1] == "'" or id2[0] == id2[-1] == '"':
-        id2 = id2[1:-1]
-
-    # 티스토리
-    return id1, id2
 
 
 class LazyVersionAction(argparse._VersionAction):
@@ -177,7 +124,6 @@ download_subparser = subparsers.add_parser("download", help="Download webtoons."
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
     "webtoon_ids",
-    type=_to_webtoon_id,
     metavar="webtoon_ids",
     help="Webtoon ID or URL.",
     nargs="+",
@@ -344,14 +290,6 @@ def parse_download(args: argparse.Namespace) -> None:
     args.platform = webtoon.SHORT_NAMES.get(args.platform, args.platform)
 
     for webtoon_id in args.webtoon_ids:
-        # 만약 다른 타입의 튜플인데 NAVER_BLOG라면 자동으로 (str, int)로 변환한다.
-        if args.platform == webtoon.NAVER_BLOG and isinstance(webtoon_id[0], int):
-            webtoon_id = str(webtoon_id[0]), int(webtoon_id[1])
-
-        # 만약 다른 타입의 튜플인데 TISTORY라면 자동으로 (str, str)로 변환한다.
-        if args.platform == webtoon.TISTORY and isinstance(webtoon_id[0], int):
-            webtoon_id = str(webtoon_id[0]), str(webtoon_id[1])
-
         if args.comments is None:
             # 사용자가 -c 옵션을 넘기지 않았다면 옵션을 None으로 둠.
             comment_download_option = None

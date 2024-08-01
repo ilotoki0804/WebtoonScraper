@@ -74,19 +74,19 @@ PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
 }
 
 
-def instantiate(webtoon_platform: str | WebtoonPlatforms, webtoon_id: WebtoonId) -> Scraper:
+def instantiate(webtoon_platform: str | WebtoonPlatforms, webtoon_id: str) -> Scraper:
     """웹툰 플랫폼 코드와 웹툰 ID로부터 스크레퍼를 인스턴스화하여 반환합니다. cookie, bearer 등의 추가적인 설정이 필요할 수도 있습니다."""
 
     Scraper: type[Scraper] | None = PLATFORMS.get(webtoon_platform.lower())  # type: ignore
     if Scraper is None:
         raise ValueError(f"Invalid webtoon platform: {webtoon_platform}")
-    return Scraper(webtoon_id)
+    return Scraper._from_string(webtoon_id)
 
 
 def instantiate_from_url(webtoon_url: str) -> Scraper:
     """웹툰 URL로부터 자동으로 알맞은 스크래퍼를 인스턴스화합니다. cookie, bearer 등의 추가적인 설정이 필요할 수 있습니다."""
 
-    for platform_name, PlatformClass in PLATFORMS.items():
+    for PlatformClass in PLATFORMS.values():
         try:
             platform = PlatformClass.from_url(webtoon_url)
         except InvalidURLError:
@@ -143,7 +143,7 @@ def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
 
 
 def setup_instance(
-    webtoon_id_or_url: WebtoonId,
+    webtoon_id_or_url: str,
     webtoon_platform: WebtoonPlatforms | Literal["url"],
     *,
     cookie: str | None = None,
@@ -155,14 +155,10 @@ def setup_instance(
     """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
 
     # 스크래퍼 불러오기
-    if isinstance(webtoon_id_or_url, str) and (webtoon_platform == "url" or "." in webtoon_id_or_url):  # URL인지 확인
+    if webtoon_platform == "url" or "." in webtoon_id_or_url:  # URL인지 확인
         scraper = instantiate_from_url(webtoon_id_or_url)
-    elif webtoon_platform == "url":
-        raise TypeError(f"{type(webtoon_id_or_url).__name__!r} is not valid type of URL.")
-    elif webtoon_platform:
-        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
     else:
-        raise InvalidPlatformError(f"Unknown platform: {webtoon_platform}")
+        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
 
     # 부가 정보 불러오기
     if cookie:
