@@ -1,21 +1,13 @@
+"""WebtoonScraper의 기본 정보들을 모아놓은 모듈입니다. circular import를 피하기 위해 필요합니다."""
+
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, TypeAlias
-
 from rich.logging import RichHandler
 
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version_info__ = (4, 0, 0, "a", 1)
 __version__ = str.join(".", map(str, __version_info__[:3])) + "".join(map(str, __version_info__[3:]))
-
-if TYPE_CHECKING:
-    from .scrapers import NaverBlogWebtoonId as _NaverBlogWebtoonId
-    from .scrapers import NaverPostWebtoonId as _NaverPostWebtoonId
-
-WebtoonId: TypeAlias = (
-    "int | str | tuple[int, int] | tuple[str, int] | tuple[str, str] | _NaverPostWebtoonId | _NaverBlogWebtoonId"
-)
 
 logger = logging.getLogger("webtoonscraper_logger")
 logger.handlers = [RichHandler(show_time=False, show_path=False)]

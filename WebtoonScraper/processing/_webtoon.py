@@ -6,7 +6,7 @@ from multiprocessing import pool
 from pathlib import Path
 from typing import Literal
 
-from ..base import WebtoonId, logger
+from ..base import logger
 from ..exceptions import InvalidPlatformError, InvalidURLError
 from ..scrapers import (
     BufftoonScraper,
@@ -107,7 +107,7 @@ def check_platform(webtoon_id, platform_name: WebtoonPlatforms) -> tuple[Webtoon
     )
 
 
-def get_webtoon_platform(webtoon_id: WebtoonId) -> WebtoonPlatforms | None:
+def get_webtoon_platform(webtoon_id) -> WebtoonPlatforms | None:
     """웹툰 ID를 추측합니다.
 
     Threading을 활용해 빠르게 모든 플랫폼의 결과를 확인합니다.
