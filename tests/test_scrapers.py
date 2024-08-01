@@ -15,7 +15,7 @@ def test_from_string():
     scraper = NaverPostScraper._from_string("235,235")
     assert scraper.webtoon_id == (235, 235)
 
-    scraper = NaverPostScraper._from_string("235, 235")
+    scraper = NaverPostScraper._from_string("  235 ,   235  ")
     assert scraper.webtoon_id == (235, 235)
 
     with pytest.raises(Exception):
@@ -43,6 +43,9 @@ def test_from_string():
     scraper = NaverBlogScraper._from_string("blog_id,1234")
     assert scraper.webtoon_id == ("blog_id", 1234)
 
+    scraper = NaverBlogScraper._from_string("  blog_id    , 1234  ")
+    assert scraper.webtoon_id == ("blog_id", 1234)
+
     with pytest.raises(Exception):
         NaverBlogScraper._from_string("unknown")
 
@@ -57,7 +60,7 @@ def test_from_string():
 
     # TistoryScraper
 
-    scraper = TistoryScraper._from_string("blog_id,category")
+    scraper = TistoryScraper._from_string("  blog_id  ,    category  ")
     assert scraper.webtoon_id == ("blog_id", "category")
 
     with pytest.raises(Exception):
