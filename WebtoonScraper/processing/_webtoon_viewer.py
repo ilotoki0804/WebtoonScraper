@@ -364,48 +364,6 @@ HTML_TEMPLATE = """\
 </html>\
 """
 
-T = TypeVar("T")
-
-
-def _select_from_sequence(choices: Sequence[T], message: str | None) -> T:
-    """사용자에게 여러 개의 선택지를 보여주고 결정할 수 있도록 하는 CLI용 선택 시 사용할 수 있는 툴입니다.
-
-    Arguments:
-        choices: 사용자가 고를 수 있는 선택지입니다. Sequence여야 제대로 동작합니다.
-        message: 선택지들을 보여주기 전 사용자에게 어떤 선택지를 골라야 하는지 설명합니다.
-
-    Returns:
-        choices 중 사용자가 고른 선택지의 값을 반환합니다.
-
-    Raises:
-        TypeError: choices가 Sequence가 아닌 경우 발생합니다.
-        ValueError: 사용자의 입력이 올바르지 않은 경우 발생합니다.
-        IndexError: 사용자가 범위를 벗어나는 선택을 했을 때 발생합니다.
-
-    Example:
-        ```python
-        >>> user_choice = _select_from_sequence(["첫번째", "두번째", "세번째"], "웹툰을 선택하세요.")
-        웹툰을 선택하세요.
-        1. 첫번째
-        2. 두번째
-        3. 세번째
-        Enter number: 2
-        >>> print(user_choice)
-        두번째
-        ```
-    """
-    if message is not None:
-        print(message)
-    if len(choices) < 10:
-        for i, item in enumerate(choices, 1):
-            print(f"{i}. {item}")
-    else:
-        for i, item in enumerate(choices, 1):
-            print(f"{i:02d}. {item}")
-
-    user_answer = int(input("Enter number: "))
-    return choices[user_answer - 1]
-
 
 def add_viewer(webtoon_directory: Path) -> None:
     """웹툰 디렉토리에 사용할 수 있는 `webtoon.html`이라는 웹툰 뷰어를 추가합니다.
