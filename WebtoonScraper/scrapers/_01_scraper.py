@@ -696,6 +696,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         episode_directory = webtoon_directory / directory_name
 
         if episode_directory.is_file():
+            if self.existing_episode_policy == "skip":
+                self.callback("download_skipped", episode_no=episode_no, file=True)
+                return True
             raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
 
         try:
