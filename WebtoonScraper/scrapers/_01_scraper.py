@@ -36,7 +36,7 @@ import hxsoup
 import pyfilename as pf
 from tqdm import tqdm
 
-from ..processing import BatchMode, add_html_webtoon_viewer, concat_webtoon
+from ..processing import BatchMode, add_viewer as add_viewer_, concat_webtoon
 from ..processing.directory_merger import (
     DIRECTORY_PATTERNS,
     NORMAL_IMAGE,
@@ -470,7 +470,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # webtoon.html 추가
         if add_viewer:
-            add_html_webtoon_viewer(webtoon_directory)
+            add_viewer_(webtoon_directory)
 
     def check_webtoon_id(
         self,

@@ -407,7 +407,7 @@ def _select_from_sequence(choices: Sequence[T], message: str | None) -> T:
     return choices[user_answer - 1]
 
 
-def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
+def add_viewer(webtoon_directory: Path) -> None:
     """웹툰 디렉토리에 사용할 수 있는 `webtoon.html`이라는 웹툰 뷰어를 추가합니다.
 
     Arguments:
@@ -420,8 +420,8 @@ def add_html_webtoon_viewer(webtoon_directory: Path) -> None:
     Example:
         ```python
         >>> from pathlib import Path
-        >>> from WebtoonScraper.webtoon_viewer import add_html_webtoon_viewer
-        >>> add_html_webtoon_viewer(Path("./webtoon/웹툰 이름(1234567)"))
+        >>> from WebtoonScraper.webtoon_viewer import add_viewer
+        >>> add_viewer(Path("./webtoon/웹툰 이름(1234567)"))
         ```
     """
 
