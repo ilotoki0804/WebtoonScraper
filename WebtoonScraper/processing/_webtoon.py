@@ -147,7 +147,7 @@ def setup_instance(
     webtoon_platform: WebtoonPlatforms | Literal["url"],
     *,
     cookie: str | None = None,
-    download_directory: str | Path = "webtoon",
+    download_directory: str | Path | None = None,
     options: dict[str, str] | None = None,
     comments_option: CommentsDownloadOption | None = None,
 ) -> Scraper:
@@ -166,7 +166,8 @@ def setup_instance(
         scraper._apply_options(options)
 
     # attribute 형식 설정 설정
+    if download_directory:
+        scraper.base_directory = download_directory
     scraper.comments_option = comments_option
-    scraper.base_directory = download_directory
 
     return scraper

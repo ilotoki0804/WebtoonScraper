@@ -277,7 +277,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         )
 
         self.webtoon_id = webtoon_id
-        self.base_directory = "webtoon"
+        self.base_directory = Path.cwd()
         self.use_tqdm_while_download = True
         self.does_store_information = True
         self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP

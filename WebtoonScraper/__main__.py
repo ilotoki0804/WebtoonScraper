@@ -159,12 +159,11 @@ download_subparser.add_argument(
     help="Episode number range you want to download.",
 )
 download_subparser.add_argument(
-    "-d",
-    "--download-directory",
+    "-b",
+    "--base-directory",
     type=Path,
-    metavar="directory",
-    default="webtoon",
-    help="The directory you want to download to.",
+    default=Path.cwd(),
+    help="Where 'webtoon directory' is stored",
 )
 download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes.")
 download_subparser.add_argument(
