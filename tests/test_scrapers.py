@@ -2,13 +2,13 @@ import pytest
 from WebtoonScraper.scrapers import *
 
 def test_from_string():
-    # NaverWebtoonScraper and other scrapers that have integer for webtoon ID
+    # NaverWebtoonSpecificScraper and other scrapers that have integer for webtoon ID
 
-    scraper = NaverWebtoonScraper._from_string("432096")
+    scraper = NaverWebtoonSpecificScraper._from_string("432096")
     assert scraper.webtoon_id == 432096
 
     with pytest.raises(Exception):
-        NaverWebtoonScraper._from_string("unknown")
+        NaverWebtoonSpecificScraper._from_string("unknown")
 
     # NaverPostScraper
 
