@@ -455,7 +455,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             else:
                 old_information = {}
 
-            information = self.get_information(old_information)
+            information = self._get_information(old_information)
             information.update(
                 thumbnail_name=thumbnail_name,
                 information_name="information.json",
@@ -487,7 +487,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             )
         Console().print(table)
 
-    def check_if_legitimate_webtoon_id(
+    def check_webtoon_id(
         self,
         exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
     ) -> str | None:
@@ -534,35 +534,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 else:
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
-    def get_information(self, old_information: dict):
-        """`information.json`에 탑재할 정보를 추가합니다.
-
-        이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼에 한정적인 정보를 추가할 수 있습니다.
-        None일 경우에는 1) dict일 경우 update가 사용됩니다. 2) 정보가 존재하지 않을 경우 오류가 나지 않고 스킵됩니다.
-        """
-        information = {}
-        for name, value in self.INFORMATION_VARS.items():
-            if value is None:
-                _ABSENT = object()
-                value = getattr(self, name, _ABSENT)
-                old_value = old_information.get(name, _ABSENT)
-                if value is _ABSENT:
-                    if old_value is not _ABSENT:
-                        continue
-                    raise ValueError(f"{self}.{name} does not exist.")
-                if isinstance(value, Mapping):
-                    value = dict(value)
-                    if old_value is not _ABSENT:
-                        value.update(old_value)
-                information[name] = value
-            elif isinstance(value, str):
-                information[name] = getattr(self, value)
-            elif callable(value):
-                information[name] = value(self, name)
-            else:
-                raise ValueError(f"Unexpected information value: {value!r}")
-        return information
-
     # MARK: PROPERTIES
 
     @property
@@ -606,6 +577,35 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.headers.update(value)
 
     # MARK: PRIVATE METHODS
+
+    def _get_information(self, old_information: dict):
+        """`information.json`에 탑재할 정보를 추가합니다.
+
+        이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼에 한정적인 정보를 추가할 수 있습니다.
+        None일 경우에는 1) dict일 경우 update가 사용됩니다. 2) 정보가 존재하지 않을 경우 오류가 나지 않고 스킵됩니다.
+        """
+        information = {}
+        for name, value in self.INFORMATION_VARS.items():
+            if value is None:
+                _ABSENT = object()
+                value = getattr(self, name, _ABSENT)
+                old_value = old_information.get(name, _ABSENT)
+                if value is _ABSENT:
+                    if old_value is not _ABSENT:
+                        continue
+                    raise ValueError(f"{self}.{name} does not exist.")
+                if isinstance(value, Mapping):
+                    value = dict(value)
+                    if old_value is not _ABSENT:
+                        value.update(old_value)
+                information[name] = value
+            elif isinstance(value, str):
+                information[name] = getattr(self, value)
+            elif callable(value):
+                information[name] = value(self, name)
+            else:
+                raise ValueError(f"Unexpected information value: {value!r}")
+        return information
 
     @staticmethod
     def _check_webtoon_id_type(webtoon_id) -> TypeGuard[WebtoonId]:
