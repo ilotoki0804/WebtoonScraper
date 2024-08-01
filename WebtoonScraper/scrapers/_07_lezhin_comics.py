@@ -108,7 +108,7 @@ class LezhinComicsScraper(Scraper[str]):
             self.fetch_user_information(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
-        directory_name = self._get_safe_file_name(f"{self.title}({self.webtoon_id}")
+        directory_name = self._safe_name(f"{self.title}({self.webtoon_id}")
         if self.is_shuffled:
             directory_name += ", shuffled"
 

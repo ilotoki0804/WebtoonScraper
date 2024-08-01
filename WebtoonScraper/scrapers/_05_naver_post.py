@@ -111,7 +111,7 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
 
     def get_webtoon_directory_name(self) -> str:
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
-        return self._get_safe_file_name(f"{self.title}{tuple(self.webtoon_id)}")
+        return self._safe_name(f"{self.title}{tuple(self.webtoon_id)}")
 
     @classmethod
     def _from_string(cls, string: str, /, **kwargs):

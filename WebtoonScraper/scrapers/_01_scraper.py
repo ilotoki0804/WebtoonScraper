@@ -320,7 +320,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다."""
-        return self._get_safe_file_name(f"{self.title}({self.webtoon_id})")
+        return self._safe_name(f"{self.title}({self.webtoon_id})")
 
     def fetch_all(self, reload: bool = False) -> None:
         """웹툰 다운로드에 필요한 모든 필수적인 정보를 불러옵니다."""
@@ -692,7 +692,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         주의: 이 함수의 episode_no는 0부터 시작합니다.
         """
         episode_title = self.episode_titles[episode_no]
-        directory_name = self._get_safe_file_name(f"{episode_no + 1:04d}. {episode_title}")
+        directory_name = self._safe_name(f"{episode_no + 1:04d}. {episode_title}")
         episode_directory = webtoon_directory / directory_name
 
         if episode_directory.is_file():
@@ -789,7 +789,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """
         file_extension = file_extension or self._get_file_extension(self.webtoon_thumbnail_url)
         image_raw = self.hxoptions.get(self.webtoon_thumbnail_url).content
-        thumbnail_name = self._get_safe_file_name(f"{self.title}.{file_extension}")
+        thumbnail_name = self._safe_name(f"{self.title}.{file_extension}")
         (webtoon_directory / thumbnail_name).write_bytes(image_raw)
         return thumbnail_name
 
@@ -815,13 +815,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         raise ValueError(f"The file extension is not detected: `{filename_or_url}`")
 
     @staticmethod
-    def _get_safe_file_name(file_or_directory_name: str) -> str:
-        """Convert file or directory "name" to acceptable name.
+    def _safe_name(name: str) -> str:
+        """일반 문자열을 파일명으로 사용 가능한 문자열로 변경합니다.
 
         Caution: Do NOT put a directory path(e.g. webtoon/ep1/001.jpg) here.
         Otherwise this function will smash slashes and backslashes.
         """
-        return pf.convert(html.unescape(file_or_directory_name))
+        return pf.convert(html.unescape(name))
 
     def _progress_indication(self, message: str, fallback: bool = True) -> bool:
         if self.use_tqdm_while_download:

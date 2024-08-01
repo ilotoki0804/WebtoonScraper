@@ -29,7 +29,7 @@ class TistoryScraper(Scraper[tuple[str, str]]):
         blog_id, category_no = self.webtoon_id
 
         # 만약 이 코드를 수정할 것이라면 NaverBlogScraper에 있는 정보 참고.
-        return self._get_safe_file_name(f"{self.title}({blog_id})")
+        return self._safe_name(f"{self.title}({blog_id})")
 
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False) -> None:
