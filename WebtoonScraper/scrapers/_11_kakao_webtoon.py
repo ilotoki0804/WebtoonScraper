@@ -260,7 +260,7 @@ class KakaoWebtoonScraper(Scraper[int]):
         except Exception as e:
             raise InvalidURLError.from_url(url, cls) from e
 
-        self = cls(webtoon_id, cookie)
+        self = cls(webtoon_id, cookie=cookie)
         self.webtoon_seo_id = parse.unquote(seo_id)
         return self
 

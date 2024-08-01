@@ -399,7 +399,7 @@ def parse_concat(args: argparse.Namespace) -> None:
     assert concatenated_webtoon_directory is not None
 
     if args.merge_number:
-        print(f"merging {concatenated_webtoon_directory}...")
+        logger.info(f"merging {concatenated_webtoon_directory}...")
         merge_webtoon(
             concatenated_webtoon_directory,
             None,
