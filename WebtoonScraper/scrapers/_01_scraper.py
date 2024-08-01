@@ -568,7 +568,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """webtoon_id가 int가 아니라면 반드시 구현해야 합니다."""
         return cls(int(string), **kwargs)  # type: ignore
 
-    def _options(self, options: dict[str, str], /) -> None:
+    def _apply_options(self, options: dict[str, str], /) -> None:
         if options:
             raise ValueError("This scraper does not accept any options.")
 

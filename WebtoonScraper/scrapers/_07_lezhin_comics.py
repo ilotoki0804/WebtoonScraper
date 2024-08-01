@@ -296,7 +296,7 @@ class LezhinComicsScraper(Scraper[str]):
     def _from_string(cls, string: str, /, **kwargs):
         return cls(string, **kwargs)
 
-    def _options(self, options: dict[str, str], /) -> None:
+    def _apply_options(self, options: dict[str, str], /) -> None:
         def convert_to_boolean(raw_value):
             """boolean으로 변경합니다.
 

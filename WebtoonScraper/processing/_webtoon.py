@@ -163,7 +163,7 @@ def setup_instance(
     if cookie:
         scraper.cookie = cookie
     if options:
-        scraper._options(options)
+        scraper._apply_options(options)
 
     # attribute 형식 설정 설정
     scraper.comments_option = comments_option
