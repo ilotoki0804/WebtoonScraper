@@ -296,6 +296,38 @@ class LezhinComicsScraper(Scraper[str]):
     def _from_string(cls, string: str, /, **kwargs):
         return cls(string, **kwargs)
 
+    def _options(self, options: dict[str, str], /) -> None:
+        def convert_to_boolean(raw_value):
+            """boolean으로 변경합니다.
+
+            `true`나 `false`면 각각 True와 False로 처리하고,
+            정수라면 0이면 False, 나머지는 True로 처리합니다.
+
+            그 외의 값은 ValueError를 일으킵니다.
+            """
+            if raw_value.lower() == "true":
+                value = True
+            elif raw_value.lower() == "false":
+                value = False
+            else:
+                try:
+                    value = bool(int(raw_value))
+                except ValueError:
+                    raise ValueError(f"Invalid value for boolean: {raw_value}") from None
+            return value
+
+        for option, raw_value in options.items():
+            if option.upper() == "UNSHUFFLE":
+                self.do_not_unshuffle = not convert_to_boolean(raw_value)
+            elif option.upper() == "DELETE_SHUFFLED":
+                self.delete_shuffled_file = convert_to_boolean(raw_value)
+            elif option.upper() == "DOWNLOAD_PAID":
+                self.get_paid_episode = convert_to_boolean(raw_value)
+            elif option.upper() == "BEARER":
+                self.bearer = raw_value
+            else:
+                raise ValueError(f"Invalid option {option!r}: {raw_value!r}")
+
     @staticmethod
     def _check_webtoon_id_type(webtoon_id) -> TypeGuard[str]:
         return isinstance(webtoon_id, str)

@@ -147,9 +147,8 @@ def setup_instance(
     webtoon_platform: WebtoonPlatforms | Literal["url"],
     *,
     cookie: str | None = None,
-    bearer: str | None = None,
     download_directory: str | Path = "webtoon",
-    get_paid_episode: bool = False,
+    options: dict[str, str] | None = None,
     comments_option: CommentsDownloadOption | None = None,
 ) -> Scraper:
     """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
@@ -163,10 +162,8 @@ def setup_instance(
     # 부가 정보 불러오기
     if cookie:
         scraper.cookie = cookie
-    if bearer and isinstance(scraper, LezhinComicsScraper):
-        scraper.bearer = bearer
-    if get_paid_episode and isinstance(scraper, LezhinComicsScraper):
-        scraper.get_paid_episode = get_paid_episode
+    if options:
+        scraper._options(options)
 
     # attribute 형식 설정 설정
     scraper.comments_option = comments_option

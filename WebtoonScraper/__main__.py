@@ -155,12 +155,6 @@ download_subparser.add_argument(
     help="Set cookie when you download Bufftoon.",
 )
 download_subparser.add_argument(
-    "--bearer",
-    type=str,
-    metavar="bearer",
-    help="Set bearer when you download Lezhin.",
-)
-download_subparser.add_argument(
     "-r",
     "--range",
     type=lambda episode_range: EpisodeRange.from_string(episode_range, inclusive=True),
@@ -177,9 +171,10 @@ download_subparser.add_argument(
 )
 download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes.")
 download_subparser.add_argument(
-    "--get-paid-episode",
-    action="store_true",
-    help="Get paid episode. Lezhin Comics only.",
+    "--options",
+    type=lambda option: option.split("="),
+    nargs="+",
+    help="Additional options for scraper.",
 )
 download_subparser.add_argument(
     "-c",
@@ -320,9 +315,8 @@ def parse_download(args: argparse.Namespace) -> None:
             webtoon_id,
             args.platform,
             cookie=args.cookie,
-            bearer=args.bearer,
             download_directory=args.download_directory,
-            get_paid_episode=args.get_paid_episode,
+            options=dict(args.options or {}),
             comments_option=comment_download_option,
         )
 
