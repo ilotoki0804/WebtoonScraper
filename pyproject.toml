@@ -55,6 +55,7 @@ black = { extras = ["full"], version = "^24.2.0" }
 ruff = "^0.3.5"
 simplebuilder = "^0.3.0"
 pytest = "^8.3.2"
+furl = "^2.1.3"
 
 [tool.poetry.extras]
 naver_post = ["demjson3"]
