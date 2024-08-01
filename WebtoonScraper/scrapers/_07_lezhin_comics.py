@@ -89,9 +89,9 @@ class LezhinComicsScraper(Scraper[str]):
         if self.bearer is not None and bearer and not bearer.startswith("Bearer"):
             raise InvalidAuthenticationError("Invalid bearer. Please type valid bearer.")
 
-        self.do_not_unshuffle: bool = False
-        self.delete_shuffled_file: bool = False
-        self.get_paid_episode: bool = False
+        self.unshuffle: bool = True
+        self.delete_shuffled: bool = False
+        self.download_paid_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
 
     async def async_download_webtoon(self, *args, **kwargs):
@@ -318,11 +318,11 @@ class LezhinComicsScraper(Scraper[str]):
 
         for option, raw_value in options.items():
             if option.upper() == "UNSHUFFLE":
-                self.do_not_unshuffle = not convert_to_boolean(raw_value)
+                self.unshuffle = convert_to_boolean(raw_value)
             elif option.upper() == "DELETE_SHUFFLED":
-                self.delete_shuffled_file = convert_to_boolean(raw_value)
+                self.delete_shuffled = convert_to_boolean(raw_value)
             elif option.upper() == "DOWNLOAD_PAID":
-                self.get_paid_episode = convert_to_boolean(raw_value)
+                self.download_paid_episode = convert_to_boolean(raw_value)
             elif option.upper() == "BEARER":
                 self.bearer = raw_value
             else:
@@ -342,7 +342,7 @@ class LezhinComicsScraper(Scraper[str]):
         get_paid_episode: bool | None = None,
         get_unusable_episode: bool = False,
     ) -> None:
-        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.get_paid_episode
+        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.download_paid_episode
         episode_int_ids: list[int] = []
         episode_str_ids: list[str] = []
         episode_titles: list[str] = []
@@ -413,10 +413,10 @@ class LezhinComicsScraper(Scraper[str]):
 
         self._unshuffled_webtoon_directory: Path | None
 
-        if not self.is_shuffled or self.do_not_unshuffle:
+        if not self.is_shuffled or not self.unshuffle:
             if self.is_shuffled:
                 logger.warning(
-                    "This webtoon is shuffled, but because self.do_not_unshuffle is set to True, webtoon won't be shuffled."
+                    "This webtoon is shuffled, but because self.unshuffle is set to True, webtoon won't be shuffled."
                 )
 
             self._webtoon_directory = base_webtoon_directory
@@ -427,7 +427,7 @@ class LezhinComicsScraper(Scraper[str]):
         target_webtoon_directory = unshuffle_typical_webtoon(
             base_webtoon_directory, self.episode_int_ids, use_tqdm=self.use_tqdm_while_download
         )
-        if self.delete_shuffled_file:
+        if self.delete_shuffled:
             shutil.rmtree(base_webtoon_directory)
             logger.info("Shuffled webtoon directory is deleted.")
 
