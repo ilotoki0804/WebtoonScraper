@@ -27,9 +27,6 @@ from WebtoonScraper.processing.directory_merger import (
 from WebtoonScraper.base import logger
 from WebtoonScraper.scrapers import CommentsDownloadOption, EpisodeRange
 
-# currently Lezhin uses only lowercase alphabet, numbers, and underscore. Uppercase alphabet and dash are added for just in case.
-ACCEPTABLE_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
-
 
 class LazyVersionAction(argparse._VersionAction):
     version: Callable[[], str] | str | None
