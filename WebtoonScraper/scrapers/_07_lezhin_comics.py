@@ -371,7 +371,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
 
-    def _set_directory_to_merge(self, base_webtoon_directory: Path) -> Path:
+    def _post_process_directory(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
         from ..processing._lezhin_unshuffler import unshuffle_typical_webtoon
 

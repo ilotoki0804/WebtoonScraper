@@ -666,7 +666,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         is_download_successful=is_download_successful,
                     )
 
-    def _set_directory_to_merge(self, webtoon_directory: Path) -> Path:
+    def _post_process_directory(self, webtoon_directory: Path) -> Path:
         """모아서 보기나 information.json, webtoon.html 등이 위치할 디렉토리를 재안내합니다.
 
         레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
