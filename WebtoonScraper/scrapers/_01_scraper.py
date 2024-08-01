@@ -15,7 +15,6 @@ from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
 from contextlib import contextmanager, suppress
-from enum import Enum
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -24,6 +23,7 @@ from typing import (
     ClassVar,
     Generic,
     Iterable,
+    Literal,
     NamedTuple,
     Sequence,
     TypedDict,
@@ -221,22 +221,6 @@ def _shorten(text: str):
     return f"'{shortened}'"
 
 
-class ExistingEpisodePolicy(Enum):
-    """다운로드받을 에피소드와 이름이 같은 폴더가 존재할 때의 처리 방식을 결정합니다."""
-
-    SKIP = "skip"
-    """폴더가 이미 존재한다면 스킵합니다(기본값)."""
-
-    HARD_CHECK = "hard_check"
-    """해당 에피소드의 이미지 개수가 일치하지 않을 때 다시 다운로드받습니다."""
-
-    INTERRUPT = "interrupt"
-    """폴처가 이미 존재한다면 예외를 발생시킵니다."""
-
-    DOWNLOAD_AGAIN = "download_again"
-    """항상 해당 폴더를 지우고 다시 다운로드합니다."""
-
-
 class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     """Abstract base class of all scrapers.
 
@@ -280,7 +264,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.base_directory = Path.cwd()
         self.use_tqdm_while_download = True
         self.does_store_information = True
-        self.existing_episode_policy: ExistingEpisodePolicy = ExistingEpisodePolicy.SKIP
+        self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self._end_downloading_when_error_occurred = False
         self.comments_option: CommentsDownloadOption | None = None
         self.comments_data: defaultdict[int, EpisodeComments] = defaultdict(dict)  # type: ignore
@@ -700,16 +684,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
-                    case ExistingEpisodePolicy.SKIP:
+                    case "skip":
                         self.callback("indicate", description=f"{_shorten(episode_title)} skipped")
                         return True
-                    case ExistingEpisodePolicy.INTERRUPT:
+                    case "raise":
                         raise FileExistsError(
                             f"Directory at {episode_directory} already exists. Please delete the directory."
                         )
-                    case ExistingEpisodePolicy.DOWNLOAD_AGAIN:
+                    case "download_again":
                         check_integrity = False
-                    case ExistingEpisodePolicy.HARD_CHECK:
+                    case "hard_check":
                         check_integrity = True
             else:
                 episode_directory.mkdir()
