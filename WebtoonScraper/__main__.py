@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from rich.console import Console
+from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__
@@ -388,7 +389,16 @@ def parse_download(args: argparse.Namespace) -> None:
         )
 
         if args.list_episodes:
-            scraper.list_episodes()
+            scraper.fetch_all()
+            table = Table(show_header=True, header_style="bold blue", box=None)
+            table.add_column("Episode number [dim](ID)[/dim]", width=12)
+            table.add_column("Episode Title", style="bold")
+            for i, (episode_id, episode_title) in enumerate(zip(scraper.episode_ids, scraper.episode_titles), 1):
+                table.add_row(
+                    f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
+                    str(episode_title),
+                )
+            Console().print(table)
             return
 
         scraper.download_webtoon(
