@@ -668,7 +668,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """
         return webtoon_directory
 
-    def _check_directory_integrity(
+    def _does_directory_intact(
         self,
         episode_directory: Path,
         image_urls: list,
@@ -679,11 +679,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
         """
 
-        does_filename_inappropriate = any(
-            not DIRECTORY_PATTERNS[NORMAL_IMAGE].match(file) for file in os.listdir(episode_directory)
+        directory_contents = os.listdir(episode_directory)
+        normal_image_regex = DIRECTORY_PATTERNS[NORMAL_IMAGE]
+        return len(image_urls) != len(directory_contents) and all(
+            normal_image_regex.match(file) for file in directory_contents
         )
-        does_file_count_inappropriate = len(image_urls) != len(os.listdir(episode_directory))
-        return does_filename_inappropriate or does_file_count_inappropriate
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path, client: hxsoup.AsyncClient) -> bool:
         """한 회차를 다운로드받습니다.
@@ -729,7 +729,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 return False
 
             if check_integrity:
-                if not self._check_directory_integrity(episode_directory, episode_images_url):
+                if self._does_directory_intact(episode_directory, episode_images_url):
                     self.callback("download_skipped", episode_no=episode_no, intact=True)
                     return True
 
