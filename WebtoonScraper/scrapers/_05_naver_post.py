@@ -120,15 +120,6 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
             raise ValueError(f"Invalid webtoon ID string (Naver Post): {string!r}")
         return cls((int(series_no.strip()), int(member_no.strip())), **kwargs)
 
-    @staticmethod
-    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[tuple[int, int]]:
-        return (
-            isinstance(webtoon_id, tuple)
-            and len(webtoon_id) == 2
-            and isinstance(webtoon_id[0], int)
-            and isinstance(webtoon_id[1], int)
-        )
-
     async def _download_episodes(self, episode_no_list, webtoon_directory) -> None:
         episode_no_list = list(episode_no_list)
         self.pbar = tqdm(total=len(episode_no_list))

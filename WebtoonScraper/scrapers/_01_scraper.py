@@ -248,11 +248,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     )
 
     def __init__(self, webtoon_id: WebtoonId, /) -> None:
-        if __debug__ and not self._check_webtoon_id_type(webtoon_id):
-            raise InvalidWebtoonIdError.from_webtoon_id(
-                webtoon_id, type(self), additional=" The type of webtoon_id is invalid."
-            )
-
         self.hxoptions = hxsoup.MutableClientOptions(
             attempts=3,
             timeout=10,
@@ -601,11 +596,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             else:
                 raise ValueError(f"Unexpected information value: {value!r}")
         return information
-
-    @staticmethod
-    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[WebtoonId]:
-        """주의: 만약 WebtoonId가 int가 아닐 경우 이 메소드를 반드시 구현해야 합니다. 아닐 경우 오류가 발생합니다."""
-        return isinstance(webtoon_id, int)
 
     @classmethod
     @abstractmethod

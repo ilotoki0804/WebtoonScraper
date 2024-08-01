@@ -81,54 +81,6 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
         return platform
     raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
 
-
-def check_platform(webtoon_id, platform_name: WebtoonPlatforms) -> tuple[WebtoonPlatforms, str | None]:
-    if not PLATFORMS[platform_name]._check_webtoon_id_type(webtoon_id):
-        return platform_name, None
-
-    logger.debug(f"Checking {platform_name}...")
-    scraper = instantiate(platform_name, webtoon_id)
-    return (
-        platform_name,
-        scraper.check_webtoon_id(),
-    )
-
-
-def get_webtoon_platform(webtoon_id) -> WebtoonPlatforms | None:
-    """웹툰 ID를 추측합니다.
-
-    Threading을 활용해 빠르게 모든 플랫폼의 결과를 확인합니다.
-    잘못된 타입을 입력할 경우 결과가 제대로 나오지 않을 수 있습니다.
-
-    Raises:
-        TypeError: WebtoonId에 해당하지 않는 타입이 webtoon_id 인자에 왔을 때 발생합니다.
-        ValueError: 사용자가 정수가 아닌 인덱스를 사용했을 때 발생합니다.
-        IndexError: 사용자가 범위를 벗어나는 선택을 했을 때 발생합니다.
-    """
-
-    # 테스트 실행
-    with pool.ThreadPool(len(PLATFORMS)) as p:
-        results_raw = p.starmap(check_platform, ((webtoon_id, platform) for platform in PLATFORMS))
-    results: list[tuple[WebtoonPlatforms, str | None]] = [(platform, title) for platform, title in results_raw if title is not None]
-
-    # 같은 웹툰 ID의 서로 다른 웹툰을 가지고 있는 플랫폼들의 개수에 따라 결과 결정
-    if not results:
-        return None
-    if len(results) == 1:
-        return results[0][0]
-
-    # 같은 웹툰 ID를 서로 다른 플랫폼에서 각자 가지고 있을 경우 사용자에게 질문해서 플랫폼 결정
-    for i, (platform, name) in enumerate(results, 1):
-        print(f"#{i} {platform}: {name}")
-
-    platform_no = input("Multiple webtoon is found. Please type number of webtoon you want to download: ")
-    platform_no = int(platform_no)
-
-    selected_platform, selected_webtoon = results[platform_no - 1]
-    logger.info(f"Webtoon {selected_webtoon} is selected.")
-    return selected_platform
-
-
 def setup_instance(
     webtoon_id_or_url: str,
     webtoon_platform: WebtoonPlatforms | Literal["url"],

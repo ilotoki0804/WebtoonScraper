@@ -328,10 +328,6 @@ class LezhinComicsScraper(Scraper[str]):
             else:
                 raise ValueError(f"Invalid option {option!r}: {raw_value!r}")
 
-    @staticmethod
-    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[str]:
-        return isinstance(webtoon_id, str)
-
     @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
         return matched_url.group("webtoon_id")

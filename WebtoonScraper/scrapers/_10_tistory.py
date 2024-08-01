@@ -96,12 +96,3 @@ class TistoryScraper(Scraper[tuple[str, str]]):
     @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, str]:
         return (matched_url.group("blog_id"), matched_url.group("category"))
-
-    @staticmethod
-    def _check_webtoon_id_type(webtoon_id) -> TypeGuard[tuple[str, str]]:
-        return (
-            isinstance(webtoon_id, tuple)
-            and len(webtoon_id) == 2
-            and isinstance(webtoon_id[0], str)
-            and isinstance(webtoon_id[1], str)
-        )
