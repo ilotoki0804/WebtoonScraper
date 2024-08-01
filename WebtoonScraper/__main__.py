@@ -129,14 +129,10 @@ download_subparser.add_argument(
     "-p",
     "--platform",
     type=lambda x: str(x).lower(),
-    metavar="webtoon_platform",
-    choices=set(webtoon.PLATFORMS) | set(webtoon.SHORT_NAMES) | {"url"},
+    choices=("url", *webtoon.PLATFORMS),
+    metavar="PLATFORM",
     default="url",
-    help=(
-        "Webtoon platform to download. "
-        "Defaults to url. "
-        f"All choices: url, {', '.join(f'{platform}({short_name})' for short_name, platform in webtoon.SHORT_NAMES.items())}"
-    ),
+    help="Webtoon platform to download. Refer to docs to check all supported platforms. Defaults to 'url'",
 )
 download_subparser.add_argument(
     "-m",
@@ -277,9 +273,6 @@ concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, he
 
 
 def parse_download(args: argparse.Namespace) -> None:
-    # 축약형 플랫폼명을 일반적인 플랫폼명으로 변환 (nw -> naver_webtoon)
-    args.platform = webtoon.SHORT_NAMES.get(args.platform, args.platform)
-
     for webtoon_id in args.webtoon_ids:
         if args.comments is None:
             # 사용자가 -c 옵션을 넘기지 않았다면 옵션을 None으로 둠.

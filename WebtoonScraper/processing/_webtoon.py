@@ -47,19 +47,6 @@ WebtoonPlatforms = Literal[
     "kakao_webtoon",
 ]
 
-SHORT_NAMES: dict[str, WebtoonPlatforms] = {
-    "nw": "naver_webtoon",
-    "wd": "webtoons_dotcom",
-    "bt": "bufftoon",
-    "np": "naver_post",
-    "ng": "naver_game",
-    "lc": "lezhin_comics",
-    "kp": "kakaopage",
-    "nb": "naver_blog",
-    "ti": "tistory",
-    "kw": "kakao_webtoon",
-}
-
 PLATFORMS: dict[WebtoonPlatforms, type[Scraper]] = {
     NAVER_WEBTOON: NaverWebtoonScraper,
     WEBTOONS_DOTCOM: WebtoonsDotcomScraper,
