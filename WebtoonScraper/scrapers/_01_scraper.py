@@ -474,19 +474,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if add_viewer:
             add_html_webtoon_viewer(webtoon_directory)
 
-    def list_episodes(self) -> None:
-        """웹툰 에피소드 목록을 출력합니다."""
-        self.fetch_all()
-        table = Table(show_header=True, header_style="bold blue", box=None)
-        table.add_column("Episode number [dim](ID)[/dim]", width=12)
-        table.add_column("Episode Title", style="bold")
-        for i, (episode_id, episode_title) in enumerate(zip(self.episode_ids, self.episode_titles), 1):
-            table.add_row(
-                f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
-                str(episode_title),
-            )
-        Console().print(table)
-
     def check_webtoon_id(
         self,
         exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
