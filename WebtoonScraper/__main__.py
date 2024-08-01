@@ -154,7 +154,7 @@ download_subparser.add_argument(
 download_subparser.add_argument(
     "-r",
     "--range",
-    type=lambda episode_range: EpisodeRange.from_string(episode_range, inclusive=True),
+    type=EpisodeRange.from_string,
     metavar="[start]~[end]",
     help="Episode number range you want to download.",
 )

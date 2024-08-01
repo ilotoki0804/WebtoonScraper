@@ -115,7 +115,7 @@ class EpisodeRange:
         return f"{type(self).__name__}({', '.join(repr(range_) for range_ in self._ranges)})"
 
     @classmethod
-    def from_string(cls, episode_range: str, inclusive: bool) -> Self:
+    def from_string(cls, episode_range: str, inclusive: bool = True) -> Self:
         """문자열로부터 EpisodeRange 인스턴스를 만듭니다.
 
         Args:
@@ -131,8 +131,8 @@ class EpisodeRange:
                 `~31`은 시작부터 31화까지 범위를 선택하며 `1~31`과 같습니다.
                 범위 선택과 에피소드 수 쓰기는 쉼표로 나누어 병렬할 수 있습니다.
                 예를 들어 `2,15,5~10,45~`은 2화, 15화, 5~10화, 45화부터 끝까지 다운로드한다는 의미입니다.
-            inclusive (bool):
-                맨 마지막 인덱스를 포함할지 결정합니다.
+            inclusive (bool, True):
+                맨 마지막 인덱스를 포함할지 결정합니다. 기본값은 True입니다.
                 예를 들어 `5~10`일때 inclusive=True라면 10회차를 포함하고,
                 False라면 포함하지 않아 5회차부터 9회차까지만 포함합니다.
         """
