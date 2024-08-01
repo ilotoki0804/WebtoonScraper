@@ -44,7 +44,7 @@ class LazyVersionAction(argparse._VersionAction):
 
 
 def _version_info() -> str:
-    def check_imported():
+    def check_dependency():
         ALL_DEPENDENCIES = {
             "naver_post": "download Naver Post",
             "lezhin_comics": "download Lezhin Comics (partially)",
@@ -53,7 +53,7 @@ def _version_info() -> str:
         }
         installed = set()
 
-        # fmt: off
+        # fmt: off  # 맥락상 import와 installed가 서로 붙어있는 편이 어울림
 
         with contextlib.suppress(Exception):
             import demjson3  # noqa
@@ -91,7 +91,7 @@ def _version_info() -> str:
                     "Download missing dependencies via `pip install -U WebtoonScraper[full]`"
                 )
 
-    return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_imported()}"
+    return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_dependency()}"
 
 
 parser = argparse.ArgumentParser(
