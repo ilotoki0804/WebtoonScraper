@@ -417,12 +417,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         with self._send_context_callback_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
-        episode_no_list = self._episode_no_range_to_real_range(episode_no_range)
+        # 여기에서 1-based에서 0-based로 바뀜.
+        if episode_no_range is None:
+            episode_no_list = range(len(self.episode_ids))
+        else:
+            episode_no_list = tuple(i for i in range(len(self.episode_ids)) if i + 1 in episode_no_range)
 
         with self._send_context_callback_message("download_episode"):
             await self._download_episodes(episode_no_list, webtoon_directory)
 
-        webtoon_directory = self._set_directory_to_merge(webtoon_directory)
+        webtoon_directory = self._post_process_directory(webtoon_directory)
 
         if concat is not None:
             with self._send_context_callback_message(
@@ -620,38 +624,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         yield end_contexts
         self.callback(base_message + "_end", is_successful=True, **end_contexts)
 
-    def _episode_no_range_to_real_range(self, episode_no_range: EpisodeRange | None) -> Sequence[int]:
-        """여러 형태와 타입으로 주어진 에피소드 다운로드 범위를 일관된 iterable로 변환합니다.
-
-        Args:
-            episode_no_range:
-                웹툰을 다운로드받을 범위를 결정합니다.
-                **범위가 1부터 시작하고 끝 수를 포함한다는 점을 주의하세요.**
-                범위를 벗어나는 경우 무시됩니다.
-
-                None인 경우(기본값): 웹툰의 모든 회차를 다운로드 받습니다.
-                tuple인 경우: `(처음, 끝)`의 튜플로 값을 받습니다. 이때 1부터 시작하고 끝 수를 포함합니다.
-                        두 값 중 None인 것이 있다면 처음이나 끝으로 평가됩니다.
-                    예1) (1, 10): 1회차부터 10회차까지를 다운로드합니다.
-                    예2) (None, 20): 1회차부터 20회차까지를 다운로드합니다.
-                    예3) (3, None): 3회차부터 끝까지 다운로드합니다.
-                    예4) (1, 100000000): 만약 웹툰 회차 수가 100000000보다 작은 경우 끝까지 다운로드됩니다.
-                int인 경우: 해당 회차 하나만 다운로드 받습니다.
-                slice인 경우: slice객체인 경우 해당 회차만큼 다운로드합니다.
-                    예1) slice(None, None, 5): 5화, 10화, 15화 등 5의 배수 만큼 다운로드합니다.
-                    예2) slice(3, None): 3화부터 끝까지 다운로드합니다.
-                    예3) slice(None, 10): 1~10화를 다운로드합니다. 끝 수를 포함합니다.
-                tuple이 아닌 iterable(예: 리스트)인 경우: \
-                        tuple이 아닌 iterable이 값으로 들어왔다면 해당 iterable에 있는 회차를 다운로드받습니다. \
-                        이때 회차 범위를 넘어서는 경우 무시됩니다.
-                    예) [3, 5, 7, 8]: 3화, 5화, 7화, 8화를 다운로드함.
-        """
-        if episode_no_range is None:
-            return range(len(self.episode_ids))
-
-        return [i - 1 for i, episode_id in enumerate(self.episode_ids, 1) if episode_id in episode_no_range]
-
-    async def _download_episodes(self, episode_no_list: Iterable[int], webtoon_directory: Path) -> None:
+    async def _download_episodes(self, episode_no_list: Sequence[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.
 
         Args:
@@ -662,7 +635,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if self.use_tqdm_while_download:
             episodes = self.pbar = tqdm(episode_no_list)
         else:
-            episodes = tuple(episode_no_list)
+            episodes = episode_no_list
         async with self.hxoptions.build_async_client() as client:
             for i, episode_no in enumerate(episodes):
                 is_download_successful = await self._download_episode(episode_no, webtoon_directory, client)
