@@ -87,6 +87,13 @@ class TistoryScraper(Scraper[tuple[str, str]]):
         ]  # 타입을 확실하게 하기 위해 if문이 필요함.
 
     @classmethod
+    def _from_string(cls, string: str, /, **kwargs):
+        blog_id, comma, category = string.partition(",")
+        if not all((blog_id, comma, category)):
+            raise ValueError(f"Invalid webtoon ID string (Tistory): {string!r}")
+        return cls((blog_id.strip(), category.strip()), **kwargs)
+
+    @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, str]:
         return (matched_url.group("blog_id"), matched_url.group("category"))
 

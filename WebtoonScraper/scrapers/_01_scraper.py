@@ -563,6 +563,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     # MARK: PRIVATE METHODS
 
+    @classmethod
+    def _from_string(cls, string: str, /, **kwargs):
+        """webtoon_id가 int가 아니라면 반드시 구현해야 합니다."""
+        return cls(int(string), **kwargs)  # type: ignore
+
     def _get_information(self, old_information: dict):
         """`information.json`에 탑재할 정보를 추가합니다.
 

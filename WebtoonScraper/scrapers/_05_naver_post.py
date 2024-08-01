@@ -113,6 +113,13 @@ class NaverPostScraper(Scraper[tuple[int, int]]):
         # tuple already contains parentheses, and without tuple, NamedTuple can be stringfied.
         return self._get_safe_file_name(f"{self.title}{tuple(self.webtoon_id)}")
 
+    @classmethod
+    def _from_string(cls, string: str, /, **kwargs):
+        series_no, comma, member_no = string.partition(",")
+        if not all((series_no, comma, member_no)):
+            raise ValueError(f"Invalid webtoon ID string (Naver Post): {string!r}")
+        return cls((int(series_no.strip()), int(member_no.strip())), **kwargs)
+
     @staticmethod
     def _check_webtoon_id_type(webtoon_id) -> TypeGuard[tuple[int, int]]:
         return (

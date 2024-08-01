@@ -125,6 +125,13 @@ class NaverBlogScraper(Scraper[tuple[str, int]]):
         return super().check_webtoon_id(InvalidWebtoonIdError)
 
     @classmethod
+    def _from_string(cls, string: str, /, **kwargs):
+        blog_id, comma, category_no = string.partition(",")
+        if not all((blog_id, comma, category_no)):
+            raise ValueError(f"Invalid webtoon ID string (Naver Blog): {string!r}")
+        return cls((blog_id.strip(), int(category_no.strip())), **kwargs)
+
+    @classmethod
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> tuple[str, int]:
         try:
             return (matched_url.group("blog_id"), int(matched_url.group("category_no")))

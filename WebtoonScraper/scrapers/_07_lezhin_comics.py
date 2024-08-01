@@ -292,6 +292,10 @@ class LezhinComicsScraper(Scraper[str]):
 
     # PRIVATE METHODS
 
+    @classmethod
+    def _from_string(cls, string: str, /, **kwargs):
+        return cls(string, **kwargs)
+
     @staticmethod
     def _check_webtoon_id_type(webtoon_id) -> TypeGuard[str]:
         return isinstance(webtoon_id, str)
