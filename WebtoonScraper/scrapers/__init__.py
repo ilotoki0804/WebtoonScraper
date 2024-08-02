@@ -33,7 +33,7 @@ from ._02_naver_webtoon import (
     NaverWebtoonScraper,
     NaverWebtoonSpecificScraper,
 )
-from ._03_webtoon_originals import WebtoonsDotcomScraper
+from ._03_webtoons_dotcom import WebtoonsDotcomScraper
 from ._04_bufftoon import BufftoonScraper
 from ._05_naver_post import NaverPostScraper, NaverPostWebtoonId
 from ._06_naver_game import NaverGameScraper
