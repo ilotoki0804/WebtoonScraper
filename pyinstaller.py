@@ -8,7 +8,7 @@ if __name__ == "__main__":
         main(["--help"])
     print()
     print("Welcome to WebtoonScraper shell!")
-    print("Type 'exit' to quit")
+    print("Type 'exit' or press ctrl+C to quit")
     while True:
         # EOFError를 놔두기 위해 input은 suppress로 감싸지 않음.
         command = input(">>> ")
