@@ -256,7 +256,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         )
 
         self.webtoon_id = webtoon_id
-        self.base_directory = Path.cwd()
+        self.base_directory: Path | str = Path.cwd()
         self.use_tqdm_while_download = True
         self.does_store_information = True
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
@@ -387,7 +387,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             self.fetch_all()
 
         webtoon_directory_name = self.get_webtoon_directory_name()
-        webtoon_directory = self.base_directory / webtoon_directory_name
+        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
 
         ensure_normal(webtoon_directory, empty_ok=True, manual_container_state=manual_container_state)
 
@@ -516,20 +516,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     logger.debug(f"WebtoonScraper status: {the_others}")
 
     # MARK: PROPERTIES
-
-    @property
-    def base_directory(self) -> Path:
-        return self._base_directory
-
-    @base_directory.setter
-    def base_directory(self, base_directory: str | Path) -> None:
-        """
-        웹툰 폴더가 위치할 디렉토리입니다. str이나 Path로 값을 받아 Path를 저장합니다.
-
-        많은 이 변수의 사용처에서는 Path를 필요로 합니다.
-        이 property는 base_directory에 str을 넣어도 Path로 자동으로 변환해줍니다.
-        """
-        self._base_directory = Path(base_directory)
 
     @property
     def cookie(self) -> str | None:
