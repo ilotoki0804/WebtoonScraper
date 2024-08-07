@@ -25,7 +25,7 @@ from WebtoonScraper.processing.directory_merger import (
     select_from_directory,
 )
 from WebtoonScraper.base import logger
-from WebtoonScraper.scrapers import CommentsDownloadOption, EpisodeRange
+from WebtoonScraper.scrapers import EpisodeRange
 
 
 class LazyVersionAction(argparse._VersionAction):
@@ -166,16 +166,7 @@ download_subparser.add_argument(
     "--options",
     type=lambda option: option.split("="),
     nargs="+",
-    help="Additional options for scraper.",
-)
-download_subparser.add_argument(
-    "-c",
-    "--comments",
-    "--comment",
-    metavar="option",
-    help="Download comments.",
-    nargs="*",
-    choices=["all", "reply"],
+    help="Additional options for scraper",
 )
 download_subparser.add_argument(
     "--concat",
@@ -280,16 +271,6 @@ concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, he
 
 def parse_download(args: argparse.Namespace) -> None:
     for webtoon_id in args.webtoon_ids:
-        if args.comments is None:
-            # 사용자가 -c 옵션을 넘기지 않았다면 옵션을 None으로 둠.
-            comment_download_option = None
-        else:
-            options = set(args.comments)
-            comment_download_option = CommentsDownloadOption(
-                top_comments_only="all" not in options,
-                reply="reply" in options,
-            )
-
         concat: BatchMode | None
         if args.concat is None:
             concat = None
@@ -312,7 +293,6 @@ def parse_download(args: argparse.Namespace) -> None:
             cookie=args.cookie,
             download_directory=args.download_directory,
             options=dict(args.options or {}),
-            comments_option=comment_download_option,
             existing_episode_policy=args.existing_episode
         )
 

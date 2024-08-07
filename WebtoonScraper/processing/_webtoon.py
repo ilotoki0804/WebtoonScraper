@@ -10,7 +10,6 @@ from ..base import logger
 from ..exceptions import InvalidPlatformError, InvalidURLError
 from ..scrapers import (
     BufftoonScraper,
-    CommentsDownloadOption,
     KakaopageScraper,
     KakaoWebtoonScraper,
     LezhinComicsScraper,
@@ -89,7 +88,6 @@ def setup_instance(
     cookie: str | None = None,
     download_directory: str | Path | None = None,
     options: dict[str, str] | None = None,
-    comments_option: CommentsDownloadOption | None = None,
 ) -> Scraper:
     """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
 
@@ -108,7 +106,6 @@ def setup_instance(
     # attribute 형식 설정 설정
     if download_directory:
         scraper.base_directory = download_directory
-    scraper.comments_option = comments_option
     scraper.existing_episode_policy = existing_episode_policy
 
     return scraper
