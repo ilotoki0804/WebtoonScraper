@@ -67,6 +67,10 @@ full = ["demjson3", "Pillow", "pycryptodomex"]
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+select = ["E", "F", "UP", "W"]
+ignore = ["E501", "F401", "E999", "F405", "F403", "E402", "S101"]
+
 [tool.black]
 line-length = 120
 
