@@ -297,7 +297,7 @@ class LezhinComicsScraper(Scraper[str]):
         return cls(string, **kwargs)
 
     def _apply_options(self, options: dict[str, str], /) -> None:
-        def convert_to_boolean(raw_value):
+        def raw_string_to_boolean(raw_string: str) -> bool:
             """boolean으로 변경합니다.
 
             `true`나 `false`면 각각 True와 False로 처리하고,
@@ -305,24 +305,24 @@ class LezhinComicsScraper(Scraper[str]):
 
             그 외의 값은 ValueError를 일으킵니다.
             """
-            if raw_value.lower() == "true":
+            if raw_string.lower() == "true":
                 value = True
-            elif raw_value.lower() == "false":
+            elif raw_string.lower() == "false":
                 value = False
             else:
                 try:
-                    value = bool(int(raw_value))
+                    value = bool(int(raw_string))
                 except ValueError:
-                    raise ValueError(f"Invalid value for boolean: {raw_value}") from None
+                    raise ValueError(f"Invalid value for boolean: {raw_string}") from None
             return value
 
         for option, raw_value in options.items():
             if option.upper() == "UNSHUFFLE":
-                self.unshuffle = convert_to_boolean(raw_value)
+                self.unshuffle = raw_string_to_boolean(raw_value)
             elif option.upper() == "DELETE_SHUFFLED":
-                self.delete_shuffled = convert_to_boolean(raw_value)
+                self.delete_shuffled = raw_string_to_boolean(raw_value)
             elif option.upper() == "DOWNLOAD_PAID":
-                self.download_paid_episode = convert_to_boolean(raw_value)
+                self.download_paid_episode = raw_string_to_boolean(raw_value)
             elif option.upper() == "BEARER":
                 self.bearer = raw_value
             else:
