@@ -571,9 +571,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         continue
                     raise ValueError(f"{self}.{name} does not exist.")
                 if isinstance(value, Mapping):
-                    value = dict(value)
+                    value = {str(k) if isinstance(k, int) else k: v for k, v in value.items()}
                     if old_value is not _ABSENT:
-                        value.update(old_value)
+                        # old_value가 value에 덮어씌어져야 하니 `.update()`나 `|=`를 사용하면 안 됨!
+                        value = old_value | value
                 information[name] = value
             elif isinstance(value, str):
                 information[name] = getattr(self, value)
