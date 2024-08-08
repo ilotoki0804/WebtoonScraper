@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+
 from rich.logging import RichHandler
 
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"

@@ -247,6 +247,10 @@ HTML_TEMPLATE = """\
         }
 
         function updateComments() {
+            if (!commentsData[episodeNo]) {
+                return;
+            }
+
             refreshCommentsButton();
 
             let episode_comments = commentsData[episodeNo]["comments"];

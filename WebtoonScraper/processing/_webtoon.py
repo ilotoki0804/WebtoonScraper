@@ -80,6 +80,7 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
         return platform
     raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
 
+
 def setup_instance(
     webtoon_id_or_url: str,
     webtoon_platform: WebtoonPlatforms | Literal["url"],
