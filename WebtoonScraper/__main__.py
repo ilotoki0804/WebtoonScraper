@@ -94,15 +94,21 @@ def _version_info() -> str:
     return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_dependency()}"
 
 
+def _parse_options(value: str):
+    try:
+        key, value = value.split("=")
+        return key.strip(), value.strip()
+    except ValueError:
+        return value.strip(), None
+
+
 parser = argparse.ArgumentParser(
     prog="WebtoonScraper",
-    usage="Download or merge webtoons in CLI",
-    description="Download webtoons with ease!",
     formatter_class=argparse.RawTextHelpFormatter,
 )
 parser.register("action", "version", LazyVersionAction)
 
-parser.add_argument("--mock", action="store_true", help="No actual action.")
+parser.add_argument("--mock", action="store_true", help="Print argument parsing result and exit. Exist for debug or practice purpose")
 parser.add_argument(
     "--version",
     action="version",
@@ -112,17 +118,16 @@ parser.add_argument(
     "-v",
     "--verbose",
     action="store_true",
-    help="Set logger level to INFO and show detailed error.",
+    help="Set logger level to DEBUG and show detailed error",
 )
-subparsers = parser.add_subparsers(title="Commands", help="Choose command you want.")
+subparsers = parser.add_subparsers(title="Commands")
 
 # download subparser
-download_subparser = subparsers.add_parser("download", help="Download webtoons.")
+download_subparser = subparsers.add_parser("download", help="Download webtoons")
 download_subparser.set_defaults(subparser_name="download")
 download_subparser.add_argument(
     "webtoon_ids",
-    metavar="webtoon_ids",
-    help="Webtoon ID or URL.",
+    help="URL or webtoon ID. You can provide multiple URLs or webtoon IDs",
     nargs="+",
 )
 download_subparser.add_argument(
@@ -138,39 +143,33 @@ download_subparser.add_argument(
     "-m",
     "--merge-number",
     type=int,
-    metavar="merge_number",
-    help="Merge number when you want to merge directories. Don't specify if you don't want to merge.",
+    help="Merge number when you want to merge directories. Don't specify if you don't want to merge",
 )
-download_subparser.add_argument(
-    "--cookie",
-    type=str,
-    metavar="cookie",
-    help="Set cookie when you download Bufftoon.",
-)
+download_subparser.add_argument("--cookie")
 download_subparser.add_argument(
     "-r",
     "--range",
     type=EpisodeRange.from_string,
-    metavar="[start]~[end]",
     help="Episode number range you want to download.",
 )
 download_subparser.add_argument(
-    "-b",
+    "-d",
     "--base-directory",
     type=Path,
     default=Path.cwd(),
     help="Where 'webtoon directory' is stored",
 )
-download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes.")
+download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes")
 download_subparser.add_argument(
+    "-o",
     "--options",
-    type=lambda option: option.split("="),
+    type=_parse_options,
     nargs="+",
     help="Additional options for scraper",
 )
 download_subparser.add_argument(
     "--concat",
-    help="Concatenating webtoon images. Full specification is on docs.",
+    help="Concatenating webtoon images. Full specification is on docs",
     nargs="+",
 )
 download_subparser.add_argument(
@@ -181,13 +180,12 @@ download_subparser.add_argument(
 )
 
 # merge subparser
-merge_subparser = subparsers.add_parser("merge", help="Merge/Restore webtoon directory.")
+merge_subparser = subparsers.add_parser("merge", help="Merge episode directories")
 merge_subparser.set_defaults(subparser_name="merge")
 merge_subparser.add_argument(
     "webtoon_directory_path",
     type=Path,
-    metavar="webtoon_directory_path",
-    help="A webtoon folder to merge or restore.",
+    help="A webtoon folder to merge or restore",
 )
 merge_subparser.add_argument(
     "-m",
@@ -195,7 +193,7 @@ merge_subparser.add_argument(
     type=int,
     metavar="merge_number",
     default=None,
-    help="Merge number when merge.",
+    help="Merge number when merge",
 )
 merge_subparser.add_argument(
     "-t",
@@ -203,56 +201,59 @@ merge_subparser.add_argument(
     type=Path,
     metavar="target_webtoon_directory",
     default=None,
-    help="The destination of output webtoon directory.",
+    help="The destination of output webtoon directory",
 )
 merge_subparser.add_argument(
     "-s",
     "--select",
     action="store_true",
-    help="Instead of typing the webtoon directory directly, open the webtoon directory selector.",
+    help="Instead of typing the webtoon directory directly, open the webtoon directory selector",
 )
 merge_subparser.add_argument(
     "-a",
     "--action",
-    choices=["m", "merge", "r", "restore", "a", "auto"],
+    choices={"merge", "restore", "auto"},
     default="auto",
     help=(
         "Determines whether to merge or restore the directories. "
-        "The [m]erge option will merge the webtoon directory. "  # cspell: ignore erge
-        "The [r]estore option restores the webtoon directory. "  # cspell: ignore estore
-        "The [a]uto option restores the directory, "
+        "The 'merge' option will merge the webtoon directory. "
+        "The 'restore' option restores the webtoon directory. "
+        "The 'auto' option restores the directory, "
         "merging it if it is already in the default state. "
-        "Ignored if the `s` option is used."
+        "Ignored if the `s` option is used"
     ),
 )
 
 # concat subparser
-concat_subparser = subparsers.add_parser("concat", help="Concatenate images of episodes.")
+concat_subparser = subparsers.add_parser("concat", help="Concatenate images of episodes")
 concat_subparser.set_defaults(subparser_name="concat")
 concat_subparser.add_argument(
     "webtoon_directory_path",
     type=Path,
     metavar="webtoon_directory_path",
-    help="The name of folder that contains webtoon folders to concatenate.",
+    help="The name of folder that contains webtoon folders to concatenate",
 )
 concat_subparser.add_argument(
     "-s",
     "--select",
     action="store_true",
-    help="Instead of typing the webtoon directory directly, open the webtoon directory selector.",
+    help="Instead of typing the webtoon directory directly, open the webtoon directory selector",
 )
-concat_subparser.add_argument("--all", action="store_true", help="Merge all images of each episode.")
+concat_subparser.add_argument("--all", action="store_true", help="Merge all images of each episode")
 concat_subparser.add_argument(
+    "-C",
     "--count",
     type=int,
-    help="Concatenate based on image count.",
+    help="Concatenate based on image count",
 )
 concat_subparser.add_argument(
+    "-H",
     "--height",
     type=int,
     help="Concatenate based on the height of concatenated images",
 )
 concat_subparser.add_argument(
+    "-R",
     "--ratio",
     type=float,
     help="Concatenate based on the ratio of concatenated images",
@@ -263,10 +264,10 @@ concat_subparser.add_argument(
     type=Path,
     metavar="target_webtoon_directory",
     default=None,
-    help="The destination of output webtoon directory.",
+    help="The destination of output webtoon directory",
 )
-concat_subparser.add_argument("-p", "--process-number", type=int, default=None, help="Multiprocessing process number.")
-concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, help="Merge after concatenation.")
+concat_subparser.add_argument("-p", "--process-number", type=int, default=None, help="Multiprocessing process number")
+concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, help="Merge after concatenation")
 
 
 def parse_download(args: argparse.Namespace) -> None:
@@ -291,7 +292,7 @@ def parse_download(args: argparse.Namespace) -> None:
             webtoon_id,
             args.platform,
             cookie=args.cookie,
-            download_directory=args.download_directory,
+            download_directory=args.base_directory,
             options=dict(args.options or {}),
             existing_episode_policy=args.existing_episode
         )

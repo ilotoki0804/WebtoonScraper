@@ -5,7 +5,6 @@
 """
 
 __all__ = [
-    "CommentsDownloadOption",
     "Scraper",
     "EpisodeRange",
     "BestChallengeSpecificScraper",
@@ -26,7 +25,7 @@ __all__ = [
     "KakaoWebtoonScraper",
 ]
 
-from ._01_scraper import CommentsDownloadOption, Scraper, EpisodeRange
+from ._01_scraper import Scraper, EpisodeRange
 from ._02_naver_webtoon import (
     BestChallengeSpecificScraper,
     ChallengeSpecificScraper,

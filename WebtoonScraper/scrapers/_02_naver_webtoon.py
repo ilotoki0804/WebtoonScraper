@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import json
 import re
 from datetime import datetime
@@ -18,7 +19,8 @@ from ..exceptions import (
     NotImplementedCommentsDownloadOptionError,
     UnsupportedRatingError,
 )
-from ._01_scraper import Comment, EpisodeComments, Scraper, reload_manager
+from ._01_scraper import Scraper, reload_manager
+from ._02_naver_webtoon_extra import NaverWebtoonMetaInfoScraper, NaverWebtoonCommentsDownloadOption
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
@@ -32,10 +34,14 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     DOWNLOAD_INTERVAL = 0.5
     PLATFORM = "naver_webtoon"
     COMMENTS_DOWNLOAD_SUPPORTED = True
+    extra_info_scraper: NaverWebtoonMetaInfoScraper
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(comments_data=None)
 
     def __init__(self, webtoon_id: int, /, *, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="https://comic.naver.com/webtoon/")
+        if self.extra_info_scraper is None:
+            self.extra_info_scraper = NaverWebtoonMetaInfoScraper()
         if cookie is not None:
             self.cookie = cookie
 
@@ -102,7 +108,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         self.episode_titles = subtitles
         self.episode_ids = episode_ids
 
-    def get_episode_image_urls(self, episode_no) -> list[str]:
+    def get_episode_image_urls(self, episode_no: int) -> list[str]:
         # sourcery skip: de-morgan
         episode_id = self.episode_ids[episode_no]
         url = f"{self.BASE_URL}/detail?titleId={self.webtoon_id}&no={episode_id}"
@@ -111,138 +117,54 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         episode_image_urls = [
             element["src"]
             for element in episode_image_urls_raw
-            if not ("agerate" in element["src"] or "ctguide" in element["src"])
+            if not ("agerate" in element["src"] or "ctguide" in element["src"])  # cspell: ignore agerate ctguide
         ]
 
         if TYPE_CHECKING:
             episode_image_urls = [url for url in episode_image_urls if isinstance(url, str)]
 
-        script = response.soup_select_one("body > script")
-        if script is not None:
-            information_script = script.text
-            search_result = re.search(
-                r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,',
-                information_script,
-            )
-            if search_result is None:
-                raise ValueError
-            self.comments_data[episode_no]["author_comment"] = json.loads(search_result.group("author_comments_raw"))
+        self.extra_info_scraper.gather_author_comment(episode_no, response)
 
         return episode_image_urls
 
-    def get_episode_comments(self, episode_no) -> None:
-        if self.comments_option is None:
-            raise CommentsDownloadOptionError("comments_option is None. Set a proper option to proceed.")
-        if self.comments_option.reply:
-            raise NotImplementedCommentsDownloadOptionError("The `reply' option is currently unavailable.")
-
-        is_official = self.WEBTOON_TYPE == "WEBTOON"
-
-        episode_id = self.episode_ids[episode_no]
-        top = self.comments_option.top_comments_only
-
-        def fetch(parameter_data: dict | None = None, reply_of: str | int | None = None):
-            parameters = dict(
-                ticket="comic" if is_official else "comic_challenge",
-                templateId="webtoon" if is_official else "creators",
-                pool="cbox3",
-                _cv=datetime.now().strftime("%Y%m%d%H%M%S"),
-                lang="ko",
-                country="KR",
-                objectId=f"{self.webtoon_id}_{episode_id}",
-                pageSize="30",
-                indexSize="10",
-                groupId=self.webtoon_id,
-                listType="OBJECT",
-                pageType="more",
-                page="1",
-                currentPage="1",
-                refresh="true",
-                sort="BEST" if top else "NEW",
-            )
-            if reply_of is not None:
-                parameters.update(parentCommentNo=str(reply_of))
-            if parameter_data:
-                latest_comment_id: str = parameter_data["latest_comment_id"]
-                current_last_comment_id: str = parameter_data["current_last_comment_id"]
-                prev_pointer: str = parameter_data["prev_pointer"]
-                next_pointer: str = parameter_data["next_pointer"]
-
-                parameters.update(
-                    {
-                        "current": current_last_comment_id,
-                        "prev": latest_comment_id,
-                        "moreParam.direction": "next",
-                        "moreParam.prev": prev_pointer,
-                        "moreParam.next": next_pointer,
-                        "page": str(parameter_data["index"] + 1),
-                        "currentPage": str(parameter_data["index"] or 1),
-                    }
-                )
-
-            res = self.hxoptions.get(
-                "https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json", params=parameters
-            )
-            return json.loads(res.text[10:-2])["result"]
-
-        if top:
-            data = fetch()
-
-            comments_count = data["count"]["total"]
-            comments = [self._extract_comment_information(comment) for comment in data["commentList"]]
-        else:
-            latest_comment_id = None
-            comments = []
-            for i in count(0):
-                if latest_comment_id:
-                    data = fetch(
-                        {
-                            "latest_comment_id": latest_comment_id,
-                            "current_last_comment_id": current_last_comment_id,  # noqa: F821 # type: ignore
-                            "prev_pointer": prev_pointer,  # noqa: F821 # type: ignore
-                            "next_pointer": next_pointer,  # noqa: F821 # type: ignore
-                            "index": i,
-                        }
-                    )
-                else:
-                    data = fetch()
-
-                prev_pointer = data["morePage"]["prev"]  # noqa: F841
-                next_pointer = data["morePage"]["next"]
-                end_pointer = data["morePage"]["end"]
-                start_pointer = data["morePage"]["start"]
-                comments_count = data["count"]["total"]
-                latest_comment_id = latest_comment_id or data["commentList"][0]["commentNo"]
-                current_last_comment_id = data["commentList"][-1]["commentNo"]  # noqa: F841
-                comments += [self._extract_comment_information(comment) for comment in data["commentList"]]
-                if next_pointer == end_pointer or end_pointer == start_pointer:
-                    # end_pointer와 start_pointer가 같을 때 next_pointer가 이상한 값을 지시할 수 있음.
-                    break
-
-        episode_comments: EpisodeComments = {
-            "download_option": self.comments_option._asdict(),
-            "comment_count": comments_count,  # type: ignore
-            "comments": comments,
-        }
-        self.comments_data[episode_no].update(episode_comments)
+    def get_episode_extra(self, episode_no) -> None:
+        self.extra_info_scraper.fetch_episode_comments(episode_no, self)
 
     def check_webtoon_id(self) -> str | None:
         return super().check_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
 
-    def _extract_comment_information(self, comment_data: dict) -> Comment:
-        return {
-            # "sort_value": comment_data["sortValue"],
-            "comments_id": comment_data["commentNo"],
-            "reply_count": int(comment_data["replyCount"]),
-            "username": comment_data["userName"],  # or "shareCommentUserName"
-            "user_id": comment_data["userIdNo"],  # or "idNo" or "profileUserId"
-            "likes": int(comment_data["sympathyCount"]),
-            "dislikes": int(comment_data["antipathyCount"]),
-            "last_modified": comment_data["modTime"],
-            "created": comment_data["regTime"],
-            "comment": comment_data["contents"],
-            "replies": [],
-        }
+    @property
+    def comments_data(self):
+        return self.extra_info_scraper.comments_data
+
+    def _apply_options(self, options: dict[str, str], /) -> None:
+        def raw_string_to_boolean(raw_string: str) -> bool:
+            """boolean으로 변경합니다.
+
+            `true`나 `false`면 각각 True와 False로 처리하고,
+            정수라면 0이면 False, 나머지는 True로 처리합니다.
+
+            그 외의 값은 ValueError를 일으킵니다.
+            """
+            if raw_string.lower() == "true":
+                value = True
+            elif raw_string.lower() == "false":
+                value = False
+            else:
+                try:
+                    value = bool(int(raw_string))
+                except ValueError:
+                    raise ValueError(f"Invalid value for boolean: {raw_string}") from None
+            return value
+
+        for option, raw_value in options.items():
+            if option.upper() == "COMMENTS":
+                if raw_value is None or raw_value.upper() == "TOP":
+                    self.extra_info_scraper.comments_option = NaverWebtoonCommentsDownloadOption(top_comments_only=True)
+                elif raw_value.upper() == "FULL":
+                    self.extra_info_scraper.comments_option = NaverWebtoonCommentsDownloadOption(top_comments_only=False)
+            else:
+                raise ValueError(f"Invalid option {option!r}: {raw_value!r}")
 
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
