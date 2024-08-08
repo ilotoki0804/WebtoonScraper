@@ -266,6 +266,9 @@ def merge_or_restore_webtoon(
         raise DirectoryStateUnmatchedError.from_state(container_state, source_webtoon_directory)
 
 
+# MARK: MERGING
+
+
 def _get_episode_no(directory_name: str) -> int:
     directory_name_matched = DIRECTORY_PATTERNS[NORMAL_EPISODE_DIRECTORY].match(directory_name)
     assert directory_name_matched is not None, f"Directory state is invalid. {directory_name = }"
@@ -363,7 +366,7 @@ def _get_merged_image_name(image_name: str, episode_name: str) -> str:
     return f"{episode_no}.{image_no}. {episode_name}.{image_extension}"
 
 
-############### CHECKING FUNCTIONALITY ###############
+# MARK: CHECKING
 
 
 def check_filename_state(file_or_directory_name: str) -> FileStates:
@@ -429,7 +432,7 @@ def guess_merge_number(webtoon_directory: Path) -> int | None:
     return most_occurred
 
 
-############### RESTORE FUNCTIONALITY ###############
+# MARK: RESTORING
 
 
 def restore_name(merged_image_name: str):
