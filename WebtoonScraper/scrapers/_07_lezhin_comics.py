@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import itertools
 import json
 import os
@@ -58,6 +59,9 @@ class LezhinComicsScraper(Scraper[str]):
             else self._unshuffled_webtoon_directory.name
         ),
         is_adult=None,
+        free_dates=None,
+        published_dates=None,
+        updated_dates=None,
     )
 
     def __init__(self, webtoon_id: str, /, *, bearer: str | None = None, cookie: str | None = None) -> None:
@@ -147,42 +151,30 @@ class LezhinComicsScraper(Scraper[str]):
         thumbnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
         assert isinstance(thumbnail_url, str), f"Invalid {thumbnail_url=}."
 
-        webtoon_raw_data = res.soup_select("script")[5]
-        assert "src" not in webtoon_raw_data.attrs, f"Invalid {self.webtoon_id=}."
-
+        script_string = res.soup_select("script")[-1].text
         try:
-            product_start = re.search(
-                r"__LZ_PRODUCT__ *= *{\n? *productType: *'comic',\n? *product: *",
-                webtoon_raw_data.text,
-            ).end()  # type: ignore
-            product_end, departure_start = re.search(",\n? *departure: *'',\n? *all: *", webtoon_raw_data.text).span()  # type: ignore
-            # departure_end = re.search(",\n *prefree", webtoon_raw_data.text).start()  # type: ignore
-
-            product = json.loads(webtoon_raw_data.text[product_start:product_end])
-
-            # # departure는 product["episodes"]와 완전히 같기 때문에 굳이 사용할 이유가 없다.
-            # departure = json.loads(webtoon_raw_data.text[departure_start:departure_end])
-        except (AttributeError, JSONDecodeError) as e:
-            raise ValueError("Parsing error. Contact developer.") from e
+            raw_data = re.match(r"self\.__next_.\.push\(\[\d,(.*)\]\)$", script_string)[1]  # type: ignore
+            data_raw = json.loads(ast.literal_eval(raw_data)[2:])
+            data = data_raw[1][3]["entity"]
+        except Exception as exc:
+            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
 
         # webtoon 정보를 받아옴.
-        title = product["display"]["title"]
+        title = data["meta"]["content"]["display"]["title"]
         # webtoon_id_str = product["alias"]  # webtoon_id가 바로 이것이라 필요없음.
-        webtoon_int_id = product["id"]
-        is_adult = product["isAdult"]
-        if "metadata" in product:
-            metadata = product["metadata"]
-            is_shuffled = metadata["imageShuffle"] if "imageShuffle" in metadata else False
-        else:
-            is_shuffled = False
+        webtoon_int_id = data["meta"]["content"]["id"]
+        is_adult = data["meta"]["content"]["isAdult"]
+        is_shuffled = data["meta"]["content"].get("metadata", {"imageShuffle": False})["imageShuffle"]
+        author = ", ".join(author["name"] for author in data["meta"]["content"]["artists"])
 
-        self._get_episode_information_from_json_data(product["episodes"])
+        self._parse_episode_information(data["meta"]["episodes"])
 
         self.webtoon_thumbnail_url = thumbnail_url
         self.title = title
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id
         self.is_adult: bool = is_adult
+        self.author: str = author
 
     @reload_manager
     def fetch_user_information(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
@@ -332,7 +324,7 @@ class LezhinComicsScraper(Scraper[str]):
     def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
         return matched_url.group("webtoon_id")
 
-    def _get_episode_information_from_json_data(
+    def _parse_episode_information(
         self,
         episode_information_raw: list[dict],
         get_paid_episode: bool | None = None,
@@ -346,6 +338,9 @@ class LezhinComicsScraper(Scraper[str]):
         display_names: list[str] = []
         unusable_episodes: list[bool] = []
         free_episodes: list[bool] = []
+        free_dates: list[int] = []
+        published_dates: list[int] = []
+        updated_dates: list[int] = []
         for episode in reversed(episode_information_raw):
             is_episode_expired = episode["properties"]["expired"]
             is_episode_not_for_sale = episode["properties"]["notForSale"]
@@ -362,6 +357,10 @@ class LezhinComicsScraper(Scraper[str]):
             unusable_episodes.append(is_episode_unusable)
             free_episodes.append(is_episode_free)
 
+            free_dates.append(episode["freedAt"])
+            published_dates.append(episode["publishedAt"])
+            updated_dates.append(episode["updatedAt"])
+
         lists_to_filter = (
             episode_int_ids,
             episode_str_ids,
@@ -370,6 +369,9 @@ class LezhinComicsScraper(Scraper[str]):
             display_names,
             unusable_episodes,
             free_episodes,
+            free_dates,
+            published_dates,
+            updated_dates,
         )
 
         to_downloads = [
@@ -402,6 +404,9 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_int_ids = episode_int_ids
         self.free_episodes = free_episodes
         self.information_chars = episode_type_chars
+        self.free_dates = free_dates
+        self.published_dates = published_dates
+        self.updated_dates = updated_dates
 
     def _post_process_directory(self, base_webtoon_directory: Path) -> Path:
         """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
