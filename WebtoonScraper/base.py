@@ -7,7 +7,7 @@ import logging
 from rich.logging import RichHandler
 
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
-__version_info__ = (4, 0, 0, "a", 1)
+__version_info__ = (4, 0, 0, "a", 2)
 __version__ = str.join(".", map(str, __version_info__[:3])) + "".join(map(str, __version_info__[3:]))
 
 logger = logging.getLogger("webtoonscraper_logger")
