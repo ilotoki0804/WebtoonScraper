@@ -39,15 +39,8 @@ class LezhinComicsScraper(Scraper[str]):
         self.is_fhd_downloaded (bool | None): None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
     """
 
-    BASE_URL = "https://www.lezhin.com/ko/comic"
-    TEST_WEBTOON_ID = "noway"
-    TEST_WEBTOON_IDS = (
-        "noway",  # general test
-        "brianoslab",  # shuffle test
-    )
-    URL_REGEX = re.compile(r"(?:https?:\/\/)?(?:www|m)[.]lezhin[.]com\/\w+?\/comic\/(?P<webtoon_id>\w+)")
-    DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     PLATFORM = "lezhin_comics"
+    DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
     INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
         is_shuffled=None,
         webtoon_int_id=None,
@@ -133,7 +126,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     @reload_manager
     def fetch_episode_information(self, *, reload: bool = False) -> None:
-        res = self.hxoptions.get(f"{self.BASE_URL}/{self.webtoon_id}")
+        res = self.hxoptions.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
         if res.status_code == 404:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
 

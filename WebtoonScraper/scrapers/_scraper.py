@@ -52,10 +52,10 @@ class RegisterMeta(type):
         if platform_name := getattr(cls, "PLATFORM", None):
             if already_registered := platforms.get(platform_name):
                 # 시작하기 전의 메시지기 때문에 `-v` 플래그로 확인하기 어려움
-                logger.debug(f"Scraper {cls} won't be registered since {already_registered} is already registered as {platform_name}")
+                logger.debug(f"Overriding {already_registered} with Scraper {cls}.")
             else:
-                platforms[platform_name] = cls
-                logger.debug(f"Scraper {cls} has been registered as {platform_name}")
+                logger.debug(f"Scraper {cls} has been registered as {platform_name}.")
+            platforms[platform_name] = cls
 
 
 class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
@@ -66,12 +66,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
     """
 
     # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
-    BASE_URL: ClassVar[str]
-    TEST_WEBTOON_ID: ClassVar
-    TEST_WEBTOON_IDS: ClassVar[tuple] = ()
-    DOWNLOAD_INTERVAL: ClassVar[int | float] = 0
-    URL_REGEX: ClassVar[re.Pattern[str]]
     PLATFORM: ClassVar[str]
+    DOWNLOAD_INTERVAL: ClassVar[int | float] = 0
     INFORMATION_VARS: ClassVar[dict[str, None | str | Callable[[Any, str], Any]]] = dict(
         title=None,
         platform="PLATFORM",
@@ -81,7 +77,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         author=None,
     )
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
-    extra_info_scraper: ExtraInfoScraper = ExtraInfoScraper()
+    extra_info_scraper: ExtraInfoScraper | None = None
 
     def __init__(self, webtoon_id: WebtoonId, /) -> None:
         self.hxoptions = hxsoup.MutableClientOptions(
@@ -91,6 +87,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             follow_redirects=True,
         )
 
+        self.extra_info_scraper = self.extra_info_scraper or ExtraInfoScraper()
         self.webtoon_id = webtoon_id
         self.base_directory: Path | str = Path.cwd()
         self.use_progress_bar = True

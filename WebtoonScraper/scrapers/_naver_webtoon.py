@@ -24,7 +24,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Naver Webtoon."""
 
     BASE_URL: str
-    TEST_WEBTOON_ID: int
     WEBTOON_TYPE: ClassVar[Literal["WEBTOON", "BEST_CHALLENGE", "CHALLENGE"]]
     EPISODE_IMAGES_URL_SELECTOR: ClassVar[str]
     PATH_NAME: str
@@ -177,9 +176,8 @@ class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):
     NaverWebtoonScraper를 이용하세요.
     """
 
-    BASE_URL = "https://comic.naver.com/webtoon"
     PLATFORM = "naver_webtoon_specific"
-    TEST_WEBTOON_ID = 809590  # 이번 생
+    BASE_URL = "https://comic.naver.com/webtoon"
     WEBTOON_TYPE = "WEBTOON"
     EPISODE_IMAGES_URL_SELECTOR = "#sectionContWide > img"
     PATH_NAME = "webtoon"
@@ -193,9 +191,8 @@ class BestChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     NaverWebtoonScraper를 이용하세요.
     """
 
-    BASE_URL = "https://comic.naver.com/bestChallenge"
     PLATFORM = "best_challenge"
-    TEST_WEBTOON_ID = 816046  # 집
+    BASE_URL = "https://comic.naver.com/bestChallenge"
     WEBTOON_TYPE = "BEST_CHALLENGE"
     EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
     PATH_NAME = "bestChallenge"
@@ -209,9 +206,8 @@ class ChallengeSpecificScraper(AbstractNaverWebtoonScraper):
     NaverWebtoonScraper를 이용하세요.
     """
 
-    BASE_URL = "https://comic.naver.com/challenge"
     PLATFORM = "challenge"
-    TEST_WEBTOON_ID = 818058  # T/F
+    BASE_URL = "https://comic.naver.com/challenge"
     WEBTOON_TYPE = "CHALLENGE"
     EPISODE_IMAGES_URL_SELECTOR = "#comic_view_area > div > img"
     PATH_NAME = "challenge"
@@ -225,11 +221,6 @@ class NaverWebtoonScraper(
     """네이버 웹툰(네이버 웹툰/베스트 도전/도전 만화 무관) 스크래퍼입니다."""
 
     PLATFORM = "naver_webtoon"
-    TEST_WEBTOON_IDS = (
-        NaverWebtoonSpecificScraper.TEST_WEBTOON_ID,
-        BestChallengeSpecificScraper.TEST_WEBTOON_ID,
-        ChallengeSpecificScraper.TEST_WEBTOON_ID,
-    )
 
     def __new__(
         cls, *args, **kwargs
