@@ -197,12 +197,12 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             ...
             ```
         """
-        with self._send_context_callback_message("setup"):
+        with self._context_message("setup"):
             self.fetch_all()
 
         webtoon_directory = self._prepare_directory()
 
-        with self._send_context_callback_message("download_thumbnail"):
+        with self._context_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         # 여기에서 1-based에서 0-based로 바뀜.
@@ -212,7 +212,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             episode_no_list = tuple(i for i in range(len(self.episode_ids)) if i + 1 in download_range)
 
         try:
-            with self._send_context_callback_message("download_episode"):
+            with self._context_message("download_episode"):
                 await self._download_episodes(episode_no_list, webtoon_directory)
 
             webtoon_directory = self._post_process_directory(webtoon_directory)
@@ -242,16 +242,12 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         주의: callback은 다운로드 과정을 멈추고 작업합니다.
         최대한 빨리 끝날 수 있도록 하는 것이 속도에 좋습니다.
         """
-        match situation:
-            case "download_episode_end":
-                logger.info(f"The webtoon {self.title} download ended.")
-            case "merge_webtoon_end":
-                logger.info("Merging webtoon ended.")
-            case "merge_webtoon_start":
-                logger.info("Merging webtoon has started...")
-            case "setup_end":
+        match situation, context:
+            case "download_thumbnail", {"finishing": True}:
                 logger.info("Webtoon data are fetched. Download has been started...")
-            case "indicate" | "download_skipped" | "download_failed" | "downloading_image":
+            case "download_episode", {"finishing": True}:
+                logger.info(f"The webtoon {self.title} download ended.")
+            case ("indicate" | "download_skipped" | "download_failed" | "downloading_image"), context:
                 match situation:
                     case "indicate":
                         episode_no = None
@@ -278,25 +274,23 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                     if episode_no is not None:
                         description = f"[{episode_no:02d}/{len(self.episode_titles):02d}] {description}"
                     logger.info(description)
-            case "description":
+            case "description", _:
                 logger.info(context["description"])
-            case "episode_download_complete":
+            case "episode_download_complete", _:
                 is_download_successful = context["is_download_successful"]
                 if is_download_successful:
                     episode_no = context["episode_no"]
                     episode_title = self.episode_titles[episode_no]
                     logger.info(f"Downloaded: #{episode_no} {_shorten(episode_title)}")
-            case the_others:
-                if context:
-                    logger.debug(f"WebtoonScraper status: {the_others}, context: {context}")
-                else:
-                    logger.debug(f"WebtoonScraper status: {the_others}")
+            case the_others, context if context:
+                logger.debug(f"WebtoonScraper status: {the_others}, context: {context}")
+            case the_others, _:
+                logger.debug(f"WebtoonScraper status: {the_others}")
 
     # MARK: PROPERTIES
 
     @property
     def cookie(self) -> str | None:
-        """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
         try:
             return self.headers["Cookie"]
         except KeyError:
@@ -308,7 +302,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
     @property
     def headers(self) -> dict[str, str]:
-        """헤더 값입니다. self.hxoptions.headers을 직접 수정하는 방법으로도 사용 가능하지만 조금 더 편리하게 header를 접근할 수 있습니다."""
         headers = self.hxoptions.headers
         if TYPE_CHECKING:
             assert isinstance(headers, dict)
@@ -341,10 +334,10 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         이 함수를 override하면 기본적으로 포함되어 있는 정보 외에 다양한 플랫폼에 한정적인 정보를 추가할 수 있습니다.
         None일 경우에는 1) dict일 경우 update가 사용됩니다. 2) 정보가 존재하지 않을 경우 오류가 나지 않고 스킵됩니다.
         """
+        _ABSENT = object()
         information = {}
         for name, value in self.INFORMATION_VARS.items():
             if value is None:
-                _ABSENT = object()
                 value = getattr(self, name, _ABSENT)
                 old_value = old_information.get(name, _ABSENT)
                 if value is _ABSENT:
@@ -366,11 +359,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         return information
 
     @contextmanager
-    def _send_context_callback_message(self, base_message: str, **contexts):
-        self.callback(base_message + "_start", **contexts)
+    def _context_message(self, context_name: str, **contexts):
+        self.callback(context_name, finishing=False, **contexts)
         end_contexts = {}
         yield end_contexts
-        self.callback(base_message + "_end", is_successful=True, **end_contexts)
+        self.callback(context_name, finishing=True, is_successful=True, **end_contexts)
 
     async def _download_episodes(self, episode_no_list: Sequence[int], webtoon_directory: Path) -> None:
         """에피소드를 반복적으로 다운로드합니다.
@@ -381,6 +374,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             webtoon_directory: 웹툰 디렉토리입니다.
         """
         if self.use_progress_bar:
+            # episode_range는 specific하다고 self에 포함하지 않으면서 pbar는 self에 붙이는 건 어불성설 아닌가?
+            # self.pbar를 생성하는 것보다 closure를 제공하는 등의 방식이 더 나을 것이라 생각함.
             episodes = self.pbar = tqdm(episode_no_list)
         else:
             episodes = episode_no_list
