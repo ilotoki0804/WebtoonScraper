@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import functools
+import json
+from pathlib import Path
 import textwrap
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from collections.abc import Iterable
+
+if TYPE_CHECKING:
+    from WebtoonScraper.scrapers._scraper import Scraper
 
 if TYPE_CHECKING:
     from typing import Self
@@ -13,6 +18,29 @@ from ..base import logger
 
 class ExtraInfoScraper:
     """이미지 이외의 정보(댓글, 작가의 말, 별점 등)을 불러올 때 사용되는 추가적인 스크래퍼입니다."""
+
+    def finalizer(self, scraper: Scraper, extras: dict[str, Any], exc: BaseException | None):
+        webtoon_directory: Path = extras["webtoon_directory"]
+        thumbnail_name: str = extras["thumbnail_name"]
+        # merge_number: int = extras["merge_number"]
+
+        # information.json 추가
+        if scraper.does_store_information:
+            information_file = webtoon_directory / "information.json"
+            if information_file.is_file():
+                old_information = json.loads(information_file.read_text(encoding="utf-8"))
+            else:
+                old_information = {}
+
+            information = scraper._get_information(old_information)
+            information.update(
+                thumbnail_name=thumbnail_name,
+                information_name="information.json",
+                original_webtoon_directory_name=webtoon_directory.name,
+                # merge_number=merge_number,
+                contents=["thumbnail", "information"],
+            )
+            information_file.write_text(json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 class EpisodeRange:

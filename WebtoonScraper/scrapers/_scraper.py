@@ -81,7 +81,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         author=None,
     )
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
-    extra_info_scraper: ExtraInfoScraper | None = None
+    extra_info_scraper: ExtraInfoScraper = ExtraInfoScraper()
 
     def __init__(self, webtoon_id: WebtoonId, /) -> None:
         self.hxoptions = hxsoup.MutableClientOptions(
@@ -158,11 +158,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_information(reload=reload)
 
-    def download_webtoon(
-        self,
-        episode_no_range: EpisodeRange | None = None,
-        merge_number: int | None = None,
-    ) -> None:
+    def download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
         """웹툰을 다운로드합니다.
 
         Jupyter 등 async 환경에서는 제대로 동작하지 않을 수 있습니다. 그럴 경우 async_download_webtoon을 사용하세요.
@@ -171,19 +167,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         추가적인 파라미터를 이용할 수 있습니다.
 
         Args:
-            episode_no_range: 다운로드할 회차의 범위를 정합니다.
+            download_range: 다운로드할 회차의 범위를 정합니다.
                 Scraper._episode_no_range_to_real_range의 문서를 참고하세요.
-            merge_number: 웹툰을 모두 다운로드 받은 뒤 웹툰을 모아서 볼 수 있도록 합니다.
-                None(기본값)이라면 웹툰을 모아서 볼 수 있도록 회차를 묶지 않습니다.
-            add_viewer: 웹툰 뷰어인 webtoon.html을 추가합니다. 기본값은 True입니다.
         """
         try:
-            asyncio.run(
-                self.async_download_webtoon(
-                    episode_no_range=episode_no_range,
-                    merge_number=merge_number,
-                )
-            )
+            asyncio.run(self.async_download_webtoon(download_range=download_range))
         except RuntimeError as e:
             try:
                 e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
@@ -191,11 +179,13 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                 logger.error("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
-    async def async_download_webtoon(
-        self,
-        episode_no_range: EpisodeRange | None = None,
-        merge_number: int | None = None,
-    ) -> None:
+    def _prepare_directory(self) -> Path:
+        webtoon_directory_name = self.get_webtoon_directory_name()
+        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
+        webtoon_directory.mkdir(parents=True, exist_ok=True)
+        return webtoon_directory
+
+    async def async_download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
 
         Example:
@@ -210,18 +200,16 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         with self._send_context_callback_message("setup"):
             self.fetch_all()
 
-        webtoon_directory_name = self.get_webtoon_directory_name()
-        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
-        webtoon_directory.mkdir(parents=True, exist_ok=True)
+        webtoon_directory = self._prepare_directory()
 
         with self._send_context_callback_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
         # 여기에서 1-based에서 0-based로 바뀜.
-        if episode_no_range is None:
+        if download_range is None:
             episode_no_list = range(len(self.episode_ids))
         else:
-            episode_no_list = tuple(i for i in range(len(self.episode_ids)) if i + 1 in episode_no_range)
+            episode_no_list = tuple(i for i in range(len(self.episode_ids)) if i + 1 in download_range)
 
         try:
             with self._send_context_callback_message("download_episode"):
@@ -229,30 +217,13 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
             webtoon_directory = self._post_process_directory(webtoon_directory)
 
-        except KeyboardInterrupt:
-            logger.error("Aborting...")
+        except BaseException as exc:
+            logger.error("Aborting..." if isinstance(exc, KeyboardInterrupt) else "Finializing...")
+            self.extra_info_scraper.finalizer(self, locals(), exc=exc)
+            raise
 
-        except BaseException:
-            logger.error("Finializing...")
-
-        finally:
-            # information.json 추가
-            if self.does_store_information:
-                information_file = webtoon_directory / "information.json"
-                if information_file.is_file():
-                    old_information = json.loads(information_file.read_text(encoding="utf-8"))
-                else:
-                    old_information = {}
-
-                information = self._get_information(old_information)
-                information.update(
-                    thumbnail_name=thumbnail_name,
-                    information_name="information.json",
-                    original_webtoon_directory_name=webtoon_directory_name,
-                    merge_number=merge_number,
-                    contents=["thumbnail", "information"],
-                )
-                information_file.write_text(json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8")
+        else:
+            self.extra_info_scraper.finalizer(self, locals(), exc=None)
 
     def check_webtoon_id(
         self,

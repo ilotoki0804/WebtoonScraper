@@ -22,66 +22,6 @@ from WebtoonScraper.base import logger, platforms
 from WebtoonScraper.scrapers import EpisodeRange, Scraper
 
 
-def _register(platform_name: str, scraper=None):
-    if scraper is None:
-        return lambda scraper: _register(platform_name, scraper)
-
-    platforms[platform_name] = scraper
-    return scraper
-
-
-def instantiate(webtoon_platform: str, webtoon_id: str) -> Scraper:
-    """웹툰 플랫폼 코드와 웹툰 ID로부터 스크레퍼를 인스턴스화하여 반환합니다. cookie, bearer 등의 추가적인 설정이 필요할 수도 있습니다."""
-
-    Scraper: type[Scraper] | None = platforms.get(webtoon_platform.lower())  # type: ignore
-    if Scraper is None:
-        raise ValueError(f"Invalid webtoon platform: {webtoon_platform}")
-    return Scraper._from_string(webtoon_id)
-
-
-def instantiate_from_url(webtoon_url: str) -> Scraper:
-    """웹툰 URL로부터 자동으로 알맞은 스크래퍼를 인스턴스화합니다. cookie, bearer 등의 추가적인 설정이 필요할 수 있습니다."""
-
-    for PlatformClass in platforms.values():
-        try:
-            platform = PlatformClass.from_url(webtoon_url)
-        except InvalidURLError:
-            continue
-        return platform
-    raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
-
-
-def setup_instance(
-    webtoon_id_or_url: str,
-    webtoon_platform: str | Literal["url"],
-    *,
-    existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip",
-    cookie: str | None = None,
-    download_directory: str | Path | None = None,
-    options: dict[str, str] | None = None,
-) -> Scraper:
-    """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
-
-    # 스크래퍼 불러오기
-    if webtoon_platform == "url" or "." in webtoon_id_or_url:  # URL인지 확인
-        scraper = instantiate_from_url(webtoon_id_or_url)
-    else:
-        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
-
-    # 부가 정보 불러오기
-    if cookie:
-        scraper.cookie = cookie
-    if options:
-        scraper._apply_options(options)
-
-    # attribute 형식 설정 설정
-    if download_directory:
-        scraper.base_directory = download_directory
-    scraper.existing_episode_policy = existing_episode_policy
-
-    return scraper
-
-
 class LazyVersionAction(argparse._VersionAction):
     version: Callable[[], str] | str | None
 
@@ -187,12 +127,6 @@ download_subparser.add_argument(
         f"Supported platforms: {', '.join(platforms)}"
     )
 )
-download_subparser.add_argument(
-    "-m",
-    "--merge-number",
-    type=int,
-    help="Merge number when you want to merge directories. Don't specify if you don't want to merge",
-)
 download_subparser.add_argument("--cookie")
 download_subparser.add_argument(
     "-r",
@@ -217,111 +151,71 @@ download_subparser.add_argument(
     nargs="+",
 )
 download_subparser.add_argument(
-    "--concat",
-    help="Concatenating webtoon images. Full specification is on docs",
-    metavar="{a,c,h,r} NUMBER",
-    nargs="+",
-)
-download_subparser.add_argument(
     "--existing-episode",
     choices=["skip", "raise", "download_again", "hard_check"],
     default="skip",
     help="Determine what to do when episode directory already exists",
 )
-download_subparser.add_argument("-N", "--thread-number", type=int, default=None)
 
-# merge subparser
-merge_subparser = subparsers.add_parser("merge", help="Merge episode directories")
-merge_subparser.set_defaults(subparser_name="merge")
-merge_subparser.add_argument(
-    "webtoon_directory_path",
-    type=Path,
-    help="A webtoon folder to merge or restore",
-)
-merge_subparser.add_argument(
-    "-m",
-    "--merge-number",
-    type=int,
-    metavar="merge_number",
-    default=None,
-    help="Merge number when merge",
-)
-merge_subparser.add_argument(
-    "-t",
-    "--target-webtoon-directory",
-    type=Path,
-    metavar="target_webtoon_directory",
-    default=None,
-    help="The destination of output webtoon directory",
-)
-merge_subparser.add_argument(
-    "-s",
-    "--select",
-    action="store_true",
-    help="Instead of typing the webtoon directory directly, open the webtoon directory selector",
-)
-merge_subparser.add_argument(
-    "-a",
-    "--action",
-    choices={"merge", "restore", "auto"},
-    default="auto",
-    help=(
-        "Determines whether to merge or restore the directories. "
-        "The 'merge' option will merge the webtoon directory. "
-        "The 'restore' option restores the webtoon directory. "
-        "The 'auto' option restores the directory, "
-        "merging it if it is already in the default state. "
-        "Ignored if the `s` option is used"
-    ),
-)
 
-# concat subparser
-concat_subparser = subparsers.add_parser("concat", help="Concatenate images of episodes")
-concat_subparser.set_defaults(subparser_name="concat")
-concat_subparser.add_argument(
-    "webtoon_directory_path",
-    type=Path,
-    metavar="webtoon_directory_path",
-    help="The name of folder that contains webtoon folders to concatenate",
-)
-concat_subparser.add_argument(
-    "-s",
-    "--select",
-    action="store_true",
-    help="Instead of typing the webtoon directory directly, open the webtoon directory selector",
-)
-concat_subparser.add_argument("--all", action="store_true", help="Merge all images of each episode")
-concat_subparser.add_argument(
-    "-C",
-    "--count",
-    type=int,
-    help="Concatenate based on image count",
-)
-concat_subparser.add_argument(
-    "-H",
-    "--height",
-    type=int,
-    help="Concatenate based on the height of concatenated images",
-)
-concat_subparser.add_argument(
-    "-R",
-    "--ratio",
-    type=float,
-    help="Concatenate based on the ratio of concatenated images",
-)
-concat_subparser.add_argument(
-    "-t",
-    "--target-webtoon-directory",
-    type=Path,
-    metavar="target_webtoon_directory",
-    default=None,
-    help="The destination of output webtoon directory",
-)
-concat_subparser.add_argument("-N", "--thread-number", type=int, default=None)
-concat_subparser.add_argument("-m", "--merge-number", type=int, default=None, help="Merge after concatenation")
+def _register(platform_name: str, scraper=None):
+    if scraper is None:
+        return lambda scraper: _register(platform_name, scraper)
 
-shell_subparser = subparsers.add_parser("shell", help="Download webtoons")
-shell_subparser.set_defaults(subparser_name="shell")
+    platforms[platform_name] = scraper
+    return scraper
+
+
+def instantiate(webtoon_platform: str, webtoon_id: str) -> Scraper:
+    """웹툰 플랫폼 코드와 웹툰 ID로부터 스크레퍼를 인스턴스화하여 반환합니다. cookie, bearer 등의 추가적인 설정이 필요할 수도 있습니다."""
+
+    Scraper: type[Scraper] | None = platforms.get(webtoon_platform.lower())  # type: ignore
+    if Scraper is None:
+        raise ValueError(f"Invalid webtoon platform: {webtoon_platform}")
+    return Scraper._from_string(webtoon_id)
+
+
+def instantiate_from_url(webtoon_url: str) -> Scraper:
+    """웹툰 URL로부터 자동으로 알맞은 스크래퍼를 인스턴스화합니다. cookie, bearer 등의 추가적인 설정이 필요할 수 있습니다."""
+
+    for PlatformClass in platforms.values():
+        try:
+            platform = PlatformClass.from_url(webtoon_url)
+        except InvalidURLError:
+            continue
+        return platform
+    raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
+
+
+def setup_instance(
+    webtoon_id_or_url: str,
+    webtoon_platform: str | Literal["url"],
+    *,
+    existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip",
+    cookie: str | None = None,
+    download_directory: str | Path | None = None,
+    options: dict[str, str] | None = None,
+) -> Scraper:
+    """여러 설정으로부터 적절한 스크래퍼 인스턴스를 반환합니다. CLI 사용을 위해 디자인되었습니다."""
+
+    # 스크래퍼 불러오기
+    if webtoon_platform == "url" or "." in webtoon_id_or_url:  # URL인지 확인
+        scraper = instantiate_from_url(webtoon_id_or_url)
+    else:
+        scraper = instantiate(webtoon_platform, webtoon_id_or_url)
+
+    # 부가 정보 불러오기
+    if cookie:
+        scraper.cookie = cookie
+    if options:
+        scraper._apply_options(options)
+
+    # attribute 형식 설정 설정
+    if download_directory:
+        scraper.base_directory = download_directory
+    scraper.existing_episode_policy = existing_episode_policy
+
+    return scraper
 
 
 def parse_download(args: argparse.Namespace) -> None:
@@ -351,10 +245,7 @@ def parse_download(args: argparse.Namespace) -> None:
         if args.no_progress_bar:
             scraper.use_progress_bar = False
 
-        scraper.download_webtoon(
-            args.range,
-            merge_number=args.merge_number,
-        )
+        scraper.download_webtoon(args.range)
 
 
 def main(argv=None) -> Literal[0, 1]:
