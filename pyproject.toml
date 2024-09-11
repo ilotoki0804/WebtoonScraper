@@ -1,0 +1,71 @@
+[project]
+name = "WebtoonScraper"
+description = "Scraping webtoons with ease"
+readme = "README-build.md"  # Use `simplebuilder` to build readme
+authors = [{ name = "ilotoki0804", email = "ilotoki0804@gmail.com" }]
+license = { file = "LICENSE" }  # Not needed, but why not
+keywords = [
+    "webtoon",
+    "webtoon scraper",
+    "naver webtoon",
+    "webtoon downloader",
+    "download webtoon",
+]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "hxsoup>=0.3.0,<=0.5.0",
+    "pyfilename==0.5.1",
+    "rich>=13.8.0",
+    "tqdm>=4.66.5",
+    "yarl>=1.9.11",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+lezhin-comics = ["pillow"]
+concat = ["pillow"]
+full = ["pillow"]
+
+[project.scripts]
+WebtoonScraper = "WebtoonScraper.__main__:main"
+webtoon = "WebtoonScraper.__main__:main"
+
+[project.urls]
+Documentation = "https://github.com/ilotoki0804/WebtoonScraper/blob/main/docs/how-to-use.md"
+Repository = "https://github.com/ilotoki0804/WebtoonScraper"
+Changelog = "https://github.com/ilotoki0804/WebtoonScraper/blob/main/docs/releases.md"
+Funding = "https://buymeacoffee.com/ilotoki0804"
+
+[tool.hatch.version]
+path = "WebtoonScraper/base.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "WebtoonScraper",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel>=6.29.5",
+    "pytest>=8.3.2",
+    "simplebuilder==0.4.0",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "W", "B"]
+ignore = ["E501", "F401", "E999", "F405", "F403", "E402", "S101", "F841"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
