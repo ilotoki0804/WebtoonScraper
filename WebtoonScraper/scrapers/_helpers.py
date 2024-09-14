@@ -19,6 +19,9 @@ from ..base import logger
 class ExtraInfoScraper:
     """이미지 이외의 정보(댓글, 작가의 말, 별점 등)와 기타 프로세싱을 사용할 때 사용되는 추가적인 스크래퍼입니다."""
 
+    def initializer(self, scraper: Scraper, webtoon_directory: Path):
+        pass
+
     def finalizer(self, scraper: Scraper, extras: dict[str, Any], exc: BaseException | None):
         webtoon_directory: Path = extras["webtoon_directory"]
         thumbnail_name: str = extras["thumbnail_name"]

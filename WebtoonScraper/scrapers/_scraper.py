@@ -199,6 +199,9 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         webtoon_directory = self._prepare_directory()
 
+        assert self.extra_info_scraper is not None
+        self.extra_info_scraper.initializer(self, webtoon_directory)
+
         with self._context_message("download_thumbnail"):
             thumbnail_name = self._download_webtoon_thumbnail(webtoon_directory)
 
