@@ -1,5 +1,3 @@
-"""Download Webtoons from Lezhin Comics."""
-
 from __future__ import annotations
 
 import ast

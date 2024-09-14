@@ -1,5 +1,3 @@
-"""Unshuffles Lezhin Comics Webtoon."""
-
 from __future__ import annotations
 
 import json
