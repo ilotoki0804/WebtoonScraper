@@ -11,6 +11,16 @@ WebtoonScraper 자체에 대한 자세한 설명은 **[사용 방법](how-to-use
         * [다운로드](#다운로드)
         * [언셔플링](#언셔플링)
         * [기타 옵션들](#기타-옵션들)
+    * [네이버 웹툰 글로벌 (webtoons.com)](#네이버-웹툰-글로벌-webtoonscom)
+    * [버프툰](#버프툰)
+        * [쿠키 얻기](#쿠키-얻기)
+        * [다운로드](#다운로드-1)
+    * [네이버 포스트](#네이버-포스트)
+    * [네이버 게임](#네이버-게임)
+    * [카카오페이지](#카카오페이지)
+    * [네이버 블로그](#네이버-블로그)
+    * [티스토리](#티스토리)
+    * [카카오 웹툰](#카카오-웹툰)
 
 ## 네이버 웹툰
 
@@ -109,3 +119,76 @@ scraper.download_webtoon()
 * `download-paid=true`: 구매한 에피소드를 추가로 다운로드합니다. 기본값은 구매가 필요하지 않은 무료 회차만 다운로드하는 것입니다.
 * `bearer="Bearer ..."`: bearer를 설정합니다. 필수적으로 요구됩니다. 설명은 [여기](#bearer)를 참고하세요.
 * `thread-number=<자연수>`: 언셔플시 사용될 프로세스 개수를 결정합니다. 기본값은 전체 스레드 개수의 반입니다. `1`이면 멀티프로세싱을 사용하지 않습니다.
+
+## 네이버 웹툰 글로벌 (webtoons.com)
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://www.webtoons.com/en/fantasy/the-top-dungeon-farmer/list?title_no=5656"
+```
+
+## 버프툰
+
+### 쿠키 얻기
+
+쿠키가 없으면 다운로드를 진행할 수 없습니다.
+[쿠키를 얻는 방법](how-to-use.md#cookie)을 참고하세요.
+
+### 다운로드
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://bufftoon.plaync.com/series/1007888" --cookie "<YOUR COOKIE HERE 쿠키를 여기에 붙여넣으세요>"
+```
+
+## 네이버 포스트
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://m.post.naver.com/my/series/detail.naver?seriesNo=648552&memberNo=3395565"
+```
+
+## 네이버 게임
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://game.naver.com/original_series/5"
+```
+
+## 카카오페이지
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://page.kakao.com/content/53397318"
+```
+
+## 네이버 블로그
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://m.blog.naver.com/bkid4?categoryNo=55"
+```
+
+## 티스토리
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://doldistudio.tistory.com/category/진돌만화"
+```
+
+특정 티스토리 사이트는 다운로드가 되지 않을 수 있습니다. 만약 어떤 티스토리 사이트를 다운로드받는 데에 실패했다면 이슈를 열어주세요.
+
+## 카카오 웹툰
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://webtoon.kakao.com/content/%EB%B6%80%EA%B8%B0%EC%98%81%ED%99%94/2343"
+```
