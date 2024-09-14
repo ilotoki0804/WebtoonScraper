@@ -17,7 +17,6 @@ from ..exceptions import (
     UnsupportedRatingError,
 )
 from ._scraper import Scraper, reload_manager
-from ._naver_webtoon_extra import NaverWebtoonCommentsDownloadOption, NaverWebtoonMetaInfoScraper
 
 
 class AbstractNaverWebtoonScraper(Scraper[int]):
@@ -29,14 +28,11 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     PATH_NAME: str
     DOWNLOAD_INTERVAL = 0.5
     COMMENTS_DOWNLOAD_SUPPORTED = True
-    extra_info_scraper: NaverWebtoonMetaInfoScraper
-    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(comments_data=None)
+    INFORMATION_VARS = Scraper.INFORMATION_VARS
 
     def __init__(self, webtoon_id: int, /, *, cookie: str | None = None) -> None:
         super().__init__(webtoon_id)
         self.headers.update(Referer="https://comic.naver.com/webtoon/")
-        if self.extra_info_scraper is None:
-            self.extra_info_scraper = NaverWebtoonMetaInfoScraper()
         if cookie is not None:
             self.cookie = cookie
 
@@ -116,12 +112,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         if TYPE_CHECKING:
             episode_image_urls = [url for url in episode_image_urls if isinstance(url, str)]
 
-        self.extra_info_scraper.gather_author_comment(episode_no, response)
-
         return episode_image_urls
-
-    def get_episode_extra(self, episode_no) -> None:
-        self.extra_info_scraper.fetch_episode_comments(episode_no, self)
 
     def check_webtoon_id(self) -> str | None:
         return super().check_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
@@ -141,10 +132,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
             raise ValueError("Cookie does not contain required data.")
         self.headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
 
-    @property
-    def comments_data(self):
-        return self.extra_info_scraper.comments_data
-
     @classmethod
     def _extract_webtoon_id(cls, url) -> int | None:
         if url.host not in {"comic.naver.com", "m.comic.naver.com"}:
@@ -155,17 +142,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
         if not webtoon_id_str:
             return None
         return int(webtoon_id_str)
-
-    def _apply_options(self, options: dict[str, str], /) -> None:
-        for option, raw_value in options.items():
-            option = option.upper().replace("-", "_").strip()
-            if option == "COMMENTS":
-                if raw_value is None or raw_value == "TOP":
-                    self.extra_info_scraper.comments_option = NaverWebtoonCommentsDownloadOption(top_comments_only=True)
-                elif raw_value == "FULL":
-                    self.extra_info_scraper.comments_option = NaverWebtoonCommentsDownloadOption(top_comments_only=False)
-            else:
-                logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")
 
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):

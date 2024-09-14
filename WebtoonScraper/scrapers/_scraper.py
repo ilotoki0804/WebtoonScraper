@@ -102,7 +102,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         """해당 회차를 구성하는 이미지들의 URL을 불러옵니다."""
         raise NotImplementedError
 
-    def get_episode_extra(self, episode_no: int) -> list[str] | None:
+    def get_episode_extra(self, episode_no: int) -> None:
         """해당 회차를 구성하는 이미지들의 URL을 불러옵니다."""
 
     @reload_manager
@@ -218,7 +218,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             webtoon_directory = self._post_process_directory(webtoon_directory)
 
         except BaseException as exc:
-            logger.error("Aborting..." if isinstance(exc, KeyboardInterrupt) else "Finializing...")
+            logger.error("Aborting..." if isinstance(exc, KeyboardInterrupt) else "Finalizing...")
             self.extra_info_scraper.finalizer(self, locals(), exc=exc)
             raise
 
