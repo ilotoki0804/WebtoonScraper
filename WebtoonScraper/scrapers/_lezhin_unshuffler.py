@@ -128,7 +128,7 @@ def unshuffle_episode(
     shutil.rmtree(target_episode_directory, ignore_errors=True)
     target_episode_directory.mkdir()
 
-    random_numbers = calculate_random_numbers(episode_id_int)
+    random_numbers = generate_random(episode_id_int)
     image_order = calculate_image_order(random_numbers)
     for image_name in os.listdir(source_episode_directory):
         source_image_path = source_episode_directory / image_name
@@ -138,8 +138,8 @@ def unshuffle_episode(
     return source_episode_directory.name
 
 
-def calculate_random_numbers(seed: int) -> list[int]:
-    """Mutating Lezhin's random number generator. `random_numbers` are always same if given seed is same."""
+def generate_random(seed: int) -> list[int]:
+    """Mutating Lezhin's pseudorandom generator. `random_numbers` are always same if given seed is same."""
     results: list[int] = []
     state = seed
     for _ in range(25):
