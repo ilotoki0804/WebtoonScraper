@@ -106,6 +106,13 @@ parser.add_argument(
 )
 parser.add_argument("--no-progress-bar", action="store_true", help="Use log instead progress bar to display status")
 subparsers = parser.add_subparsers(title="Commands")
+parser.add_argument(
+    "-N",
+    "--thread-number",
+    type=int,
+    default=None,
+    help="Set concurrent thread number. You can also use `THREAD_NUMBER` to set thread numbers to use."
+)
 
 # download subparser
 download_subparser = subparsers.add_parser("download", help="Download webtoons")
@@ -184,7 +191,7 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
         except InvalidURLError:
             continue
         return platform
-    raise InvalidPlatformError(f"Failed to retrieve webtoon platform from URL: {webtoon_url}")
+    raise InvalidPlatformError(f"Platform not detected: {webtoon_url}")
 
 
 def setup_instance(
@@ -244,6 +251,9 @@ def parse_download(args: argparse.Namespace) -> None:
 
         if args.no_progress_bar:
             scraper.use_progress_bar = False
+
+        if hasattr(scraper, "thread_number"):
+            scraper.thread_number = args.thread_number  # type: ignore
 
         scraper.download_webtoon(args.range)
 

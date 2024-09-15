@@ -92,6 +92,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.delete_shuffled: bool = False
         self.download_paid_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
+        self.thread_number: int | None = None
 
     async def async_download_webtoon(self, *args, **kwargs):
         await super().async_download_webtoon(*args, **kwargs)
@@ -313,7 +314,12 @@ class LezhinComicsScraper(Scraper[str]):
             elif option == "BEARER":
                 self.bearer = raw_value
             elif option == "THREAD_NUMBER":
-                if raw_value.lower() in ("none", "null"):
+                if self.thread_number:
+                    logger.warning(
+                        f"Thread number has already been set as {self.thread_number}, "
+                        f"but thread_number option overriding that value to {raw_value}."
+                    )
+                if raw_value.lower() == "default":
                     self.thread_number = None
                 else:
                     self.thread_number = int(raw_value)

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
-from ..base import DEFAULT_PROCESS_NUMBER, logger
+from ..base import get_default_thread_number, logger
 from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
 from ..directory_state import (
     DIRECTORY_PATTERNS,
@@ -95,7 +95,7 @@ def unshuffle(
         "The webtoon is being unshuffled. It takes a while and it's very CPU-intensive task. "
         "So keep patient and wait until the process end."
     )
-    with ThreadPool(thread_number or DEFAULT_PROCESS_NUMBER) as p:
+    with ThreadPool(thread_number or get_default_thread_number()) as p:
         unshuffled_episode_ids = p.imap_unordered(lambda args: unshuffle_episode(*args), unshuffle_parameters)
         if use_progress_bar:
             progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
