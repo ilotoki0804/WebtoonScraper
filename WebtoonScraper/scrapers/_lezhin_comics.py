@@ -68,6 +68,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         bearer와 cookie를 어떻게 얻는지는 문서를 참고하세요.
         """
+        # cspell: ignore allowadult
         super().__init__(webtoon_id)
         self.headers.update(
             {
@@ -134,8 +135,7 @@ class LezhinComicsScraper(Scraper[str]):
         except EmptyResultError:
             if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
                 raise UnsupportedRatingError(
-                    "Adult webtoon is not available since you don't set cookie. "
-                    "Check docs to how to download"
+                    "Adult webtoon is not available since you don't set cookie. " "Check docs to how to download"
                 ) from None
             if "adult" in res.url.path:
                 raise UnsupportedRatingError(
@@ -195,6 +195,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.viewed_episodes = [episode_id in view_episodes_set for episode_id in self.episode_int_ids]
 
     def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[tuple[str, str]] | None:
+        # cspell: ignore keygen
         is_purchased = self.purchased_episodes[episode_no] if hasattr(self, "purchased_episodes") else False
 
         if is_purchased and self.is_fhd_downloaded is not None:
@@ -335,7 +336,15 @@ class LezhinComicsScraper(Scraper[str]):
             return None
         return matched["webtoon_id"]
 
-    def _download_image(self, image_directory: Path, url_and_media_type: tuple[str, str], image_no: int, client: AsyncClient, *, file_extension: str | None = None):
+    def _download_image(
+        self,
+        image_directory: Path,
+        url_and_media_type: tuple[str, str],
+        image_no: int,
+        client: AsyncClient,
+        *,
+        file_extension: str | None = None,
+    ):
         url, media_type = url_and_media_type
         if media_type not in ("image/jpeg", "image/gif"):
             logger.warning(f"Unknown media type: {media_type}")

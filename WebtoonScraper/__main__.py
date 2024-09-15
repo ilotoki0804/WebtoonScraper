@@ -89,9 +89,7 @@ parser = argparse.ArgumentParser(
 parser.register("action", "version", LazyVersionAction)
 
 parser.add_argument(
-    "--mock",
-    action="store_true",
-    help="Print argument parsing result and exit. Exist for debug or practice purpose"
+    "--mock", action="store_true", help="Print argument parsing result and exit. Exist for debug or practice purpose"
 )
 parser.add_argument(
     "--version",
@@ -111,7 +109,7 @@ parser.add_argument(
     "--thread-number",
     type=int,
     default=None,
-    help="Set concurrent thread number. You can also use `THREAD_NUMBER` to set thread numbers to use."
+    help="Set concurrent thread number. You can also use `THREAD_NUMBER` to set thread numbers to use.",
 )
 
 # download subparser
@@ -132,7 +130,7 @@ download_subparser.add_argument(
     help=(
         "Webtoon platform to download. Only specify when you want to use webtoon id rather than url. "
         f"Supported platforms: {', '.join(platforms)}"
-    )
+    ),
 )
 download_subparser.add_argument("--cookie")
 download_subparser.add_argument(
@@ -233,7 +231,7 @@ def parse_download(args: argparse.Namespace) -> None:
             cookie=args.cookie,
             download_directory=args.base_directory,
             options=dict(args.options or {}),
-            existing_episode_policy=args.existing_episode
+            existing_episode_policy=args.existing_episode,
         )
 
         if args.list_episodes:
@@ -241,7 +239,9 @@ def parse_download(args: argparse.Namespace) -> None:
             table = Table(show_header=True, header_style="bold blue", box=None)
             table.add_column("Episode number [dim](ID)[/dim]", width=12)
             table.add_column("Episode Title", style="bold")
-            for i, (episode_id, episode_title) in enumerate(zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1):
+            for i, (episode_id, episode_title) in enumerate(
+                zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1
+            ):
                 table.add_row(
                     f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
                     str(episode_title),

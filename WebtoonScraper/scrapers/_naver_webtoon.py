@@ -39,8 +39,9 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
     @reload_manager
     def fetch_webtoon_information(self, *, reload: bool = False, no_invalid_webtoon_type_error: bool = False) -> None:
         url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
+        headers = self.headers | dict(Accept="application/json, text/plain, */*")
         try:
-            webtoon_json_info = self.hxoptions.get(url, headers=self.headers | dict(Accept="application/json, text/plain, */*")).json()
+            webtoon_json_info = self.hxoptions.get(url, headers=headers).json()
         except JSONDecodeError:
             raise InvalidPlatformError(f"{self.webtoon_id} is invalid webtoon ID.") from None
         # webtoon_json_info['thumbnailUrl']  # 정사각형 썸네일

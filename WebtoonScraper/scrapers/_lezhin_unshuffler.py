@@ -50,7 +50,13 @@ def unshuffle_typical_webtoon(
         raise ValueError(f"webtoon directory {source_webtoon_directory} is not typical. Use `unshuffle` instead.")
     target_webtoon_directory = Path(str_target_webtoon_directory)
 
-    unshuffle(source_webtoon_directory, target_webtoon_directory, episode_int_ids, use_progress_bar=use_progress_bar, thread_number=thread_number)
+    unshuffle(
+        source_webtoon_directory,
+        target_webtoon_directory,
+        episode_int_ids,
+        use_progress_bar=use_progress_bar,
+        thread_number=thread_number,
+    )
     return target_webtoon_directory
 
 

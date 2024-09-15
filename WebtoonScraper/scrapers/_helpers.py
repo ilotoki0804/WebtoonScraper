@@ -88,22 +88,32 @@ class EpisodeRange:
     def __repr__(self) -> str:
         return f"{type(self).__name__}({', '.join(repr(range_) for range_ in self._ranges)})"
 
-    def _add(self, item, not_invert: bool):
-        if self._ranges:
-            last_not_invert, last_item = self._ranges[-1]
-            match last_item, item, not_invert == last_not_invert:
-                case int(last_item), int(item), True:
-                    self._ranges[-1] = {last_item, item}
-                case set(last_item), int(item), True:
-                    last_item.add(item)
-                case set(last_item), [*item], True:
-                    last_item.update(item)
-                case _, item, _:
-                    normalized_item = {item} if isinstance(item, int) else item if isinstance(item, set | range | slice) else set(item)
-                    self._ranges.append((not_invert, normalized_item))
+    @staticmethod
+    def _normalize_item(item):
+        if isinstance(item, int):
+            return {item}
+        elif isinstance(item, set | range | slice):
+            return item
         else:
-            normalized_item = {item} if isinstance(item, int) else item if isinstance(item, set | range | slice) else set(item)
+            return set(item)
+
+    def _add(self, item, not_invert: bool) -> None:
+        if not self._ranges:
+            normalized_item = self._normalize_item(item)
             self._ranges.append((not_invert, normalized_item))
+            return
+
+        last_not_invert, last_item = self._ranges[-1]
+        match last_item, item, not_invert == last_not_invert:
+            case int(last_item), int(item), True:
+                self._ranges[-1] = {last_item, item}
+            case set(last_item), int(item), True:
+                last_item.add(item)
+            case set(last_item), [*item], True:
+                last_item.update(item)
+            case _, item, _:
+                normalized_item = self._normalize_item(item)
+                self._ranges.append((not_invert, normalized_item))
 
     def add(self, item: slice | range | Iterable[int] | int):
         self._add(item, not_invert=True)
