@@ -7,6 +7,7 @@
 __all__ = [
     "Scraper",
     "EpisodeRange",
+    "ExtraInfoScraper",
     "BestChallengeSpecificScraper",
     "ChallengeSpecificScraper",
     "NaverWebtoonScraper",
@@ -14,7 +15,8 @@ __all__ = [
     "LezhinComicsScraper",
 ]
 
-from ._scraper import EpisodeRange, Scraper
+from ._helpers import EpisodeRange, ExtraInfoScraper
+from ._scraper import Scraper
 from ._naver_webtoon import (
     BestChallengeSpecificScraper,
     ChallengeSpecificScraper,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import html
-import json
 import os
 import re
 import shutil
@@ -44,7 +43,7 @@ from ._helpers import shorten as _shorten
 if TYPE_CHECKING:
     from typing import Self
 
-WebtoonId = TypeVar("WebtoonId", int, str, tuple[int, int], tuple[str, int], tuple[str, str])
+WebtoonId = TypeVar("WebtoonId")
 
 
 class RegisterMeta(type):
