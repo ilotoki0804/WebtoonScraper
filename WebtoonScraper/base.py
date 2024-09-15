@@ -14,8 +14,11 @@ if TYPE_CHECKING:
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version__ = "4.2.0"
 
-_CPU_COUNT = os.cpu_count()
-DEFAULT_PROCESS_NUMBER = 1 if _CPU_COUNT is None or _CPU_COUNT < 2 else max(_CPU_COUNT // 2, 10)
+if TYPE_CHECKING:
+    DEFAULT_PROCESS_NUMBER: int
+else:
+    _CPU_COUNT = os.cpu_count()
+    DEFAULT_PROCESS_NUMBER = 1 if _CPU_COUNT is None or _CPU_COUNT < 2 else max(_CPU_COUNT // 2, 10)
 
 logger = logging.getLogger("WebtoonScraper")
 logger.handlers = [RichHandler(show_time=False, show_path=False)]
