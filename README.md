@@ -10,7 +10,7 @@
 
 **[English documentation is available](./docs/README-en.md).**
 
-최대 규모 오픈 소스 웹툰 스크래퍼입니다.
+웹툰을 다운로드받을 수 있는 프로그램입니다.
 
 저작권과 책임에 대한 내용을 더욱 자세히 알고 싶다면 [이 문서](./docs/copyright.md)를 참고해 주세요.
 
