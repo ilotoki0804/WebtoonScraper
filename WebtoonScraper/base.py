@@ -30,7 +30,7 @@ def get_default_thread_number() -> int:
 
 
 logger = logging.getLogger("WebtoonScraper")
-logger.handlers = [RichHandler(show_time=False, show_path=False)]
+logger.addHandler(RichHandler(show_time=False, show_path=False))
 logger.setLevel(logging.INFO)
 
 platforms: dict[str, type[Scraper]] = {}
