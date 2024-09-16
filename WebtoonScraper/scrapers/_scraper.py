@@ -93,6 +93,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.does_store_information = True
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.author = None
+        self._stop_progress = False
 
     # MARK: PUBLIC METHODS
 
@@ -281,6 +282,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                     episode_no = context["episode_no"]
                     episode_title = self.episode_titles[episode_no]
                     logger.info(f"Downloaded: #{episode_no} {_shorten(episode_title)}")
+            case "episode_download_stopped", _:
+                logger.error("WebtoonScraper stopped.")
             case the_others, context if context:
                 logger.debug(f"WebtoonScraper status: {the_others}, context: {context}")
             case the_others, _:
@@ -313,6 +316,9 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.headers.update(value)
 
     # MARK: PRIVATE METHODS
+
+    def _stop(self):
+        self._stop_progress = True
 
     @classmethod
     def _from_string(cls, string: str, /, **kwargs):
@@ -380,6 +386,14 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             episodes = episode_no_list
         async with self.hxoptions.build_async_client() as client:
             for i, episode_no in enumerate(episodes):
+                if self._stop_progress:
+                    self.callback(
+                        "episode_download_stopped",
+                        index=i,
+                        episode_no=episode_no,
+                        episodes=episodes,
+                    )
+                    break
                 is_download_successful = await self._download_episode(episode_no, webtoon_directory, client)
                 if not self.use_progress_bar:
                     self.callback(
