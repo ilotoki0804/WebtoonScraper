@@ -75,6 +75,8 @@ webtoon --version
 
 ## Donate
 
+[![BECOME A PATREON](../images/patreon.png)](https://www.patreon.com/ilotoki0804)
+
 The WebtoonScraper project is funded by donations.
 
 You can support the developers by donating on [Patreon](https://www.patreon.com/ilotoki0804),
