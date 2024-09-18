@@ -67,7 +67,7 @@ WebtoonScraper 프로젝트는 후원으로 운영됩니다.
 
 ### 앱으로 이용하기 (베타)
 
-<img src="./images/gui.png" width="70%">
+[<img src="https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/main/images/gui.png" width="70%">](https://www.patreon.com/ilotoki0804)
 
 WebtoonScraper는 파이썬이나 pip 설치 없이 바로 앱으로 사용할 수 있으며,
 앱을 이용하면 CLI를 사용하는 방법을 알 필요 없이 더욱 간편하게 사용할 수 있습니다.
