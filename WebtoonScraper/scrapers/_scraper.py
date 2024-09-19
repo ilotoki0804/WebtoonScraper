@@ -243,8 +243,10 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         최대한 빨리 끝날 수 있도록 하는 것이 속도에 좋습니다.
         """
         match situation, context:
+            case "setup", {"finishing": False}:
+                logger.info("Fetching metadata...")
             case "download_thumbnail", {"finishing": True}:
-                logger.info("Webtoon data are fetched. Download has been started...")
+                logger.info(f"Downloading {_shorten(self.title)}...")
             case "download_episode", {"finishing": True}:
                 logger.info(f"The webtoon {self.title} download ended.")
             case ("indicate" | "download_skipped" | "download_failed" | "downloading_image"), context:
