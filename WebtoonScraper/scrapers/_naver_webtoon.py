@@ -135,14 +135,13 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> int | None:
-        if url.host not in {"comic.naver.com", "m.comic.naver.com"}:
-            return None
-        if url.path != f"/{cls.PATH_NAME}/list":
-            return None
-        webtoon_id_str = url.query.get("titleId")
-        if not webtoon_id_str:
-            return None
-        return int(webtoon_id_str)
+        match url.host, url.parts, dict(url.query):
+            case (
+                "comic.naver.com" | "m.comic.naver.com",
+                ("/", cls.PATH_NAME, "list"),
+                {"titleId": webtoon_id_str}
+            ):
+                return int(webtoon_id_str)
 
 
 class NaverWebtoonSpecificScraper(AbstractNaverWebtoonScraper):

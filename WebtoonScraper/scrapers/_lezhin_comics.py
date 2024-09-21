@@ -329,12 +329,9 @@ class LezhinComicsScraper(Scraper[str]):
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> str | None:
-        if url.host != "www.lezhin.com":
-            return None
-        matched = re.match(r"/ko/comic/(?P<webtoon_id>\w+)", str(url.path))
-        if not matched:
-            return None
-        return matched["webtoon_id"]
+        match url.host, url.parts:
+            case "www.lezhin.com", ("/", "ko", "comic", webtoon_id):
+                return webtoon_id
 
     def _download_image(
         self,
@@ -351,10 +348,6 @@ class LezhinComicsScraper(Scraper[str]):
         if media_type.startswith("image"):
             file_extension = media_type.removeprefix("image/")
         return super()._download_image(image_directory, url, image_no, client, file_extension=file_extension)
-
-    @classmethod
-    def _get_webtoon_id_from_matched_url(cls, matched_url: re.Match) -> int:
-        return matched_url.group("webtoon_id")
 
     def _parse_episode_information(
         self,
