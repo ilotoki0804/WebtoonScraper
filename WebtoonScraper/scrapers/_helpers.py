@@ -62,6 +62,9 @@ class EpisodeRange:
                     if index in container:
                         return True ^ invert
 
+                case slice(start=None, stop=None, step=None):
+                    return True ^ invert
+
                 case slice(start=None, stop=int(stop), step=int() | None as step):
                     step = 1 if step is None else step
                     if index in range(1, stop, step):
@@ -121,13 +124,17 @@ class EpisodeRange:
     def add_not(self, item: slice | range | Iterable[int] | int):
         self._add(item, not_invert=False)
 
-    def apply_string(self, episode_range: str, inclusive: bool = True):
+    def apply_string(self, episode_range: str, inclusive: bool = True, exclusion_from_all: bool = True):
+        first_run = True
         for range_str in episode_range.split(","):
             if range_str.startswith("!"):
+                if first_run and exclusion_from_all:
+                    self.add(slice(None))
                 adder = self.add_not
                 range_str = range_str[1:]
             else:
                 adder = self.add
+            first_run = False
 
             start, tilde, end = range_str.partition("~")
             start = start.replace(" ", "")
