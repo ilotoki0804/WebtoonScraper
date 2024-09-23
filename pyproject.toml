@@ -3,7 +3,7 @@ name = "WebtoonScraper"
 description = "Scraping webtoons with ease"
 readme = "README-build.md"  # Use `simplebuilder` to build readme
 authors = [{ name = "ilotoki0804", email = "ilotoki0804@gmail.com" }]
-license = { file = "LICENSE" }  # Not needed, but why not
+license = "MIT"
 keywords = [
     "webtoon",
     "webtoon scraper",
@@ -47,10 +47,8 @@ Funding = "https://buymeacoffee.com/ilotoki0804"
 [tool.hatch.version]
 path = "WebtoonScraper/base.py"
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "WebtoonScraper",
-]
+[tool.hatch.build.targets.wheel]
+packages = ["WebtoonScraper"]
 
 [tool.uv]
 dev-dependencies = [
