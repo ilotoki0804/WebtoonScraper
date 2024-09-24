@@ -41,7 +41,7 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
 
 ## 후원하기
 
-[![BECOME A PATREON](./images/patreon.png)](https://www.patreon.com/ilotoki0804)
+[![BECOME A PATREON](https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/refs/heads/main/images/patreon.png)](https://www.patreon.com/ilotoki0804)
 
 WebtoonScraper 프로젝트는 후원으로 운영됩니다.
 
