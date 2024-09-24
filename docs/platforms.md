@@ -21,6 +21,9 @@ WebtoonScraper 자체에 대한 자세한 설명은 **[사용 방법](how-to-use
     * [네이버 블로그](#네이버-블로그)
     * [티스토리](#티스토리)
     * [카카오 웹툰](#카카오-웹툰)
+    * [투믹스](#투믹스)
+        * [쿠키 얻기](#쿠키-얻기-1)
+        * [다운로드](#다운로드-2)
 
 ## 네이버 웹툰
 
@@ -191,4 +194,19 @@ webtoon download "https://doldistudio.tistory.com/category/진돌만화"
 
 ```console
 webtoon download "https://webtoon.kakao.com/content/%EB%B6%80%EA%B8%B0%EC%98%81%ED%99%94/2343"
+```
+
+## 투믹스
+
+### 쿠키 얻기
+
+쿠키가 없으면 다운로드를 진행할 수 없습니다.
+[쿠키를 얻는 방법](how-to-use.md#cookie)을 참고하세요.
+
+### 다운로드
+
+다음과 같은 명령어로 다운로드가 가능합니다.
+
+```console
+webtoon download "https://www.toomics.com/webtoon/episode/toon/1234" --cookie "<YOUR COOKIE HERE 쿠키를 여기에 붙여넣으세요>"
 ```
