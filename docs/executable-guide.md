@@ -1,13 +1,13 @@
-# 사용 방법
+# 실행 파일 사용 방법
 
-WebtoonScraper를 사용하는 방법을 상세하게 설명합니다.
+실행 파일을 사용하는 방법을 상세하게 설명합니다.
+앱 사용 방법은 [앱 사용 가이드](./app-guide.md)를 참고하세요.
 
-* [사용 방법](#사용-방법)
-    * [설치 확인](#설치-확인)
-        * [추가 의존성](#추가-의존성)
+* [실행 파일 사용 방법](#실행-파일-사용-방법)
+    * [다운로드 및 열기](#다운로드-및-열기)
+        * [구매](#구매)
+        * [다운로드 및 열기](#다운로드-및-열기-1)
     * [웹툰 다운로드](#웹툰-다운로드)
-        * [CLI로의 사용](#cli로의-사용)
-        * [파이썬 패키지로의 사용](#파이썬-패키지로의-사용)
         * [다운로드할 디렉토리 선택](#다운로드할-디렉토리-선택)
         * [cookie](#cookie)
         * [다운로드하고 싶은 범위 설정](#다운로드하고-싶은-범위-설정)
@@ -16,65 +16,45 @@ WebtoonScraper를 사용하는 방법을 상세하게 설명합니다.
         * [여러 웹툰 다운로드](#여러-웹툰-다운로드)
         * [다운로드 중단 시 작동](#다운로드-중단-시-작동)
     * [웹툰 에피소드 병합하기](#웹툰-에피소드-병합하기)
-        * [CLI에서 에피소드 병합하기](#cli에서-에피소드-병합하기)
-        * [파이썬 스크립트로 병합하기](#파이썬-스크립트로-병합하기)
     * [웹툰 이미지 결합하기](#웹툰-이미지-결합하기)
         * [이미지 결합 옵션](#이미지-결합-옵션)
-        * [CLI에서 이미지 결합하기](#cli에서-이미지-결합하기)
-        * [파이썬 스크립트로 결합하기](#파이썬-스크립트로-결합하기)
         * [스레드 개수 정하기](#스레드-개수-정하기)
     * [웹툰 감상하기](#웹툰-감상하기)
 
 
-## 설치 확인
+## 다운로드 및 열기
 
-CLI에 `webtoon --version`를 쳐서 다음과 같은 메시지가 나오는지 확인해 보세요.
-(`*`이나 `...`으로 처리된 부분은 사용자마다 다를 수 있습니다.)
+### 구매
 
-```
-WebtoonScraper 4.*.* of Python 3.*.* ... at ...
-✅ All extra dependencies are installed!
-```
+[패트리온](https://www.patreon.com/ilotoki0804)에서 후원할 경우 앱을 다운로드받으실 수 있습니다.
+이때 앱을 다운로드받는 방법은 멤버십과 포스트 구매 방법이 있습니다.
 
-위와 같은 메시지가 나온다면 패키지가 잘 설치된 것입니다.
+멤버십은 기간 중 새 버전이 나왔을 때 바로 다운로드받을 수 있고,
+포스트 구매는 일회성이지만 멤버십과 마찬가지로 요구시 일정 기간 지원을 받을 수 있습니다.
 
-만약 WebtoonScraper의 버전이 3 이하로 나온다면 업그레이드가 필요합니다.
+### 다운로드 및 열기
 
-### 추가 의존성
+멤버십이거나 포스트를 구매하면 앱과 실행 파일이 담겨 있는 포스트를 확인하실 수 있을 겁니다.
+여기에서 `(사용하는 운영체제 이름)-portable.zip`이라고 되어 있는 파일을 다운로드하세요.
 
-대신 다음과 같은 메시지가 나올 수도 있습니다.
+![포터블 다운로드](image/app-guide/1726847537949.png)
 
-```
-WebtoonScraper 4.*.* of Python 3.*.* ... at ...
-⚠️ Extra dependencies ... are not installed.
-You won't be able to ...
-Download missing dependencies via `pip install -U WebtoonScraper[full]`
-```
+압축 파일을 풀면 아래와 같이 `_internals` 폴더와 `pyinstaller.exe`(혹은 그냥 `pyinstaller`)가 보일 텐데
+`_internals` 폴더는 작동하는 데에 필요하지만 딱히 직접 건드릴 일은 없습니다.
+중요한 것은 `pyinstaller`로, 해당 실행 파일을 열어주세요.
 
-이런 메시지가 뜬다면 WebtoonScraper를 정상적으로 사용할 수 있지만 일부 기능을 사용할 수 없을 수 있습니다.
+![압축 해제](image/executable-guild/1727180361946.png)
 
-추가 의존성의 종류는 다음과 같습니다.
+단, 운영 체제별로 참고해야 할 사항이 있습니다.
 
-| 의존성 이름 | 설치하는 패키지 | 설명 |
-|--|--|--|
-| `lezhin_comics` | `Pillow` | 일부 레진코믹스 웹툰을 다운로드할 때 필요합니다. |
-| `concat` | `Pillow` | [이미지 결합 기능](#웹툰-이미지-결합하기)을 사용할 때 필요합니다. |
-| `full` | `demjson3`, `Pillow`, `pycryptodomex` | 모든 추가 의존성을 설치합니다. |
+* 윈도우: "Windows의 PC 보호" 창이 뜨면서 실행이 안 될 수 있습니다. 그런 경우에는 `추가 정보`(왼쪽 중간에 있습니다.)를 클릭하고 `실행`을 누르세요.
+* 맥OS와 리눅스: `bash: ./pyinstaller: Permission denied`라고 나오며 실행을 거부할 수 있습니다. `chmod +x ./pyinstaller`를 통해 실행 권한을 추가하세요.
 
-추가 의존성은 `WebtoonScraper[<의존성 이름 1>,<의존성 이름 2>,...]`의 형태로 입력하면 같이 다운로드받을 수 있습니다.
-예를 들어, 이미지 결합 기능과 카카오 웹툰을 다운로드해야 한다면 `WebtoonScraper[concat,kakao_webtoon]`로 입력하면 됩니다.
+아래와 같이 터미널이 뜨면 성공입니다! 이제 사용하실 수 있습니다.
 
-전체 추가 의존성을 다운로드받고 싶다면 `full`을 이용할 수 있습니다.
-
-```console
-pip install -U WebtoonScraper[full]
-```
-
-일반적으로는 `full` 의존성으로 다운로드하는 것을 추천합니다.
+![터미널 열림](image/executable-guild/1727180390351.png)
 
 ## 웹툰 다운로드
-
-### CLI로의 사용
 
 가장 기본적으로는 다음과 같이 웹툰의 소개 페이지의 URL을 복사한 후 `webtoon download` 뒤에 큰따옴표를 친 URL을 놓으면 사용하실 수 있습니다.
 
@@ -83,61 +63,6 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217"
 ```
 
 이렇게 하면 `webtoon` 폴더 안에 웹툰 디렉토리가 생성되고, 해당 URL에 있는 웹툰이 다운로드됩니다.
-
-### 파이썬 패키지로의 사용
-
-WebtoonScraper는 파이썬 스크립트로도 잘 사용할 수 있도록 설계되었습니다.
-
-우선 스크래퍼 이름을 다음에서 찾아 보세요.
-
-| 플랫폼 이름 | 스크래퍼 이름 | [추가 의존성](#추가-의존성) |
-|--|--|--|
-| 네이버 웹툰(통합) | `NaverWebtoonScraper` | |
-| 네이버 웹툰 정식 연재 | `NaverWebtoonSpecificScraper` | |
-| 네이버 웹툰 베스트 도전 | `BestChallengeSpecificScraper` | |
-| 네이버 웹툰 도전만화 | `ChallengeSpecificScraper` | |
-| 네이버 웹툰 글로벌 (webtoons.com) | `WebtoonsDotcomScraper` | |
-| 레진코믹스 | `LezhinComicsScraper` | `lezhin_comics`[^1] |
-
-[^1]: 일부 웹툰의 경우 `lezhin_comics` 의존성 없이도 동작합니다.
-
-그런 다음 다음과 같이 임포트하세요. 아래는 `NaverWebtoonScraper`(네이버 웹툰)의 예시입니다.
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-```
-
-그런 다음 `.from_url()`을 통해 스크래퍼 인스턴스를 만드세요.
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-
-scraper = NaverWebtoonScraper.from_url("https://comic.naver.com/webtoon/list?titleId=819217")
-```
-
-`.download_webtoon()`를 사용하면 웹툰을 다운로드할 수 있습니다.
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-
-scraper = NaverWebtoonScraper.from_url("https://comic.naver.com/webtoon/list?titleId=819217")
-scraper.download_webtoon()
-```
-
-Jupyter 등 async 환경에서는 `.download_webtoon()`이 작동하지 않을 수 있습니다. 그러한 경우 `.async_download_webtoon()`를 사용하세요.
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-
-scraper = NaverWebtoonScraper.from_url("https://comic.naver.com/webtoon/list?titleId=819217")
-await scraper.async_download_webtoon()
-```
-
-> [!WARNING]
-> Jupyter 등 async 환경에서는 `.download_webtoon()`를 사용할 수 없을 수 있습니다. 그럴 경우 `.async_download_webtoon()`를 사용해 주세요.
-
-WebtoonScraper의 일부 동작에는 멀티프로세싱이 활용될 수 있습니다.
-따라서 `__name__ == "__main__`을 통해 발생할 수 있는 문제를 예방하는 것이 좋습니다.
 
 ### 다운로드할 디렉토리 선택
 
@@ -186,16 +111,6 @@ webtoon download ... --cookie "<쿠키 전체>"
 ```
 
 즉, 원래 명령어를 놓고, `--cookie`를 추가한 뒤 뒤에 큰따옴표로 감싼 쿠키 전체를 그대로 붙여넣어 주시면 됩니다. *큰따옴표 까먹지 마세요!*
-
-파이썬 스크립트로 사용하는 경우 다음과 같이 짜면 됩니다.
-
-```python
-from WebtoonScraper.scrapers import BufftoonScraper
-
-scraper = BufftoonScraper.from_url("https://bufftoon.plaync.com/series/1007888")
-scraper.cookie = "<쿠키 전체>"
-scraper.download_webtoon()
-```
 
 `<쿠키 전체>`의 자리에 쿠키를 그대로 붙여넣으면 됩니다.
 
@@ -332,9 +247,7 @@ webtoon download "https://comic.naver.com/webtoon/list?titleId=819217" "https://
 
 몇 개의 에피소드를 한 디렉토리로 묶을 것인지를 값으로 제공해야 합니다.
 
-맨 마지막 에피소드가 개수가 설정된 값보다 작을 경우 한 개의 디렉토리에 모아놓게 됩니다. 예를 들어 전체 에피소드가 13개이고 5개씩 묶도록 설정했을 경우 1~5/6~18로 마지막 디렉토리의 개수가 5보다 작아지지 않도록나뉘어지게 됩니다.
-
-### CLI에서 에피소드 병합하기
+맨 마지막 에피소드가 개수가 설정된 값보다 작을 경우 한 개의 디렉토리에 모아놓게 됩니다. 예를 들어 전체 에피소드가 13개이고 5개씩 묶도록 설정했을 경우 1~5/6~18로 마지막 디렉토리의 개수가 5보다 작아지지 않도록 나뉘어지게 됩니다.
 
 에피소드 병합은 두 가지 방식으로 진행할 수 있습니다.
 
@@ -363,26 +276,6 @@ webtoon merge "webtoon" -s -m 5
 
 이렇게 하면 웹툰 디렉토리 이름을 알지 않고도 직접 보고 선택해 에피소드를 병합할 수 있습니다.
 
-### 파이썬 스크립트로 병합하기
-
-다운로드 후 바로 적용:
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-
-scraper = NaverWebtoonScraper.from_url("https://comic.naver.com/webtoon/list?titleId=819217")
-scraper.download_webtoon(merge_number=5)
-```
-
-따로 스크립트로 존재하는 웹툰 디렉토리에 적용(WebtoonScraper 4.0.0 이후):
-
-```python
-from pathlib import Path
-from WebtoonScraper.processing import merge_webtoon
-
-merge_webtoon(Path("webtoon/웹툰 이름(12345)"), merge_number=5)
-```
-
 ## 웹툰 이미지 결합하기
 
 한 에피소드는 여러 개의 이미지로 구성됩니다. 이미지 결합 기능은 몇 개의 이미지를 기준에 따라 한 개의 이미지로 병합하는 기능입니다.
@@ -402,8 +295,6 @@ merge_webtoon(Path("webtoon/웹툰 이름(12345)"), merge_number=5)
 | ratio | 실수 | 이미지의 가로 픽셀 수에 대한 세로 픽셀 수 비율이 해당 값 이상이 되도록 결합합니다. | `ratio 12.5`는 이미지의 `세로 픽셀 수 / 가로 픽셀 수`의 비율이 `12.5` 이상이 되도록 합니다. |
 
 모든 경우 마지막 파일은 해당 조건을 충족하지 못할 수 있습니다. 예를 들어 전체 파일 개수가 12개일 때 `count 5`라면 맨 마지막 파일은 2개가 결합된 파일일 수 있습니다.
-
-### CLI에서 이미지 결합하기
 
 웹툰 이미지 결합은 두 가지 방식으로 진행할 수 있습니다.
 
@@ -441,42 +332,16 @@ webtoon concat "webtoon" -s --ratio 12.5
 
 이렇게 하면 웹툰 디렉토리 이름을 알지 않고도 직접 보고 선택해 웹툰을 결합할 수 있습니다.
 
-### 파이썬 스크립트로 결합하기
-
-다운로드가 끝난 후 바로 결합하려면 `.download_webtoon()`의 `concat` 옵션을 활용하세요.
-
-```python
-from WebtoonScraper.scrapers import NaverWebtoonScraper
-
-scraper = NaverWebtoonScraper.from_url("https://comic.naver.com/webtoon/list?titleId=819217")
-# 네 가지 옵션 중 하나를 선택하세요.
-# scraper.download_webtoon(concat="all")
-# scraper.download_webtoon(concat=("count", 5))
-# scraper.download_webtoon(concat=("height", 8000))
-# scraper.download_webtoon(concat=("ratio", 12.5))
-```
-
-따로 스크립트로 존재하는 웹툰 디렉토리에 적용:
-
-```python
-from pathlib import Path
-from WebtoonScraper.processing import concat_webtoon
-
-# 네 가지 옵션 중 하나를 선택하세요.
-# concat_webtoon(Path("webtoon/웹툰 이름(12345)"), None, batch="all")
-# concat_webtoon(Path("webtoon/웹툰 이름(12345)"), None, batch=("count", 5))
-# concat_webtoon(Path("webtoon/웹툰 이름(12345)"), None, batch=("height", 8000))
-# concat_webtoon(Path("webtoon/웹툰 이름(12345)"), None, batch=("ratio", 12.5))
-```
-
 ### 스레드 개수 정하기
 
 결합 시에는 멀티스레딩이 활용됩니다. 이때 프로세스의 기본 개수는 전체 스레드 개수의 반이며, `--thread-number` 옵션으로 프로세스 개수를 조절할 수 있습니다.
 
 예를 들어 프로세스 6개를 사용하도록 변경한다면 다음과 같이 설정할 수 있습니다.
 
+이 옵션은 `webtoon`과 `concat` 사이에 들어가야 합니다. 위치에 주의하세요!
+
 ```console
-webtoon concat ... --thread-number 6
+webtoon --thread-number 6 concat ...
 ```
 
 이때 `--thread-number`를 1로 설정하면 멀티스레딩을 사용하지 않습니다.
