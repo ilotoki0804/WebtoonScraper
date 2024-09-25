@@ -5,6 +5,7 @@
         "concatenator",
         "cryptodome",
         "demjson",
+        "httpc",
         "hxoptions",
         "hxsoup",
         "Kakao",
