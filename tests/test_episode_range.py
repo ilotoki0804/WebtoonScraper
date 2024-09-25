@@ -42,3 +42,9 @@ def test_episode_range():
     e = EpisodeRange()
     e.apply_string("!2~6,!18,4", exclusion_from_all=False)
     assert [i for i in range(20) if i in e] == [4]
+
+    # 빈 문자열은 아무것도 의미하지 않음. 모든 범위를 표현하려면 `~`를 사용해야 함.
+    e = EpisodeRange.from_string("")
+    assert 1 not in e
+    assert 3 not in e
+    assert 300 not in e
