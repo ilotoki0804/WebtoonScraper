@@ -21,7 +21,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "hxsoup>=0.3.0,<=0.5.0",
+    "hxsoup>=0.3.0,<=0.5.1",
     "pyfilename==0.5.1",
     "rich>=13.8.0",
     "tqdm>=4.66.5",
