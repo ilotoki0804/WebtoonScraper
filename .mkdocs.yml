@@ -1,6 +1,6 @@
 site_name: WebtoonScraper
 site_description: Download webtoons with ease.
-site_url: https://webtoonscraper.readthedocs.org/ko/latest/
+site_url: https://webtoonscraper.readthedocs.io/ko/latest/
 
 theme:
     name: 'material'
