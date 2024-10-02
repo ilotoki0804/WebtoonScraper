@@ -1,6 +1,6 @@
 site_name: WebtoonScraper
 site_description: Download webtoons with ease.
-site_url: https://webtoonscraper.readthedocs.io/ko/latest/
+site_url: https://webtoonscraper.readthedocs.io/
 
 theme:
     name: 'material'
@@ -19,7 +19,7 @@ theme:
 
 repo_name: ilotoki0804/WebtoonScraper
 repo_url: https://github.com/ilotoki0804/WebtoonScraper/
-edit_uri: ""
+edit_uri: "ko/latest/"
 
 nav:
     - English README: 'docs/README-en.md'
