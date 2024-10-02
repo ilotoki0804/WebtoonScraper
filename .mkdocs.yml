@@ -4,7 +4,6 @@ site_url: https://webtoonscraper.readthedocs.org/
 
 theme:
     name: 'material'
-    custom_dir: 'docs/overrides'
     palette:
       - scheme: 'default'
         media: '(prefers-color-scheme: light)'
