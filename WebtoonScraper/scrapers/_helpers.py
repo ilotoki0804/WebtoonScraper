@@ -43,7 +43,8 @@ class ExtraInfoScraper:
                 # merge_number=merge_number,
                 contents=["thumbnail", "information"],
             )
-            information_file.write_text(json.dumps(information, ensure_ascii=False, indent=2), encoding="utf-8")
+            with open(information_file, "w", encoding="utf-8") as f:
+                json.dump(information, f, ensure_ascii=False, indent=2)
 
 
 class EpisodeRange:
