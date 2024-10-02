@@ -35,8 +35,19 @@ class ExtraInfoScraper:
             else:
                 old_information = {}
 
+            if isinstance(scraper.webtoon_id, str | int):
+                webtoon_id = scraper.webtoon_id
+            elif isinstance(scraper.webtoon_id, Iterable):
+                # webtoon id가 튜플일 경우 그 안의 요소들은
+                # int이거나 str일 거라는 가정 하에 작동하는 코드.
+                # 그렇지 않는다면 수정해야 함!
+                webtoon_id = tuple(scraper.webtoon_id)
+            else:
+                raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
+
             information = scraper._get_information(old_information)
             information.update(
+                webtoon_id=webtoon_id,
                 thumbnail_name=thumbnail_name,
                 information_name="information.json",
                 original_webtoon_directory_name=webtoon_directory.name,
