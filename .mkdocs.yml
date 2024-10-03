@@ -1,6 +1,6 @@
 site_name: WebtoonScraper
 site_description: Download webtoons with ease.
-site_url: https://webtoonscraper.readthedocs.io/
+site_url: !ENV READTHEDOCS_CANONICAL_URL
 
 theme:
     name: 'material'
@@ -22,14 +22,16 @@ repo_url: https://github.com/ilotoki0804/WebtoonScraper/
 edit_uri: "ko/latest/"
 
 nav:
-    - English README: 'docs/README-en.md'
-    - 저작권과 책임: 'docs/copyright.md'
+    - 튜토리얼: 'tutorial.md'
     - 사용 가이드:
-      - 앱: 'docs/app-guide.md'
-      - 실행 파일: 'docs/executable-guide.md'
-      - PyPI 패키지: 'docs/how-to-use.md'
-      - 플랫폼 가이드: 'docs/platforms.md'
-    - 릴리즈 노트: 'docs/releases.md'
+      - 앱: 'app-guide.md'
+      - 실행 파일: 'executable-guide.md'
+      - PyPI 패키지: 'how-to-use.md'
+      - 플랫폼 가이드: 'platforms.md'
+    - 기타:
+      - English README: 'README-en.md'
+      - 저작권과 책임: 'copyright.md'
+      - 릴리즈 노트: 'releases.md'
 
 markdown_extensions:
   - admonition
