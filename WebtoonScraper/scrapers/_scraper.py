@@ -74,6 +74,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         episode_ids=None,
         episode_titles=None,
         author=None,
+        download_status="download_status",
     )
     DEFAULT_IMAGE_FILE_EXTENSION: str | None = None
     extra_info_scraper: ExtraInfoScraper | None = None
@@ -380,6 +381,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                 iterable이므로 list 등으로 변환하는 과정이 필요할 수도 있습니다.
             webtoon_directory: 웹툰 디렉토리입니다.
         """
+        # "skipped_by_range", "stopped"
+        self.download_status: dict[int, Literal["failed", "downloaded", "already_exist"]] = {}
         if self.use_progress_bar:
             # episode_range는 specific하다고 self에 포함하지 않으면서 pbar는 self에 붙이는 건 어불성설 아닌가?
             # self.pbar를 생성하는 것보다 closure를 제공하는 등의 방식이 더 나을 것이라 생각함.
@@ -443,6 +446,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         if episode_directory.is_file():
             if self.existing_episode_policy == "skip":
+                self.download_status[episode_no] = "already_exist"
                 self.callback("download_skipped", episode_no=episode_no, file=True)
                 return True
             raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
@@ -451,6 +455,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             if episode_directory.is_dir():
                 match self.existing_episode_policy:
                     case "skip":
+                        self.download_status[episode_no] = "already_exist"
                         self.callback("download_skipped", episode_no=episode_no)
                         return True
                     case "raise":
@@ -469,6 +474,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             episode_images_url = self.get_episode_image_urls(episode_no)
 
             if not episode_images_url:
+                self.download_status[episode_no] = "failed"
                 self.callback("download_failed", episode_no=episode_no, warning=True)
                 if not os.listdir(episode_directory):
                     episode_directory.rmdir()
@@ -476,6 +482,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
             if check_integrity:
                 if self._does_directory_intact(episode_directory, episode_images_url):
+                    self.download_status[episode_no] = "already_exist"
                     self.callback("download_skipped", episode_no=episode_no, intact=True)
                     return True
 
@@ -484,6 +491,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
             self.callback("downloading_image", episode_no=episode_no)
         except BaseException:
+            self.callback("cancelling", episode_no=episode_no)
             if not os.listdir(episode_directory):
                 episode_directory.rmdir()
             raise
@@ -495,9 +503,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             )
             await asyncio.gather(*tasks)
         except BaseException:
+            self.callback("cancelling", episode_no=episode_no)
             shutil.rmtree(episode_directory)
             raise
 
+        self.download_status[episode_no] = "downloaded"
         self.callback("download_completed", episode_no=episode_no)
         return True
 
