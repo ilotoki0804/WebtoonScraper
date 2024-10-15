@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import html
+import json
 import os
 import re
 import shutil
@@ -95,6 +96,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.author = None
         self._stop_progress = False
+        self.ignore_snapshot: bool = False
 
     # MARK: PUBLIC METHODS
 
@@ -320,6 +322,46 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
     # MARK: PRIVATE METHODS
 
+    def _load_snapshot(self, webtoon_directory: Path) -> None:
+        self._snapshot_data: dict
+        if self.ignore_snapshot:
+            self._snapshot_data = {}
+            return
+
+        snapshot_path = webtoon_directory.parent / f"{webtoon_directory.name}.snapshots"
+        try:
+            self._snapshot_data = json.loads(snapshot_path.read_text("utf-8"))
+        except Exception:
+            self._snapshot_data = {}
+
+    def _get_snapshot_contents(self, path: Path) -> str | dict | None:
+        result = self._snapshot_data.get("contents")
+        if not result:
+            return None
+        parts = path.relative_to(self.base_directory).parts
+        for part in parts[1:]:  # 웹툰 디렉토리에서 시작하기 위해 맨 첫 번째 웹툰 디렉토리 파트를 버림
+            match result:
+                case str():
+                    return None
+                case dict(result):
+                    try:
+                        result = result[part]
+                    except KeyError:
+                        return None
+        return result
+
+    def _snapshot_contents_info(self, path: Path) -> Literal["file", "directory"] | None:
+        # logger.info(f"{path}, '{path.relative_to(self.base_directory)}', {type(self._get_snapshot_contents(path))}")
+        match self._get_snapshot_contents(path):
+            case None:
+                return None
+            case dict():
+                return "directory"
+            case str():
+                return "file"
+            case other:
+                raise TypeError(f"Unexpected type: {type(other).__name__}")
+
     def _stop(self):
         self._stop_progress = True
 
@@ -381,8 +423,10 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                 iterable이므로 list 등으로 변환하는 과정이 필요할 수도 있습니다.
             webtoon_directory: 웹툰 디렉토리입니다.
         """
+        self._load_snapshot(webtoon_directory)
+
         # "skipped_by_range", "stopped"
-        self.download_status: dict[int, Literal["failed", "downloaded", "already_exist"]] = {}
+        self.download_status: dict[int, Literal["failed", "downloaded", "already_exist", "skipped_by_trackfile"]] = {}
         if self.use_progress_bar:
             # episode_range는 specific하다고 self에 포함하지 않으면서 pbar는 self에 붙이는 건 어불성설 아닌가?
             # self.pbar를 생성하는 것보다 closure를 제공하는 등의 방식이 더 나을 것이라 생각함.
@@ -428,9 +472,15 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
         """
 
-        directory_contents = os.listdir(episode_directory)
+        try:
+            real_contents = os.listdir(episode_directory)
+        except Exception:
+            real_contents = []
+        snapshot_contents = self._get_snapshot_contents(episode_directory) or ()
+        directory_contents = {*real_contents, *snapshot_contents}
+
         normal_image_regex = DIRECTORY_PATTERNS[NORMAL_IMAGE]
-        return len(image_urls) != len(directory_contents) and all(
+        return len(image_urls) == len(directory_contents) and all(
             normal_image_regex.match(file) for file in directory_contents
         )
 
@@ -444,19 +494,22 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         directory_name = self._safe_name(f"{episode_no + 1:04d}. {episode_title}")
         episode_directory = webtoon_directory / directory_name
 
-        if episode_directory.is_file():
+        episode_at_snapshot = self._snapshot_contents_info(episode_directory)
+
+        if (exist_in_file := episode_directory.is_file()) or (exist_in_snapshot := episode_at_snapshot == "file"):
             if self.existing_episode_policy == "skip":
-                self.download_status[episode_no] = "already_exist"
-                self.callback("download_skipped", episode_no=episode_no, file=True)
+                self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_trackfile"
+                self.callback("download_skipped", episode_no=episode_no, is_file=exist_in_file, is_snapshot=exist_in_snapshot)
                 return True
             raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
 
         try:
-            if episode_directory.is_dir():
+            exist_in_file = episode_directory.is_dir()
+            if exist_in_file or (exist_in_snapshot := episode_at_snapshot == "directory"):
                 match self.existing_episode_policy:
                     case "skip":
-                        self.download_status[episode_no] = "already_exist"
-                        self.callback("download_skipped", episode_no=episode_no)
+                        self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_trackfile"
+                        self.callback("download_skipped", episode_no=episode_no, is_file=exist_in_file, is_snapshot=exist_in_snapshot)
                         return True
                     case "raise":
                         raise FileExistsError(
@@ -466,6 +519,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                         check_integrity = False
                     case "hard_check":
                         check_integrity = True
+                if not exist_in_file:
+                    episode_directory.mkdir()
             else:
                 episode_directory.mkdir()
                 check_integrity = False
@@ -484,6 +539,8 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                 if self._does_directory_intact(episode_directory, episode_images_url):
                     self.download_status[episode_no] = "already_exist"
                     self.callback("download_skipped", episode_no=episode_no, intact=True)
+                    if not exist_in_file:
+                        episode_directory.rmdir()
                     return True
 
                 shutil.rmtree(episode_directory)
