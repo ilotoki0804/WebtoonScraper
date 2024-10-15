@@ -426,7 +426,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self._load_snapshot(webtoon_directory)
 
         # "skipped_by_range", "stopped"
-        self.download_status: dict[int, Literal["failed", "downloaded", "already_exist", "skipped_by_trackfile"]] = {}
+        self.download_status: dict[int, Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot"]] = {}
         if self.use_progress_bar:
             # episode_range는 specific하다고 self에 포함하지 않으면서 pbar는 self에 붙이는 건 어불성설 아닌가?
             # self.pbar를 생성하는 것보다 closure를 제공하는 등의 방식이 더 나을 것이라 생각함.
@@ -498,7 +498,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         if (exist_in_file := episode_directory.is_file()) or (exist_in_snapshot := episode_at_snapshot == "file"):
             if self.existing_episode_policy == "skip":
-                self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_trackfile"
+                self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_snapshot"
                 self.callback("download_skipped", episode_no=episode_no, is_file=exist_in_file, is_snapshot=exist_in_snapshot)
                 return True
             raise FileExistsError(f"File at {episode_directory} already exists. Please delete the file.")
@@ -508,7 +508,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             if exist_in_file or (exist_in_snapshot := episode_at_snapshot == "directory"):
                 match self.existing_episode_policy:
                     case "skip":
-                        self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_trackfile"
+                        self.download_status[episode_no] = "already_exist" if exist_in_file else "skipped_by_snapshot"
                         self.callback("download_skipped", episode_no=episode_no, is_file=exist_in_file, is_snapshot=exist_in_snapshot)
                         return True
                     case "raise":
