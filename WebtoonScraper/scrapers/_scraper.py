@@ -636,9 +636,12 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         """
         return pf.convert(html.unescape(name))
 
-    def _progress_indication(self, message: str, fallback: bool = True) -> bool:
-        if self.use_progress_bar:
-            with suppress(AttributeError):
-                self.pbar.set_description(message)
-                return True
-        return False
+    def _progress_indication(self, message: str) -> bool:
+        if not self.use_progress_bar:
+            return False
+        try:
+            self.pbar.set_description(message)
+        except AttributeError:
+            return False
+        else:
+            return True
