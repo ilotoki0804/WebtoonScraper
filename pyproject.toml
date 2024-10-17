@@ -26,13 +26,9 @@ dependencies = [
     "rich>=13.8.0",
     "tqdm>=4.66.5",
     "yarl>=1.9.11",
+    "pillow>=10.4.0",
 ]
 dynamic = ["version"]
-
-[project.optional-dependencies]
-lezhin-comics = ["pillow"]
-concat = ["pillow"]
-full = ["pillow"]
 
 [project.scripts]
 WebtoonScraper = "WebtoonScraper.__main__:main"
