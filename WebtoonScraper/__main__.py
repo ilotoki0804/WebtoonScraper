@@ -71,7 +71,7 @@ def _version_info() -> str:
                     "Download missing dependencies via `pip install -U WebtoonScraper[full]`"
                 )
 
-    return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}\n{check_dependency()}"
+    return f"WebtoonScraper {__version__} of Python {sys.version} at {str(files(WebtoonScraper))}"
 
 
 def _parse_options(value: str):
