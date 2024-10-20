@@ -21,6 +21,7 @@ from typing import (
     Literal,
     TypeVar,
 )
+from collections.abc import Container
 from collections.abc import Callable, Sequence
 from urllib import parse
 
@@ -158,7 +159,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_information(reload=reload)
 
-    def download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
+    def download_webtoon(self, download_range: EpisodeRange | Container[WebtoonId] | None = None) -> None:
         """웹툰을 다운로드합니다.
 
         Jupyter 등 async 환경에서는 제대로 동작하지 않을 수 있습니다. 그럴 경우 async_download_webtoon을 사용하세요.
@@ -168,7 +169,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         Args:
             download_range: 다운로드할 회차의 범위를 정합니다.
-                Scraper._episode_no_range_to_real_range의 문서를 참고하세요.
         """
         try:
             asyncio.run(self.async_download_webtoon(download_range=download_range))
@@ -179,7 +179,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                 logger.error("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
-    async def async_download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
+    async def async_download_webtoon(self, download_range: EpisodeRange | Container[WebtoonId] | None = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
 
         Example:
