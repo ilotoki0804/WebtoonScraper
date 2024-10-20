@@ -222,17 +222,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         else:
             self.extra_info_scraper.finalizer(self, locals(), exc=None)
 
-    def check_webtoon_id(
-        self,
-        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
-    ) -> str | None:
-        """webtoon_id가 플랫폼에서 적합하다면 제목을 반환하고 아니라면 None을 반환합니다."""
-        try:
-            self.fetch_webtoon_information()
-            return self.title
-        except exception_type:
-            return None
-
     def callback(self, situation: str, **context) -> None:
         """웹툰 다운로드의 중요한 순간들을 알림받습니다.
 

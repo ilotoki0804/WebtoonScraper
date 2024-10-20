@@ -115,9 +115,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         return episode_image_urls
 
-    def check_webtoon_id(self) -> str | None:
-        return super().check_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
-
     @property
     def cookie(self) -> str | None:
         """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
