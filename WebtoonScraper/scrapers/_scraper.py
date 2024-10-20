@@ -586,9 +586,18 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             client: 사용할 AsyncClient입니다.
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
-        file_extension = file_extension or self._get_file_extension(url)
+        response = await client.get(url)
+        image_raw: bytes = response.content
+
+        if not file_extension:
+            # content-type 헤더가 해석되기를 기대함
+            content_type: str = response.headers.get("content-type")
+            category, _, extension = content_type.partition("/")
+            if category == "image":
+                file_extension = extension.lower()
+            else:
+                file_extension = self._get_file_extension(url)
         file_name = f"{image_no:03d}.{file_extension}"
-        image_raw: bytes = (await client.get(url)).content
 
         file_directory = image_directory / file_name
         file_directory.write_bytes(image_raw)
