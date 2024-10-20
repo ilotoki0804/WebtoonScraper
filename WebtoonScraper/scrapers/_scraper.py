@@ -21,6 +21,7 @@ from typing import (
     Literal,
     TypeVar,
 )
+from collections.abc import Container
 from collections.abc import Callable, Sequence
 from urllib import parse
 
@@ -126,6 +127,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
+    def _extract_webtoon_id(cls, url: URL) -> WebtoonId | None:
+        raise NotImplementedError
+
+    @classmethod
     def from_url(
         cls,
         url: str,
@@ -143,11 +149,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         return cls(webtoon_id, *args, **kwargs)
 
-    @classmethod
-    @abstractmethod
-    def _extract_webtoon_id(cls, url: URL) -> WebtoonId | None:
-        raise NotImplementedError
-
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다."""
         return self._safe_name(f"{self.title}({self.webtoon_id})")
@@ -158,7 +159,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             self.fetch_webtoon_information(reload=reload)
         self.fetch_episode_information(reload=reload)
 
-    def download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
+    def download_webtoon(self, download_range: EpisodeRange | Container[WebtoonId] | None = None) -> None:
         """웹툰을 다운로드합니다.
 
         Jupyter 등 async 환경에서는 제대로 동작하지 않을 수 있습니다. 그럴 경우 async_download_webtoon을 사용하세요.
@@ -168,24 +169,17 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         Args:
             download_range: 다운로드할 회차의 범위를 정합니다.
-                Scraper._episode_no_range_to_real_range의 문서를 참고하세요.
         """
         try:
             asyncio.run(self.async_download_webtoon(download_range=download_range))
         except RuntimeError as e:
             try:
-                e.add_note("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+                e.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             except AttributeError:
-                logger.error("Use `async_download_webtoon` in Jupyter or asyncio environment.")
+                logger.error("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
-    def _prepare_directory(self) -> Path:
-        webtoon_directory_name = self.get_webtoon_directory_name()
-        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
-        webtoon_directory.mkdir(parents=True, exist_ok=True)
-        return webtoon_directory
-
-    async def async_download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
+    async def async_download_webtoon(self, download_range: EpisodeRange | Container[WebtoonId] | None = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
 
         Example:
@@ -227,17 +221,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
 
         else:
             self.extra_info_scraper.finalizer(self, locals(), exc=None)
-
-    def check_webtoon_id(
-        self,
-        exception_type: type[BaseException] | tuple[type[BaseException], ...] = Exception,
-    ) -> str | None:
-        """webtoon_id가 플랫폼에서 적합하다면 제목을 반환하고 아니라면 None을 반환합니다."""
-        try:
-            self.fetch_webtoon_information()
-            return self.title
-        except exception_type:
-            return None
 
     def callback(self, situation: str, **context) -> None:
         """웹툰 다운로드의 중요한 순간들을 알림받습니다.
@@ -321,6 +304,12 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.headers.update(value)
 
     # MARK: PRIVATE METHODS
+
+    def _prepare_directory(self) -> Path:
+        webtoon_directory_name = self.get_webtoon_directory_name()
+        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
+        webtoon_directory.mkdir(parents=True, exist_ok=True)
+        return webtoon_directory
 
     def _load_snapshot(self, webtoon_directory: Path) -> None:
         self._snapshot_data: dict
@@ -586,9 +575,18 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             client: 사용할 AsyncClient입니다.
             file_extension: 만약 None이라면(기본값) 파일 확장자를 자동으로 알아내고, 아니라면 해당 값을 파일 확장자로 사용합니다.
         """
-        file_extension = file_extension or self._get_file_extension(url)
+        response = await client.get(url)
+        image_raw: bytes = response.content
+
+        if not file_extension:
+            # content-type 헤더가 해석되기를 기대함
+            content_type: str = response.headers.get("content-type")
+            category, _, extension = content_type.partition("/")
+            if category == "image":
+                file_extension = extension.lower()
+            else:
+                file_extension = self._get_file_extension(url)
         file_name = f"{image_no:03d}.{file_extension}"
-        image_raw: bytes = (await client.get(url)).content
 
         file_directory = image_directory / file_name
         file_directory.write_bytes(image_raw)
@@ -626,6 +624,9 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             return cls.DEFAULT_IMAGE_FILE_EXTENSION
 
         raise ValueError(f"The file extension is not detected: `{filename_or_url}`")
+
+    # @staticmethod
+    # def _get_image_file
 
     @staticmethod
     def _safe_name(name: str) -> str:

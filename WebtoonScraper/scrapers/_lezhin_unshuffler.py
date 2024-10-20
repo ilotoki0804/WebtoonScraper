@@ -20,19 +20,7 @@ from ..directory_state import (
     check_container_state,
 )
 
-if TYPE_CHECKING:
-    from PIL import Image
-else:
-    Image = None
-
-
-def _load_pillow():
-    global Image
-    if Image:
-        return Image
-    with MissingOptionalDependencyError.importing("Pillow", "lezhin_comics"):
-        from PIL import Image
-    return Image
+from PIL import Image
 
 
 def unshuffle_typical_webtoon(
@@ -174,7 +162,6 @@ def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_
         shutil.copy(base_image_path, alt_image_path)
         return
 
-    _load_pillow()
     with Image.open(base_image_path) as image:
         image_x, image_y = image.size
         margin = image_y % 5

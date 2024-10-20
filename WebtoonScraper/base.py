@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
 __url__ = "https://github.com/ilotoki0804/WebtoonScraper"
-__version__ = "4.4.1"
+__version__ = "4.5.0"
 
 
 def get_default_thread_number() -> int:

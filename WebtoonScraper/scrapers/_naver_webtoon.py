@@ -115,9 +115,6 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         return episode_image_urls
 
-    def check_webtoon_id(self) -> str | None:
-        return super().check_webtoon_id((InvalidPlatformError, UnsupportedRatingError))
-
     @property
     def cookie(self) -> str | None:
         """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
@@ -244,16 +241,13 @@ class NaverWebtoonScraper(
     def _extract_webtoon_id(cls, url: URL) -> tuple[int | None, str | None]:
         url = cls._extract_naver_me(url) or url
         if url.host not in ("comic.naver.com", "m.comic.naver.com"):
-            raise
             return None, None
         matched = re.match(r"/(?P<platform>\w+)/list", str(url.path))
         if not matched:
-            raise
             return None, None
         platform = matched["platform"]
         webtoon_id_str = url.query.get("titleId")
         if not webtoon_id_str:
-            raise
             return None, None
         return int(webtoon_id_str), platform
 
