@@ -126,6 +126,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
+    def _extract_webtoon_id(cls, url: URL) -> WebtoonId | None:
+        raise NotImplementedError
+
+    @classmethod
     def from_url(
         cls,
         url: str,
@@ -142,11 +147,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             raise InvalidURLError.from_url(url, cls)
 
         return cls(webtoon_id, *args, **kwargs)
-
-    @classmethod
-    @abstractmethod
-    def _extract_webtoon_id(cls, url: URL) -> WebtoonId | None:
-        raise NotImplementedError
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리를 만드는 데에 사용되는 string을 반환합니다."""
@@ -178,12 +178,6 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             except AttributeError:
                 logger.error("Use `async_download_webtoon` in Jupyter or asyncio environment.")
             raise
-
-    def _prepare_directory(self) -> Path:
-        webtoon_directory_name = self.get_webtoon_directory_name()
-        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
-        webtoon_directory.mkdir(parents=True, exist_ok=True)
-        return webtoon_directory
 
     async def async_download_webtoon(self, download_range: EpisodeRange | None = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
@@ -321,6 +315,12 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.headers.update(value)
 
     # MARK: PRIVATE METHODS
+
+    def _prepare_directory(self) -> Path:
+        webtoon_directory_name = self.get_webtoon_directory_name()
+        webtoon_directory = Path(self.base_directory, webtoon_directory_name)
+        webtoon_directory.mkdir(parents=True, exist_ok=True)
+        return webtoon_directory
 
     def _load_snapshot(self, webtoon_directory: Path) -> None:
         self._snapshot_data: dict
@@ -626,6 +626,9 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
             return cls.DEFAULT_IMAGE_FILE_EXTENSION
 
         raise ValueError(f"The file extension is not detected: `{filename_or_url}`")
+
+    # @staticmethod
+    # def _get_image_file
 
     @staticmethod
     def _safe_name(name: str) -> str:
