@@ -115,16 +115,7 @@ class AbstractNaverWebtoonScraper(Scraper[int]):
 
         return episode_image_urls
 
-    @property
-    def cookie(self) -> str | None:
-        """브라우저에서 값을 확인할 수 있는 쿠키 값입니다. 로그인 등에서 이용됩니다."""
-        try:
-            return self.headers["Cookie"]
-        except KeyError:
-            return None
-
-    @cookie.setter
-    def cookie(self, value: str) -> None:
+    def _set_cookie(self, value: str) -> None:
         matched = re.search(r"XSRF-TOKEN=([^;]+);", value)
         if not matched:
             raise ValueError("Cookie does not contain required data.")
