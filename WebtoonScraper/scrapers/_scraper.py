@@ -98,6 +98,7 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         self.author = None
         self._stop_progress = False
         self.ignore_snapshot: bool = False
+        self.save_extra_information: bool = False
 
     # MARK: PUBLIC METHODS
 
@@ -376,6 +377,16 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
         _ABSENT = object()
         information = {}
         for name, value in self.INFORMATION_VARS.items():
+            field, sep, remains = name.partition(".")
+            if sep:
+                if field == "extra" and not self.save_extra_information:
+                    continue
+                name = remains
+                information[field] = information.get(field, {})
+                to_store = information[field]
+            else:
+                to_store = information
+
             if value is None:
                 value = getattr(self, name, _ABSENT)
                 old_value = old_information.get(name, _ABSENT)
@@ -388,11 +399,11 @@ class Scraper(Generic[WebtoonId], metaclass=RegisterMeta):  # MARK: SCRAPER
                     if old_value is not _ABSENT:
                         # old_value가 value에 덮어씌어져야 하니 `.update()`나 `|=`를 사용하면 안 됨!
                         value = old_value | value
-                information[name] = value
+                to_store[name] = value
             elif isinstance(value, str):
-                information[name] = getattr(self, value)
+                to_store[name] = getattr(self, value)
             elif callable(value):
-                information[name] = value(self, name)
+                to_store[name] = value(self, name)
             else:
                 raise ValueError(f"Unexpected information value: {value!r}")
         return information
