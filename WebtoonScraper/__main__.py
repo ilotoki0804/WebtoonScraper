@@ -285,7 +285,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
 
     # 어떠한 command도 입력하지 않았을 경우 도움말을 표시함.
     if not hasattr(args, "subparser_name"):
-        return main(argv=["--help"])
+        return await async_main(argv=["--help"])
 
     if args.verbose:
         logger.setLevel(logging.DEBUG)
