@@ -6,12 +6,11 @@ import shutil
 from contextlib import suppress
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from tqdm import tqdm
+from rich import progress
 
 from ..base import get_default_thread_number, logger
-from ..exceptions import DirectoryStateUnmatchedError, MissingOptionalDependencyError
+from ..exceptions import DirectoryStateUnmatchedError
 from ..directory_state import (
     DIRECTORY_PATTERNS,
     NORMAL_EPISODE_DIRECTORY,
@@ -26,7 +25,7 @@ from PIL import Image
 def unshuffle_typical_webtoon(
     source_webtoon_directory: Path,
     episode_int_ids: list[int] | None = None,
-    use_progress_bar: bool = True,
+    progress: progress.Progress | None = None,
     thread_number: int | None = None,
 ) -> Path:
     str_source_webtoon_directory = str(source_webtoon_directory)
@@ -42,7 +41,7 @@ def unshuffle_typical_webtoon(
         source_webtoon_directory,
         target_webtoon_directory,
         episode_int_ids,
-        use_progress_bar=use_progress_bar,
+        progress=progress,
         thread_number=thread_number,
     )
     return target_webtoon_directory
@@ -54,7 +53,7 @@ def unshuffle(
     episode_int_ids: list[int] | None,
     thread_number: int | None = None,
     check_directory_state: bool = True,
-    use_progress_bar: bool = True,
+    progress: progress.Progress | None = None,
 ) -> None:
     if episode_int_ids is None:
         episode_int_ids = _search_episode_int_ids(source_webtoon_directory)
@@ -91,19 +90,18 @@ def unshuffle(
     )
     with ThreadPool(thread_number or get_default_thread_number()) as p:
         unshuffled_episode_ids = p.imap_unordered(lambda args: unshuffle_episode(*args), unshuffle_parameters)
-        if use_progress_bar:
-            progress_bar = tqdm(unshuffled_episode_ids, total=len(unshuffle_parameters))
-            for episode_name in progress_bar:
-                progress_bar.set_description(f"Episode {episode_name} unshuffle ended")
-        else:
+        if progress is None:
             for i, episode_name in enumerate(unshuffled_episode_ids, 1):
                 logger.info(f"[{i:02d}/{len(unshuffle_parameters):02d}] Episode {episode_name} unshuffle ended")
+        else:
+            task = progress.add_task("Unshuffle webtoon...", total=len(unshuffle_parameters))
+            for episode_name in unshuffled_episode_ids:
+                progress.update(task, description=f"Episode {episode_name} unshuffle ended")
 
     logger.info("The webtoon unshuffled successfully.")
 
 
 def _search_episode_int_ids(source_webtoon_directory: Path) -> list[int]:
-    # sourcery skip: extract-method
     information_file = source_webtoon_directory / "information.json"
     if information_file.exists():
         with suppress(json.JSONDecodeError):
@@ -133,7 +131,7 @@ def unshuffle_episode(
 
 
 def generate_random(seed: int) -> list[int]:
-    """Mutating Lezhin's pseudorandom generator. `random_numbers` are always same if given seed is same."""
+    """Imitate Lezhin's pseudorandom generator. The result is always same if given seed is same."""
     results: list[int] = []
     state = seed
     for _ in range(25):

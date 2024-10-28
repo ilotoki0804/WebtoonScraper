@@ -38,9 +38,9 @@ class InvalidWebtoonIdError(WebtoonScraperError):
             else ""
         )
         if scraper is None:
-            return cls(f"Invalid webtoon ID: {webtoon_id!r}." + rating_message + additional)
+            return cls(f"Invalid webtoon ID: {webtoon_id!r}.{rating_message}{additional}")
         assert isinstance(scraper, type)
-        return cls(f"Invalid webtoon ID: {webtoon_id!r} for {scraper.__name__}." + rating_message + additional)
+        return cls(f"Invalid webtoon ID: {webtoon_id!r} for {scraper.__name__}.{rating_message}{additional}")
 
 
 class InvalidURLError(WebtoonScraperError):

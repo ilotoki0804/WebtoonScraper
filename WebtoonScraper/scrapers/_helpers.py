@@ -19,43 +19,62 @@ from ..base import logger
 class ExtraInfoScraper:
     """이미지 이외의 정보(댓글, 작가의 말, 별점 등)와 기타 프로세싱을 사용할 때 사용되는 추가적인 스크래퍼입니다."""
 
+    def register(self, scraper: Scraper) -> None:
+        # self.scraper = scraper
+        scraper.register_callback("initialize", self.initializer)
+        scraper.register_callback("finalize", self.finalizer)
+
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
 
-    def finalizer(self, scraper: Scraper, extras: dict[str, Any], exc: BaseException | None):
+    def finalizer(self, scraper: Scraper, finishing: bool, extras: dict[str, Any] | None = None, exc: BaseException | None = None):
+        if not finishing:
+            return
+        else:  # TODO: 나중에 elif TYPE_CHECKING으로 변경
+            assert exc is not None
+            assert extras is not None
+
         webtoon_directory: Path = extras["webtoon_directory"]
-        thumbnail_name: str = extras["thumbnail_name"]
-        # merge_number: int = extras["merge_number"]
+        thumbnail_path: Path | None = extras.get("thumbnail_name")
+
+        if thumbnail_path is None:
+            thumbnail_name = None
+        else:
+            thumbnail_name = thumbnail_path.name
 
         # information.json 추가
-        if scraper.does_store_information:
-            information_file = webtoon_directory / "information.json"
-            if information_file.is_file():
+        information_file = webtoon_directory / "information.json"
+        if information_file.is_file():
+            try:
                 old_information = json.loads(information_file.read_text(encoding="utf-8"))
-            else:
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Failed to parse existing information.json file since it's corrupted. Old information will be ignored."
+                )
                 old_information = {}
+        else:
+            old_information = {}
 
-            if isinstance(scraper.webtoon_id, str | int):
-                webtoon_id = scraper.webtoon_id
-            elif isinstance(scraper.webtoon_id, Iterable):
-                # webtoon id가 튜플일 경우 그 안의 요소들은
-                # int이거나 str일 거라는 가정 하에 작동하는 코드.
-                # 그렇지 않는다면 수정해야 함!
-                webtoon_id = tuple(scraper.webtoon_id)
-            else:
-                raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
+        if isinstance(scraper.webtoon_id, str | int):
+            webtoon_id = scraper.webtoon_id
+        elif isinstance(scraper.webtoon_id, Iterable):
+            # webtoon id가 튜플일 경우 그 안의 요소들은
+            # int이거나 str일 거라는 가정 하에 작동하는 코드.
+            # 그렇지 않는다면 수정해야 함!
+            webtoon_id = tuple(scraper.webtoon_id)
+        else:
+            raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
 
-            information = scraper._get_information(old_information)
-            information.update(
-                webtoon_id=webtoon_id,
-                thumbnail_name=thumbnail_name,
-                information_name="information.json",
-                original_webtoon_directory_name=webtoon_directory.name,
-                # merge_number=merge_number,
-                contents=["thumbnail", "information"],
-            )
-            with open(information_file, "w", encoding="utf-8") as f:
-                json.dump(information, f, ensure_ascii=False, indent=2)
+        information = scraper._get_information(old_information)
+        information.update(
+            webtoon_id=webtoon_id,
+            thumbnail_name=thumbnail_name,
+            information_name="information.json",
+            original_webtoon_directory_name=webtoon_directory.name,
+            contents=["thumbnail", "information"],
+        )
+        with open(information_file, "w", encoding="utf-8") as f:
+            json.dump(information, f, ensure_ascii=False, indent=2)
 
 
 class EpisodeRange:
@@ -186,32 +205,17 @@ class EpisodeRange:
         return self
 
 
-def reload_manager(f):
-    """함수의 결과값을 캐싱합니다. 단, reload 파라미터를 True로 둘 경우 다시 함수를 호출에 값을 받아옵니다.
+def async_reload_manager(f):
+    """함수의 결과값을 캐싱합니다. 단, reload 파라미터를 True로 둘 경우 다시 함수를 호출해 값을 받아옵니다."""
+    _NOTSET = object()
+    _cache = _NOTSET
 
-    이 함수는 클래스의 메소드에만 적용시킬 수 있습니다.
-    `__slots__`가 있다면 제대로 작동하지 않을 수 있는데, 그럴 경우 `__slots__`에 `_reload_cache`를 추가해 주세요.
-    """
-
-    # __slots__가 필요하다면 Scraper에 _return_cache를 구현하면 됨!
     @functools.wraps(f)
-    def wrapper(self, *args, reload: bool = False, **kwargs):
-        try:
-            self._reload_cache  # noqa
-        except AttributeError:
-            self._reload_cache = {}
-
-        if f in self._reload_cache:
-            if not reload:
-                logger.debug(
-                    f"{f} is already loaded, so loading is skipped. In order to reload, set `reload` parameter to True."
-                )
-                return self._reload_cache[f]
-            logger.info("Refreshing webtoon_information")
-
-        return_value = f(self, *args, reload=reload, **kwargs)
-        self._reload_cache[f] = return_value
-        return return_value
+    async def wrapper(*args, reload: bool = False, **kwargs):
+        nonlocal _cache
+        if reload or _cache is _NOTSET:
+            _cache = await f(*args, reload=reload, **kwargs)
+        return _cache
 
     return wrapper
 

@@ -12,9 +12,6 @@ import urllib.parse
 from json import JSONDecodeError
 from pathlib import Path
 
-from hxsoup.client import AsyncClient
-from hxsoup.exceptions import EmptyResultError
-
 from ..base import logger
 from ..exceptions import (
     InvalidAuthenticationError,
@@ -23,7 +20,7 @@ from ..exceptions import (
     UnsupportedRatingError,
     UseFetchEpisode,
 )
-from ._scraper import Scraper, reload_manager
+from ._scraper import Scraper, async_reload_manager
 
 
 class LezhinComicsScraper(Scraper[str]):
@@ -38,28 +35,27 @@ class LezhinComicsScraper(Scraper[str]):
     """
 
     PLATFORM = "lezhin_comics"
-    DEFAULT_IMAGE_FILE_EXTENSION = "jpg"
-    INFORMATION_VARS = Scraper.INFORMATION_VARS | dict(
-        is_shuffled=None,
-        webtoon_int_id=None,
-        episode_int_ids=None,
-        information_chars=None,
-        free_episodes=None,
-        shuffled_webtoon_directory_name=(
-            lambda self, _: None
-            if self._unshuffled_webtoon_directory is None
-            else self._unshuffled_webtoon_directory.name
-        ),
-        is_adult=None,
-        free_dates=None,
-        published_dates=None,
-        updated_dates=None,
+    INFORMATION_VARS = Scraper.INFORMATION_VARS | Scraper._build_information_dict(
+        "is_shuffled",
+        "webtoon_int_id",
+        "episode_int_ids",
+        "is_adult",
+        shuffled_directory="_shuffled_directory",
+        unshuffled_directory="_unshuffled_directory",
+    ) | Scraper._build_information_dict(
+        "information_chars",
+        "free_episodes",
+        "free_dates",
+        "published_dates",
+        "updated_dates",
+        "raw_data",
+        "availability",
+        "unusable_episodes",
+        subcategory="extra",
     )
-    thread_number: int | None = None
     DEFAULT_COOKIE = "x-lz-locale=ko_KR"
-    _unshuffled_webtoon_directory: Path | None = None
 
-    def __init__(self, webtoon_id: str, /, *, bearer: str | None = None, cookie: str | None = None) -> None:
+    def __init__(self, webtoon_id: str, /, *, bearer: str | None = None, cookie: str | None = None, user_int_id: int | None = None) -> None:
         """
         * 에피소드를 리스팅만 하고 싶은 경우: webtoon_id만 필요
         * 웹툰을 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요
@@ -80,33 +76,31 @@ class LezhinComicsScraper(Scraper[str]):
             }
         )
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
-        self.hxoptions.update(
-            timeout=50,
-            attempts=3,
-        )
-        self.cookie = cookie or self.DEFAULT_COOKIE  # 수정 시에는 중복된 부분도 수정하기
+        self.client.timeout = 50
+        self.cookie = cookie or self.DEFAULT_COOKIE
         self.bearer = bearer or os.environ.get("LEZHIN_BEARER", None)
-        if self.bearer is not None and bearer and (not bearer.startswith("Bearer") or bearer == "Bearer ..."):
-            raise InvalidAuthenticationError("Invalid bearer. Please provide valid bearer.")
+        self.user_int_id = user_int_id
 
+        # 레진코믹스의 설정들
         self.unshuffle: bool = True
         self.delete_shuffled: bool = False
-        self.download_paid_episode: bool = False
+        self.download_paid_episode: bool = True
+        self.download_unusable_episode: bool = False
         self.is_fhd_downloaded: bool | None = False
         self.thread_number: int | None = None
 
     async def async_download_webtoon(self, *args, **kwargs):
         await super().async_download_webtoon(*args, **kwargs)
-        if self._unshuffled_webtoon_directory:
+        if self._unshuffled_directory and self._shuffled_directory:
             shutil.copy(
-                self._unshuffled_webtoon_directory / "information.json",
-                self._webtoon_directory / "information.json",
+                self._unshuffled_directory / "information.json",
+                self._shuffled_directory / "information.json",
             )
 
-    def fetch_all(self, reload: bool = False) -> None:
-        super().fetch_all(reload)
+    async def fetch_all(self, reload: bool = False) -> None:
+        await super().fetch_all(reload)
         with suppress(InvalidAuthenticationError):
-            self.fetch_user_information(reload=reload)
+            await self.fetch_user_information(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
         directory_name = self._safe_name(f"{self.title}({self.webtoon_id}")
@@ -120,32 +114,30 @@ class LezhinComicsScraper(Scraper[str]):
 
         return directory_name
 
-    @reload_manager
-    def fetch_webtoon_information(self, *, reload: bool = False) -> None:
+    @async_reload_manager
+    async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         raise UseFetchEpisode()
 
-    @reload_manager
-    def fetch_episode_information(self, *, reload: bool = False) -> None:
-        res = self.hxoptions.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
+    @async_reload_manager
+    async def fetch_episode_information(self, *, reload: bool = False) -> None:
+        res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}", raise_for_status=False)
         if res.status_code == 404:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
 
-        try:
-            title = res.soup_select("h2")[-1].text
-        except EmptyResultError:
+        matched = res.match("h2")
+        if not matched:
             if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
                 raise UnsupportedRatingError(
                     "Adult webtoon is not available since you don't set cookie. " "Check docs to how to download"
-                ) from None
-            if "adult" in res.url.path:
+                )
+            if "adult" in res.url.path:  # TODO: 아마 follow_redirects=False라서 다른 답을 내놓을 것임. HTTP 403을 사용하면 되는지 확인!!
                 raise UnsupportedRatingError(
                     "The account is not adult authenticated. Thus can not download adult webtoons."
-                ) from None
+                )
+        title = matched.pop().text()
 
-        thumbnail_url = res.soup_select_one('meta[property="og:image"]', no_empty_result=True).get("content")
-        assert isinstance(thumbnail_url, str), f"Invalid {thumbnail_url=}."
-
-        script_string = res.soup_select("script")[-1].text
+        thumbnail_url = res.single('meta[property="og:image"]').attrs.get("content")
+        script_string = res.match("script")[-1].text()
         try:
             raw_data = re.match(r"self\.__next_.\.push\(\[\d,(.*)\]\)$", script_string)[1]  # type: ignore
             data_raw = json.loads(ast.literal_eval(raw_data)[2:])
@@ -159,23 +151,29 @@ class LezhinComicsScraper(Scraper[str]):
         webtoon_int_id = data["meta"]["content"]["id"]
         is_adult = data["meta"]["content"]["isAdult"]
         is_shuffled = data["meta"]["content"].get("metadata", {}).get("imageShuffle", False)
-        author = ", ".join(author["name"] for author in data["meta"]["content"]["artists"])
+        authors = [author["name"] for author in data["meta"]["content"]["artists"]]
+        author = ", ".join(authors)
 
-        self._parse_episode_information(data["meta"]["episodes"])
-
+        self.raw_data = data
         self.webtoon_thumbnail_url = thumbnail_url
         self.title = title
         self.is_shuffled = is_shuffled
         self.webtoon_int_id = webtoon_int_id
         self.is_adult: bool = is_adult
+        self.authors: list[str] = authors
         self.author: str = author
 
-    @reload_manager
-    def fetch_user_information(self, user_int_id: int | None = None, *, reload: bool = False) -> None:
-        user_int_id = user_int_id or random.randrange(5000000000000000, 6000000000000000)
+        self._parse_episode_information(data["meta"]["episodes"])
+
+    @async_reload_manager
+    async def fetch_user_information(self, *, reload: bool = False) -> None:
+        await self.fetch_episode_information()
+
+        user_int_id = self.user_int_id or random.randrange(5000000000000000, 6000000000000000)
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         try:
-            data = self.hxoptions.get(url).json()
+            res = await self.client.get(url)
+            data = res.json()
         except JSONDecodeError:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.") from None
         if "error" in data:
@@ -187,14 +185,29 @@ class LezhinComicsScraper(Scraper[str]):
         raw_last_viewed_episode = data.get("latestViewedEpisode", 0)
         self.last_viewed_episode_int_id: int | None = int(raw_last_viewed_episode) if raw_last_viewed_episode else None
 
+        # 계정 상태
         self.is_subscribed = data["subscribed"]
         self.does_get_notifications = data["notification"]
         self.is_preferred: bool | None = data["preferred"] if data["preferred"] != "none" else None
-
+        # 에피소드 관련
         self.purchased_episodes = [episode_id in purchased_episodes_set for episode_id in self.episode_int_ids]
         self.viewed_episodes = [episode_id in view_episodes_set for episode_id in self.episode_int_ids]
 
-    def get_episode_image_urls(self, episode_no, attempts: int = 3) -> list[tuple[str, str]] | None:
+        # INFORMATION_VARS는 declarative하지만 꼭 그래야 할까?
+        self.INFORMATION_VARS = self.INFORMATION_VARS | Scraper._build_information_dict(  # type: ignore
+            "purchased_episodes",
+        ) | Scraper._build_information_dict(
+            "is_subscribed",
+            "does_get_notifications",
+            "is_preferred",
+            "viewed_episodes",
+            subcategory="extra",
+        )
+
+    async def get_episode_image_urls(self, episode_no, retry: int = 3) -> list[tuple[str, str]] | None:
+        if not self.availability[episode_no]:
+            return None
+
         # cspell: ignore keygen
         is_purchased = self.purchased_episodes[episode_no] if hasattr(self, "purchased_episodes") else False
 
@@ -202,7 +215,7 @@ class LezhinComicsScraper(Scraper[str]):
             self.is_fhd_downloaded = True
 
         purchased = "true" if is_purchased else "false"
-        # 스페셜 캐릭터를 포함하고 있는 이상한 웹툰이 있음
+        # 스페셜 캐릭터를 포함하고 있는 이상한 웹툰이 있음.  # TODO: 테스트에 포함하기!
         episode_id_str = urllib.parse.quote(self.episode_ids[episode_no])
         episode_id_int = self.episode_int_ids[episode_no]
 
@@ -211,17 +224,16 @@ class LezhinComicsScraper(Scraper[str]):
             f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
         )
 
-        keys_response = self.hxoptions.get(keygen_url)
+        keys_response = await self.client.get(keygen_url)
         if keys_response.status_code == 403:
             if self.bearer:
                 logger.warning(
-                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
+                    f"Can't retrieve data from {self.episode_titles[episode_no]}. "
                     "It's probably because Episode is not available or not for free episode. "
                 )
             else:
                 logger.warning(
-                    f"can't retrieve data from {self.episode_titles[episode_no]}. "
-                    "It's almost certainly because you don't have bearer. Set bearer to get data."
+                    f"Can't retrieve data from {self.episode_titles[episode_no]}. SET BEARER TO DOWNLOAD PROPERLY."
                 )
             return None
 
@@ -235,15 +247,15 @@ class LezhinComicsScraper(Scraper[str]):
             f"platform=web&store=web&alias={self.webtoon_id}&name={episode_id_str}&preload=false"
             "&type=comic_episode"
         )
-        try:
-            images_data = self.hxoptions.get(images_retrieve_url).json()
-        except json.JSONDecodeError:
-            if attempts <= 1:
-                raise
-            logger.warning("Retrying json decode...")
-            return self.get_episode_image_urls(episode_no, attempts=attempts - 1)
+        for i in range(retry):
+            try:
+                res = await self.client.get(images_retrieve_url)
+                images_data = res.json()
+            except json.JSONDecodeError:
+                if retry == i + 1:
+                    raise
+                logger.warning("Retrying...")
 
-        # created_at = images_data["data"]["createdAt"]
         image_urls: list[tuple[str, str]] = []
         for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
             image_url = (
@@ -256,7 +268,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         return image_urls
 
-    # PROPERTIES
+    # MARK: PROPERTIES
 
     @property
     def bearer(self) -> str | None:
@@ -265,11 +277,13 @@ class LezhinComicsScraper(Scraper[str]):
     @bearer.setter
     def bearer(self, value: str | None) -> None:
         """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
+        if value is not None and value and (not value.startswith("Bearer") or value == "Bearer ..."):
+            raise InvalidAuthenticationError("Invalid bearer. Please provide valid bearer.")
         self._bearer = value
         if value is not None:
-            self.headers.update(Authorization=value)
+            self.headers.update({"Authorization": value})
 
-    # PRIVATE METHODS
+    # MARK: PRIVATE METHODS
 
     @classmethod
     def _from_string(cls, string: str, /, **kwargs):
@@ -324,34 +338,26 @@ class LezhinComicsScraper(Scraper[str]):
             case "www.lezhin.com", ("/", "ko", "comic", webtoon_id):
                 return webtoon_id
 
-    def _download_image(
+    async def _download_image(
         self,
-        image_directory: Path,
-        url_and_media_type: tuple[str, str],
-        image_no: int,
-        client: AsyncClient,
-        *,
-        file_extension: str | None = None,
-    ):
-        url, media_type = url_and_media_type
+        url_tuple: tuple[str, str],
+        /,
+        directory: Path,
+        name: str,
+    ) -> Path:
+        url, media_type = url_tuple
         if media_type not in ("image/jpeg", "image/gif"):
             logger.warning(f"Unknown media type: {media_type}")
         if media_type.startswith("image"):
-            file_extension = media_type.removeprefix("image/")
-        return super()._download_image(image_directory, url, image_no, client, file_extension=file_extension)
+            file_extension = media_type.removeprefix("image/")  # TODO: 이거 없이도 잘 작동하는지 확인하고 아니라면 변경하기
+        return await super()._download_image(url, directory, name)
 
-    def _parse_episode_information(
-        self,
-        episode_information_raw: list[dict],
-        get_paid_episode: bool | None = None,
-        get_unusable_episode: bool = False,
-    ) -> None:
-        get_paid_episode = get_paid_episode if get_paid_episode is not None else self.download_paid_episode
+    def _parse_episode_information(self, episode_information_raw: list[dict]) -> None:
+        get_paid_episode = self.download_paid_episode
+        download_unusable_episode = self.download_unusable_episode
         episode_int_ids: list[int] = []
         episode_str_ids: list[str] = []
         episode_titles: list[str] = []
-        episode_type_chars: list[str] = []
-        display_names: list[str] = []
         unusable_episodes: list[bool] = []
         free_episodes: list[bool] = []
         free_dates: list[int | None] = []
@@ -366,10 +372,6 @@ class LezhinComicsScraper(Scraper[str]):
             episode_int_ids.append(episode["id"])
             episode_str_ids.append(episode["name"])
             episode_titles.append(episode["display"]["title"])
-            episode_type_chars.append(episode["display"]["type"])
-            # episode_id_strs와 거의 같지만 특별편인 경우 'x1' 등으로 표시되는 episode_id_strs과는 달리
-            # '공지'와 같은 글자로 나타나며 에피소드 위 작은 글씨를 의미한다. 스크래핑과는 큰 관련이 없는 자료이다.
-            display_names.append(episode["display"]["displayName"])
             unusable_episodes.append(is_episode_unusable)
             free_episodes.append(is_episode_free)
 
@@ -377,79 +379,48 @@ class LezhinComicsScraper(Scraper[str]):
             published_dates.append(episode["publishedAt"])
             updated_dates.append(episode["updatedAt"])
 
-        lists_to_filter = (
-            episode_int_ids,
-            episode_str_ids,
-            episode_titles,
-            episode_type_chars,
-            display_names,
-            unusable_episodes,
-            free_episodes,
-            free_dates,
-            published_dates,
-            updated_dates,
-        )
-
         to_downloads = [
-            (get_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
+            (download_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
             for is_unusable, is_free in zip(unusable_episodes, free_episodes, strict=True)
         ]
 
-        if len(episode_titles) - sum(to_downloads):
-            match get_unusable_episode, get_paid_episode:
-                case False, False:
-                    warning_message = "Unusable or not for free episode will be skipped."
-                case True, False:
-                    warning_message = "Unusable episode will be skipped."
-                case False, True:
-                    warning_message = "Not for free episode will be skipped."
-                case _:
-                    raise Unreachable
-
-            warning_message += " Following episodes will be skipped: "
-            warning_message += ", ".join(
-                subtitle for to_download, subtitle in zip(to_downloads, episode_titles, strict=True) if not to_download
-            )
-            logger.warning(warning_message)
-
-        for list_to_filter in lists_to_filter:
-            list_to_filter[:] = itertools.compress(list_to_filter, to_downloads)  # type: ignore
-
+        self.availability = to_downloads
         self.episode_titles = episode_titles
         self.episode_ids: list[str] = episode_str_ids
         self.episode_int_ids = episode_int_ids
         self.free_episodes = free_episodes
-        self.information_chars = episode_type_chars
+        self.unusable_episodes = unusable_episodes
         self.free_dates = free_dates
         self.published_dates = published_dates
         self.updated_dates = updated_dates
 
     def _post_process_directory(self, base_webtoon_directory: Path) -> Path:
-        """For lezhin's shuffle process. This function changes webtoon_directory to unshuffled webtoon's directory."""
-        from ._lezhin_unshuffler import unshuffle_typical_webtoon
-
         if not self.is_shuffled or not self.unshuffle:
             if self.is_shuffled:
                 logger.warning(
-                    "This webtoon is shuffled, but because self.unshuffle is set to True, webtoon won't be shuffled."
+                    "This webtoon is shuffled, but since self.unshuffle is set to True, webtoon won't be unshuffled."
                 )
 
-            self._webtoon_directory = base_webtoon_directory
-            self._unshuffled_webtoon_directory = None
+            self._shuffled_directory = base_webtoon_directory
+            self._unshuffled_directory = None
 
             return base_webtoon_directory
+
+        from ._lezhin_unshuffler import unshuffle_typical_webtoon
 
         target_webtoon_directory = unshuffle_typical_webtoon(
             base_webtoon_directory,
             self.episode_int_ids,
-            use_progress_bar=self.use_progress_bar,
+            progress=self.progress if self.use_progress_bar else None,
             thread_number=self.thread_number,
         )
+
         if self.delete_shuffled:
             shutil.rmtree(base_webtoon_directory)
             logger.info("Shuffled webtoon directory is deleted.")
-
-        self._webtoon_directory = base_webtoon_directory
-        self._unshuffled_webtoon_directory = target_webtoon_directory
+            self._shuffled_directory = None
+        else:
+            self._shuffled_directory = base_webtoon_directory
+        self._unshuffled_directory = target_webtoon_directory
 
         return target_webtoon_directory

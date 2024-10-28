@@ -7,6 +7,7 @@ import os
 from typing import TYPE_CHECKING
 
 from rich.logging import RichHandler
+from rich.console import Console
 
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
@@ -34,3 +35,5 @@ logger.addHandler(RichHandler(show_time=False, show_path=False))
 logger.setLevel(logging.INFO)
 
 platforms: dict[str, type[Scraper]] = {}
+
+console = Console()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import contextlib
 import logging
 import re
@@ -223,7 +224,7 @@ def setup_instance(
     return scraper
 
 
-def parse_download(args: argparse.Namespace) -> None:
+async def parse_download(args: argparse.Namespace) -> None:
     for webtoon_id in args.webtoon_ids:
         scraper = setup_instance(
             webtoon_id,
@@ -235,7 +236,7 @@ def parse_download(args: argparse.Namespace) -> None:
         )
 
         if args.list_episodes:
-            scraper.fetch_all()
+            await scraper.fetch_all()
             table = Table(show_header=True, header_style="bold blue", box=None)
             table.add_column("Episode number [dim](ID)[/dim]", width=12)
             table.add_column("Episode Title", style="bold")
@@ -255,10 +256,14 @@ def parse_download(args: argparse.Namespace) -> None:
         if hasattr(scraper, "thread_number"):
             scraper.thread_number = args.thread_number  # type: ignore
 
-        scraper.download_webtoon(args.range)
+        await scraper.async_download_webtoon(args.range)
 
 
 def main(argv=None) -> Literal[0, 1]:
+    return asyncio.run(async_main(argv))
+
+
+async def async_main(argv=None) -> Literal[0, 1]:
     """모든 CLI 명령어를 처리하는 함수입니다.
 
     Arguments:
@@ -288,7 +293,7 @@ def main(argv=None) -> Literal[0, 1]:
     try:
         match args.subparser_name:
             case "download":
-                parse_download(args)
+                await parse_download(args)
             case unknown_subparser:
                 raise NotImplementedError(f"{unknown_subparser} is not a valid command.")
     except KeyboardInterrupt as exc:
@@ -298,8 +303,7 @@ def main(argv=None) -> Literal[0, 1]:
         return exc.code  # type: ignore
     except BaseException as exc:
         logger.error(f"{type(exc).__name__}: {exc}")
-        if args.verbose:
-            Console().print_exception()
+        Console().print_exception()
         return 1
     else:
         return 0

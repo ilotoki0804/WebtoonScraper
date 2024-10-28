@@ -1,15 +1,15 @@
 import pytest
-from WebtoonScraper.scrapers import *
+from WebtoonScraper.scrapers import *  # type: ignore
 
 
 def test_from_string():
-    # NaverWebtoonSpecificScraper and other scrapers that have integer for webtoon ID
+    # NaverWebtoonScraper and other scrapers that have integer for webtoon ID
 
-    scraper = NaverWebtoonSpecificScraper._from_string("432096")
+    scraper = NaverWebtoonScraper._from_string("432096")
     assert scraper.webtoon_id == 432096
 
     with pytest.raises(ValueError):
-        NaverWebtoonSpecificScraper._from_string("unknown")
+        NaverWebtoonScraper._from_string("unknown")
 
     # LezhinComicsScraper
 
@@ -19,24 +19,28 @@ def test_from_string():
 
 def test_from_url():
     scraper = NaverWebtoonScraper.from_url(
+        "https://comic.naver.com/webtoon/list?titleId=805702"
+    )
+    assert scraper.webtoon_id == 805702 and type(scraper) is NaverWebtoonScraper
+    scraper = NaverWebtoonScraper.from_url(
         "https://comic.naver.com/webtoon/list?titleId=812354&tab=thu"
     )
-    assert scraper.webtoon_id == 812354 and type(scraper) is NaverWebtoonSpecificScraper
+    assert scraper.webtoon_id == 812354 and type(scraper) is NaverWebtoonScraper
     scraper = NaverWebtoonScraper.from_url(
         "https://comic.naver.com/bestChallenge/list?titleId=816046"
     )
-    assert scraper.webtoon_id == 816046 and type(scraper) is BestChallengeSpecificScraper
+    assert scraper.webtoon_id == 816046 and type(scraper) is NaverWebtoonScraper
     scraper = NaverWebtoonScraper.from_url(
         "https://comic.naver.com/challenge/list?titleId=745689"
     )
-    assert scraper.webtoon_id == 745689 and type(scraper) is ChallengeSpecificScraper
-    assert NaverWebtoonSpecificScraper.from_url(
+    assert scraper.webtoon_id == 745689 and type(scraper) is NaverWebtoonScraper
+    assert NaverWebtoonScraper.from_url(
         "https://comic.naver.com/webtoon/list?titleId=812354&tab=thu"
     ).webtoon_id == 812354
-    assert BestChallengeSpecificScraper.from_url(
+    assert NaverWebtoonScraper.from_url(
         "https://comic.naver.com/bestChallenge/list?titleId=816046"
     ).webtoon_id == 816046
-    assert ChallengeSpecificScraper.from_url(
+    assert NaverWebtoonScraper.from_url(
         "https://comic.naver.com/challenge/list?titleId=745689"
     ).webtoon_id == 745689
 
