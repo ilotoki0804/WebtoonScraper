@@ -760,27 +760,17 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 return other
 
     async def _download_image(self, url: str, directory: Path, name: str) -> Path:
-        response = await self.client.get(url)
-        image_raw: bytes = response.content
+        try:
+            response = await self.client.get(url)
+            image_raw: bytes = response.content
+            file_extension = self._infer_filetype(response.headers.get("content-type"), image_raw)
 
-        # file extension 찾기
-        content_type: str | None = response.headers.get("content-type")
-        if content_type:
-            # content-type 해더에서 추론
-            content_type = content_type.lower()
-            for filetype_cls in IMAGE:
-                if filetype_cls.MIME == content_type:
-                    file_extension = filetype_cls.EXTENSION
-        else:
-            # 파일 헤더에서 추론
-            file_extension = filetype.guess_extension(image_raw)
-            if not file_extension:
-                raise ValueError(f"Failed to infer file extension contents downloaded from following url: {url!r}")
-                # file_extension = "jpg"  # 가장 흔한 확장자인 jpg로 fallback (하는 대신 raise함)
-
-        image_path = directory / self._safe_name(f"{name}.{file_extension}")
-        image_path.write_bytes(image_raw)
-        return image_path
+            image_path = directory / self._safe_name(f"{name}.{file_extension}")
+            image_path.write_bytes(image_raw)
+            return image_path
+        except Exception as exc:
+            exc.add_note(f"Exception occurred when downloading image from {url!r}")
+            raise
 
     def _load_snapshot(self, webtoon_directory: Path) -> None:
         """스냅샷 정보를 불러옵니다. self.ignore_snapshot이 True이거나 스냅샷이 없거나 훼손되었다면 라면 값을 불러오지 않습니다."""
@@ -865,6 +855,25 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         end_contexts = {}
         yield end_contexts
         self.callback(context_name, finishing=True, is_successful=True, **end_contexts)
+
+    @staticmethod
+    def _infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
+        # file extension 찾기
+        if content_type:
+            # content-type 해더에서 추론
+            content_type = content_type.lower()
+            for filetype_cls in IMAGE:
+                if filetype_cls.MIME == content_type:
+                    file_extension = filetype_cls.EXTENSION
+        else:
+            # 파일 헤더에서 추론
+            file_extension = filetype.guess_extension(image_raw)
+            if not file_extension:
+                raise ValueError("Failed to infer file extension contents.")
+                # 만약 필요한 경우 가장 흔한 확장자읜 jpg로 fallback하는 아래의 코드를 사용할 것.
+                # file_extension = "jpg"
+
+        return file_extension
 
     @staticmethod
     def _safe_name(name: str) -> str:
