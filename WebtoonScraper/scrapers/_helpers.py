@@ -27,12 +27,13 @@ class ExtraInfoScraper:
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
 
-    def finalizer(self, scraper: Scraper, finishing: bool, extras: dict[str, Any] | None = None, exc: BaseException | None = None):
+    def finalizer(self, finishing: bool, **context):
         if not finishing:
             return
-        else:  # TODO: 나중에 elif TYPE_CHECKING으로 변경
-            assert exc is not None
-            assert extras is not None
+
+        exc: BaseException | None = context["exc"]
+        extras: dict = context["extras"]
+        scraper: Scraper = context["scraper"]
 
         webtoon_directory: Path = extras["webtoon_directory"]
         thumbnail_path: Path | None = extras.get("thumbnail_name")
@@ -66,6 +67,8 @@ class ExtraInfoScraper:
             raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
 
         information = scraper._get_information(old_information)
+        if not scraper.save_extra_information and "extra" in information:
+            del information["extra"]
         information.update(
             webtoon_id=webtoon_id,
             thumbnail_name=thumbnail_name,

@@ -740,7 +740,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def _normalize_information(self, information):
         match information:
-            case int() | str() | None as value:
+            case int() | str() | float() | None as value:
                 return value
 
             case Mapping() as mapping:
