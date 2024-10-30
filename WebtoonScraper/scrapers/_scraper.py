@@ -503,6 +503,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     async def aclose(self) -> None:
         """스크래퍼를 닫습니다. `Scraper.stop()` 메서드를 사용하기에 상당히 불안정합니다."""
         self.stop()
+        if self.use_progress_bar:
+            self.progress.stop()
         await self.client.aclose()
         if getattr(self, "_progress", None):
             self._progress.stop()
@@ -578,11 +580,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         try:
             for episode_no in range(total_episodes):
-                self.progress.advance(task)
                 context = dict(
                     episode_no=episode_no,
-                    task_id=task,
                 )
+                if self.use_progress_bar:
+                    self.progress.advance(task)
+                    context.update(task_id=task)
+
                 # download_range는 1-based indexing이니 조정이 필요함
                 if download_range is not None and episode_no + 1 not in download_range:
                     self.callback("download_skipped", by_range=True, **context)
@@ -591,7 +595,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     raise KeyboardInterrupt
                 await self._download_episode(episode_no, webtoon_directory, context)
         finally:
-            self.progress.remove_task(task)
+            if self.use_progress_bar:
+                self.progress.remove_task(task)
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path, context: dict | None = None) -> None:
         context = context or {}
