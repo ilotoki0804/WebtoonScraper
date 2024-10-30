@@ -117,7 +117,7 @@ class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
     def importing(cls, package_name: str, install_through: str | None = None):
         try:
             yield
-        except ImportError as e:
+        except ImportError as exc:
             error_message = (
                 f"Package {package_name!r} is not installed in Python environment. "
                 f"Please install {package_name!r} though one of following command:\n"
@@ -128,7 +128,7 @@ class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
                     f"pip install -U WebtoonScraper[{install_through}]  (minimal; download required dependency for this particular download)\n"
                 )
             error_message += f"pip install -U {package_name}  (download manually, not recommended since it could install incompatible version)"
-            raise cls(error_message) from e
+            raise cls(error_message) from exc
 
 
 class CommentError(WebtoonScraperError):

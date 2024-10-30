@@ -123,8 +123,8 @@ class NaverWebtoonScraper(Scraper[int]):
     def from_url(cls, url: str) -> Self:
         try:
             webtoon_type, webtoon_id = cls._extract_webtoon_id(URL(url))
-        except Exception as e:
-            raise InvalidURLError.from_url(url, cls) from e
+        except Exception as exc:
+            raise InvalidURLError.from_url(url, cls) from exc
 
         if webtoon_id is None or webtoon_type is None:
             raise InvalidURLError.from_url(url, cls)
