@@ -14,12 +14,11 @@ from typing import Any, Literal
 from collections.abc import Callable, Iterable
 
 from WebtoonScraper.exceptions import InvalidPlatformError, InvalidURLError
-from rich.console import Console
 from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__
-from WebtoonScraper.base import logger, platforms
+from WebtoonScraper.base import logger, platforms, console
 from WebtoonScraper.scrapers import EpisodeRange, Scraper
 
 
@@ -247,7 +246,7 @@ async def parse_download(args: argparse.Namespace) -> None:
                     f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
                     str(episode_title),
                 )
-            Console().print(table)
+            console.print(table)
             return
 
         if args.no_progress_bar:
@@ -303,7 +302,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
         return exc.code  # type: ignore
     except BaseException as exc:
         logger.error(f"{type(exc).__name__}: {exc}")
-        Console().print_exception()
+        console.print_exception()
         return 1
     else:
         return 0

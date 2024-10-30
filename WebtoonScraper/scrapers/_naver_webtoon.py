@@ -112,7 +112,8 @@ class NaverWebtoonScraper(Scraper[int]):
 
         episode_image_urls: list[str] = []
         for element in response.match(self.image_selector):
-            image_url: str = element.attrs.get("src")
+            image_url = element.attrs.get("src")
+            assert image_url is not None
             if "agerate" in image_url or "ctguide" in image_url:  # cspell: ignore agerate ctguide
                 continue
             episode_image_urls.append(image_url)
@@ -172,12 +173,11 @@ class NaverWebtoonScraper(Scraper[int]):
         self.headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
 
     def _gather_author_comment(self, episode_no: int, response: httpc.Response):
-        script = response.single("body > script")
-        if script is not None:
-            information_script = script.text()
-            search_result = re.search(
-                r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,',
-                information_script,
-            )
-            assert search_result is not None
-            self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
+        script = response.single("body > script", remain_ok=True)
+        information_script = script.text()
+        search_result = re.search(
+            r'article: *{"no":\d*,"subtitle":".+?","authorWords":(?P<author_comments_raw>.+?)},\s*currentIndex: *\d*,',
+            information_script,
+        )
+        assert search_result is not None
+        self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))

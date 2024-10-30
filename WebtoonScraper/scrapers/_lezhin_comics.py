@@ -43,7 +43,6 @@ class LezhinComicsScraper(Scraper[str]):
         shuffled_directory="_shuffled_directory",
         unshuffled_directory="_unshuffled_directory",
     ) | Scraper._build_information_dict(
-        "information_chars",
         "free_episodes",
         "free_dates",
         "published_dates",
@@ -137,6 +136,7 @@ class LezhinComicsScraper(Scraper[str]):
         title = matched.pop().text()
 
         thumbnail_url = res.single('meta[property="og:image"]').attrs.get("content")
+        assert thumbnail_url is not None
         script_string = res.match("script")[-1].text()
         try:
             raw_data = re.match(r"self\.__next_.\.push\(\[\d,(.*)\]\)$", script_string)[1]  # type: ignore
@@ -345,6 +345,9 @@ class LezhinComicsScraper(Scraper[str]):
         directory: Path,
         name: str,
     ) -> Path:
+        if isinstance(url_tuple, str):
+            return await super()._download_image(url_tuple, directory, name)
+
         url, media_type = url_tuple
         if media_type not in ("image/jpeg", "image/gif"):
             logger.warning(f"Unknown media type: {media_type}")

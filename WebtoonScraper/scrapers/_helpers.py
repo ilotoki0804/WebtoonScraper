@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import functools
 import json
 from pathlib import Path
@@ -206,6 +207,20 @@ class EpisodeRange:
         self = cls()
         self.apply_string(episode_range, inclusive)
         return self
+
+
+class BoundedTaskGroup(asyncio.TaskGroup):
+    def __init__(self, max_task: int) -> None:
+        self._semaphore = asyncio.Semaphore(max_task)
+        super().__init__()
+
+    async def _wrap_coroutine(self, coro):
+        async with self._semaphore:
+            return await coro
+
+    def create_task(self, coro, *, name=None, context=None):
+        coro = self._wrap_coroutine(coro)
+        return super().create_task(coro, name=name, context=context)
 
 
 def async_reload_manager(f):

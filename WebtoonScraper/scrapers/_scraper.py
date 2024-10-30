@@ -432,7 +432,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.info(f"Downloading {_shorten(self.title)}...")
             case "download_episode", {"finishing": True}:
                 logger.info(f"The webtoon {self.title} download ended.")
-            case ("indicate" | "download_skipped" | "download_failed" | "downloading_image"), context:
+            case ("indicate" | "download_skipped" | "download_failed" | "downloading_image" | "download_completed"), context:
                 match situation:
                     case "indicate":
                         episode_no = None
