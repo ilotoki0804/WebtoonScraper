@@ -169,7 +169,7 @@ class LezhinComicsScraper(Scraper[str]):
     async def fetch_user_information(self, *, reload: bool = False) -> None:
         await self.fetch_episode_information()
 
-        user_int_id = self.user_int_id or random.randrange(5000000000000000, 6000000000000000)
+        user_int_id = self.user_int_id or random.Random(self.webtoon_id).randrange(5000000000000000, 6000000000000000)
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         try:
             res = await self.client.get(url)
