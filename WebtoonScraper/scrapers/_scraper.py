@@ -325,8 +325,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.callback("initialize", webtoon_directory=webtoon_directory)
 
         if not self.skip_thumbnail_download or TYPE_CHECKING:
-            with self._context_message("download_thumbnail"):
-                thumbnail_task = asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
+            try:
+                contents = os.listdir(webtoon_directory)
+            except Exception:
+                pass
+            else:
+                if any(content.startswith("thumbnail.") for content in contents):
+                    thumbnail_task = None
+                else:
+                    with self._context_message("download_thumbnail"):
+                        thumbnail_task = asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
 
         try:
             if self._download_status != "nothing":
@@ -347,7 +355,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     canceled_tasks += task.cancel()
 
                 extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
-                if not self.skip_thumbnail_download and not thumbnail_task.cancel():
+                if thumbnail_task and not self.skip_thumbnail_download and not thumbnail_task.cancel():
                     extras["thumbnail_path"] = await thumbnail_task
                 self._download_status = "nothing"
                 context.update(exc=exc, extras=extras, canceled=canceled_tasks)
@@ -358,7 +366,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 await self._tasks.join()
                 self._download_status = "nothing"
                 extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
-                if not self.skip_thumbnail_download:
+                if thumbnail_task and not self.skip_thumbnail_download:
                     extras["thumbnail_path"] = await thumbnail_task
                 context.update(exc=None, extras=extras)
 
