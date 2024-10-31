@@ -175,9 +175,9 @@ class LezhinComicsScraper(Scraper[str]):
             res = await self.client.get(url)
             data = res.json()
         except JSONDecodeError:
-            raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.") from None
+            raise InvalidAuthenticationError("Bearer is invalid. Failed to fetch user information.") from None
         if "error" in data:
-            raise InvalidAuthenticationError("Bearer is invalid. Failed to `fetch_user_infos`.")
+            raise InvalidAuthenticationError("Bearer is invalid. Failed to fetch user information.")
         data: dict = data["data"]
         view_episodes_set = {int(episode_int_id) for episode_int_id in data["history"] or []}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data["purchased"] or []}
@@ -224,7 +224,7 @@ class LezhinComicsScraper(Scraper[str]):
             f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
         )
 
-        keys_response = await self.client.get(keygen_url)
+        keys_response = await self.client.get(keygen_url, raise_for_status=False)
         if keys_response.status_code == 403:
             if self.bearer:
                 logger.warning(

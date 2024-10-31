@@ -37,7 +37,7 @@ class ExtraInfoScraper:
         scraper: Scraper = context["scraper"]
 
         webtoon_directory: Path = extras["webtoon_directory"]
-        thumbnail_path: Path | None = extras.get("thumbnail_name")
+        thumbnail_path: Path | None = extras.get("thumbnail_path")
 
         if thumbnail_path is None:
             thumbnail_name = None
