@@ -255,6 +255,8 @@ class LezhinComicsScraper(Scraper[str]):
                 if retry == i + 1:
                     raise
                 logger.warning("Retrying...")
+            else:
+                break
 
         image_urls: list[tuple[str, str]] = []
         for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
