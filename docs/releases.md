@@ -1,5 +1,18 @@
 # Release Note
 
+## 5.0.0a1
+
+* 진행 표시줄로 tqdm 대신 rich.progress 사용
+* hxoptions 대신 client 사용 -- 속도가 상당히 개선됨
+* 코드의 다양한 부분에서 async 사용
+* NaverWebtoonScraper가 더 이상 웹툰 타입에 따라 분할되지 않음.
+* hxsoup와 tqdm 의존성을 버리고 httpc 의존성 추가
+* download_range에 임의의 컨네이너를 사용할 수 있도록 허용; 이제는 간단한 케이스에 대해 `range(1, 11)`과 같이 사용하는 것이 가능해짐
+* import pillow eagerly
+* 파일 확장차 추론 메커니즘 개선
+* Scraper의 문서 개선
+* 기타 크고 작은 버그 수정과 기능 개선
+
 ## 4.5.0 (2024-10-19)
 
 * (plus) 스냅샷 기능 추가 (webtoon snap)
@@ -7,6 +20,8 @@
 * ctrl+C로는 셸 나가지 못하도록 함; ctrl+D(UNIX)나 ctrl+Z then Enter(윈도우) 사용 가능
 * webtoons.com 스크래퍼 개선
 * 기타 오류 수정 및 개선
+* (실험적) readthedocs 문서 추가
+* Scraper.download_status 추가
 
 ## 4.4.1 (2024-09-25)
 
