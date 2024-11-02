@@ -119,9 +119,8 @@ class LezhinComicsScraper(Scraper[str]):
 
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
-        res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}", raise_for_status=False)
-        if res.status_code == 404:
-            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, type(self))
+        with InvalidWebtoonIdError.redirect_error(self):
+            res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
 
         matched = res.match("h2")
         if not matched:

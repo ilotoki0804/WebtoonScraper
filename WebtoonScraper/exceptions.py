@@ -5,7 +5,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
+from httpx import HTTPStatusError
+
 if TYPE_CHECKING:
+    from .scrapers import Scraper as _Scraper
     from pathlib import Path
     from typing import Self
 
@@ -27,6 +30,27 @@ class DirectoryStateUnmatchedError(WebtoonScraperError):
 
 class InvalidWebtoonIdError(WebtoonScraperError):
     """Webtoon ID is invalid."""
+
+    @classmethod
+    @contextmanager
+    def redirect_error(cls, scraper: _Scraper, rating_notice=True, error_type: type[BaseException] | tuple[type[BaseException], ...] = HTTPStatusError):
+        try:
+            yield
+        except error_type as exc:
+            if isinstance(exc, HTTPStatusError):
+                reason = exc.response.reason_phrase
+                raise cls.from_webtoon_id(
+                    webtoon_id=scraper.webtoon_id,
+                    scraper=type(scraper),
+                    rating_notice=rating_notice,
+                    additional=f" (HTTP {exc.response.status_code}{' ' * bool(reason)}{reason})",
+                ) from None
+            else:
+                raise cls.from_webtoon_id(
+                    webtoon_id=scraper.webtoon_id,
+                    scraper=type(scraper),
+                    rating_notice=rating_notice,
+                ) from None
 
     @classmethod
     def from_webtoon_id(

@@ -10,6 +10,7 @@ from json.decoder import JSONDecodeError
 from typing import Literal, Self
 
 import httpc
+from httpx import HTTPStatusError
 from yarl import URL
 
 from ..exceptions import (
@@ -39,12 +40,10 @@ class NaverWebtoonScraper(Scraper[int]):
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         headers = self.headers.copy()
         headers.update({"Accept": "application/json, text/plain, */*"})
-        try:
+        with InvalidWebtoonIdError.redirect_error(self, error_type=(JSONDecodeError, HTTPStatusError)):
             url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
             res = await self.client.get(url, headers=headers)
             webtoon_json_info: dict = res.json()
-        except JSONDecodeError:
-            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, self) from None
 
         # 정보 저장
         self.webtoon_thumbnail_url = webtoon_json_info["sharedThumbnailUrl"]
@@ -104,10 +103,15 @@ class NaverWebtoonScraper(Scraper[int]):
         self.raw_articles = articles
         self.author_comments = {}
 
-    async def get_episode_image_urls(self, episode_no: int) -> list[str]:
+    async def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         episode_id = self.episode_ids[episode_no]
         url = f"{self.base_url}/detail?titleId={self.webtoon_id}&no={episode_id}"
-        response = await self.client.get(url)
+
+        try:
+            response = await self.client.get(url)
+        except HTTPStatusError:
+            return None
+
         self._gather_author_comment(episode_no, response)
 
         episode_image_urls: list[str] = []
