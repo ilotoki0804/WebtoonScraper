@@ -226,15 +226,17 @@ class BoundedTaskGroup(asyncio.TaskGroup):
 
 def async_reload_manager(f):
     """함수의 결과값을 캐싱합니다. 단, reload 파라미터를 True로 둘 경우 다시 함수를 호출해 값을 받아옵니다."""
-    _NOTSET = object()
-    _cache = _NOTSET
-
+    # 주의: 클로저를 이용한 캐싱을 사용하면 인스턴스별로 설정되지 않아 재앙이 닥칠 수 있다
     @functools.wraps(f)
-    async def wrapper(*args, reload: bool = False, **kwargs):
-        nonlocal _cache
-        if reload or _cache is _NOTSET:
-            _cache = await f(*args, reload=reload, **kwargs)
-        return _cache
+    async def wrapper(self, *args, reload: bool = False, **kwargs):
+        if not hasattr(self, "_cache"):
+            self._cache = {}
+
+        result = self._cache.get(f)
+        if reload or result is None:
+            result = await f(self, *args, reload=reload, **kwargs)
+            self._cache[f] = result
+        return result
 
     return wrapper
 
