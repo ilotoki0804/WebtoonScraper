@@ -33,7 +33,7 @@ class InvalidWebtoonIdError(WebtoonScraperError):
 
     @classmethod
     @contextmanager
-    def redirect_error(cls, scraper: _Scraper, rating_notice=True, error_type: type[BaseException] | tuple[type[BaseException], ...] = HTTPStatusError):
+    def redirect_error(cls, scraper: _Scraper, rating_notice=False, error_type: type[BaseException] | tuple[type[BaseException], ...] = HTTPStatusError):
         try:
             yield
         except error_type as exc:

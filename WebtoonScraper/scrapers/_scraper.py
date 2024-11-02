@@ -686,7 +686,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         f"{index:03d}",
                     ))
         except BaseException:
-            self.callback("cancelling", episode_no=episode_no, **context)
+            self.callback("cancelling", **context)
             shutil.rmtree(episode_directory)
             raise
 
