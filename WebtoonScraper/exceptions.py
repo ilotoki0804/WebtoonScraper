@@ -93,23 +93,6 @@ class UseFetchEpisode(WebtoonScraperError):
         super().__init__(message or "Use `fetch_episode_information` for get webtoon information.")
 
 
-class InvalidBlogIdError(InvalidWebtoonIdError):
-    """Invalid blog id. Maybe there's a typo or blog is closed.
-
-    네이버 블로그의 경우 일반적인 웹툰 플랫폼들과는 다르게 blog id와 category number로
-    분리되어 있고 처리 과정 중에 blog id가 잘못됐는지 category number가 잘못됐는지 확인할 수 있는
-    로직이 있어서 따로 분리됨.
-    """
-
-
-class InvalidCategoryNoError(InvalidWebtoonIdError):
-    """Invalid category number.
-
-    Maybe there's a typo or category is deleted.
-    Check docs of InvalidBlogId for full description.
-    """
-
-
 class InvalidPlatformError(WebtoonScraperError):
     """Invalid platform error.
 
