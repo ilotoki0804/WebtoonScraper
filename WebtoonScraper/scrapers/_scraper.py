@@ -324,27 +324,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         webtoon_directory = self._prepare_directory()
         self.callback("initialize", webtoon_directory=webtoon_directory)
         self._load_snapshot(webtoon_directory)
-
-        if not self.skip_thumbnail_download or TYPE_CHECKING:
-            try:
-                contents = os.listdir(webtoon_directory)
-            except Exception:
-                snapshot_contents = self._get_snapshot_contents(webtoon_directory)
-                if isinstance(snapshot_contents, dict):
-                    contents = list(snapshot_contents)
-                else:
-                    contents = []
-            else:
-                snapshot_contents = self._get_snapshot_contents(webtoon_directory)
-                if isinstance(snapshot_contents, dict):
-                    # 중복된 컨텐츠가 나타날 수도 있지만 상관없음
-                    contents += snapshot_contents
-
-            if any(content.startswith("thumbnail.") for content in contents):
-                thumbnail_task = None
-            else:
-                with self._context_message("download_thumbnail"):
-                    thumbnail_task = asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
+        thumbnail_task = await self._download_thumbnail(webtoon_directory)
 
         try:
             if self._download_status != "nothing":
@@ -922,3 +902,24 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             f"{subcategory}/{key}": value
             for key, value in manual_keys.items()
         }
+
+    async def _download_thumbnail(self, webtoon_directory: Path) -> None | asyncio.Task[Path]:
+        if self.skip_thumbnail_download:
+            return None
+
+        try:
+            contents = os.listdir(webtoon_directory)
+        except Exception:
+            snapshot_contents = self._get_snapshot_contents(webtoon_directory)
+            contents = list(snapshot_contents) if isinstance(snapshot_contents, dict) else []
+        else:
+            snapshot_contents = self._get_snapshot_contents(webtoon_directory)
+            if isinstance(snapshot_contents, dict):
+                # 중복된 컨텐츠가 나타날 수도 있지만 상관없음
+                contents += snapshot_contents
+
+        if any(content.startswith("thumbnail.") for content in contents):
+            return None
+
+        with self._context_message("download_thumbnail"):
+            return asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
