@@ -12,7 +12,6 @@ from rich.console import Console
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
-__url__ = "https://github.com/ilotoki0804/WebtoonScraper"
 __version__ = "5.0.0a1"
 
 

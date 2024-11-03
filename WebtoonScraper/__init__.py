@@ -9,7 +9,4 @@
 다양한 플랫폼에서 웹툰을 다운로드하는 오픈 소스 웹툰 스크래퍼입니다.
 """
 
-from .base import (
-    __url__,  # noqa
-    __version__,  # noqa
-)
+from .base import __version__
