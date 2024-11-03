@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 import json
 import re
 from itertools import count
@@ -18,6 +17,7 @@ from ..exceptions import (
     InvalidWebtoonIdError,
     UnsupportedRatingError,
 )
+from ..base import logger
 from ._scraper import Scraper, async_reload_manager
 
 
@@ -31,8 +31,12 @@ class NaverWebtoonScraper(Scraper[int]):
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", subcategory="extra")
         | Scraper._build_information_dict("webtoon_type", "authors")
     )
+    comment_counts: dict
+    comments: dict
 
     def __init__(self, webtoon_id: int) -> None:
+        self.download_comments = False
+        self.top_comments_only = True
         super().__init__(webtoon_id)
         self.headers.update({"Referer": "https://comic.naver.com/webtoon/"})
 
@@ -121,6 +125,16 @@ class NaverWebtoonScraper(Scraper[int]):
             if "agerate" in image_url or "ctguide" in image_url:  # cspell: ignore agerate ctguide
                 continue
             episode_image_urls.append(image_url)
+
+        try:
+            get_episode_comments = self.extra_info_scraper.get_episode_comments  # type: ignore
+        except AttributeError:
+            pass
+        else:
+            # 댓글을 asynchronously 다운로드하고 싶은 경우.
+            # await self._tasks.put(asyncio.create_task(get_episode_comments(episode_no, self)))
+            await get_episode_comments(episode_no, self)
+
         return episode_image_urls
 
     @classmethod
@@ -185,3 +199,35 @@ class NaverWebtoonScraper(Scraper[int]):
         )
         assert search_result is not None
         self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
+
+    def _apply_options(self, options: dict[str, str], /) -> None:
+        def raw_string_to_boolean(raw_string: str) -> bool:
+            """boolean으로 변경합니다.
+
+            `true`나 `false`면 각각 True와 False로 처리하고,
+            정수라면 0이면 False, 나머지는 True로 처리합니다.
+
+            그 외의 값은 ValueError를 일으킵니다.
+            """
+            if raw_string.lower() == "true":
+                value = True
+            elif raw_string.lower() == "false":
+                value = False
+            else:
+                try:
+                    value = bool(int(raw_string))
+                except ValueError:
+                    raise ValueError(f"Invalid value for boolean: {raw_string}") from None
+            return value
+
+        for option, raw_value in options.items():
+            option = option.upper().replace("-", "_").strip()
+            if option.removesuffix("S") == "DOWNLOAD_COMMENT":
+                self.download_comments = raw_string_to_boolean(raw_value)
+            if option.removesuffix("S") == "DOWNLOAD_ALL_COMMENT":
+                option_true = not raw_string_to_boolean(raw_value)
+                if option_true:
+                    self.download_comments = option_true
+                    self.top_comments_only = option_true
+            else:
+                logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")
