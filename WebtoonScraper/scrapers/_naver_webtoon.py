@@ -29,7 +29,7 @@ class NaverWebtoonScraper(Scraper[int]):
     INFORMATION_VARS = (
         Scraper.INFORMATION_VARS
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", subcategory="extra")
-        | Scraper._build_information_dict("webtoon_type", "authors")
+        | Scraper._build_information_dict("webtoon_type", "authors", "author_comments")
     )
     comment_counts: dict
     comments: dict
