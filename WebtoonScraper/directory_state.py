@@ -1,10 +1,9 @@
-"""웹툰 디렉토리를 에피소드별로 묶거나 푸는 기능을 하는 모듈입니다.
-
-또한 웹툰 디렉토리의 상태를 파악하는 코드들도 같이 존재합니다.
-"""
+"""웹툰 디렉토리의 상태를 파악합니다."""
 
 from __future__ import annotations
 
+from contextlib import suppress
+import json
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -98,6 +97,24 @@ def _directories_and_files_of(
         else:
             files.append(path)
     return sorted(directories), sorted(files)
+
+
+def load_information_json(directory: Path) -> dict | None:
+    information = directory / "information.json"
+    with suppress(Exception):
+        with open(information, encoding="utf-8") as f:
+            return json.load(f)
+
+    snapshot = directory.parent / f"{directory.name}.snapshots"
+    with suppress(Exception):
+        with open(snapshot, encoding="utf-8") as f:
+            data = json.load(f)
+        latest_snapshot_no = data["selected_snapshots"][-1]
+        snapshot = data["snapshots"][latest_snapshot_no]
+        metadata = snapshot["meta"]
+        return metadata
+
+    return None
 
 
 def check_filename_state(file_or_directory_name: str) -> FileStates:

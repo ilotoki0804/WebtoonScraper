@@ -35,6 +35,7 @@ from ..base import console, logger, platforms
 from ..directory_state import (
     DIRECTORY_PATTERNS,
     NORMAL_IMAGE,
+    load_information_json,
 )
 from ..exceptions import (
     InvalidURLError,
@@ -324,6 +325,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         webtoon_directory = self._prepare_directory()
         self.callback("initialize", webtoon_directory=webtoon_directory)
         self._load_snapshot(webtoon_directory)
+        self._load_information(webtoon_directory)
         thumbnail_task = await self._download_thumbnail(webtoon_directory)
 
         try:
@@ -681,7 +683,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.callback("download_completed", **context)
         return
 
-    def _get_information(self, old_information: dict):
+    def _get_information(self):
         """information.json에 탑재할 정보를 갈무리합니다.
 
         Note:
@@ -702,6 +704,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 to_store = information
                 name = original_name
 
+            old_information = self._old_information
             fetch_failed = []
             match to_fetch:
                 case None:
@@ -816,6 +819,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 return "file"
             case other:
                 raise TypeError(f"Unexpected type: {type(other).__name__}")
+
+    def _load_information(self, webtoon_directory: Path) -> None:
+        old_information = load_information_json(webtoon_directory)
+        if not old_information:
+            old_information = {}
+        self._old_information = old_information
 
     def _prepare_directory(self) -> Path:
         webtoon_directory_name = self.get_webtoon_directory_name()

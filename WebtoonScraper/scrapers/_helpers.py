@@ -8,6 +8,8 @@ import textwrap
 from typing import TYPE_CHECKING, Any
 from collections.abc import Iterable
 
+from WebtoonScraper.directory_state import load_information_json
+
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers._scraper import Scraper
 
@@ -44,19 +46,6 @@ class ExtraInfoScraper:
         else:
             thumbnail_name = thumbnail_path.name
 
-        # information.json 추가
-        information_file = webtoon_directory / "information.json"
-        if information_file.is_file():
-            try:
-                old_information = json.loads(information_file.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                logger.warning(
-                    "Failed to parse existing information.json file since it's corrupted. Old information will be ignored."
-                )
-                old_information = {}
-        else:
-            old_information = {}
-
         if isinstance(scraper.webtoon_id, str | int):
             webtoon_id = scraper.webtoon_id
         elif isinstance(scraper.webtoon_id, Iterable):
@@ -67,7 +56,7 @@ class ExtraInfoScraper:
         else:
             raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
 
-        information = scraper._get_information(old_information)
+        information = scraper._get_information()
         if not scraper.save_extra_information and "extra" in information:
             del information["extra"]
         information.update(
@@ -77,7 +66,7 @@ class ExtraInfoScraper:
             original_webtoon_directory_name=webtoon_directory.name,
             contents=["thumbnail", "information"],
         )
-        with open(information_file, "w", encoding="utf-8") as f:
+        with open(webtoon_directory / "information.json", "w", encoding="utf-8") as f:
             json.dump(information, f, ensure_ascii=False, indent=2)
 
 
