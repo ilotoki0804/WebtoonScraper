@@ -877,21 +877,22 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @staticmethod
     def _infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
-        # file extension 찾기
         if content_type:
-            # content-type 해더에서 추론
+            # content-type 헤더에서 추론
             content_type = content_type.lower()
             for filetype_cls in IMAGE:
                 if filetype_cls.MIME == content_type:
-                    file_extension = filetype_cls.EXTENSION
-        else:
-            # 파일 헤더에서 추론
-            file_extension = filetype.guess_extension(image_raw)
-            if not file_extension:
-                raise ValueError("Failed to infer file extension contents.")
-                # 만약 필요한 경우 가장 흔한 확장자읜 jpg로 fallback하는 아래의 코드를 사용할 것.
-                # file_extension = "jpg"
+                    return filetype_cls.EXTENSION
 
+        if image_raw is None:
+            raise ValueError("Failed to infer file extension contents.")
+
+        # 파일 헤더에서 추론
+        file_extension = filetype.guess_extension(image_raw)
+        if not file_extension:
+            raise ValueError("Failed to infer file extension contents.")
+            # 만약 필요한 경우 가장 흔한 확장자읜 jpg로 fallback하는 아래의 코드를 사용할 것.
+            # return "jpg"
         return file_extension
 
     @staticmethod
