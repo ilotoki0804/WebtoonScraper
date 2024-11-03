@@ -102,6 +102,11 @@ parser.add_argument(
     action="store_true",
     help="Set logger level to DEBUG and show detailed error",
 )
+parser.add_argument(
+    "--propagate-error",
+    action="store_true",
+    help="Propagate error without extra process",
+)
 parser.add_argument("--no-progress-bar", action="store_true", help="Use log instead progress bar to display status")
 subparsers = parser.add_subparsers(title="Commands")
 parser.add_argument(
@@ -289,23 +294,30 @@ async def async_main(argv=None) -> Literal[0, 1]:
     if args.verbose:
         logger.setLevel(logging.DEBUG)
 
-    try:
+    if args.propagate_error:
         match args.subparser_name:
             case "download":
                 await parse_download(args)
             case unknown_subparser:
                 raise NotImplementedError(f"{unknown_subparser} is not a valid command.")
-    except KeyboardInterrupt as exc:
-        logger.error("Aborted.")
-        return 1
-    except SystemExit as exc:
-        return exc.code  # type: ignore
-    except BaseException as exc:
-        logger.error(f"{type(exc).__name__}: {exc}")
-        console.print_exception()
-        return 1
-    else:
         return 0
+    else:
+        try:
+            match args.subparser_name:
+                case "download":
+                    await parse_download(args)
+                case unknown_subparser:
+                    raise NotImplementedError(f"{unknown_subparser} is not a valid command.")
+        except KeyboardInterrupt as exc:
+            logger.error("Aborted.")
+            return 1
+        except SystemExit as exc:
+            return exc.code  # type: ignore
+        except BaseException as exc:
+            console.print_exception()
+            return 1
+        else:
+            return 0
 
 
 if __name__ == "__main__":
