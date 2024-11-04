@@ -35,7 +35,7 @@ class LezhinComicsScraper(Scraper[str]):
     """
 
     PLATFORM = "lezhin_comics"
-    INFORMATION_VARS = Scraper.INFORMATION_VARS | Scraper._build_information_dict(
+    information_vars = Scraper.information_vars | Scraper._build_information_dict(
         "is_shuffled",
         "webtoon_int_id",
         "episode_int_ids",
@@ -192,8 +192,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.purchased_episodes = [episode_id in purchased_episodes_set for episode_id in self.episode_int_ids]
         self.viewed_episodes = [episode_id in view_episodes_set for episode_id in self.episode_int_ids]
 
-        # INFORMATION_VARS는 declarative하지만 꼭 그래야 할까?
-        self.INFORMATION_VARS = self.INFORMATION_VARS | Scraper._build_information_dict(  # type: ignore
+        self.information_vars = self.information_vars | Scraper._build_information_dict(  # type: ignore
             "purchased_episodes",
         ) | Scraper._build_information_dict(
             "is_subscribed",

@@ -162,7 +162,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
     PLATFORM: ClassVar[str]
     DOWNLOAD_INTERVAL: ClassVar[int | float] = 0
-    INFORMATION_VARS: ClassVar[dict[str, None | str | Path | Callable]] = dict(
+    EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
+    TASK_QUEUE_FACTORY: Callable = asyncio.Queue
+    information_vars: dict[str, None | str | Path | Callable] = dict(
         title=None,
         platform="PLATFORM",
         webtoon_thumbnail_url=None,
@@ -171,8 +173,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         author=None,
         download_status="download_status",
     )
-    EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
-    TASK_QUEUE_FACTORY: Callable = asyncio.Queue
 
     def __init__(self, webtoon_id: WebtoonId, *, register_extra: bool = True) -> None:
         """스크래퍼를 웹툰 id를 받아 초기화합니다.
@@ -687,15 +687,15 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """information.json에 탑재할 정보를 갈무리합니다.
 
         Note:
-            INFORMATION_VARS에 설정된 값을 바탕으로 탑재할 정보를 결정하는데, 그 규칙은 아래와 같습니다.
-            * INFORMATION_VARS의 키는 `information.json`의 디렉토리에서의 위치를 결정하고, 서브카테고리는 `/`으로 분리됩니다.
+            information_vars에 설정된 값을 바탕으로 탑재할 정보를 결정하는데, 그 규칙은 아래와 같습니다.
+            * information_vars의 키는 `information.json`의 디렉토리에서의 위치를 결정하고, 서브카테고리는 `/`으로 분리됩니다.
                 즉, `spam`이 키라면 `information.json`에서 `spam` 키에 값이 저장되며, `ham/hello`이라면 `information.json`의
                 `ham`이라는 딕셔너리의 `hello` 키에 값이 저장됩니다.
-            * INFORMATION_VARS의 값은 None이거나 문자열, callable일 수 있습니다.
+            * information_vars의 값은 None이거나 문자열, callable일 수 있습니다.
         """
         _ABSENT = object()
         information = {}
-        for original_name, to_fetch in self.INFORMATION_VARS.items():
+        for original_name, to_fetch in self.information_vars.items():
             subcategory, sep, remains = original_name.partition("/")
             if sep:
                 to_store = information[subcategory] = information.get(subcategory, {})

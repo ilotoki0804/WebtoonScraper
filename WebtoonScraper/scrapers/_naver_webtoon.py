@@ -26,8 +26,8 @@ class NaverWebtoonScraper(Scraper[int]):
     PLATFORM = "naver_webtoon"
     DOWNLOAD_INTERVAL = 0.5
     COMMENTS_DOWNLOAD_SUPPORTED = True
-    INFORMATION_VARS = (
-        Scraper.INFORMATION_VARS
+    information_vars = (
+        Scraper.information_vars
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", subcategory="extra")
         | Scraper._build_information_dict("webtoon_type", "authors", "author_comments")
     )
