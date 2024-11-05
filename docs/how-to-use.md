@@ -296,12 +296,15 @@ webtoon download "<url>" --list-episodes
 
 플렛폼 종속적 옵션은 `--option` 플래그를 이용해서 사용하실 수 있습니다.
 
-지정할 때는 `--option OPT1=VAL1 OPT2=VAL2`와 같이 작성합니다.
+지정할 때는 `--option OPT1=VAL1`와 같이 작성합니다.
+
+만약 새로운 옵션을 추가하고 싶다면 또 다른 `--option`을 추가하면 됩니다.
+예를 들어 `--option OPT1=VAL1 --option OPT2=VAL2`과 같이 사용할 수 있습니다.
 
 예를 들어 다음과 같습니다.
 
 ```console
-webtoon download ... --option bearer="Bearer ..." get_paid_episode=true
+webtoon download ... --option bearer="Bearer ..." --option get_paid_episode=true
 ```
 
 이때 옵션과 값 사이에는 등호가 위치하는데, **옵션명과 값이 띄어져 있어서는 안 됩니다**.
