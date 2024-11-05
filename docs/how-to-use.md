@@ -97,7 +97,7 @@ WebtoonScraper는 파이썬 스크립트로도 잘 사용할 수 있도록 설�
 | 네이버 웹툰 베스트 도전 | `BestChallengeSpecificScraper` | |
 | 네이버 웹툰 도전만화 | `ChallengeSpecificScraper` | |
 | 네이버 웹툰 글로벌 (webtoons.com) | `WebtoonsDotcomScraper` | |
-| 레진코믹스 | `LezhinComicsScraper` | `lezhin_comics`[^1] |
+| 레진코믹스 | `LezhinComicsScraper` | |
 
 [^1]: 일부 웹툰의 경우 `lezhin_comics` 의존성 없이도 동작합니다.
 
