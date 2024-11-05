@@ -75,7 +75,6 @@ def _version_info() -> str:
 
 
 def _add_version(parser: ArgumentParser):
-    parser.register("action", "version", LazyVersionAction)
     parser.add_argument(
         "--version",
         action="version",
@@ -95,7 +94,7 @@ parser = argparse.ArgumentParser(
     prog="WebtoonScraper",
     formatter_class=argparse.RawTextHelpFormatter,
 )
-
+parser.register("action", "version", LazyVersionAction)
 parser.add_argument(
     "--mock", action="store_true", help="Print argument parsing result and exit. Exist for debug or practice purpose"
 )
