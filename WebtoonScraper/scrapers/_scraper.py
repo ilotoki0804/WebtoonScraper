@@ -198,7 +198,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
-        self.save_extra_information: bool = False
+        self.information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
         self.skip_thumbnail_download: bool = False
 
         # data attributes
@@ -645,7 +645,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if not image_urls:
             self.download_status[episode_no] = "failed"
             self.callback("download_failed", warning=True, **context)
-            if not os.listdir(episode_directory):
+            with suppress(Exception):
                 episode_directory.rmdir()
             return
 
@@ -694,9 +694,21 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             * information_vars의 값은 None이거나 문자열, callable일 수 있습니다.
         """
         _ABSENT = object()
+        to_exclude = set(self.information_to_exclude)
         information = {}
         for original_name, to_fetch in self.information_vars.items():
             subcategory, sep, remains = original_name.partition("/")
+
+            # Exclude patterns
+            if subcategory + "/" in to_exclude:
+                continue
+            if original_name in to_exclude:
+                continue
+            if not subcategory and "/" + remains in to_exclude:
+                continue
+            if remains in to_exclude:
+                continue
+
             if sep:
                 to_store = information[subcategory] = information.get(subcategory, {})
                 name = remains

@@ -57,8 +57,6 @@ class ExtraInfoScraper:
             raise ValueError(f"Invalid webtoon id type to parse: {type(scraper.webtoon_id).__name__}")
 
         information = scraper._get_information()
-        if not scraper.save_extra_information and "extra" in information:
-            del information["extra"]
         information.update(
             webtoon_id=webtoon_id,
             thumbnail_name=thumbnail_name,
