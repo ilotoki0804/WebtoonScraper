@@ -428,6 +428,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.info(f"Downloading {_shorten(self.title)}...")
             case "download_episode", {"finishing": True}:
                 logger.info(f"The webtoon {self.title} download ended.")
+            case "download_skipped", {"by_empty_title": True}:
+                pass  # fake episode
             case (
                 "indicate"
                 | "download_skipped"
@@ -608,7 +610,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         episode_title = self.episode_titles[episode_no]
         if episode_title is None:
             self.download_status[episode_no] = "not_downloadable"
-            self.callback("download_skipped", by_empty_title=True)
+            self.callback("download_skipped", by_empty_title=True, **context)
             return
         directory_name = self._safe_name(f"{episode_no + 1:04d}. {episode_title}")
         episode_directory = webtoon_directory / directory_name
