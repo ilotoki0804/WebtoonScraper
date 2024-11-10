@@ -5,18 +5,11 @@ import functools
 import json
 from pathlib import Path
 import textwrap
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Self
 from collections.abc import Iterable
-
-from WebtoonScraper.directory_state import load_information_json
 
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers._scraper import Scraper
-
-if TYPE_CHECKING:
-    from typing import Self
-
-from ..base import logger
 
 
 class ExtraInfoScraper:
