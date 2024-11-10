@@ -604,6 +604,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         finally:
             if self.use_progress_bar:
                 self.progress.remove_task(task)
+                if self.progress.tasks:
+                    logger.warning("Progress is running. Cannot stop it.")
+                else:
+                    self.progress.stop()
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path, context: dict | None = None) -> None:
         context = context or {}
