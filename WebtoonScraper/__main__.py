@@ -110,14 +110,14 @@ parser.add_argument(
     help="Propagate error without extra process",
 )
 parser.add_argument("--no-progress-bar", action="store_true", help="Use log instead progress bar to display status")
-subparsers = parser.add_subparsers(title="Commands")
+# 이유는 정말 모르겠지만 subparser specifier 뒤에 이 옵션을 위치시켜야*만* 적용됨. 이유는 불명...
 parser.add_argument(
     "-N",
     "--thread-number",
     type=int,
-    default=None,
     help="Set concurrent thread number. You can also use `THREAD_NUMBER` to set thread numbers to use.",
 )
+subparsers = parser.add_subparsers(title="Commands")
 
 # download subparser
 download_subparser = subparsers.add_parser("download", help="Download webtoons")
@@ -156,9 +156,9 @@ download_subparser.add_argument(
 download_subparser.add_argument("--list-episodes", action="store_true", help="List all episodes")
 download_subparser.add_argument(
     "-O",
-    "--options",
+    "--option",
     type=_parse_options,
-    help="Additional options for scraper",
+    help="An additional option for scraper",
     metavar='OPTION_NAME="OPTION_VALUE"',
     action="append",
 )
