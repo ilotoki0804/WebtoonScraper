@@ -12,7 +12,7 @@ from rich.console import Console
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
-__version__ = "5.0.0a1"
+__version__ = "5.0.0"
 
 
 def get_default_thread_number() -> int:
