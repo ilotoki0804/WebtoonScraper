@@ -12,6 +12,8 @@ import urllib.parse
 from json import JSONDecodeError
 from pathlib import Path
 
+from httpx import HTTPStatusError
+
 from ..base import logger
 from ..exceptions import (
     InvalidAuthenticationError,
@@ -172,12 +174,9 @@ class LezhinComicsScraper(Scraper[str]):
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
         try:
             res = await self.client.get(url)
-            data = res.json()
-        except JSONDecodeError:
+        except HTTPStatusError:
             raise InvalidAuthenticationError("Bearer is invalid. Failed to fetch user information.") from None
-        if "error" in data:
-            raise InvalidAuthenticationError("Bearer is invalid. Failed to fetch user information.")
-        data: dict = data["data"]
+        data: dict = res.json()["data"]
         view_episodes_set = {int(episode_int_id) for episode_int_id in data["history"] or []}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data["purchased"] or []}
 
