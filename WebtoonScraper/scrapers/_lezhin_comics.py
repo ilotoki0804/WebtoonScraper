@@ -53,6 +53,10 @@ class LezhinComicsScraper(Scraper[str]):
         "availability",
         "unusable_episodes",
         subcategory="extra",
+    ) | Scraper._build_information_dict(
+        "bearer",
+        "user_int_id",
+        subcategory="credentials",
     )
     DEFAULT_COOKIE = "x-lz-locale=ko_KR"
 
@@ -117,7 +121,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        raise UseFetchEpisode()
+        raise UseFetchEpisode
 
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
