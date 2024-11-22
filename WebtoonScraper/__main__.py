@@ -237,7 +237,7 @@ async def parse_download(args: argparse.Namespace) -> None:
             args.platform,
             cookie=args.cookie,
             download_directory=args.base_directory,
-            options=dict(args.options or {}),
+            options=dict(args.option or {}),
             existing_episode_policy=args.existing_episode,
         )
 
