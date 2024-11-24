@@ -5,13 +5,15 @@ build:
   tools:
     python: "3.12"
 
+docs_dir:
+  docs
+
 python:
   install:
     - requirements: docs/requirements.txt
 
 mkdocs:
   configuration: .mkdocs.yml
-  docs_dir: docs
 
 formats:
    - pdf
