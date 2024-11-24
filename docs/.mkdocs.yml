@@ -22,16 +22,21 @@ repo_url: https://github.com/ilotoki0804/WebtoonScraper/
 edit_uri: "ko/latest/"
 
 nav:
-    - 튜토리얼: 'tutorial.md'
+    # - 튜토리얼: 'mkdocs/tutorial.md'
     - 사용 가이드:
-      - 앱: 'app-guide.md'
-      - 실행 파일: 'executable-guide.md'
-      - PyPI 패키지: 'how-to-use.md'
-      - 플랫폼 가이드: 'platforms.md'
+      - 설치: 'mkdocs/01-installing.md'
+      - CLI로 다운로드: 'mkdocs/02-downloading-cli.md'
+      - 앱으로 다운로드: 'mkdocs/03-downloading-app.md'
+      - 플랫폼: 'mkdocs/10-platforms.md'
+    - 다양한 기능:
+      - 다운로드 범위: 'mkdocs/90-download-range.md'
+      - 회차 병합하기: 'mkdocs/91-merging.md'
+      - 이미지 결합하기: 'mkdocs/92-concatenating.md'
+      - 웹툰 감상하기: 'mkdocs/93-how-to-view.md'
     - 기타:
       - English README: 'README-en.md'
-      - 저작권과 책임: 'copyright.md'
-      - 릴리즈 노트: 'releases.md'
+      - 저작권과 책임: 'mkdocs/94-copyright.md'
+      - 릴리즈 노트: 'mkdocs/95-releases.md'
 
 markdown_extensions:
   - admonition
