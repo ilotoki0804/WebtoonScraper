@@ -10,7 +10,8 @@ python:
     - requirements: docs/requirements.txt
 
 mkdocs:
-  configuration: docs/.mkdocs.yml
+  configuration: .mkdocs.yml
+  docs_dir: docs
 
 formats:
    - pdf
