@@ -91,14 +91,16 @@ class NaverWebtoonScraper(Scraper[int]):
 
         raw_episode_ids = set(article["no"] for article in articles)
         raw_episode_ids_iter = (article["no"] for article in articles)
-        raw_episode_titles_iter = (article["subtitle"] for article in articles)
+        # 좀 더 확실하게 하려면 blindInspection이 True인 경우를 찾을 것
+        raw_episode_titles_iter = (article.get("subtitle") for article in articles)
         episode_ids = []
         episode_titles = []
         for zero_index in range(max(raw_episode_ids)):
             index = zero_index + 1
-            if index in raw_episode_ids:
+            episode_title: str | None = next(raw_episode_titles_iter)
+            if index in raw_episode_ids and episode_title:
                 episode_ids.append(next(raw_episode_ids_iter))
-                episode_titles.append(next(raw_episode_titles_iter))
+                episode_titles.append(episode_title)
             else:
                 episode_ids.append(None)
                 episode_titles.append(None)
