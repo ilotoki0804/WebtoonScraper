@@ -56,7 +56,7 @@
 이때 사이에 공백 문자를 넣지 않도록 주의하세요.
 
 ```console
-webtoon download --range !3,!12,!16~21 "https://..."
+webtoon download --range "!3,!12,!16~21" "https://..."
 ```
 
 ### 앱
