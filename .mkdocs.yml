@@ -28,7 +28,7 @@ nav:
       - CLI로 다운로드: 'mkdocs/02-downloading-cli.md'
       - 앱으로 다운로드: 'mkdocs/03-downloading-app.md'
       - 플랫폼: 'mkdocs/10-platforms.md'
-    - 다양한 기능:
+    - 추가 기능:
       - 다운로드 범위: 'mkdocs/90-download-range.md'
       - 회차 병합하기: 'mkdocs/91-merging.md'
       - 이미지 결합하기: 'mkdocs/92-concatenating.md'
