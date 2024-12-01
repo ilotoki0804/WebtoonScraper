@@ -89,18 +89,22 @@ class NaverWebtoonScraper(Scraper[int]):
             articles += current_articles
             previous_articles = current_articles
 
-        raw_episode_ids = set(article["no"] for article in articles)
-        raw_episode_ids_iter = (article["no"] for article in articles)
-        # 좀 더 확실하게 하려면 blindInspection이 True인 경우를 찾을 것
-        raw_episode_titles_iter = (article.get("subtitle") for article in articles)
+        episode_data = {
+            article["no"]: article["subtitle"]
+            for article in articles
+            if not article.get("blindInspection")
+        }
+
         episode_ids = []
         episode_titles = []
-        for zero_index in range(max(raw_episode_ids)):
+        for zero_index in range(max(episode_data) if episode_data else 0):
             index = zero_index + 1
-            episode_title: str | None = next(raw_episode_titles_iter)
-            if index in raw_episode_ids and episode_title:
-                episode_ids.append(next(raw_episode_ids_iter))
-                episode_titles.append(episode_title)
+            # 1. 인덱스가 있는지 확인, 2. subtitle이 존재하는지 확인
+            # 만약 에피소스당 데이터가 2개 이상이 되어 튜플을 사용하는 경우
+            # 이 코드도 subtitle이 존재하는지를 확인하는 코드로 재정의되어야 함!
+            if episode_data.get(index):
+                episode_ids.append(index)
+                episode_titles.append(episode_data[index])
             else:
                 episode_ids.append(None)
                 episode_titles.append(None)
