@@ -174,7 +174,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         download_status="download_status",
     )
 
-    def __init__(self, webtoon_id: WebtoonId, *, register_extra: bool = True) -> None:
+    def __init__(self, webtoon_id: WebtoonId) -> None:
         """스크래퍼를 웹툰 id를 받아 초기화합니다.
 
         Args:
@@ -214,9 +214,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if not getattr(self, "extra_info_scraper", None):
             self.extra_info_scraper = self.EXTRA_INFO_SCRAPER_FACTORY()
 
-        if register_extra:
-            self.extra_info_scraper.register(self)
-
     def __init_subclass__(cls, register: bool = True, override: bool = False) -> None:
         if not register:
             return
@@ -233,6 +230,17 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         platforms[platform_name] = cls
 
     # MARK: ABSTRACT METHODS
+
+    @property
+    def extra_info_scraper(self) -> ExtraInfoScraper:
+        return self._extra_info_scraper
+
+    @extra_info_scraper.setter
+    def extra_info_scraper(self, extra: ExtraInfoScraper) -> None:
+        if hasattr(self, "_extra_info_scraper"):
+            self._extra_info_scraper.unregister(self)
+        self._extra_info_scraper = extra
+        extra.register(self)
 
     @abstractmethod
     async def get_episode_image_urls(self, episode_no: int) -> list[str] | None:

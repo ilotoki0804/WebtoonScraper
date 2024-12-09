@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import functools
 import json
 from pathlib import Path
@@ -19,6 +20,12 @@ class ExtraInfoScraper:
         # self.scraper = scraper
         scraper.register_callback("initialize", self.initializer)
         scraper.register_callback("finalize", self.finalizer)
+
+    def unregister(self, scraper: Scraper) -> None:
+        with suppress(ValueError):
+            scraper._triggers["initialize"].remove(self.initializer)
+        with suppress(ValueError):
+            scraper._triggers["finalize"].remove(self.finalizer)
 
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
