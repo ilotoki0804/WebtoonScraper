@@ -1,5 +1,10 @@
 # Release Note
 
+## 5.0.1
+
+* <https://webtoonscraper.readthedocs.io/>로 문서 위치 변경
+* 기타 크고 작은 버그 수정
+
 ## 5.0.0
 
 * `--options`를 `--option`으로 변경하고 사용하는 방식 변경 ([문서](./how-to-use.md#플랫폼-종속적-옵션) 참고) 및 관련 버그 수정(post1)
