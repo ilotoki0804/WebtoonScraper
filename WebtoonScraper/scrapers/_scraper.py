@@ -21,6 +21,7 @@ from typing import (
     Self,
     overload,
 )
+from collections.abc import Iterator
 import warnings
 
 import filetype
@@ -357,7 +358,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 if thumbnail_task and not self.skip_thumbnail_download and not thumbnail_task.cancel():
                     extras["thumbnail_path"] = await thumbnail_task
                 self._download_status = "nothing"
-                context.update(exc=exc, extras=extras, canceled=canceled_tasks)
+                context.update(exc=exc, extras=extras, canceled=canceled_tasks, is_successful=False)
             raise
 
         else:
@@ -890,11 +891,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         )
 
     @contextmanager
-    def _context_message(self, context_name: str, **contexts):
+    def _context_message(self, context_name: str, **contexts) -> Iterator[dict]:
         self.callback(context_name, finishing=False, **contexts)
-        end_contexts = {}
+        end_contexts = dict(finishing=True, is_successful=True)
         yield end_contexts
-        self.callback(context_name, finishing=True, is_successful=True, **end_contexts)
+        self.callback(context_name, **end_contexts)
 
     @staticmethod
     def _infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
