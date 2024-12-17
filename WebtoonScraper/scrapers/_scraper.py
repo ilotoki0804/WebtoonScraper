@@ -313,7 +313,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             asyncio.run(self.async_download_webtoon(download_range=download_range))
         except RuntimeError as exc:
-            exc.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
+            if "event loop" in exc.args[0]:
+                exc.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
     async def async_download_webtoon(self, download_range: RangeType = None) -> None:
