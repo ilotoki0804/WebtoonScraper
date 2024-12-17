@@ -90,6 +90,10 @@ def _parse_options(value: str):
         return value.strip(), None
 
 
+def _parse_excluding(string: str) -> tuple[str, ...]:
+    return tuple(value.strip() for value in string.split(",") if value.strip())
+
+
 parser = argparse.ArgumentParser(
     prog="WebtoonScraper",
     formatter_class=argparse.RawTextHelpFormatter,
@@ -167,6 +171,13 @@ download_subparser.add_argument(
     choices=["skip", "raise", "download_again", "hard_check"],
     default="skip",
     help="Determine what to do when episode directory already exists",
+)
+download_subparser.add_argument(
+    "--excluding",
+    type=_parse_excluding,
+    default=Scraper.information_to_exclude,
+    nargs="?",
+    help="Exclude specific information from information.json. Defaults to `extra/,credentials/`.",
 )
 
 
@@ -262,6 +273,7 @@ async def parse_download(args: argparse.Namespace) -> None:
         if hasattr(scraper, "thread_number"):
             scraper.thread_number = args.thread_number  # type: ignore
 
+        scraper.information_to_exclude = args.excluding or ()
         await scraper.async_download_webtoon(args.range)
 
 

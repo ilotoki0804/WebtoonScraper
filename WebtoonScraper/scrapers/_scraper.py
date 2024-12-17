@@ -159,10 +159,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     """
 
     # MARK: CLASS VARIABLES
-
-    # 이 변수들은 웹툰 플랫폼에 종속적이기에 클래스 상수로 분류됨.
     PLATFORM: ClassVar[str]
-    DOWNLOAD_INTERVAL: ClassVar[int | float] = 0
+    DOWNLOAD_INTERVAL: int | float = 0
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
     TASK_QUEUE_FACTORY: Callable = asyncio.Queue
     information_vars: dict[str, None | str | Path | Callable] = dict(
@@ -174,6 +172,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         author=None,
         download_status="download_status",
     )
+    information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """스크래퍼를 웹툰 id를 받아 초기화합니다.
@@ -199,7 +198,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
-        self.information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
         self.skip_thumbnail_download: bool = False
 
         # data attributes
@@ -391,7 +389,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def register_callback(self, trigger: str) -> Callable[[CallableT], CallableT]: ...
 
     def register_callback(self, trigger: str, func: Callable | None = None):
-        """특정 callback 트리거가 발생했을 때 실행할 컬백을 등록합니다.
+        """특정 callback 트리거가 발생했을 때 실행할 콜백을 등록합니다.
 
         Example:
             ```python
