@@ -176,7 +176,6 @@ download_subparser.add_argument(
     "--excluding",
     type=_parse_excluding,
     default=Scraper.information_to_exclude,
-    nargs="?",
     help="Exclude specific information from information.json. Defaults to `extra/,credentials/`.",
 )
 
@@ -273,7 +272,7 @@ async def parse_download(args: argparse.Namespace) -> None:
         if hasattr(scraper, "thread_number"):
             scraper.thread_number = args.thread_number  # type: ignore
 
-        scraper.information_to_exclude = args.excluding or ()
+        scraper.information_to_exclude = args.excluding
         await scraper.async_download_webtoon(args.range)
 
 
