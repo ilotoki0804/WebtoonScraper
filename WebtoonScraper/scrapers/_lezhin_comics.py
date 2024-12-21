@@ -52,6 +52,8 @@ class LezhinComicsScraper(Scraper[str]):
         "raw_data",
         "availability",
         "unusable_episodes",
+        "episode_dates",
+        "episode_states",
         subcategory="extra",
     ) | Scraper._build_information_dict(
         "bearer",
@@ -149,6 +151,17 @@ class LezhinComicsScraper(Scraper[str]):
             data = data_raw[1][3]["entity"]
         except Exception as exc:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
+
+        selector = "body > div.lzCntnr > div > div > ul > li > a"
+        episode_dates: list[str] = []
+        episode_states: list[str] = []
+        for episode in res.match(selector):
+            date_element, state_element = episode.css("a > div > div > div > div")
+            episode_dates.append(date_element.text())
+            episode_states.append(state_element.text())
+
+        self.episode_dates: list[str] = episode_dates
+        self.episode_states: list[str] = episode_states
 
         # webtoon 정보를 받아옴.
         title = data["meta"]["content"]["display"]["title"]
