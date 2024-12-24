@@ -204,6 +204,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.author: str | None = None  # 스크래퍼들이 모두 author 필드를 구현하면 제거하기
         self.webtoon_id: WebtoonId = webtoon_id
         self.base_directory: Path | str = Path.cwd()
+        self.skip_download: list[int] = []
+        """0-based index를 사용해 다운로드를 생략할 웹툰을 결정합니다."""
         self._download_status: Literal["downloading", "nothing", "canceling"] = "nothing"
         self._triggers: defaultdict[str, list[Callable]] = defaultdict(list)
         self._tasks: asyncio.Queue[asyncio.Future] = self.TASK_QUEUE_FACTORY()
@@ -436,8 +438,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.info(f"Downloading {_shorten(self.title)}...")
             case "download_episode", {"finishing": True}:
                 logger.info(f"The webtoon {self.title} download ended.")
-            case "download_skipped", {"by_empty_title": True}:
-                pass  # fake episode
+            case "download_skipped", {"by_empty_title": True} | {"by_skip_download": True} | {"by_range": True} as reason:
+                logger.debug(f"Download skipped {reason.popitem()[0]} with context: {context}")
             case (
                 "indicate"
                 | "download_skipped"
@@ -603,6 +605,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     context.update(task_id=task)
 
                 # download_range는 1-based indexing이니 조정이 필요함
+                if episode_no in self.skip_download:
+                    self.callback("download_skipped", by_skip_download=True, **context)
+                    continue
                 if download_range is not None and episode_no + 1 not in download_range:
                     self.callback("download_skipped", by_range=True, **context)
                     continue
