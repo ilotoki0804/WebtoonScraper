@@ -235,7 +235,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         keygen_url = (
             f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
-            f"contentId={self.webtoon_int_id}&episodeId={episode_id_int}&purchased={purchased}&q={30}&firstCheckType={'P'}"
+            f"q={30}&contentId={self.webtoon_int_id}&episodeId={episode_id_int}&firstCheckType={'T'}&purchased={purchased}"
         )
 
         keys_response = await self.client.get(keygen_url, raise_for_status=False)
@@ -252,9 +252,9 @@ class LezhinComicsScraper(Scraper[str]):
             return None
 
         response_data = keys_response.json()["data"]
-        policy = response_data["Policy"]
-        signature = response_data["Signature"]
-        key_pair_id = response_data["Key-Pair-Id"]
+        policy: str = response_data["Policy"]
+        signature: str = response_data["Signature"]
+        key_pair_id: str = response_data["Key-Pair-Id"]
 
         images_retrieve_url = (
             "https://www.lezhin.com/lz-api/v2/inventory_groups/comic_viewer_k?"
@@ -273,10 +273,13 @@ class LezhinComicsScraper(Scraper[str]):
                 break
 
         image_urls: list[tuple[str, str]] = []
-        for image_url_data in images_data["data"]["extra"]["episode"]["scrollsInfo"]:
+        episode_info = images_data["data"]["extra"]["episode"]
+        updated_at = episode_info["updatedAt"]
+        for image_url_data in episode_info["scrollsInfo"]:
+            # .replace("~", "%7E")
             image_url = (
                 f'https://rcdn.lezhin.com/v2{image_url_data["path"]}'
-                f".webp?purchased={purchased}&q={30}&updated={1587628135437}"
+                f".webp?purchased={purchased}&q={30}&updated={updated_at}"
                 f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
             )
             media_type = image_url_data["mediaType"]
