@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import ast
-import itertools
 import json
 import os
 import random
@@ -9,7 +7,6 @@ import re
 import shutil
 from contextlib import suppress
 import urllib.parse
-from json import JSONDecodeError
 from pathlib import Path
 
 from httpx import HTTPStatusError
@@ -18,7 +15,6 @@ from ..base import logger
 from ..exceptions import (
     InvalidAuthenticationError,
     InvalidWebtoonIdError,
-    Unreachable,
     UnsupportedRatingError,
     UseFetchEpisode,
 )
@@ -93,8 +89,10 @@ class LezhinComicsScraper(Scraper[str]):
         self.delete_shuffled: bool = False
         self.download_paid_episode: bool = True
         self.download_unusable_episode: bool = False
-        self.is_fhd_downloaded: bool | None = False
+        # None일 경우 상황에 따라 적절한 값으로 변경될 수 있는 값들
         self.thread_number: int | None = None
+        self.is_fhd_downloaded: bool | None = None
+        self.open_free_episode: bool | None = None
 
     async def async_download_webtoon(self, *args, **kwargs):
         await super().async_download_webtoon(*args, **kwargs)
@@ -128,26 +126,28 @@ class LezhinComicsScraper(Scraper[str]):
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
         with InvalidWebtoonIdError.redirect_error(self):
-            res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
+            try:
+                res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
+            except HTTPStatusError as exc:
+                if not exc.response.status_code == 307:
+                    raise
+                if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
+                    raise UnsupportedRatingError(
+                        "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
+                    ) from exc
+                else:
+                    raise UnsupportedRatingError(
+                        "The account is not adult authenticated. Thus can not download adult webtoons."
+                    ) from exc
 
-        matched = res.match("h2")
-        if not matched:
-            if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
-                raise UnsupportedRatingError(
-                    "Adult webtoon is not available since you don't set cookie. " "Check docs to how to download"
-                )
-            if "adult" in res.url.path:  # TODO: 아마 follow_redirects=False라서 다른 답을 내놓을 것임. HTTP 403을 사용하면 되는지 확인!!
-                raise UnsupportedRatingError(
-                    "The account is not adult authenticated. Thus can not download adult webtoons."
-                )
-        title = matched.pop().text()
+        title = res.match("h2").pop().text()
 
         thumbnail_url = res.single('meta[property="og:image"]').attrs.get("content")
         assert thumbnail_url is not None
         script_string = res.match("script")[-1].text()
         try:
             raw_data = re.match(r"self\.__next_.\.push\(\[\d,(.*)\]\)$", script_string)[1]  # type: ignore
-            data_raw = json.loads(ast.literal_eval(raw_data)[2:])
+            data_raw = json.loads(json.loads(raw_data)[2:])
             data = data_raw[1][3]["entity"]
         except Exception as exc:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
@@ -156,12 +156,15 @@ class LezhinComicsScraper(Scraper[str]):
         episode_dates: list[str] = []
         episode_states: list[str] = []
         for episode in res.match(selector):
-            date_element, state_element = episode.css("a > div > div > div > div")
+            # *_: N시간 후 무료 요소의 경우 개수가 3개임
+            date_element, state_element, *_ = episode.css("a > div > div > div > div")
             episode_dates.append(date_element.text())
             episode_states.append(state_element.text())
 
         self.episode_dates: list[str] = episode_dates
         self.episode_states: list[str] = episode_states
+        if self.open_free_episode is None:
+            self.open_free_episode = True
 
         # webtoon 정보를 받아옴.
         title = data["meta"]["content"]["display"]["title"]
@@ -207,6 +210,8 @@ class LezhinComicsScraper(Scraper[str]):
         # 에피소드 관련
         self.purchased_episodes = [episode_id in purchased_episodes_set for episode_id in self.episode_int_ids]
         self.viewed_episodes = [episode_id in view_episodes_set for episode_id in self.episode_int_ids]
+        if self.is_fhd_downloaded is None:
+            self.is_fhd_downloaded = any(self.purchased_episodes)
 
         self.information_vars = self.information_vars | Scraper._build_information_dict(  # type: ignore
             "purchased_episodes",
@@ -225,13 +230,21 @@ class LezhinComicsScraper(Scraper[str]):
         # cspell: ignore keygen
         is_purchased = self.purchased_episodes[episode_no] if hasattr(self, "purchased_episodes") else False
 
-        if is_purchased and self.is_fhd_downloaded is not None:
-            self.is_fhd_downloaded = True
-
         purchased = "true" if is_purchased else "false"
         # 스페셜 캐릭터를 포함하고 있는 이상한 웹툰이 있음.  # TODO: 테스트에 포함하기!
         episode_id_str = urllib.parse.quote(self.episode_ids[episode_no])
         episode_id_int = self.episode_int_ids[episode_no]
+
+        if self.open_free_episode and self.episode_states[episode_no] == "무료 공개":
+            res = await self.client.get(f"https://www.lezhin.com/lz-api/contents/v3/{self.webtoon_id}/episodes/{episode_id_str}?referrerViewType=NORMAL&objectType=comic")
+            episode_data = res.json()["data"]
+            # is_collected = episode_data["episode"]["isCollected"]  # false
+            remaining_time = episode_data["episode"]["remainingTime"]  # 0
+            if remaining_time != 0:
+                logger.warning(f"Episode {self.episode_titles[episode_no]} is not available yet. Remaining time: {remaining_time}.")
+                return None
+            # expire 시간 등 확인
+            await self.client.post("https://www.lezhin.com/lz-api/v2/contents/313/episodes/5933612038356992/timer")
 
         keygen_url = (
             f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
