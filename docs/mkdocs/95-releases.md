@@ -1,5 +1,13 @@
 # Release Note
 
+## 5.0.2
+
+* 레진코믹스 관련 변경 사항 반영
+* `--excluding` 옵션 추가 (TODO: 관련 문서 추가 필요)
+* 이미지 높이 관련 기능 개선
+* 카카오페이지 관련 변경 사항 반영
+* 기타 크고 작은 버그 수정 및 개선
+
 ## 5.0.1
 
 * <https://webtoonscraper.readthedocs.io/>로 문서 위치 변경
