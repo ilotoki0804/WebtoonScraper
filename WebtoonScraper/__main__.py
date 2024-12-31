@@ -296,14 +296,14 @@ async def async_main(argv=None) -> Literal[0, 1]:
     _add_version(parser)
     args = parser.parse_args(argv)  # 주어진 argv가 None이면 sys.argv[1:]을 기본값으로 삼음
 
+    # 어떠한 command도 입력하지 않았을 경우 도움말을 표시함.
+    if not hasattr(args, "subparser_name"):
+        args = parser.parse_args(["--help"])
+
     # --mock 인자가 포함된 경우 실제 다운로드까지 가지 않고 표현된 인자를 보여주고 종료.
     if args.mock:
         print("Arguments:", str(args).removeprefix("Namespace(").removesuffix(")"))
         return 0
-
-    # 어떠한 command도 입력하지 않았을 경우 도움말을 표시함.
-    if not hasattr(args, "subparser_name"):
-        return await async_main(argv=["--help"])
 
     if args.verbose:
         logger.setLevel(logging.DEBUG)
