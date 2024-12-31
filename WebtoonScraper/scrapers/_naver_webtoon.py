@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import re
 from itertools import count
 from json.decoder import JSONDecodeError
@@ -28,8 +29,8 @@ class NaverWebtoonScraper(Scraper[int]):
     COMMENTS_DOWNLOAD_SUPPORTED = True
     information_vars = (
         Scraper.information_vars
-        | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", subcategory="extra")
-        | Scraper._build_information_dict("webtoon_type", "authors", "author_comments")
+        | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", "episode_audio_urls", subcategory="extra")
+        | Scraper._build_information_dict("webtoon_type", "authors", "author_comments", "download_audio", "audio_names")
     )
     comment_counts: dict
     comments: dict
@@ -37,6 +38,9 @@ class NaverWebtoonScraper(Scraper[int]):
     def __init__(self, webtoon_id: int) -> None:
         self.download_comments = False
         self.top_comments_only = True
+        self.download_audio = True
+        self.episode_audio_urls: dict[int, str] = {}
+        self.audio_names: dict[int, str] = {}
         super().__init__(webtoon_id)
         self.headers.update({"Referer": "https://comic.naver.com/webtoon/"})
 
@@ -124,6 +128,14 @@ class NaverWebtoonScraper(Scraper[int]):
 
         self._gather_author_comment(episode_no, response)
 
+        try:
+            audio_url = response.single("audio#bgmPlayer > source", remain_ok=True).attrs["src"]
+            assert audio_url
+        except (ValueError, KeyError):
+            pass
+        else:
+            self.episode_audio_urls[episode_no] = audio_url
+
         episode_image_urls: list[str] = []
         for element in response.match(self.image_selector):
             image_url = element.attrs.get("src")
@@ -156,6 +168,24 @@ class NaverWebtoonScraper(Scraper[int]):
         self = cls(webtoon_id)
         self._set_webtoon_type(webtoon_type)  # camelCase 웹툰 타입
         return self
+
+    async def _download_episode_images(self, episode_no: int, context: dict, image_urls: list[str], episode_directory: Path) -> None:
+        if self.download_audio:
+            audio_url = self.episode_audio_urls.get(episode_no)
+            audio_name = f"{len(image_urls) + 1:03d}.mp3"
+            audio_path = episode_directory / audio_name
+            if audio_url and not audio_path.exists() and self._snapshot_contents_info(audio_path) is None:
+                try:
+                    res = await self.client.get(audio_url)
+                    with audio_path.open("wb") as f:
+                        async for data in res.aiter_bytes():
+                            f.write(data)
+                except Exception as exc:
+                    exc.add_note("Failed to download audio file.")
+                    raise
+                else:
+                    self.audio_names[episode_no] = audio_name
+        return await super()._download_episode_images(episode_no, context, image_urls, episode_directory)
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> tuple[str, int] | tuple[None, None]:
@@ -235,5 +265,9 @@ class NaverWebtoonScraper(Scraper[int]):
                 if option_true:
                     self.download_comments = option_true
                     self.top_comments_only = option_true
+            if option.removesuffix("S") == "DOWNLOAD_AUDIO":
+                option_true = raw_string_to_boolean(raw_value)
+                if option_true:
+                    self.download_audio = option_true
             else:
                 logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")

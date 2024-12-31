@@ -686,14 +686,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             if not as_folder:
                 episode_directory.mkdir()
-
-            async with asyncio.TaskGroup() as group:
-                for index, url in enumerate(image_urls, 1):
-                    group.create_task(self._download_image(
-                        url,
-                        episode_directory,
-                        f"{index:03d}",
-                    ))
+            await self._download_episode_images(episode_no, context, image_urls, episode_directory)
         except BaseException:
             self.callback("cancelling", **context)
             shutil.rmtree(episode_directory)
@@ -703,6 +696,15 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.download_status[episode_no] = "downloaded"
         self.callback("download_completed", **context)
         return
+
+    async def _download_episode_images(self, episode_no: int, context: dict, image_urls: list[str], episode_directory: Path) -> None:
+        async with asyncio.TaskGroup() as group:
+            for index, url in enumerate(image_urls, 1):
+                group.create_task(self._download_image(
+                    url,
+                    episode_directory,
+                    f"{index:03d}",
+                ))
 
     def _get_information(self):
         """information.json에 탑재할 정보를 갈무리합니다.
@@ -806,6 +808,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             image_raw: bytes = response.content
             file_extension = self._infer_filetype(response.headers.get("content-type"), image_raw)
 
+            # NOTE: response.aiter_bytes()를 사용한 방법이 더 효율적일 수 있음.
+            # 아닐 수도 있고 현재도 딱히 문제는 없어서 그대로 둠.
             image_path = directory / self._safe_name(f"{name}.{file_extension}")
             image_path.write_bytes(image_raw)
             return image_path
