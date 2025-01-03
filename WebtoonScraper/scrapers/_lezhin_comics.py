@@ -130,7 +130,7 @@ class LezhinComicsScraper(Scraper[str]):
                 res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
             except HTTPStatusError as exc:
                 if not exc.response.status_code == 307:
-                    raise
+                    raise  # InvalidWebtoonIdError로 넘어가게 함.
                 if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
                     raise UnsupportedRatingError(
                         "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
@@ -152,11 +152,11 @@ class LezhinComicsScraper(Scraper[str]):
         except Exception as exc:
             raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
 
-        selector = "body > div.lzCntnr > div > div > ul > li > a"
+        selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
         episode_dates: list[str] = []
         episode_states: list[str] = []
         for episode in res.match(selector):
-            # *_: N시간 후 무료 요소의 경우 개수가 3개임
+            # *_: 'N시간 후 무료' 요소의 경우 개수가 3개임
             date_element, state_element, *_ = episode.css("a > div > div > div > div")
             episode_dates.append(date_element.text())
             episode_states.append(state_element.text())
@@ -296,6 +296,9 @@ class LezhinComicsScraper(Scraper[str]):
                 f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
             )
             media_type = image_url_data["mediaType"]
+            # 경고 이미지 무시 (https://ccdn.lezhin.com/v2/comics/notice_contents/ko_warn_white.webp)
+            if "notice_contents" in image_url:
+                continue
             image_urls.append((image_url, media_type))
 
         return image_urls
@@ -361,6 +364,8 @@ class LezhinComicsScraper(Scraper[str]):
                     self.thread_number = None
                 else:
                     self.thread_number = int(raw_value)
+            elif option == "OPEN_FREE_EPISODE":
+                self.open_free_episode = raw_string_to_boolean(raw_value)
             else:
                 logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")
 

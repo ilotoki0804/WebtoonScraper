@@ -20,7 +20,6 @@ MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
 MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
 
 WEBTOON_DIRECTORY: Final = "webtoon_directory"
-# 만약 이름을 WEBTOONS_DIRECTORY로 한다면 매우 햇갈릴 가능성이 높기에 대신 WEBTOON_DIRECTORY_CONTAINER라는 이름을 사용함
 WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
 
 NOT_MATCHED: Final = "not_matched"
@@ -41,7 +40,7 @@ FileStates = Literal[
     "webtoon_directory",
     "not_matched",
 ]
-PathOrStr: TypeAlias = "str | Path"
+PathOrStr = str | Path
 
 # NOT_MATCHED를 제외한 모든 FileStates를 포함함.
 FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
