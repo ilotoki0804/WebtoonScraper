@@ -48,7 +48,7 @@ from ._helpers import shorten as _shorten
 WebtoonId = TypeVar("WebtoonId")
 CallableT = TypeVar("CallableT", bound=Callable)
 RangeType = EpisodeRange | Container[WebtoonId] | None
-DownloadStatus = Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable"]
+DownloadStatus = Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable", "skipped_by_skip_download", "skipped_by_range"]
 
 
 class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
@@ -609,9 +609,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 # download_range는 1-based indexing이니 조정이 필요함
                 if episode_no in self.skip_download:
                     self.callback("download_skipped", by_skip_download=True, **context)
+                    self.download_status[episode_no] = "skipped_by_skip_download"
                     continue
                 if download_range is not None and episode_no + 1 not in download_range:
                     self.callback("download_skipped", by_range=True, **context)
+                    self.download_status[episode_no] = "skipped_by_range"
                     continue
                 if self._download_status == "canceling":
                     raise KeyboardInterrupt
