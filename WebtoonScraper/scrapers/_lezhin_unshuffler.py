@@ -7,19 +7,16 @@ from contextlib import suppress
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
+from PIL import Image
 from rich import progress
 
 from ..base import get_default_thread_number, logger
-from ..exceptions import DirectoryStateUnmatchedError
 from ..directory_state import (
-    DIRECTORY_PATTERNS,
-    NORMAL_EPISODE_DIRECTORY,
-    NORMAL_WEBTOON_DIRECTORY,
+    DirectoryState,
     _directories_and_files_of,
     check_container_state,
 )
-
-from PIL import Image
+from ..exceptions import DirectoryStateUnmatchedError
 
 
 def unshuffle_typical_webtoon(
@@ -66,7 +63,7 @@ def unshuffle(
 
     if check_directory_state:
         directory_state = check_container_state(source_webtoon_directory)
-        if directory_state != NORMAL_WEBTOON_DIRECTORY:
+        if directory_state != DirectoryState.WebtoonDirectory(is_merged=False):
             raise DirectoryStateUnmatchedError.from_state(directory_state, source_webtoon_directory)
 
     unshuffle_parameters = []
@@ -74,7 +71,7 @@ def unshuffle(
         source_episode_directory = source_webtoon_directory / episode_directory_name
         target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        processed_directory_name = DIRECTORY_PATTERNS[NORMAL_EPISODE_DIRECTORY].match(episode_directory_name)
+        processed_directory_name = DirectoryState.EpisodeDirectory(is_merged=False).match(episode_directory_name)
         if processed_directory_name is None:
             logger.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
             continue

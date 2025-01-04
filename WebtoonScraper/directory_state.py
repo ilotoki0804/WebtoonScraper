@@ -2,92 +2,138 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 import json
 import re
+import typing
 from collections import defaultdict
+from contextlib import suppress
 from pathlib import Path
-from typing import Final, Literal, TypeAlias
 
-from .base import logger
+from fieldenum import Variant, fieldenum
 
-NORMAL_IMAGE: Final = "normal_image"
-NORMAL_EPISODE_DIRECTORY: Final = "normal_episode_directory"
-NORMAL_WEBTOON_DIRECTORY: Final = "normal_webtoon_directory"
+from WebtoonScraper.base import logger
 
-MERGED_IMAGE: Final = "merged_image"
-MERGED_EPISODE_DIRECTORY: Final = "merged_episode_directory"
-MERGED_WEBTOON_DIRECTORY: Final = "merged_webtoon_directory"
-
-WEBTOON_DIRECTORY: Final = "webtoon_directory"
-WEBTOON_DIRECTORY_CONTAINER: Final = "webtoon_directory_container"
-
-NOT_MATCHED: Final = "not_matched"
-
-ContainerStates = Literal[
-    "normal_webtoon_directory",
-    "normal_episode_directory",
-    "merged_webtoon_directory",
-    "merged_episode_directory",
-    "webtoon_directory_container",
-    "not_matched",
-]
-FileStates = Literal[
-    "normal_image",
-    "normal_episode_directory",
-    "merged_image",
-    "merged_episode_directory",
-    "webtoon_directory",
-    "not_matched",
-]
 PathOrStr = str | Path
 
-# NOT_MATCHED를 제외한 모든 FileStates를 포함함.
-FILE_TO_CONTAINER: Final[dict[FileStates, ContainerStates]] = {
-    NORMAL_IMAGE: NORMAL_EPISODE_DIRECTORY,
-    NORMAL_EPISODE_DIRECTORY: NORMAL_WEBTOON_DIRECTORY,
-    MERGED_IMAGE: MERGED_EPISODE_DIRECTORY,
-    MERGED_EPISODE_DIRECTORY: MERGED_WEBTOON_DIRECTORY,
-    WEBTOON_DIRECTORY: WEBTOON_DIRECTORY_CONTAINER,
-}
+
+# @typing.dataclass_transform()
+@fieldenum
+class DirectoryState:
+    if typing.TYPE_CHECKING:
+        class NotMatched(DirectoryState):  # type: ignore
+            resumable: bool | None
+
+            def __init__(self, resumable: bool | None): ...
+            def to_container(self, default: DirectoryState | None = None) -> DirectoryState: ...
+            def is_container(self) -> bool: ...
+            def pattern(self, tolerant: bool = False) -> re.Pattern[str]: ...
+
+        class Image(DirectoryState):  # type: ignore
+            is_merged: bool
+
+            def __init__(self, is_merged: bool): ...
+            def to_container(self, default: DirectoryState | None = None) -> DirectoryState: ...
+            def is_container(self) -> bool: ...
+            def pattern(self, tolerant: bool = False) -> re.Pattern[str]: ...
+
+        class EpisodeDirectory(DirectoryState):  # type: ignore
+            is_merged: bool | None
+
+            def __init__(self, is_merged: bool | None): ...
+            def to_container(self, default: DirectoryState | None = None) -> DirectoryState: ...
+            def is_container(self) -> bool: ...
+            def pattern(self, tolerant: bool = False) -> re.Pattern[str]: ...
+
+        class WebtoonDirectory(DirectoryState):  # type: ignore
+            is_merged: bool | None
+
+            def __init__(self, is_merged: bool | None): ...
+            def to_container(self, default: DirectoryState | None = None) -> DirectoryState: ...
+            def is_container(self) -> bool: ...
+            def pattern(self, tolerant: bool = False) -> re.Pattern[str]: ...
+
+        class WebtoonDirectoryContainer(DirectoryState):  # type: ignore
+            def __init__(self): ...
+            def to_container(self, default: DirectoryState | None = None) -> DirectoryState: ...
+            def is_container(self) -> bool: ...
+            def pattern(self, tolerant: bool = False) -> re.Pattern[str]: ...
+
+    else:
+        NotMatched = Variant(resumable=bool | None)
+        Image = Variant(is_merged=bool)
+        EpisodeDirectory = Variant(is_merged=bool | None)
+        WebtoonDirectory = Variant(is_merged=bool | None)
+        WebtoonDirectoryContainer = Variant()
+
+    # fmt: off
+    PATTERNS: typing.ClassVar = (
+        (re.compile(r"^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$"), re.compile(r"^(?P<image_no>\d+)[.](?P<extension>[a-zA-Z0-9]+)$")),
+        (re.compile(r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"), re.compile(r"^(?P<episode_no>\d+)\. (?P<episode_name>.+)$")),
+        (re.compile(r"^(?P<episode_no>\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$"), re.compile(r"^(?P<episode_no>\d+)[.](?P<image_no>\d+)[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]+)$")),
+        (re.compile(r"^(?P<from>\d{4})~(?P<to>\d{4})$"), re.compile(r"^(?P<from>\d+)~(?P<to>\d+)$")),
+        (re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:HD|shuffled|concatenated))*[)]$"), re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:\w+))*[)]$")),
+    )
+    # fmt: on
+
+    def to_container(self, default: DirectoryState | None = None) -> DirectoryState:
+        match self:
+            case DirectoryState.Image(is_merged=is_merged):
+                return DirectoryState.EpisodeDirectory(is_merged=is_merged)
+            case DirectoryState.EpisodeDirectory(is_merged=is_merged):
+                return DirectoryState.WebtoonDirectory(is_merged=is_merged)
+            case DirectoryState.WebtoonDirectory(is_merged=is_merged):
+                return DirectoryState.WebtoonDirectoryContainer()
+            case _ if default is not None:
+                return default
+            case other:
+                raise ValueError(f"{other} is not a content state.")
+
+    def is_container(self) -> bool:
+        match self:
+            case (
+                DirectoryState.EpisodeDirectory(),
+                DirectoryState.WebtoonDirectory(),
+                DirectoryState.WebtoonDirectoryContainer(),
+            ):
+                return True
+            case _:
+                return False
+
+    def pattern(self, tolerant: bool = False) -> re.Pattern[str]:
+        match self:
+            case DirectoryState.Image(is_merged=False):
+                return self.PATTERNS[0][tolerant]
+            case DirectoryState.EpisodeDirectory(is_merged=False):
+                return self.PATTERNS[1][tolerant]
+            case DirectoryState.Image(is_merged=True):
+                return self.PATTERNS[2][tolerant]
+            case DirectoryState.EpisodeDirectory(is_merged=True):
+                return self.PATTERNS[3][tolerant]
+            case DirectoryState.WebtoonDirectory():
+                return self.PATTERNS[4][tolerant]
+            case _:
+                raise ValueError(f"{self} is not a container state.")
 
 
-# fmt: off
-DIRECTORY_PATTERNS: dict[FileStates, re.Pattern[str]] = {
-    # 023.jpg
-    NORMAL_IMAGE: re.compile(r"^(?P<image_no>\d{3})[.](?P<extension>[a-zA-Z0-9]{3,4})$"),
-    # 0001. episode_name
-    NORMAL_EPISODE_DIRECTORY: re.compile(r"^(?P<episode_no>\d{4})\. (?P<episode_name>.+)$"),
-    # 0001.001. episode_name.jpg
-    MERGED_IMAGE: re.compile(r"^(?P<episode_no>\d{4})[.](?P<image_no>\d{3})[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]{3,4})$"),
-    # 0001~0005
-    MERGED_EPISODE_DIRECTORY: re.compile(r"^(?P<from>\d{4})~(?P<to>\d{4})$"),
-    # webtoon_name(webtoon_id[, HD][, shuffled])
-    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:HD|shuffled|concatenated))*[)]$"),
-}
-DIRECTORY_PATTERNS_TOLERANT: dict[FileStates, re.Pattern[str]] = {
-    # 023.jpg
-    NORMAL_IMAGE: re.compile(r"^(?P<image_no>\d+)[.](?P<extension>[a-zA-Z0-9]+)$"),
-    # 0001. episode_name
-    NORMAL_EPISODE_DIRECTORY: re.compile(r"^(?P<episode_no>\d+)\. (?P<episode_name>.+)$"),
-    # 0001.001. episode_name.jpg
-    MERGED_IMAGE: re.compile(r"^(?P<episode_no>\d+)[.](?P<image_no>\d+)[.] (?P<episode_name>.+)[.](?P<extension>[a-zA-Z]+)$"),
-    # 0001~0005
-    MERGED_EPISODE_DIRECTORY: re.compile(r"^(?P<from>\d+)~(?P<to>\d+)$"),
-    # webtoon_name(webtoon_id[, meta]*)
-    WEBTOON_DIRECTORY: re.compile(r"^(?P<webtoon_name>.+)[(](?P<webtoon_id>.+?)(?:, (?:\w+))*[)]$"),
-}
-# fmt: on
+DIRECTORY_STATES = (
+    DirectoryState.Image(is_merged=False),
+    DirectoryState.Image(is_merged=True),
+    DirectoryState.EpisodeDirectory(is_merged=False),
+    DirectoryState.EpisodeDirectory(is_merged=True),
+    DirectoryState.WebtoonDirectory(is_merged=None),
+)
 
 
 def _directories_and_files_of(
     directory: PathOrStr,
     treat_underscored_directories_as_file: bool = True,
-    /,
+    ignore_snapshot: bool = True,
 ) -> tuple[list[Path], list[Path]]:
     directories: list[Path] = []
     files: list[Path] = []
     for path in Path(directory).iterdir():
+        if ignore_snapshot and path.name.endswith(".snapshots"):
+            continue
         is_underscored = (
             treat_underscored_directories_as_file and path.name.startswith("_") and not path.name.startswith("__")
         )
@@ -116,47 +162,43 @@ def load_information_json(directory: Path) -> dict | None:
     return None
 
 
-def check_filename_state(file_or_directory_name: str) -> FileStates:
+def check_filename_state(file_or_directory_name: str) -> DirectoryState:
     """한 파일(혹은 디렉토리) 이름의 상태를 확인합니다."""
-    for state_name, regex in DIRECTORY_PATTERNS.items():
-        if regex.match(file_or_directory_name):
-            return state_name
-    return NOT_MATCHED
+    for state in DIRECTORY_STATES:
+        if state.pattern().match(file_or_directory_name):
+            return state
+    return DirectoryState.NotMatched(resumable=None)
 
 
-def check_container_state(directory: PathOrStr, *, warn: bool = False) -> ContainerStates:
+def check_container_state(directory: PathOrStr, *, warn: bool = False) -> DirectoryState:
     """해당 path에 있는 디렉토리의 상태를 확인합니다."""
     directory = Path(directory)
     if not directory.exists():
-        if warn:
-            logger.warning(f"It looks like the directory({directory}) doesn't exist.")
-        return NOT_MATCHED
+        return DirectoryState.NotMatched(resumable=True)
 
     if directory.is_file():
         if warn:
             logger.warning(f"It looks like the file({directory}) is not a directory.")
-        return NOT_MATCHED
+        return DirectoryState.NotMatched(resumable=False)
 
     directories, files = _directories_and_files_of(directory)
 
+    # 빈 디렉토리의 경우와 파일만 있는 경우 모두를 포괄함함
     if not directories:
-        states: set[FileStates] = {check_filename_state(file.name) for file in files if not file.name.startswith("_")}
-        if len(states) == 1:
-            return FILE_TO_CONTAINER.get(states.pop(), NOT_MATCHED)
-        return NOT_MATCHED
+        return DirectoryState.NotMatched(resumable=True)
 
-    for state_name, regex in DIRECTORY_PATTERNS.items():
-        # 매치되지 '않은' 것의 개수를 세는 것을 주의!!!
-        if not sum(not regex.match(episode_or_image.name) for episode_or_image in directories):
-            return FILE_TO_CONTAINER.get(state_name, NOT_MATCHED)
+    for state in DIRECTORY_STATES:
+        # 매치되지 '않은' 것의 개수를 세니 주의!!!
+        if not sum(not state.pattern().match(episode_or_image.name) for episode_or_image in directories):
+            return state.to_container()
 
-    return NOT_MATCHED
+    return DirectoryState.NotMatched(resumable=None)
 
 
 def guess_merge_number(webtoon_directory: Path) -> int | None:
     """웹툰 디렉토리가 어떤 값으로 묶였는지 추측합니다. 에피소드 일부가 다운로드되지 않았더라도 그럭저럭 잘 찾아낼 수 있습니다."""
     directories, _ = _directories_and_files_of(webtoon_directory)
-    regex = DIRECTORY_PATTERNS[MERGED_EPISODE_DIRECTORY]
+    regex = DirectoryState.EpisodeDirectory(is_merged=True).pattern()
     counter = defaultdict(int)
     for directory in directories:
         matched = regex.match(directory.name)

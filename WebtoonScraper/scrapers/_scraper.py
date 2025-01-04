@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
 import html
 import json
 import os
 import shutil
 import ssl
 import time
+import warnings
 from abc import abstractmethod
-from collections.abc import Callable, Container, Mapping
+from collections import defaultdict
+from collections.abc import Callable, Container, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import (
@@ -17,25 +18,24 @@ from typing import (
     ClassVar,
     Generic,
     Literal,
-    TypeVar,
     Self,
+    TypeVar,
     overload,
 )
-from collections.abc import Iterator
-import warnings
 
 import filetype
-import httpc
 import httpx
 import pyfilename as pf
 from filetype.types import IMAGE
 from rich import progress
 from yarl import URL
 
+import httpc
+
 from ..base import console, logger, platforms
 from ..directory_state import (
-    DIRECTORY_PATTERNS,
-    NORMAL_IMAGE,
+    DIRECTORY_STATES,
+    DirectoryState,
     load_information_json,
 )
 from ..exceptions import (
@@ -897,7 +897,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         snapshot_contents = self._get_snapshot_contents(episode_directory) or ()
         directory_contents = {*real_contents, *snapshot_contents}
 
-        normal_image_regex = DIRECTORY_PATTERNS[NORMAL_IMAGE]
+        normal_image_regex = DirectoryState.Image(is_merged=False).pattern()
         return len(image_urls) == len(directory_contents) and all(
             normal_image_regex.match(file) for file in directory_contents
         )
