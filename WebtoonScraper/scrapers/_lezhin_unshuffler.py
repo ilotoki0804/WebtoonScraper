@@ -71,7 +71,7 @@ def unshuffle(
         source_episode_directory = source_webtoon_directory / episode_directory_name
         target_episode_directory = target_webtoon_directory / episode_directory_name
 
-        processed_directory_name = DirectoryState.EpisodeDirectory(is_merged=False).match(episode_directory_name)
+        processed_directory_name = DirectoryState.EpisodeDirectory(is_merged=False).pattern().match(episode_directory_name)
         if processed_directory_name is None:
             logger.debug(f"{episode_directory_name} is passed and it assumed to be thumbnail, so just ignored.")
             continue
