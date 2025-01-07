@@ -34,7 +34,7 @@ WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니�
 
 **네이버 웹툰·베스트 도전·도전만화 무료 웹툰 다운로드 가능, 성인 웹툰의 경우 쿠키 필요, 유료·매일+ 웹툰 다운로드 불가**
 
-**[웹사이트](https://comic.naver.com/index) / 예시 URL: <https://comic.naver.com/webtoon/list?titleId=769209>**
+[웹사이트](https://comic.naver.com/index) / 예시 URL: <https://comic.naver.com/webtoon/list?titleId=769209>
 
 네이버 웹툰 앱에서 `공유하기`를 통해 링크를 복사할 경우 `naver.me` 단축 URL로 공유되는데, 이 링크로도 다운로드가 가능합니다.
 
@@ -46,7 +46,7 @@ WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니�
 
 **유·무료·성인 웹툰 다운로드 가능, 유료·성인 웹툰의 경우 쿠키 필요**
 
-**[웹사이트](https://webtoon.kakao.com/) / 예시 URL: <https://comic.naver.com/webtoon/list?titleId=769209>**
+[웹사이트](https://webtoon.kakao.com/) / 예시 URL: <https://comic.naver.com/webtoon/list?titleId=769209>
 
 카카오페이지는 [별도의 가이드](#카카오페이지)를 참고하세요.
 
@@ -56,7 +56,7 @@ WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니�
 
 **유·무료·성인 웹툰 다운로드 가능, 유료·성인 웹툰의 경우 bearer(후술) 필요, 성인 웹툰의 경우 쿠키 필요요**
 
-**[웹사이트](https://www.lezhin.com/ko) / 예시 URL: <https://webtoon.kakao.com/content/%EB%82%98-%ED%98%BC%EC%9E%90%EB%A7%8C-%EB%A0%88%EB%B2%A8%EC%97%85/2320>**
+[웹사이트](https://www.lezhin.com/ko) / 예시 URL: <https://webtoon.kakao.com/content/%EB%82%98-%ED%98%BC%EC%9E%90%EB%A7%8C-%EB%A0%88%EB%B2%A8%EC%97%85/2320>
 
 #### bearer
 
@@ -73,4 +73,4 @@ bearer를 얻는 방법은 다음과 같습니다.
 
 **유·무료 웹툰 다운로드 가능, 유료 웹툰의 경우 쿠키 필요**
 
-**[웹사이트](https://page.kakao.com/) / 예시 URL: <https://page.kakao.com/content/53397318>**
+[웹사이트](https://page.kakao.com/) / 예시 URL: <https://page.kakao.com/content/53397318>
