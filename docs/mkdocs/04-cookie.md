@@ -13,7 +13,7 @@
 | 플랫폼 | 필요 여부 | 비고 |
 |--|--|--|
 | 네이어 웹툰 | 성인 웹툰의 경우 필요 | |
-| 레진코믹스 | 성인 웹툰의 경우 필요 | 특별히 쿠키 외에 bearer가 요구됩니다. [이 내용](platforms.md#bearer)을 참고하세요 |
+| 레진코믹스 | 성인 웹툰의 경우 필요 | 특별히 쿠키 외에 bearer가 요구됩니다. [이 내용](10-platforms.md#bearer)을 참고하세요 |
 | 버프툰 | 필요 | |
 | 카카오 웹툰 | 성인 웹툰과 대여 및 구매한 웹툰의 경우 필요 | |
 | 투믹스 | 필요 | |
@@ -28,22 +28,20 @@
 
 [^1]: 예시 이미지에는 따로 로그인이 되어 있지 않지만 쿠키가 필요한 상황에서는 꼭 로그인해야 합니다.
 
-![원하는 페이지로 가서 로그인한 상황](image/cookie/cookie-0-open-page.png)
+![원하는 페이지로 가서 로그인한 상황](image/cookie/cookie-0-open-website.png)
 
 **`f12`를 누르고** `ctrl+R`을 눌러 **새로고침**하세요.
 
 ![devtool이 열려 있는 모습](image/cookie/cookie-1-open-devtools.png)
-![네트워크 탭이 열려진 모습](image/cookie/cookie-2-open-network-tab.png)
-![새로고침을 한 모습](image/cookie/cookie-3-refresh.png)
 
 `Network` 혹은 `네트워크` 탭으로 가서 제일 **처음에 있는 요청**을 누르세요.
 
-![첫 번째 요청을 클릭한 모습](image/cookie/cookie-4-click-first-response.png)
+![첫 번째 요청을 클릭한 모습](image/cookie/cookie-2-refresh-and-find.png)
 
 아래로 스크롤에서 `request header` 혹은 `요청 헤더`를 찾은 뒤 그 아래에 **`Cookie:`라고 되어 있는 부분을 찾아 모두 복사하세요**.
 해당 내용을 아래의 '쿠키 입력'을 참고해서 WebtoonScraper에 붙여넣으면 됩니다.
 
-![쿠키를 복사한 모습](image/cookie/cookie-5-copy-cookie.png)
+![쿠키를 복사한 모습](image/cookie/cookie-3-find-cookie.png)
 
 ### 앱에서 쿠키 적용하기
 
