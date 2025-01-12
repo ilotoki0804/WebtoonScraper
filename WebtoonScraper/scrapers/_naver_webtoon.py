@@ -260,12 +260,12 @@ class NaverWebtoonScraper(Scraper[int]):
             option = option.upper().replace("-", "_").strip()
             if option.removesuffix("S") == "DOWNLOAD_COMMENT":
                 self.download_comments = raw_string_to_boolean(raw_value)
-            if option.removesuffix("S") == "DOWNLOAD_ALL_COMMENT":
+            elif option.removesuffix("S") == "DOWNLOAD_ALL_COMMENT":
                 option_true = not raw_string_to_boolean(raw_value)
                 if option_true:
                     self.download_comments = option_true
                     self.top_comments_only = option_true
-            if option.removesuffix("S") == "DOWNLOAD_AUDIO":
+            elif option.removesuffix("S") == "DOWNLOAD_AUDIO":
                 option_true = raw_string_to_boolean(raw_value)
                 if option_true:
                     self.download_audio = option_true
