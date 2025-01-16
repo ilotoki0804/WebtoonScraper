@@ -26,7 +26,6 @@ class NaverWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Naver Webtoon."""
     PLATFORM = "naver_webtoon"
     DOWNLOAD_INTERVAL = 0.5
-    COMMENTS_DOWNLOAD_SUPPORTED = True
     information_vars = (
         Scraper.information_vars
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", "episode_audio_urls", subcategory="extra")
@@ -236,38 +235,16 @@ class NaverWebtoonScraper(Scraper[int]):
         assert search_result is not None
         self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
 
-    def _apply_options(self, options: dict[str, str], /) -> None:
-        def raw_string_to_boolean(raw_string: str) -> bool:
-            """boolean으로 변경합니다.
-
-            `true`나 `false`면 각각 True와 False로 처리하고,
-            정수라면 0이면 False, 나머지는 True로 처리합니다.
-
-            그 외의 값은 ValueError를 일으킵니다.
-            """
-            if raw_string.lower() == "true":
-                value = True
-            elif raw_string.lower() == "false":
-                value = False
-            else:
-                try:
-                    value = bool(int(raw_string))
-                except ValueError:
-                    raise ValueError(f"Invalid value for boolean: {raw_string}") from None
-            return value
-
-        for option, raw_value in options.items():
-            option = option.upper().replace("-", "_").strip()
-            if option.removesuffix("S") == "DOWNLOAD_COMMENT":
-                self.download_comments = raw_string_to_boolean(raw_value)
-            elif option.removesuffix("S") == "DOWNLOAD_ALL_COMMENT":
-                option_true = not raw_string_to_boolean(raw_value)
-                if option_true:
-                    self.download_comments = option_true
-                    self.top_comments_only = option_true
-            elif option.removesuffix("S") == "DOWNLOAD_AUDIO":
-                option_true = raw_string_to_boolean(raw_value)
-                if option_true:
-                    self.download_audio = option_true
-            else:
-                logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")
+    def _apply_option(self, option: str, value: str) -> None:
+        match option:
+            case "download-comment" | "download-comments":
+                self.download_comments = self._boolean_option(value)
+            case "download-all-comment" | "download-all-comments":
+                boolean_value = self._boolean_option(value)
+                if boolean_value:
+                    self.download_comments = True
+                    self.top_comments_only = False
+            case "download-audio" | "download-audios":
+                self.download_audio = self._boolean_option(value)
+            case _:
+                super()._apply_option(option, value)

@@ -585,11 +585,25 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def _apply_options(self, options: dict[str, str], /) -> None:
         if options:
-            for option, raw_value in options.items():
-                logger.warning(
-                    f"Unknown option for {type(self).__name__}; {type(self).__name__} does not accept any option"
-                    f": {option!r}. value: {raw_value!r}"
-                )
+            for option, value in options.items():
+                self._apply_option(option.strip().lower().replace("_", "-"), value)
+
+    def _apply_option(self, option: str, value: str) -> None:
+        logger.warning(
+            f"Unknown option {option!r} for {type(self).__name__}; value: {value!r}"
+        )
+
+    @staticmethod
+    def _boolean_option(value: str) -> bool:
+        # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
+        # https://www.sqlite.org/pragma.html
+        match value.strip().lower():
+            case "1" | "yes" | "true" | "on":
+                return True
+            case "0" | "no" | "false" | "off":
+                return False
+            case other:
+                raise ValueError(f"{other!r} can't be represented as boolean.")
 
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)

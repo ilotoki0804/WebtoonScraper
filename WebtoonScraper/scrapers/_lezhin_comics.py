@@ -334,50 +334,30 @@ class LezhinComicsScraper(Scraper[str]):
     def _from_string(cls, string: str, /, **kwargs):
         return cls(string, **kwargs)
 
-    def _apply_options(self, options: dict[str, str], /) -> None:
-        def raw_string_to_boolean(raw_string: str) -> bool:
-            """boolean으로 변경합니다.
-
-            `true`나 `false`면 각각 True와 False로 처리하고,
-            정수라면 0이면 False, 나머지는 True로 처리합니다.
-
-            그 외의 값은 ValueError를 일으킵니다.
-            """
-            if raw_string.lower() == "true":
-                value = True
-            elif raw_string.lower() == "false":
-                value = False
-            else:
-                try:
-                    value = bool(int(raw_string))
-                except ValueError:
-                    raise ValueError(f"Invalid value for boolean: {raw_string}") from None
-            return value
-
-        for option, raw_value in options.items():
-            option = option.upper().replace("-", "_").strip()
-            if option == "UNSHUFFLE":
-                self.unshuffle = raw_string_to_boolean(raw_value)
-            elif option == "DELETE_SHUFFLED":
-                self.delete_shuffled = raw_string_to_boolean(raw_value)
-            elif option == "DOWNLOAD_PAID":
-                self.download_paid_episode = raw_string_to_boolean(raw_value)
-            elif option == "BEARER":
-                self.bearer = raw_value
-            elif option == "THREAD_NUMBER":
+    def _apply_option(self, option: str, value: str) -> None:
+        match option:
+            case "unshuffle":
+                self.unshuffle = self._boolean_option(value)
+            case "delete-shuffled":
+                self.delete_shuffled = self._boolean_option(value)
+            case "download-paid":
+                self.download_paid_episode = self._boolean_option(value)
+            case "bearer":
+                self.bearer = value.strip()
+            case "open-free-episode":
+                self.open_free_episode = self._boolean_option(value)
+            case "thread-number":
                 if self.thread_number:
                     logger.warning(
                         f"Thread number has already been set as {self.thread_number}, "
-                        f"but thread_number option overriding that value to {raw_value}."
+                        f"but thread_number option overriding it to {value!r}."
                     )
-                if raw_value.lower() == "default":
+                if value.strip().lower() == "default":
                     self.thread_number = None
                 else:
-                    self.thread_number = int(raw_value)
-            elif option == "OPEN_FREE_EPISODE":
-                self.open_free_episode = raw_string_to_boolean(raw_value)
-            else:
-                logger.warning(f"Unknown option for {type(self).__name__}: {option!r}. value: {raw_value!r}")
+                    self.thread_number = int(value.strip())
+            case _:
+                super()._apply_option(option, value)
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> str | None:
