@@ -12,7 +12,7 @@ from rich.console import Console
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
-__version__ = "5.1.0"
+__version__ = "5.1.1"
 platforms: dict[str, type[Scraper]] = {}
 console = Console()
 
