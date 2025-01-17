@@ -13,6 +13,12 @@ if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
 __version__ = "5.1.0"
+platforms: dict[str, type[Scraper]] = {}
+console = Console()
+
+logger = logging.getLogger("WebtoonScraper")
+logger.addHandler(RichHandler(show_time=False, show_path=False))
+logger.setLevel(logging.INFO)
 
 
 def get_default_thread_number() -> int:
@@ -27,12 +33,3 @@ def get_default_thread_number() -> int:
     cpu_count = os.cpu_count()
     process_number = 1 if cpu_count is None or cpu_count < 2 else max(cpu_count // 2, 10)
     return process_number
-
-
-logger = logging.getLogger("WebtoonScraper")
-logger.addHandler(RichHandler(show_time=False, show_path=False))
-logger.setLevel(logging.INFO)
-
-platforms: dict[str, type[Scraper]] = {}
-
-console = Console()
