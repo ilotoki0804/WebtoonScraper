@@ -590,7 +590,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def _apply_option(self, option: str, value: str) -> None:
         logger.warning(
-            f"Unknown option {option!r} for {type(self).__name__}; value: {value!r}"
+            f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}"
         )
 
     @staticmethod
