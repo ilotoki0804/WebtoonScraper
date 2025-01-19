@@ -164,7 +164,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_dates: list[str] = episode_dates
         self.episode_states: list[str] = episode_states
         if self.open_free_episode is None:
-            self.open_free_episode = False
+            self.open_free_episode = True
 
         # webtoon 정보를 받아옴.
         title = data["meta"]["content"]["display"]["title"]
