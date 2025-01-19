@@ -14,6 +14,7 @@ WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니�
 | **리디북스 웹툰** | O | ? | O |
 | **투믹스** | O | X | ? |
 | **버프툰** | O | ? | O |
+| **이만배** | O | - | O |
 | **네이버 포스트** | O | - | - |
 | **네이버 게임** | O | - | - |
 | **네이버 블로그** | O | - | - |
@@ -138,3 +139,40 @@ bearer를 얻는 방법은 다음과 같습니다.
 **유·무료 웹툰 다운로드 가능, 유료 웹툰의 경우 쿠키 필요**
 
 [웹사이트](https://page.kakao.com/) | 예시 URL: <https://page.kakao.com/content/53397318>
+
+## 이만배
+
+[웹사이트](https://www.emanbae.com/) | 예시 URL: <https://www.emanbae.com/series/13>
+
+### 이만배 다운로드 방법
+
+다운로드 방식은 다음과 같습니다.
+
+우선 아래 [이만배 bearer](#이만배-bearer) 단락에서 bearer를 찾아서 복사해 저장해 놓습니다.
+
+(앱의 경우) 앱에서 웹툰의 URL을 붙여넣으면 아래 '플랫폼 추가 설정' 칸에 쿠키 입력창이 드러납니다. 앞에서 복사한 값을 붙여넣고 (성인 웹툰이 아닌 경우 쿠키는 입력할 필요가 없습니다.) 다운로드 버튼을 누릅니다.
+
+(CLI인 경우) 다음의 명령어를 입력합니다:
+
+```
+webtoon download --option bearer="<bearer 값>" --cookie "<쿠키>" "<웹툰 URL>"
+```
+
+만약 쿠키가 필요하지 않은 비성인 웹툰의 경우 `cookie` 항목을 제외하고 명령어를 입력합니다:
+
+```
+webtoon download --option bearer="<bearer 값>" "<웹툰 URL>"
+```
+
+### 이만배 bearer
+
+이만배는 자신의 계정의 데이터를 사용하기 위해선 bearer를 얻어 앱이나 포터블에서 사용해야 합니다.
+bearer를 얻는 방법은 다음과 같습니다.
+
+1. [이 링크](https://htmlpreview.github.io/?https://github.com/ilotoki0804/WebtoonScraper/blob/main/docs/get-bearer-emanbae.html)로 가세요(아직은 가지 마시고 설명을 좀 더 들으세요).
+1. 해당 웹페이지에 링크가 하나 있을 텐데, 그 링크를 북마크바로 드래그하세요. 만약 북마크바가 보이지 않을 시 `ctrl+shift+B`를 이용해 보이게 하세요. 그러면 북마크에 `get bearer`라는 이름의 북마크가 하나 생성이 될 것입니다.
+1. [이만배 홈페이지](https://www.emanbae.com/)(메인 페이지에서는 사용할 수 없으니 꼭 이 링크로 가세요!)로 간 뒤 **로그인하세요**.
+1. 해당 북마크를 클릭하세요.
+1. 그러면 `here is the bearer string`이라는 안내 메시지와 함께 아래에 bearer가 뜰 것입니다. 복사하세요.
+
+`EMANBAE_BEARER` 환경 변수를 설정할 경우 해당 값을 이용합니다.

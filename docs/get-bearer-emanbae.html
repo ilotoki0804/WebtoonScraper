@@ -1,0 +1,20 @@
+<html>
+    <p>다음의 링크를 드래그해서 즐겨찾기 바에 올려놓아 즐겨찾기에 추가하세요.</p>
+    <p>Drag following link to favorites.</p>
+    <p><a href="javascript:%0A%28%28%29%20%3D%3E%20%7B%0A%20%20%20%20let%20token%20%3D%20localStorage.getItem%28%22accessToken%22%29%3B%0A%20%20%20%20if%20%28token%29%20%7B%0A%20%20%20%20%20%20%20%20prompt%28%22here%20is%20the%20bearer%20string%3A%22%2C%20%60Bearer%20%24%7Btoken%7D%60%29%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20alert%28%22You%20are%20not%20on%20the%20Emanbae%20or%20you%20haven%27t%20logged%20in.%22%29%3B%0A%20%20%20%20%7D%0A%7D%29%28%29%0A">get bearer</a></p>
+    <script>
+        // 인코딩 시에는 urllib.parse.quote를 사용하면 됨.
+        /*
+        (() => {
+            let token = localStorage.getItem("accessToken");
+            if (token) {
+                prompt("here is the bearer string:", `Bearer ${token}`);
+            } else {
+                alert("You are not on the Emanbae or you haven't logged in.");
+            }
+        })()
+        */
+    </script>
+    <p>만약 즐겨찾기 바가 없다면 <code>ctrl+shift+B</code>를 통해 즐겨찾기 바를 활성화하세요.</p>
+    <img src="https://raw.githubusercontent.com/ilotoki0804/WebtoonScraper/main/images/get-cookie.gif">
+</html>
