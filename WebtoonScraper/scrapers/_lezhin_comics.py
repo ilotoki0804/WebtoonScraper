@@ -164,7 +164,7 @@ class LezhinComicsScraper(Scraper[str]):
         self.episode_dates: list[str] = episode_dates
         self.episode_states: list[str] = episode_states
         if self.open_free_episode is None:
-            self.open_free_episode = True
+            self.open_free_episode = False
 
         # webtoon 정보를 받아옴.
         title = data["meta"]["content"]["display"]["title"]
@@ -222,24 +222,6 @@ class LezhinComicsScraper(Scraper[str]):
             "viewed_episodes",
             subcategory="extra",
         )
-
-    async def _open_free_episode(self, episode_id_str: str) -> None:
-        # 아직 작동하지 않는 관계로 스킵.
-        return
-
-        # await asyncio.sleep(1)
-        res = await self.client.get(f"https://www.lezhin.com/lz-api/contents/v3/{self.webtoon_id}/episodes/{episode_id_str}?referrerViewType=NORMAL&objectType=comic")
-        episode_data = res.json()["data"]
-        # 뭔지는 모르지만 항상 False였음
-        assert not episode_data["episode"]["isCollected"]
-        # N다무 남은 시간. 이 함수에 들어올 때는 0이여야 함.
-        remaining_time = episode_data["episode"]["remainingTime"]
-        if remaining_time != 0:
-            raise ValueError(f"Episode {episode_id_str} is not available yet. Remaining time: {remaining_time}.")
-
-        # expire 시간 등 확인
-        await self.client.post("https://www.lezhin.com/lz-api/v2/contents/313/episodes/5933612038356992/timer")
-        await self.client.get(f"https://www.lezhin.com/ko/comic/munyeo/{episode_id_str}?_rsc=1fohy")
 
     async def get_episode_image_urls(self, episode_no, retry: int = 3) -> list[tuple[str, str]] | None:
         if not self.availability[episode_no]:
@@ -454,3 +436,6 @@ class LezhinComicsScraper(Scraper[str]):
         self._unshuffled_directory = target_webtoon_directory
 
         return target_webtoon_directory
+
+    async def _open_free_episode(self, episode_id_str: str) -> None:
+        pass
