@@ -293,7 +293,9 @@ async def async_main(argv=None) -> Literal[0, 1]:
         이 함수는 KeyboardInterrupt를 제외한 어떠한 오류도 발생시키지 않습니다.
         그 대신 성공했을 때는 0을, 실패했을 때에는 1을 반환합니다.
     """
-    _add_version(parser)
+    # 다른 곳에서 이미 version 커맨드를 추가했다면 따로 추가하지 않음
+    with contextlib.suppress(argparse.ArgumentError):
+        _add_version(parser)
     args = parser.parse_args(argv)  # 주어진 argv가 None이면 sys.argv[1:]을 기본값으로 삼음
 
     # 어떠한 command도 입력하지 않았을 경우 도움말을 표시함.
