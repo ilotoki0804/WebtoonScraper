@@ -46,4 +46,19 @@ webtoon --version
 
 ![앱 launch](image/app-guide/1726848003470.png)
 
-![터미널 열림](image/executable-guild/1727180390351.png)
+![터미널 열림](image/executable-guide/1727180390351.png)
+
+### 직접 사용하기
+
+`./portable` 혹은 `portable.exe`에 어떠한 인자도 설정하지 않은 채 실행하면(기본) CLI 셸이 실행됩니다.
+인자와 함께 실행할 경우 `webtoon` 명령어를 사용하는 것과 같은 방식으로 실행해 사용할 수 있습니다.
+
+예를 들어 아래의 명령어는 CLI 셸과 동일하게 `<URL>`에 해당하는 웹툰을 다운로드합니다.
+
+```console
+# 윈도우에서
+portable download "<url>"
+
+# 맥과 리눅스에서
+./portable download "<URL>"
+```
