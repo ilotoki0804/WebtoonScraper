@@ -26,7 +26,7 @@ dependencies = [
     "pyfilename~=0.6.0",
     "rich>=13.8.0",
     "yarl>=1.9.11",
-    "pillow==11.0.0",
+    "pillow>=10.4.0",
     "fieldenum~=0.2.0",
 ]
 dynamic = ["version"]
