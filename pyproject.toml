@@ -3,7 +3,7 @@ name = "WebtoonScraper"
 description = "Scraping webtoons with ease"
 readme = "README-build.md"  # Use `simplebuilder` to build readme
 authors = [{ name = "ilotoki0804", email = "ilotoki0804@gmail.com" }]
-license = "MIT"
+license = "Apache-2.0"
 keywords = [
     "webtoon",
     "webtoon scraper",
