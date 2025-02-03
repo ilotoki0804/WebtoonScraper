@@ -9,7 +9,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/ilotoki0804/WebtoonScraper/blob/main/pyproject.toml)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/ilotoki0804/WebtoonScraper/blob/main/pyproject.toml)
 
-쉽고 빠르게 많은 웹사이트에서 웹툰을 다운로드받을 있는 프로그램입니다.
+쉽고 빠르게 많은 웹사이트에서 웹툰을 다운로드받는 프로그램입니다.
 
 자세한 설명은 [문서](https://webtoonscraper.readthedocs.io/)를 참고해 주세요.
 

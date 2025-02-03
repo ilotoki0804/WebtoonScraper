@@ -34,7 +34,6 @@ import httpc
 
 from ..base import console, logger, platforms
 from ..directory_state import (
-    DIRECTORY_STATES,
     DirectoryState,
     load_information_json,
 )
@@ -86,8 +85,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             썸네일을 다운로드하지 않습니다.
             썸네일이 다운로드되어있는 것을 확신하거나 썸네일 다운로드가 필요 없을 경우 사용합니다.
 
-            -----
-            이 아래는 데이터 속성들입니다. 기본값이 설정되어 있으나 사용자가 선호에 따라 변경될 수 있도록 디자인되어 있습니다.
+        이 아래는 데이터 속성들입니다. 기본값이 설정되어 있으나 사용자가 선호에 따라 변경될 수 있도록 디자인되어 있습니다.
 
         base_directory (Path | str, Path.cwd()):
             웹툰 디렉토리가 위치할 *베이스 디렉토리*를 결정합니다.
@@ -99,8 +97,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             Scraper.__init__()은 extra_info_scraper가 구현되어 있지 않았을 때
             자동으로 EXTRA_INFO_SCRAPER_FACTORY을 통해 extra_info_scraper를 구현하도록 되어 있습니다.
 
-            -----
-            이 아래는 `Scraper.fetch_all()`을 실행할 경우 할당되는 속성입니다.
+        이 아래는 `Scraper.fetch_all()`을 실행할 경우 할당되는 속성입니다.
 
         webtoon_thumbnail_url (str):
             웹툰의 썸네일을 다운로드할 때 사용되는 URL입니다.
@@ -121,8 +118,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             기본 타입은 int로 되어 있지만 구현에 따라 어떤 타입이던 될 수 있습니다.
             해당 에피소드가 다운로드 가능하지 않은 경우 값은 None이 됩니다.
 
-            -----
-            이 아래는 프로퍼티나 기본으로 할당되는 값입니다.
+        이 아래는 프로퍼티나 기본으로 할당되는 값입니다.
 
         client (httpc.AsyncClient):
             Scraper에서 (거의) 모든 네트워크가 오가는 것을 총괄하는 HTTP 클라이언트입니다.
@@ -136,8 +132,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             header에 쿠키를 설정하는 프로퍼티입니다. 일부 구현은 쿠키를 이 프로퍼티를 거치는 것을
             전제하므로 만약 쿠키 문자열을 설정할 일이 있다면 반드시 이 프로퍼티를 거쳐야 합니다.
 
-            -----
-            이 아래는 클래스 속성입니다. 새로운 스크래퍼를 디자인할 때 값을 설정해주어야 합니다.
+        이 아래는 클래스 속성입니다. 새로운 스크래퍼를 디자인할 때 값을 설정해주어야 합니다.
 
         PLATFORM (str):
             스크래퍼가 다운로드하는 플랫폼을 표현하는 문자열입니다.
