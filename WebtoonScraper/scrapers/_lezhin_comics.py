@@ -358,7 +358,7 @@ class LezhinComicsScraper(Scraper[str]):
             return await super()._download_image(url_tuple, directory, name)
 
         url, media_type = url_tuple
-        if media_type not in ("image/jpeg", "image/gif"):
+        if media_type not in ("image/jpeg", "image/gif", "image/png"):
             logger.warning(f"Unknown media type: {media_type}")
         if media_type.startswith("image"):
             file_extension = media_type.removeprefix("image/")  # TODO: 이거 없이도 잘 작동하는지 확인하고 아니라면 변경하기
