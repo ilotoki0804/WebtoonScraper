@@ -38,6 +38,7 @@ class LezhinComicsScraper(Scraper[str]):
         "webtoon_int_id",
         "episode_int_ids",
         "is_adult",
+        "language_code",
         shuffled_directory="_shuffled_directory",
         unshuffled_directory="_unshuffled_directory",
     ) | Scraper._build_information_dict(
@@ -56,9 +57,18 @@ class LezhinComicsScraper(Scraper[str]):
         "user_int_id",
         subcategory="credentials",
     )
-    DEFAULT_COOKIE = "x-lz-locale=ko_KR"
+    BASE_URLS = dict(
+        ko="https://www.lezhin.com",
+        en="https://www.lezhinus.com",
+        ja="https://www.lezhin.jp",
+    )
+    LOCALES = dict(
+        ko="ko-KR",
+        en="en-US",
+        ja="ja-JP",
+    )
 
-    def __init__(self, webtoon_id: str, /, *, bearer: str | None = None, cookie: str | None = None, user_int_id: int | None = None) -> None:
+    def __init__(self, webtoon_id: str | tuple[str, str], /, *, bearer: str | None = None, cookie: str | None = None, user_int_id: int | None = None) -> None:
         """
         * 에피소드를 리스팅만 하고 싶은 경우: webtoon_id만 필요
         * 웹툰을 다운로드하고 싶은 경우: webtoon_id와 bearer가 필요
@@ -68,19 +78,62 @@ class LezhinComicsScraper(Scraper[str]):
         bearer와 cookie를 어떻게 얻는지는 문서를 참고하세요.
         """
         # cspell: ignore allowadult
+
+        # webtoon_id가 tuple로 주어질 경우 tuple을 해체해서 language code를 때어냄
+        if isinstance(webtoon_id, str):
+            language_code = "ko"
+        else:
+            language_code, webtoon_id = webtoon_id
+
+        self._shuffled_directory = None
+        self._unshuffled_directory = None
+        self.language_code = language_code
+        self.base_url = self.BASE_URLS[language_code]
+        referrer = f"{self.base_url}/{self.language_code}/comic/{webtoon_id}"
+        locale = self.LOCALES[language_code]
+
         super().__init__(webtoon_id)
         self.headers.update(
             {
-                "Referer": "https://www.lezhin.com/ko/comic/dr_hearthstone/1",
+                "Referer": referrer,
                 "X-Lz-Adult": "0",
                 "X-Lz-Allowadult": "false",
                 "X-Lz-Country": "kr",
-                "X-Lz-Locale": "ko-KR",
+                "X-Lz-Locale": locale,
             }
         )
+
+        # HACK: 임시!!
+        self.cookie = cookie or self.default_cookie
+
+        # TODO: cookie도 json_headers를 사용해야 함!!!
+        self.json_headers = {
+            "accept": "*/*",
+            "accept-language": "ko",
+            "cache-control": "no-cache",
+            "content-type": "application/json",
+            "dnt": "1",
+            "pragma": "no-cache",
+            "priority": "u=1, i",
+            "referer": referrer,
+            "cookie": self.cookie,
+            "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Chromium\";v=\"133\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "sec-gpc": "1",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+            "x-lz-adult": "0",
+            "x-lz-allowadult": "false",
+            "x-lz-country": "kr",
+            "x-lz-locale": locale,
+        }
+
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
         self.client.timeout = 50
-        self.cookie = cookie or self.DEFAULT_COOKIE
+        self.cookie = cookie or self.default_cookie
         self.bearer = bearer or os.environ.get("LEZHIN_BEARER", None)
         self.user_int_id = user_int_id
 
@@ -108,7 +161,13 @@ class LezhinComicsScraper(Scraper[str]):
             await self.fetch_user_information(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
-        directory_name = self._safe_name(f"{self.title}({self.webtoon_id}")
+        directory_name = f"{self.title}("
+
+        if self.language_code == "ko":
+            directory_name += self.webtoon_id
+        else:
+            directory_name += f"{self.language_code}, {self.webtoon_id}"
+
         if self.is_shuffled:
             directory_name += ", shuffled"
 
@@ -117,7 +176,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         directory_name += ")"
 
-        return directory_name
+        return self._safe_name(directory_name)
 
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -127,11 +186,11 @@ class LezhinComicsScraper(Scraper[str]):
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
         with InvalidWebtoonIdError.redirect_error(self):
             try:
-                res = await self.client.get(f"https://www.lezhin.com/ko/comic/{self.webtoon_id}")
+                res = await self.client.get(f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}")
             except HTTPStatusError as exc:
                 if not exc.response.status_code == 307:
                     raise  # InvalidWebtoonIdError로 넘어가게 함.
-                if self.cookie == self.DEFAULT_COOKIE or self.cookie is None:
+                if self.cookie == self.default_cookie or self.cookie is None:
                     raise UnsupportedRatingError(
                         "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
                     ) from exc
@@ -239,8 +298,8 @@ class LezhinComicsScraper(Scraper[str]):
             await self._open_free_episode(episode_id_str)
 
         keygen_url = (
-            f"https://www.lezhin.com/lz-api/v2/cloudfront/signed-url/generate?"
-            f"q={30}&contentId={self.webtoon_int_id}&episodeId={episode_id_int}&firstCheckType={'T'}&purchased={purchased}"
+            f"{self.base_url}/lz-api/v2/cloudfront/signed-url/generate?"
+            f"q={30}&contentId={self.webtoon_int_id}&episodeId={episode_id_int}&firstCheckType={'T' if self.language_code == "ko" else 'F'}&purchased={purchased}"
         )
 
         keys_response = await self.client.get(keygen_url, raise_for_status=False)
@@ -262,13 +321,13 @@ class LezhinComicsScraper(Scraper[str]):
         key_pair_id: str = response_data["Key-Pair-Id"]
 
         images_retrieve_url = (
-            "https://www.lezhin.com/lz-api/v2/inventory_groups/comic_viewer_k?"
+            f"{self.base_url}/lz-api/v2/inventory_groups/{'comic_viewer' if self.language_code == 'ja' else 'comic_viewer_k'}?"
             f"platform=web&store=web&alias={self.webtoon_id}&name={episode_id_str}&preload=false"
             "&type=comic_episode"
         )
         for i in range(retry):
             try:
-                res = await self.client.get(images_retrieve_url)
+                res = await self.client.get(images_retrieve_url, headers=self.json_headers)
                 images_data = res.json()
             except json.JSONDecodeError:
                 if retry == i + 1:
@@ -309,6 +368,11 @@ class LezhinComicsScraper(Scraper[str]):
         self._bearer = value
         if value is not None:
             self.headers.update({"Authorization": value})
+            self.json_headers["authorization"] = self.bearer
+
+    @property
+    def default_cookie(self) -> str:
+        return f"x-lz-locale={self.LOCALES[self.language_code].replace("-", "_")}"
 
     # MARK: PRIVATE METHODS
 
@@ -342,10 +406,10 @@ class LezhinComicsScraper(Scraper[str]):
                 super()._apply_option(option, value)
 
     @classmethod
-    def _extract_webtoon_id(cls, url) -> str | None:
+    def _extract_webtoon_id(cls, url) -> str | tuple[str, str] | None:
         match url.host, url.parts:
-            case "www.lezhin.com", ("/", "ko", "comic", webtoon_id):
-                return webtoon_id
+            case "www.lezhin.com" | "www.lezhinus.com" | "www.lezhin.jp", ("/", language_code, "comic", webtoon_id):
+                return language_code, webtoon_id
 
     async def _download_image(
         self,
