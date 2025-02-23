@@ -224,6 +224,7 @@ class NaverWebtoonScraper(Scraper[int]):
         if not matched:
             raise ValueError("Cookie does not contain required data.")
         self.headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
+        self.json_headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
 
     def _gather_author_comment(self, episode_no: int, response: httpc.Response):
         script = response.single("body > script", remain_ok=True)

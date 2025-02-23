@@ -185,9 +185,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             timeout=10,
             raise_for_status=True,
             follow_redirects=False,
-            headers=dict(httpc.HEADERS),
+            headers=httpc.HEADERS,
             verify=ssl.create_default_context(),
         )
+        self.json_headers = httpc.HEADERS | {
+            'accept': 'application/json, text/plain, */*',
+            'content-type': 'application/json',
+        }
 
         # settings attributes
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
@@ -574,11 +578,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def headers(self, value) -> None:
         self.headers.clear()
         self.headers.update(value)
+        self.json_headers.clear()
+        self.json_headers.update(value)
 
     # MARK: PRIVATE METHODS
 
     def _set_cookie(self, value: str) -> None:
         self.headers.update({"Cookie": value})
+        self.json_headers.update({"Cookie": value})
 
     def _apply_options(self, options: dict[str, str], /) -> None:
         if options:

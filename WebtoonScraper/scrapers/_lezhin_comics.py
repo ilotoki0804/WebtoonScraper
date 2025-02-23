@@ -90,46 +90,17 @@ class LezhinComicsScraper(Scraper[str]):
         self.language_code = language_code
         self.base_url = self.BASE_URLS[language_code]
         referrer = f"{self.base_url}/{self.language_code}/comic/{webtoon_id}"
-        locale = self.LOCALES[language_code]
 
         super().__init__(webtoon_id)
-        self.headers.update(
-            {
-                "Referer": referrer,
-                "X-Lz-Adult": "0",
-                "X-Lz-Allowadult": "false",
-                "X-Lz-Country": "kr",
-                "X-Lz-Locale": locale,
-            }
-        )
-
-        # HACK: 임시!!
-        self.cookie = cookie or self.default_cookie
-
-        # TODO: cookie도 json_headers를 사용해야 함!!!
-        self.json_headers = {
-            "accept": "*/*",
-            "accept-language": "ko",
-            "cache-control": "no-cache",
-            "content-type": "application/json",
-            "dnt": "1",
-            "pragma": "no-cache",
-            "priority": "u=1, i",
-            "referer": referrer,
-            "cookie": self.cookie,
-            "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Chromium\";v=\"133\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "sec-gpc": "1",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-            "x-lz-adult": "0",
-            "x-lz-allowadult": "false",
-            "x-lz-country": "kr",
-            "x-lz-locale": locale,
+        extra_headers = {
+            "Referer": referrer,
+            "X-Lz-Adult": "0",
+            "X-Lz-Allowadult": "false",
+            "X-Lz-Country": "kr",
+            "X-Lz-Locale": self.LOCALES[language_code],
         }
+        self.headers.update(extra_headers)
+        self.json_headers.update(extra_headers)
 
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
         self.client.timeout = 50
@@ -368,7 +339,7 @@ class LezhinComicsScraper(Scraper[str]):
         self._bearer = value
         if value is not None:
             self.headers.update({"Authorization": value})
-            self.json_headers["authorization"] = self.bearer
+            self.json_headers["authorization"] = value
 
     @property
     def default_cookie(self) -> str:
