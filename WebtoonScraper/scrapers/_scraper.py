@@ -185,6 +185,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             timeout=10,
             raise_for_status=True,
             follow_redirects=False,
+            # 어차피 업스트림에서 복사되기에 복사 없이 보내도 괜찮음.
             headers=httpc.HEADERS,
             verify=ssl.create_default_context(),
         )
