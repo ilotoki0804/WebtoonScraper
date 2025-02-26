@@ -12,6 +12,8 @@ from collections.abc import Iterable
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers._scraper import Scraper
 
+from ..base import __version__ as version
+
 
 class ExtraInfoScraper:
     """이미지 이외의 정보(댓글, 작가의 말, 별점 등)와 기타 프로세싱을 사용할 때 사용되는 추가적인 스크래퍼입니다."""
@@ -65,7 +67,8 @@ class ExtraInfoScraper:
             contents=["thumbnail", "information"],
         )
         with open(webtoon_directory / "information.json", "w", encoding="utf-8") as f:
-            json.dump(information, f, ensure_ascii=False, indent=2)
+            # 버전은 맨 위에 오는 것이 가장 보기 좋음
+            json.dump(dict(version=version) | information, f, ensure_ascii=False, indent=2)
 
 
 class EpisodeRange:
