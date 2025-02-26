@@ -13,12 +13,13 @@ WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니�
 | **webtoons.com** | O | O | X |
 | **리디북스 웹툰** | O | ? | O |
 | **투믹스** | O | X | ? |
-| **버프툰** | O | ? | O |
+| **버프툰** | O | - | O |
 | **이만배** | O | - | O |
 | **네이버 포스트** | O | - | - |
 | **네이버 게임** | O | - | - |
 | **네이버 블로그** | O | - | - |
 | **티스토리** | O | - | - |
+| **탑툰** | O | O | ? |
 
 유료 회차에는 24시간 무료나 3다무와 같은 시간이나 이용권을 사용해서 열리는 경우도 포함됩니다.
 
@@ -74,6 +75,8 @@ webtoon download --option download-comments="true" --option download-all-comment
 [웹사이트](https://www.lezhin.com/ko) | 예시 URL: <https://www.lezhin.com/ko/comic/dr_hearthstone>
 
 레진코믹스 성인 웹툰을 다운로드받기 위해선 쿠키가 필요합니다. 쿠키를 얻는 방법은 [쿠키 문서](./04-cookie.md)를 확인하세요.
+
+한국어 레진코믹스(https://www.lezhin.com/ko)뿐 아니라 영어(https://www.lezhinus.com/en)와 일본어(https://www.lezhin.jp/ja) 레진코믹스도 다운로드를 지원합니다. 다운로드 방식은 모두 동일합니다.
 
 ### 레진코믹스 다운로드 방법
 
@@ -176,3 +179,12 @@ bearer를 얻는 방법은 다음과 같습니다.
 1. 그러면 `here is the bearer string`이라는 안내 메시지와 함께 아래에 bearer가 뜰 것입니다. 복사하세요.
 
 `EMANBAE_BEARER` 환경 변수를 설정할 경우 해당 값을 이용합니다.
+
+
+## 탑툰
+
+**유·무료 웹툰 다운로드 가능, 쿠키 필요**
+
+[웹사이트](https://toptoon.com/) | 예시 URL: <https://toptoon.com/comic/ep_list/Brain_Breaker>
+
+웹툰 다운로드 시 쿠키를 적용시켜야 합니다. [쿠키 문서](./04-cookie.md)를 참고해 쿠키를 복사해 적용하세요.
