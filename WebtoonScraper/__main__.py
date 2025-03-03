@@ -324,7 +324,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
                     await parse_download(args)
                 case unknown_subparser:
                     raise NotImplementedError(f"{unknown_subparser} is not a valid command.")
-        except KeyboardInterrupt as exc:
+        except KeyboardInterrupt:
             logger.error("Aborted.")
             return 1
         except SystemExit as exc:
