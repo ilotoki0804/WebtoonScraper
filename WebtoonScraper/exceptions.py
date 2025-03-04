@@ -136,19 +136,3 @@ class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
                 )
             error_message += f"pip install -U {package_name}  (download manually, not recommended since it could install incompatible version)"
             raise cls(error_message) from exc
-
-
-class CommentError(WebtoonScraperError):
-    """Errors related to comments."""
-
-
-class CommentsDownloadOptionError(CommentError):
-    """Comment download option is not supported or implemented."""
-
-
-class UnsupportedCommentsDownloadOptionError(CommentsDownloadOptionError):
-    """The comment download option cannot be implemented due to technical difficulties."""
-
-
-class NotImplementedCommentsDownloadOptionError(CommentsDownloadOptionError, NotImplementedError):
-    """This option is not currently implemented, but may be implemented in the future."""
