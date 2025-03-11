@@ -109,9 +109,9 @@ parser.add_argument(
     help="Set logger level to DEBUG and show detailed error",
 )
 parser.add_argument(
-    "--propagate-error",
+    "--format-error",
     action="store_true",
-    help="Propagate error without extra process",
+    help="Format exceptions nicely",
 )
 parser.add_argument("--no-progress-bar", action="store_true", help="Use log instead progress bar to display status")
 # 이유는 정말 모르겠지만 subparser specifier 뒤에 이 옵션을 위치시켜야*만* 적용됨. 이유는 불명...
@@ -310,7 +310,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
     if args.verbose:
         logger.setLevel(logging.DEBUG)
 
-    if args.propagate_error:
+    if not args.format_error:
         match args.subparser_name:
             case "download":
                 await parse_download(args)
