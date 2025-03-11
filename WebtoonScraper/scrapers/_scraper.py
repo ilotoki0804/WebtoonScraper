@@ -502,6 +502,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @classmethod
     def from_url(cls, url: str) -> Self:
+        # NaverWebtoonScraper와 KakaoWebtoonScraper에 복사된 코드가 있음.
         """URL을 통해 스크래퍼를 초기화합니다."""
         try:
             webtoon_id: WebtoonId | None = cls._extract_webtoon_id(URL(url))

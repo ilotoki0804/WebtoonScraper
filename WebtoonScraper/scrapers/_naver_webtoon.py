@@ -156,6 +156,8 @@ class NaverWebtoonScraper(Scraper[int]):
 
     @classmethod
     def from_url(cls, url: str) -> Self:
+        # NOTE: 이 코드는 Scraper.from_url에서 긁어온 코드이기 때문에, 해당 코드가 변경되었을 경우
+        # 같이 변경이 필요함.
         try:
             webtoon_type, webtoon_id = cls._extract_webtoon_id(URL(url))
         except Exception as exc:
