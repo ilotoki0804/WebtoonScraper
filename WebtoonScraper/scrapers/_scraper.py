@@ -554,11 +554,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if getattr(self, "_progress", None):
             return self._progress
         self._progress = progress.Progress(
-            progress.SpinnerColumn(),
-            *progress.Progress.get_default_columns(),
+            progress.SpinnerColumn(spinner_name="aesthetic"),
+            progress.TextColumn("[progress.description]{task.description}"),
+            progress.BarColumn(bar_width=None),
+            progress.TaskProgressColumn(),
+            progress.TimeRemainingColumn(),
+            progress.TextColumn("[progress.remaining]ETA"),
             progress.TimeElapsedColumn(),
             console=console,
             transient=False,
+            expand=True,
         )
         self._progress.start()
         return self._progress
