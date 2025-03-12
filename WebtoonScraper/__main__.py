@@ -276,8 +276,15 @@ async def parse_download(args: argparse.Namespace) -> None:
         await scraper.async_download_webtoon(args.range)
 
 
-def main(argv=None) -> Literal[0, 1]:
-    return asyncio.run(async_main(argv))
+def main(argv=None, *, propagate_keyboard_interrupt: bool = False) -> Literal[0, 1]:
+    if propagate_keyboard_interrupt:
+        return asyncio.run(async_main(argv))
+    else:
+        try:
+            return asyncio.run(async_main(argv))
+        except KeyboardInterrupt:
+            logger.error("Aborted.")
+            return 1
 
 
 async def async_main(argv=None) -> Literal[0, 1]:
