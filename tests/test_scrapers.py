@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from WebtoonScraper.scrapers import *  # type: ignore
 
@@ -47,3 +48,43 @@ def test_from_url():
     assert LezhinComicsScraper.from_url(
         "https://www.lezhin.com/ko/comic/dr_hearthstone"
     ).webtoon_id == "dr_hearthstone"
+
+
+def test_callback():
+    asyncio.run(async_test_callback())
+
+
+async def async_test_callback():
+    scraper = NaverWebtoonScraper.from_url(
+        "https://comic.naver.com/webtoon/list?titleId=805702"
+    )
+
+    @scraper.register_async_callback("async_trigger")
+    async def async_callback(scraper, **context):
+        assert context["key"] == "value"
+
+    @scraper.register_async_callback("async_task_trigger", blocking=False)
+    async def async_callback_task(scraper, **context):
+        assert context["key"] == "value"
+        return "return_value"
+
+    @scraper.register_callback("trigger")
+    def callback(scraper, **context):
+        assert context["key"] == "value"
+
+    await scraper.async_callback("async_trigger", key="value")
+    await scraper.async_callback("trigger", key="value")
+    scraper.callback("trigger", key="value")
+    task, = await scraper.async_callback("async_task_trigger", key="value")  # type: ignore
+    assert await task == "return_value"
+
+    with pytest.raises(AssertionError):
+        await scraper.async_callback("async_trigger", key="not_a_value")
+    with pytest.raises(AssertionError):
+        await scraper.async_callback("trigger", key="not_a_value")
+    scraper.callback("async_trigger", key="not_a_value")
+    with pytest.raises(AssertionError):
+        scraper.callback("trigger", key="not_a_value")
+    with pytest.raises(AssertionError):
+        task, = await scraper.async_callback("async_task_trigger", key="not_a_value")  # type: ignore
+        await task

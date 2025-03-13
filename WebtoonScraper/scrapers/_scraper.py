@@ -10,11 +10,12 @@ import time
 import warnings
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import Callable, Container, Iterator, Mapping
+from collections.abc import Callable, Container, Coroutine, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     ClassVar,
     Generic,
     Literal,
@@ -24,13 +25,12 @@ from typing import (
 )
 
 import filetype
+import httpc
 import httpx
 import pyfilename as pf
 from filetype.types import IMAGE
 from rich import progress
 from yarl import URL
-
-import httpc
 
 from ..base import console, logger, platforms
 from ..directory_state import (
@@ -157,7 +157,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     PLATFORM: ClassVar[str]
     DOWNLOAD_INTERVAL: int | float = 0
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
-    TASK_QUEUE_FACTORY: Callable = asyncio.Queue
     information_vars: dict[str, None | str | Path | Callable] = dict(
         title=None,
         platform="PLATFORM",
@@ -207,8 +206,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.skip_download: list[int] = []
         """0-based index를 사용해 다운로드를 생략할 웹툰을 결정합니다."""
         self._download_status: Literal["downloading", "nothing", "canceling"] = "nothing"
-        self._triggers: defaultdict[str, list[Callable]] = defaultdict(list)
-        self._tasks: asyncio.Queue[asyncio.Future] = self.TASK_QUEUE_FACTORY()
+        # self._triggers: defaultdict[tuple[Literal["async", "async_task"], str], list[Callable[..., Coroutine]]] | defaultdict[tuple[Literal["sync"], str], list[Callable]] = defaultdict(list)
+        # 적어도 pyright에서는 위의 type expr가 잘 작동하지 않음. 아래의 더 generic한 버전을 사용
+        self._triggers: defaultdict[tuple[Literal["sync", "async", "async_task"], str], list[Callable[..., Coroutine]] | list[Callable]] = defaultdict(list)
+        self._tasks: asyncio.Queue[asyncio.Future] = asyncio.Queue()
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
 
         # initialize extra info scraper
@@ -387,6 +388,49 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         await self.fetch_episode_information(reload=reload)
 
     @overload
+    def register_async_callback(self, trigger: str, func: CallableT, *, blocking: bool = True) -> CallableT: ...
+
+    @overload
+    def register_async_callback(self, trigger: str, *, blocking: bool = True) -> Callable[[CallableT], CallableT]: ...
+
+    def register_async_callback(self, trigger: str, func: Callable[..., Coroutine] | None = None, *, blocking: bool = True) -> Any:
+        """특정 callback 트리거가 발생했을 때 실행할 비동기 콜백을 등록합니다."""
+        if func is None:
+            return lambda func: self.register_async_callback(trigger, func, blocking=blocking)
+
+        # blocking으로 할지 말지를 callback을 등록할 때 해야 할까, 아님 부를 때 결정해야 할까?
+        # 실례를 한번 봐야 할 것 같은데 아직은 잘 모르겠다.
+        # 일단 지금은 callback을 등록할 때 결정하는 것으로 한다.
+        self._triggers[("async" if blocking else "async_task", trigger)].append(func)
+        return func
+
+    async def async_callback(self, situation: str, **context) -> list[asyncio.Task] | None:
+        if callbacks := self._triggers.get(("async", situation)):
+            for callback in callbacks:
+                await callback(scraper=self, **context)
+
+        if callbacks := self._triggers.get(("async_task", situation)):
+            tasks = []
+            print("starting task!")
+            for callback in callbacks:
+                task = asyncio.create_task(callback(scraper=self, **context))
+                await self._tasks.put(task)
+                print("I got task!")
+                tasks.append(task)
+            return tasks or None
+
+        self.callback(situation, **context)
+
+    def unregister_callback(self, trigger: str, func: Callable, type: Literal["sync", "async", "async_task"] | None = None) -> None:
+        # 굳이 빈 key를 만들 필욘 없으니 get을 사용. 그냥 [] 사용해도 솔직히 상관없음.
+        if type == "sync" or type is None:
+            self._triggers.get(("sync", trigger), []).remove(func)
+        if type == "async" or type is None:
+            self._triggers.get(("async", trigger), []).remove(func)
+        if type == "async_task" or type is None:
+            self._triggers.get(("async_task", trigger), []).remove(func)
+
+    @overload
     def register_callback(self, trigger: str, func: CallableT) -> CallableT: ...
 
     @overload
@@ -424,7 +468,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if func is None:
             return lambda func: self.register_callback(trigger, func)
 
-        self._triggers[trigger].append(func)
+        self._triggers[("sync", trigger)].append(func)
         return func
 
     def callback(self, situation: str, **context) -> None:
@@ -496,7 +540,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             case the_others, _:
                 logger.debug(f"WebtoonScraper status: {the_others}")
 
-        if callbacks := self._triggers.get(situation):
+        if callbacks := self._triggers.get(("sync", situation)):
             for callback in callbacks:
                 callback(scraper=self, **context)
 

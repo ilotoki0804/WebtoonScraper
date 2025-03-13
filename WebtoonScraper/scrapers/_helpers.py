@@ -24,10 +24,8 @@ class ExtraInfoScraper:
         scraper.register_callback("finalize", self.finalizer)
 
     def unregister(self, scraper: Scraper) -> None:
-        with suppress(ValueError):
-            scraper._triggers["initialize"].remove(self.initializer)
-        with suppress(ValueError):
-            scraper._triggers["finalize"].remove(self.finalizer)
+        scraper.unregister_callback("initialize", self.initializer, "sync")
+        scraper.unregister_callback("initialize", self.finalizer, "sync")
 
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
