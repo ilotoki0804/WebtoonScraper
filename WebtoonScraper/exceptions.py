@@ -17,7 +17,7 @@ class WebtoonScraperError(Exception):
     """Base class of every error of custom WebtoonScraper error."""
 
 
-class DirectoryStateUnmatchedError(WebtoonScraperError):
+class DirectoryStateError(WebtoonScraperError):
     """Directory state received from check_directory_state is not desired."""
 
     @classmethod
@@ -28,7 +28,7 @@ class DirectoryStateUnmatchedError(WebtoonScraperError):
         return cls(message)
 
 
-class InvalidWebtoonIdError(WebtoonScraperError):
+class WebtoonIdError(WebtoonScraperError):
     """Webtoon ID is invalid."""
 
     @classmethod
@@ -55,7 +55,7 @@ class InvalidWebtoonIdError(WebtoonScraperError):
     @classmethod
     def from_webtoon_id(
         cls, webtoon_id, scraper=None, rating_notice: bool = False, additional: str = ""
-    ) -> InvalidWebtoonIdError:
+    ) -> WebtoonIdError:
         rating_message = (
             " It might be because rating of the webtoon is not supported. Check if the webtoon is adult-only."
             if rating_notice
@@ -67,7 +67,7 @@ class InvalidWebtoonIdError(WebtoonScraperError):
         return cls(f"Invalid webtoon ID: {webtoon_id!r} for {scraper.__name__}.{rating_message}{additional}")
 
 
-class InvalidURLError(WebtoonScraperError):
+class URLError(WebtoonScraperError):
     """Given URL is not valid."""
 
     @classmethod
@@ -78,15 +78,15 @@ class InvalidURLError(WebtoonScraperError):
         return cls(f"{scraper.__qualname__} does not accept URL `{url}`.")
 
 
-class UnsupportedWebtoonError(WebtoonScraperError):
+class WebtoonError(WebtoonScraperError):
     """The webtoon cannot be downloaded by Scraper."""
 
 
-class UnsupportedRatingError(UnsupportedWebtoonError):
+class RatingError(WebtoonError):
     """The webtoon can't be downloaded due to rating."""
 
 
-class InvalidAuthenticationError(WebtoonScraperError):
+class AuthenticationError(WebtoonScraperError):
     """Provided authentication method is invalid, expired or corrupted."""
 
 
@@ -97,19 +97,11 @@ class UseFetchEpisode(WebtoonScraperError):
         super().__init__(message or "Use `fetch_episode_information` for get webtoon information.")
 
 
-class InvalidPlatformError(WebtoonScraperError):
+class PlatformError(WebtoonScraperError):
     """Invalid platform error.
 
     Maybe you didn't select platform or typed invalid parameter.
     """
-
-
-class UserCanceledError(WebtoonScraperError):
-    """User revoked process."""
-
-
-class InvalidFetchResultError(WebtoonScraperError):
-    """Fetch result was invalid."""
 
 
 class Unreachable(WebtoonScraperError):
@@ -122,7 +114,7 @@ class Unreachable(WebtoonScraperError):
         )
 
 
-class MissingOptionalDependencyError(WebtoonScraperError, ImportError):
+class DependencyError(WebtoonScraperError, ImportError):
     @classmethod
     @contextmanager
     def importing(cls, package_name: str, install_through: str | None = None):

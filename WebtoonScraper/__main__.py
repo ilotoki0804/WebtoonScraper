@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Literal
 from collections.abc import Callable, Iterable
 
-from WebtoonScraper.exceptions import InvalidPlatformError, InvalidURLError
+from WebtoonScraper.exceptions import PlatformError, URLError
 from rich.table import Table
 
 import WebtoonScraper
@@ -203,10 +203,10 @@ def instantiate_from_url(webtoon_url: str) -> Scraper:
     for PlatformClass in platforms.values():
         try:
             platform = PlatformClass.from_url(webtoon_url)
-        except InvalidURLError:
+        except URLError:
             continue
         return platform
-    raise InvalidPlatformError(f"Platform not detected: {webtoon_url}")
+    raise PlatformError(f"Platform not detected: {webtoon_url}")
 
 
 def setup_instance(

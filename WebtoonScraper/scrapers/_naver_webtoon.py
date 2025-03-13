@@ -14,9 +14,9 @@ from httpx import HTTPStatusError
 from yarl import URL
 
 from ..exceptions import (
-    InvalidURLError,
-    InvalidWebtoonIdError,
-    UnsupportedRatingError,
+    URLError,
+    WebtoonIdError,
+    RatingError,
 )
 from ..base import logger
 from ._scraper import Scraper, async_reload_manager
@@ -47,7 +47,7 @@ class NaverWebtoonScraper(Scraper[int]):
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         headers = self.headers.copy()
         headers.update({"Accept": "application/json, text/plain, */*"})
-        with InvalidWebtoonIdError.redirect_error(self, error_type=(JSONDecodeError, HTTPStatusError)):
+        with WebtoonIdError.redirect_error(self, error_type=(JSONDecodeError, HTTPStatusError)):
             url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
             res = await self.client.get(url, headers=headers)
             webtoon_json_info: dict = res.json()
@@ -64,7 +64,7 @@ class NaverWebtoonScraper(Scraper[int]):
 
         # 심의 확인
         if not self.cookie and webtoon_json_info["age"]["type"] == "RATE_18":
-            raise UnsupportedRatingError(
+            raise RatingError(
                 f"In order to download adult webtoon {self.title}, you need valid cookie. Refer to docs to get additional info."
             )
 
@@ -161,10 +161,10 @@ class NaverWebtoonScraper(Scraper[int]):
         try:
             webtoon_type, webtoon_id = cls._extract_webtoon_id(URL(url))
         except Exception as exc:
-            raise InvalidURLError.from_url(url, cls) from exc
+            raise URLError.from_url(url, cls) from exc
 
         if webtoon_id is None or webtoon_type is None:
-            raise InvalidURLError.from_url(url, cls)
+            raise URLError.from_url(url, cls)
 
         self = cls(webtoon_id)
         self._set_webtoon_type(webtoon_type)  # camelCase 웹툰 타입

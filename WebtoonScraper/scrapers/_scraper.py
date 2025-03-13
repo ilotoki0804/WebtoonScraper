@@ -38,7 +38,7 @@ from ..directory_state import (
     load_information_json,
 )
 from ..exceptions import (
-    InvalidURLError,
+    URLError,
     UseFetchEpisode,
 )
 from ._helpers import EpisodeRange, ExtraInfoScraper, async_reload_manager
@@ -507,10 +507,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             webtoon_id: WebtoonId | None = cls._extract_webtoon_id(URL(url))
         except Exception as exc:
-            raise InvalidURLError.from_url(url, cls) from exc
+            raise URLError.from_url(url, cls) from exc
 
         if webtoon_id is None:
-            raise InvalidURLError.from_url(url, cls)
+            raise URLError.from_url(url, cls)
 
         return cls(webtoon_id)
 

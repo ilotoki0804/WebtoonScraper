@@ -13,9 +13,9 @@ from httpx import HTTPStatusError
 
 from ..base import logger
 from ..exceptions import (
-    InvalidAuthenticationError,
-    InvalidWebtoonIdError,
-    UnsupportedRatingError,
+    AuthenticationError,
+    WebtoonIdError,
+    RatingError,
     UseFetchEpisode,
 )
 from ._scraper import Scraper, async_reload_manager
@@ -128,7 +128,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     async def fetch_all(self, reload: bool = False) -> None:
         await super().fetch_all(reload)
-        with suppress(InvalidAuthenticationError):
+        with suppress(AuthenticationError):
             await self.fetch_user_information(reload=reload)
 
     def get_webtoon_directory_name(self) -> str:
@@ -155,7 +155,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
-        with InvalidWebtoonIdError.redirect_error(self):
+        with WebtoonIdError.redirect_error(self):
             try:
                 res = await self.client.get(f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}")
             except HTTPStatusError as exc:
@@ -168,11 +168,11 @@ class LezhinComicsScraper(Scraper[str]):
                     raise  # InvalidWebtoonIdError로 넘어가게 함.
                 elif location.startswith("/ko/content-mode"):
                     if self.cookie == self.default_cookie or self.cookie is None:
-                        raise UnsupportedRatingError(
+                        raise RatingError(
                             "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
                         ) from exc
                     else:
-                        raise UnsupportedRatingError(
+                        raise RatingError(
                             "The account is not adult authenticated. Thus can not download adult webtoons."
                         ) from exc
                 else:
@@ -188,7 +188,7 @@ class LezhinComicsScraper(Scraper[str]):
             data_raw = json.loads(json.loads(raw_data)[2:])
             data = data_raw[1][3]["entity"]
         except Exception as exc:
-            raise InvalidWebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
+            raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
 
         selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
         episode_dates: list[str] = []
@@ -233,7 +233,7 @@ class LezhinComicsScraper(Scraper[str]):
         try:
             res = await self.client.get(url)
         except HTTPStatusError:
-            raise InvalidAuthenticationError("Bearer is invalid. Failed to fetch user information.") from None
+            raise AuthenticationError("Bearer is invalid. Failed to fetch user information.") from None
         data: dict = res.json()["data"]
         view_episodes_set = {int(episode_int_id) for episode_int_id in data["history"] or []}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data["purchased"] or []}
@@ -343,7 +343,7 @@ class LezhinComicsScraper(Scraper[str]):
     def bearer(self, value: str | None) -> None:
         """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
         if value is not None and value and (not value.startswith("Bearer") or value == "Bearer ..."):
-            raise InvalidAuthenticationError("Invalid bearer. Please provide valid bearer.")
+            raise AuthenticationError("Invalid bearer. Please provide valid bearer.")
         self._bearer = value
         if value is not None:
             self.headers.update({"Authorization": value})

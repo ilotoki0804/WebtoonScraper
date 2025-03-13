@@ -16,7 +16,7 @@ from ..directory_state import (
     _directories_and_files_of,
     check_container_state,
 )
-from ..exceptions import DirectoryStateUnmatchedError
+from ..exceptions import DirectoryStateError
 
 
 def unshuffle_typical_webtoon(
@@ -64,7 +64,7 @@ def unshuffle(
     if check_directory_state:
         directory_state = check_container_state(source_webtoon_directory)
         if directory_state != DirectoryState.WebtoonDirectory(is_merged=False):
-            raise DirectoryStateUnmatchedError.from_state(directory_state, source_webtoon_directory)
+            raise DirectoryStateError.from_state(directory_state, source_webtoon_directory)
 
     unshuffle_parameters = []
     for episode_directory_name in sorted(os.listdir(source_webtoon_directory)):
