@@ -160,15 +160,23 @@ class LezhinComicsScraper(Scraper[str]):
                 res = await self.client.get(f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}")
             except HTTPStatusError as exc:
                 if not exc.response.status_code == 307:
+                    raise  # InvalidWebtoonIdError이거나 기타 위로 전파해야 할 오류들
+
+                # 이 아래는 모두 307 Redirect인 경우임
+                location = exc.response.headers["Location"]
+                if location.startswith("/404"):
                     raise  # InvalidWebtoonIdError로 넘어가게 함.
-                if self.cookie == self.default_cookie or self.cookie is None:
-                    raise UnsupportedRatingError(
-                        "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
-                    ) from exc
+                elif location.startswith("/ko/content-mode"):
+                    if self.cookie == self.default_cookie or self.cookie is None:
+                        raise UnsupportedRatingError(
+                            "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
+                        ) from exc
+                    else:
+                        raise UnsupportedRatingError(
+                            "The account is not adult authenticated. Thus can not download adult webtoons."
+                        ) from exc
                 else:
-                    raise UnsupportedRatingError(
-                        "The account is not adult authenticated. Thus can not download adult webtoons."
-                    ) from exc
+                    raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
 
         title = res.match("h2").pop().text()
 
