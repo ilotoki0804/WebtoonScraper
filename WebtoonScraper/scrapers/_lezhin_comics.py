@@ -33,6 +33,7 @@ class LezhinComicsScraper(Scraper[str]):
     """
 
     PLATFORM = "lezhin_comics"
+    download_interval = 0
     information_vars = Scraper.information_vars | Scraper._build_information_dict(
         "is_shuffled",
         "webtoon_int_id",

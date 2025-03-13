@@ -25,7 +25,6 @@ from ._scraper import Scraper, async_reload_manager
 class NaverWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Naver Webtoon."""
     PLATFORM = "naver_webtoon"
-    DOWNLOAD_INTERVAL = 0.5
     information_vars = (
         Scraper.information_vars
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", "episode_audio_urls", subcategory="extra")

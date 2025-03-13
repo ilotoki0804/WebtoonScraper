@@ -145,7 +145,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             서브클래스 파라미터를 override=True로 두어야 합니다.
             스크래퍼 자동 등록을 회피하려면 register=False로 두세요.
 
-        DOWNLOAD_INTERVAL (int):
+        download_interval (int):
             각 다운로드 사이에 쉬는 시간을 정합니다.
 
         EXTRA_INFO_SCRAPER_FACTORY (type[ExtraInfoScraper]):
@@ -155,7 +155,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     # MARK: CLASS VARIABLES
     PLATFORM: ClassVar[str]
-    DOWNLOAD_INTERVAL: int | float = 0
+    download_interval: int | float = 0.5
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
     information_vars: dict[str, None | str | Path | Callable] = dict(
         title=None,
@@ -738,7 +738,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     )
 
         # fetch image urls
-        time.sleep(self.DOWNLOAD_INTERVAL)  # 실제로 요청을 보내기 직전에 interval을 넣음.
+        time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
         try:
             image_urls = await self.get_episode_image_urls(episode_no)
         except BaseException as exc:
