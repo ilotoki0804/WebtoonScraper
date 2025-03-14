@@ -5,8 +5,8 @@ import os
 import random
 import re
 import shutil
-from contextlib import suppress
 import urllib.parse
+from contextlib import suppress
 from pathlib import Path
 
 from httpx import HTTPStatusError
@@ -14,10 +14,11 @@ from httpx import HTTPStatusError
 from ..base import logger
 from ..exceptions import (
     AuthenticationError,
-    WebtoonIdError,
     RatingError,
     UseFetchEpisode,
+    WebtoonIdError,
 )
+from ._helpers import boolean_option
 from ._scraper import Scraper, async_reload_manager
 
 
@@ -363,15 +364,15 @@ class LezhinComicsScraper(Scraper[str]):
     def _apply_option(self, option: str, value: str) -> None:
         match option:
             case "unshuffle":
-                self.unshuffle = self._boolean_option(value)
+                self.unshuffle = boolean_option(value)
             case "delete-shuffled":
-                self.delete_shuffled = self._boolean_option(value)
+                self.delete_shuffled = boolean_option(value)
             case "download-paid":
-                self.download_paid_episode = self._boolean_option(value)
+                self.download_paid_episode = boolean_option(value)
             case "bearer":
                 self.bearer = value.strip()
             case "open-free-episode":
-                self.open_free_episode = self._boolean_option(value)
+                self.open_free_episode = boolean_option(value)
             case "thread-number":
                 if self.thread_number:
                     logger.warning(

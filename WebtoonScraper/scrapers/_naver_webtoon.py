@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import re
 from itertools import count
 from json.decoder import JSONDecodeError
+from pathlib import Path
 from typing import Literal, Self
 
 import httpc
@@ -14,11 +14,11 @@ from httpx import HTTPStatusError
 from yarl import URL
 
 from ..exceptions import (
+    RatingError,
     URLError,
     WebtoonIdError,
-    RatingError,
 )
-from ..base import logger
+from ._helpers import boolean_option
 from ._scraper import Scraper, async_reload_manager
 
 
@@ -240,13 +240,13 @@ class NaverWebtoonScraper(Scraper[int]):
     def _apply_option(self, option: str, value: str) -> None:
         match option:
             case "download-comment" | "download-comments":
-                self.download_comments = self._boolean_option(value)
+                self.download_comments = boolean_option(value)
             case "download-all-comment" | "download-all-comments":
-                boolean_value = self._boolean_option(value)
+                boolean_value = boolean_option(value)
                 if boolean_value:
                     self.download_comments = True
                     self.top_comments_only = False
             case "download-audio" | "download-audios":
-                self.download_audio = self._boolean_option(value)
+                self.download_audio = boolean_option(value)
             case _:
                 super()._apply_option(option, value)

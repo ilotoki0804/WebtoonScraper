@@ -4,14 +4,13 @@ import argparse
 import asyncio
 import contextlib
 import logging
-import re
 import sys
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from importlib.resources import files
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 
 from WebtoonScraper.exceptions import PlatformError, URLError
 from rich.table import Table
@@ -336,7 +335,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
             return 1
         except SystemExit as exc:
             return exc.code  # type: ignore
-        except BaseException as exc:
+        except BaseException:
             console.print_exception()
             return 1
         else:

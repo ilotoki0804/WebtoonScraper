@@ -24,11 +24,9 @@ from typing import (
     overload,
 )
 
-import filetype
 import httpc
 import httpx
 import pyfilename as pf
-from filetype.types import IMAGE
 from rich import progress
 from yarl import URL
 
@@ -41,7 +39,7 @@ from ..exceptions import (
     URLError,
     UseFetchEpisode,
 )
-from ._helpers import EpisodeRange, ExtraInfoScraper, async_reload_manager
+from ._helpers import EpisodeRange, ExtraInfoScraper, async_reload_manager, infer_filetype
 from ._helpers import shorten as _shorten
 
 WebtoonId = TypeVar("WebtoonId")
@@ -648,18 +646,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}"
         )
 
-    @staticmethod
-    def _boolean_option(value: str) -> bool:
-        # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
-        # https://www.sqlite.org/pragma.html
-        match value.strip().lower():
-            case "1" | "yes" | "true" | "on":
-                return True
-            case "0" | "no" | "false" | "off":
-                return False
-            case other:
-                raise ValueError(f"{other!r} can't be represented as boolean.")
-
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)
         self.download_status: list[DownloadStatus | None] = [None] * total_episodes
@@ -889,7 +875,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             response = await self.client.get(url)
             image_raw: bytes = response.content
-            file_extension = self._infer_filetype(response.headers.get("content-type"), image_raw)
+            file_extension = infer_filetype(response.headers.get("content-type"), image_raw)
 
             # NOTE: response.aiter_bytes()를 사용한 방법이 더 효율적일 수 있음.
             # 아닐 수도 있고 현재도 딱히 문제는 없어서 그대로 둠.
@@ -989,26 +975,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         end_contexts = dict(finishing=True, is_successful=True)
         yield end_contexts
         self.callback(context_name, **end_contexts)
-
-    @staticmethod
-    def _infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
-        if content_type:
-            # content-type 헤더에서 추론
-            content_type = content_type.lower()
-            for filetype_cls in IMAGE:
-                if filetype_cls.MIME == content_type:
-                    return filetype_cls.EXTENSION
-
-        if image_raw is None:
-            raise ValueError("Failed to infer file extension contents.")
-
-        # 파일 헤더에서 추론
-        file_extension = filetype.guess_extension(image_raw)
-        if not file_extension:
-            raise ValueError("Failed to infer file extension contents.")
-            # 만약 필요한 경우 가장 흔한 확장자읜 jpg로 fallback하는 아래의 코드를 사용할 것.
-            # return "jpg"
-        return file_extension
 
     @staticmethod
     def _safe_name(name: str) -> str:

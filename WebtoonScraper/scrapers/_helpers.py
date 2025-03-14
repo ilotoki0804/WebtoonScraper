@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import functools
 import json
-from pathlib import Path
 import textwrap
-from typing import TYPE_CHECKING, Self
 from collections.abc import Iterable
+from pathlib import Path
+from typing import TYPE_CHECKING, Self
+
+import filetype
+from filetype.types import IMAGE
 
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers._scraper import Scraper
@@ -232,3 +234,35 @@ def async_reload_manager(f):
 def shorten(text: str):
     shortened = textwrap.shorten(text, width=15, placeholder="...")
     return f"'{shortened}'"
+
+
+def boolean_option(value: str) -> bool:
+    # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
+    # https://www.sqlite.org/pragma.html
+    match value.strip().lower():
+        case "1" | "yes" | "true" | "on":
+            return True
+        case "0" | "no" | "false" | "off":
+            return False
+        case other:
+            raise ValueError(f"{other!r} can't be represented as boolean.")
+
+
+def infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
+    if content_type:
+        # content-type 헤더에서 추론
+        content_type = content_type.lower()
+        for filetype_cls in IMAGE:
+            if filetype_cls.MIME == content_type:
+                return filetype_cls.EXTENSION
+
+    if image_raw is None:
+        raise ValueError("Failed to infer file extension contents.")
+
+    # 파일 헤더에서 추론
+    file_extension = filetype.guess_extension(image_raw)
+    if not file_extension:
+        raise ValueError("Failed to infer file extension contents.")
+        # 만약 필요한 경우 가장 흔한 확장자읜 jpg로 fallback하는 아래의 코드를 사용할 것.
+        # return "jpg"
+    return file_extension
