@@ -6,18 +6,17 @@ import contextlib
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from importlib.resources import files
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Callable
 
-from WebtoonScraper.exceptions import PlatformError, URLError
 from rich.table import Table
 
 import WebtoonScraper
 from WebtoonScraper import __version__
-from WebtoonScraper.base import logger, platforms, console
+from WebtoonScraper.base import console, logger, platforms
+from WebtoonScraper.exceptions import PlatformError, URLError
 from WebtoonScraper.scrapers import EpisodeRange, Scraper
 
 

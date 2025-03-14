@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 from httpx import HTTPStatusError
 
 if TYPE_CHECKING:
-    from .scrapers import Scraper as _Scraper
     from pathlib import Path
     from typing import Self
+
+    from .scrapers import Scraper as _Scraper
 
 
 class WebtoonScraperError(Exception):

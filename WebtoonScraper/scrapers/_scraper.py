@@ -39,7 +39,12 @@ from ..exceptions import (
     URLError,
     UseFetchEpisode,
 )
-from ._helpers import EpisodeRange, ExtraInfoScraper, async_reload_manager, infer_filetype
+from ._helpers import (
+    EpisodeRange,
+    ExtraInfoScraper,
+    async_reload_manager,
+    infer_filetype,
+)
 from ._helpers import shorten as _shorten
 
 WebtoonId = TypeVar("WebtoonId")

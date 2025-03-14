@@ -13,7 +13,6 @@ __all__ = [
 ]
 
 from ._helpers import EpisodeRange, ExtraInfoScraper
-from ._scraper import Scraper
-from ._naver_webtoon import NaverWebtoonScraper
-
 from ._lezhin_comics import LezhinComicsScraper
+from ._naver_webtoon import NaverWebtoonScraper
+from ._scraper import Scraper
