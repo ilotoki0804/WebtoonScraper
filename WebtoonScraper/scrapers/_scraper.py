@@ -427,11 +427,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def unregister_callback(self, trigger: str, func: Callable, type: Literal["sync", "async", "async_task"] | None = None) -> None:
         # 굳이 빈 key를 만들 필욘 없으니 get을 사용. 그냥 [] 사용해도 솔직히 상관없음.
         if type == "sync" or type is None:
-            self._triggers.get(("sync", trigger), []).remove(func)
+            with suppress(ValueError):
+                self._triggers.get(("sync", trigger), []).remove(func)
         if type == "async" or type is None:
-            self._triggers.get(("async", trigger), []).remove(func)
+            with suppress(ValueError):
+                self._triggers.get(("async", trigger), []).remove(func)
         if type == "async_task" or type is None:
-            self._triggers.get(("async_task", trigger), []).remove(func)
+            with suppress(ValueError):
+                self._triggers.get(("async_task", trigger), []).remove(func)
 
     @overload
     def register_callback(self, trigger: str, func: CallableT) -> CallableT: ...
