@@ -4,29 +4,31 @@
 
 WebtoonScraper는 다양한 웹툰 플랫폼에서 다운로드를 제공합니다.
 
-| 플랫폼명 | 무료 회차 | 성인 웹툰 | 유료 회차 |
+아래의 표에서 다운로드 가능한 웹툰과 종류를 확인하실 수 있습니다.
+
+| 플랫폼명 | 무료 회차 | 성인 웹툰 | 구매한 유료 회차 |
 |--|--|--|--|
-| **네이버 웹툰(PyPI 제공)** | O | O | X |
-| **카카오 웹툰** | O | O | O |
-| **레진코믹스(PyPI 제공)** | O | O | O |
-| **카카오페이지** | O | ? | O |
-| **webtoons.com** | O | O | X |
-| **리디북스 웹툰** | O | ? | O |
-| **투믹스** | O | X | ? |
-| **버프툰** | O | - | O |
-| **이만배** | O | - | O |
-| **네이버 포스트** | O | - | - |
-| **네이버 게임** | O | - | - |
-| **네이버 블로그** | O | - | - |
-| **티스토리** | O | - | - |
-| **탑툰** | O | O | ? |
+| **네이버 웹툰(PyPI 제공)** | 가능 | 가능 | 불가 |
+| **카카오 웹툰** | 가능 | 가능 | 가능 |
+| **레진코믹스(PyPI 제공)** | 가능 | 가능 | 가능 |
+| **카카오페이지** | 가능 | 확인안됨 | 가능 |
+| **webtoons.com** | 가능 | 가능 | 불가 |
+| **리디북스 웹툰** | 가능 | 가능 | 가능 |
+| **투믹스** | 가능 | 가능 | 가능 |
+| **버프툰** | 가능 | 해당없음 | 가능 |
+| **이만배** | 가능 | 해당없음 | 가능 |
+| **네이버 포스트** | 가능 | 해당없음 | 해당없음 |
+| **네이버 게임** | 가능 | 해당없음 | 해당없음 |
+| **네이버 블로그** | 가능 | 해당없음 | 해당없음 |
+| **티스토리** | 가능 | 해당없음 | 해당없음 |
+| **탑툰** | 가능 | 가능 | 확인안됨 |
 
 유료 회차에는 24시간 무료나 3다무와 같은 시간이나 이용권을 사용해서 열리는 경우도 포함됩니다.
 
-해당 표에서 `?`으로 표기되어 있는 부분은 **해당 내용이 아직 확인되지 않았다는 의미**입니다.
+해당 표에서 `확인안됨`으로 표기되어 있는 부분은 **해당 내용이 아직 확인되지 않았다는 의미**입니다.
 만약 해당 필드를 직접 확인했다면 알려주세요. 업데이트하거나 작동하도록 수정하겠습니다.
 
-해당 표에서 `-`으로 표기되어 있는 부분은 해당 플랫폼에서 **해당 사항이 없다는 의미**입니다.
+해당 표에서 `해당없음`으로 표기되어 있는 부분은 해당 플랫폼에서 **해당 사항이 없다는 의미**입니다.
 예를 들어 네이버 포스트의 경우 유료 회차를 별도로 지정할 수 있는 시스템이 애초에 없습니다.
 따라서 네이버 포스트의 유료 회차 파트는 `-`으로 표기되어 있습니다.
 
@@ -143,6 +145,30 @@ bearer를 얻는 방법은 다음과 같습니다.
 
 [웹사이트](https://page.kakao.com/) | 예시 URL: <https://page.kakao.com/content/53397318>
 
+## `webtoons.com`
+
+**무료·성인 웹툰 다운로드 가능, 쿠키 필요 없음**
+
+[웹사이트](https://www.webtoons.com/) | 예시 URL: <https://www.webtoons.com/en/fantasy/wumpus-wonderventures-discord-webcomic/list?title_no=5291>
+
+## 리디북스 웹툰
+
+**유·무료·성인 웹툰 다운로드 가능, 유료·성인 웹툰의 경우 쿠키 필요**
+
+[웹사이트](https://ridibooks.com/webtoon/recommendation) | 예시 URL: <https://ridibooks.com/books/3498016129>
+
+## 투믹스
+
+**무료·성인 웹툰 다운로드 가능, 성인 웹툰의 경우 쿠키 필요**
+
+[웹사이트](https://www.toomics.com/) | 예시 URL: <https://www.toomics.com/webtoon/episode/toon/8545>
+
+## 버프툰
+
+**유·무료 웹툰 다운로드 가능, 쿠키 필요**
+
+[웹사이트](https://bufftoon.plaync.com/) | 예시 URL: <https://bufftoon.plaync.com/series/1007888>
+
 ## 이만배
 
 [웹사이트](https://www.emanbae.com/) | 예시 URL: <https://www.emanbae.com/series/13>
@@ -180,6 +206,25 @@ bearer를 얻는 방법은 다음과 같습니다.
 
 `EMANBAE_BEARER` 환경 변수를 설정할 경우 해당 값을 이용합니다.
 
+## 네이버 포스트
+
+[웹사이트](https://m.post.naver.com/feed.naver) | 예시 URL: <https://m.post.naver.com/my/series/detail.naver?seriesNo=648552&memberNo=3395565>
+
+## 네이버 게임
+
+[웹사이트](https://game.naver.com/original_series) | 예시 URL: <https://game.naver.com/original_series/59>
+
+## 네이버 블로그
+
+[웹사이트](https://m.blog.naver.com/FeedList.naver) | 예시 URL: <https://doldistudio.tistory.com/category/진돌만화>
+
+모바일 사이트(<m.blog.naver.com>)를 이용해 주세요.
+
+## 티스토리
+
+[웹사이트](https://www.tistory.com/) | 예시 URL: <https://m.blog.naver.com/dpk58172?categoryNo=24&tab=1>
+
+특정 티스토리 사이트는 다운로드가 되지 않을 수 있습니다. 만약 어떤 티스토리 사이트를 다운로드받는 데에 실패했다면 이슈를 열어주세요.
 
 ## 탑툰
 
