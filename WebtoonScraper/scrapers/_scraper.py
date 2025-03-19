@@ -498,7 +498,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 "indicate"
                 | "download_skipped"
                 | "download_failed"
-                | "downloading_image"
+                | "downloading"
                 | "download_completed"
             ), context:
                 match situation:
@@ -514,7 +514,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         description = f"{_shorten(episode_title)} download failed"
                         if context["warning"]:
                             logger.warning(f"Failed to download: {episode_no + 1}. {episode_title}")
-                    case "downloading_image":
+                    case "downloading":
                         episode_no = context["episode_no"]
                         episode_title = self.episode_titles[episode_no]
                         description = f"downloading {_shorten(episode_title)}"
@@ -730,6 +730,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     raise FileExistsError(
                         f"Directory at {episode_directory} already exists. Please delete the directory."
                     )
+
+        # 다운로드 직전에 메시지를 보냄
+        self.callback("downloading", **context)
 
         # fetch image urls
         time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
