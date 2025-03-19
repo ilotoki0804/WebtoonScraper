@@ -1,5 +1,12 @@
 # Release Note
 
+## 5.4.0
+
+* 투믹스 글로벌(<https://global.toomics.com/en>) 모든 언어 지원 Support downloading webtoons from toomics global (every languages)
+* 리디와 투믹스 성인 웹툰 지원
+* 문서 개선 및 과거 문서 정리
+* 많은 API 개선 (async_callback, 예외 이름, progress bar, ...)
+
 ## 5.3.0
 
 * 레진코믹스 다른 언어(영어, 일본어)도 다운로드 지원. Support downloading webtoons from languages other than korean (English, Japanese) on Lezhin. Lezhin 英語, 日本語 支援.
