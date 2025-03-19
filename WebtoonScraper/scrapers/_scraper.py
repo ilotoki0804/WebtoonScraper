@@ -216,8 +216,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
 
         # initialize extra info scraper
-        if not getattr(self, "extra_info_scraper", None):
-            self.extra_info_scraper = self.EXTRA_INFO_SCRAPER_FACTORY()
+        self.extra_info_scraper
 
     def __init_subclass__(cls, register: bool = True, override: bool = False) -> None:
         if not register:
@@ -238,12 +237,24 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @property
     def extra_info_scraper(self) -> ExtraInfoScraper:
-        return self._extra_info_scraper
+        try:
+            return self._extra_info_scraper
+        except AttributeError:
+            self.extra_info_scraper = self.EXTRA_INFO_SCRAPER_FACTORY()
+            return self._extra_info_scraper
 
     @extra_info_scraper.setter
-    def extra_info_scraper(self, extra: ExtraInfoScraper) -> None:
-        if hasattr(self, "_extra_info_scraper"):
-            self._extra_info_scraper.unregister(self)
+    def extra_info_scraper(self, extra: ExtraInfoScraper | None) -> None:
+        try:
+            prev_extra = self._extra_info_scraper
+        except AttributeError:
+            pass
+        else:
+            prev_extra.unregister(self)
+
+        if extra is None:
+            extra = self.EXTRA_INFO_SCRAPER_FACTORY()
+
         self._extra_info_scraper = extra
         extra.register(self)
 
@@ -339,7 +350,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self.fetch_all()
 
         webtoon_directory = self._prepare_directory()
-        await self.async_callback("initialize", webtoon_directory=webtoon_directory)
+        await self.async_callback("download_started", webtoon_directory=webtoon_directory)
         self._load_snapshot(webtoon_directory)
         self._load_information(webtoon_directory)
         thumbnail_task = await self._download_thumbnail(webtoon_directory)
@@ -353,7 +364,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             webtoon_directory = self._post_process_directory(webtoon_directory)
 
         except BaseException as exc:
-            async with self._context_message("finalize") as context:
+            async with self._context_message("download_ended") as context:
                 # cancelling all tasks
                 canceled_tasks = 0
                 tasks = self._tasks
@@ -369,7 +380,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             raise
 
         else:
-            async with self._context_message("finalize") as context:
+            async with self._context_message("download_ended") as context:
                 await self._tasks.join()
                 self._download_status = "nothing"
                 extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
@@ -540,8 +551,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     episode_no = context["episode_no"]
                     episode_title = self.episode_titles[episode_no]
                     logger.info(f"Downloaded: #{episode_no} {_shorten(episode_title)}")
-            case "finalize", {"finishing": False, "exc": exc}:
-                logger.error("Aborting..." if isinstance(exc, KeyboardInterrupt) else "Finalizing...")
             case the_others, context if context:
                 logger.debug(f"WebtoonScraper status: {the_others}, context: {context}")
             case the_others, _:

@@ -22,12 +22,12 @@ class ExtraInfoScraper:
 
     def register(self, scraper: Scraper) -> None:
         # self.scraper = scraper
-        scraper.register_callback("initialize", self.initializer)
-        scraper.register_callback("finalize", self.finalizer)
+        scraper.register_callback("download_started", self.initializer)
+        scraper.register_callback("download_ended", self.finalizer)
 
     def unregister(self, scraper: Scraper) -> None:
-        scraper.unregister_callback("initialize", self.initializer, "sync")
-        scraper.unregister_callback("initialize", self.finalizer, "sync")
+        scraper.unregister_callback("download_started", self.initializer, "sync")
+        scraper.unregister_callback("download_ended", self.finalizer, "sync")
 
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
