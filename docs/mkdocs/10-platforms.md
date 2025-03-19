@@ -218,7 +218,7 @@ bearer를 얻는 방법은 다음과 같습니다.
 
 [웹사이트](https://m.blog.naver.com/FeedList.naver) | 예시 URL: <https://doldistudio.tistory.com/category/진돌만화>
 
-모바일 사이트(<m.blog.naver.com>)를 이용해 주세요.
+[모바일 사이트](https://m.blog.naver.com)를 이용해 주세요.
 
 ## 티스토리
 
