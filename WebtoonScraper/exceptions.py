@@ -39,7 +39,12 @@ class WebtoonIdError(WebtoonScraperError):
             yield
         except error_type as exc:
             if isinstance(exc, HTTPStatusError):
-                reason = exc.response.reason_phrase
+                response = exc.response
+                reason = response.reason_phrase
+
+                if response.has_redirect_location:
+                    reason += f" to {response.url}"
+
                 raise cls.from_webtoon_id(
                     webtoon_id=scraper.webtoon_id,
                     scraper=type(scraper),
