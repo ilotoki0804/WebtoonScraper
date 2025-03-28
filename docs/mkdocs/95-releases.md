@@ -1,5 +1,10 @@
 # Release Note
 
+## 5.4.1
+
+* 카카오페이지 사이트 변화 반영
+* 투믹스 확장 지원
+
 ## 5.4.0
 
 * 투믹스 글로벌(<https://global.toomics.com/en>) 모든 언어 지원 Support downloading webtoons from toomics global (every languages)
