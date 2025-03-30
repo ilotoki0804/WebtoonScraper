@@ -280,7 +280,7 @@ class LezhinComicsScraper(Scraper[str]):
 
         keygen_url = (
             f"{self.base_url}/lz-api/v2/cloudfront/signed-url/generate?"
-            f"q={30}&contentId={self.webtoon_int_id}&episodeId={episode_id_int}&firstCheckType={'T' if self.language_code == "ko" else 'F'}&purchased={purchased}"
+            f"q={30}&contentId={self.webtoon_int_id}&episodeId={episode_id_int}&firstCheckType={'T' if self.language_code == 'ko' else 'F'}&purchased={purchased}"
         )
 
         keys_response = await self.client.get(keygen_url, raise_for_status=False)
@@ -353,7 +353,7 @@ class LezhinComicsScraper(Scraper[str]):
 
     @property
     def default_cookie(self) -> str:
-        return f"x-lz-locale={self.LOCALES[self.language_code].replace("-", "_")}"
+        return f"x-lz-locale={self.LOCALES[self.language_code].replace('-', '_')}"
 
     # MARK: PRIVATE METHODS
 

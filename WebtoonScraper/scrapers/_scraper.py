@@ -505,7 +505,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             case "download_skipped", {"by_empty_title": True} | {"by_skip_download": True} | {"by_range": True}:
                 reason = (context.keys() & {"by_empty_title", "by_skip_download", "by_range"}).pop()
                 assert context.pop(reason)
-                logger.debug(f"Download skipped {reason.replace("_", " ")} with context: {context}")
+                logger.debug(f"Download skipped {reason.replace('_', ' ')} with context: {context}")
             case (
                 "indicate"
                 | "download_skipped"
