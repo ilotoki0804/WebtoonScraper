@@ -275,10 +275,10 @@ async def parse_download(args: argparse.Namespace) -> None:
         if args.no_progress_bar:
             scraper.use_progress_bar = False
 
-        if args.webtoon_dir_format:
-            scraper._webtoon_directory_format = args.webtoon_dir_format
-        if args.episode_dir_format:
-            scraper._episode_directory_format = args.episode_dir_format
+        if args.webtoon_dir_name:
+            scraper._webtoon_directory_format = args.webtoon_dir_name
+        if args.episode_dir_name:
+            scraper._episode_directory_format = args.episode_dir_name
 
         if hasattr(scraper, "thread_number"):
             scraper.thread_number = args.thread_number  # type: ignore
