@@ -680,6 +680,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)
         self.download_status: list[DownloadStatus | None] = [None] * total_episodes
+        self.episode_dir_names: list[str | None] = [None] * total_episodes
         if self.use_progress_bar:
             task = self.progress.add_task("Setting up...", total=total_episodes)
 
@@ -728,6 +729,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         ))
         episode_directory = webtoon_directory / directory_name
         episode_at_snapshot = self._snapshot_contents_info(episode_directory)
+        self.episode_dir_names[episode_no] = directory_name
 
         # 동명의 파일이 있는지 확인
         is_file_exists = episode_directory.is_file()
