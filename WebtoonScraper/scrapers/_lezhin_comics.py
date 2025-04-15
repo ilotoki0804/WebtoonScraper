@@ -133,23 +133,21 @@ class LezhinComicsScraper(Scraper[str]):
         with suppress(AuthenticationError):
             await self.fetch_user_information(reload=reload)
 
-    def get_webtoon_directory_name(self) -> str:
-        directory_name = f"{self.title}("
+    def _get_identifier(self) -> str:
+        identifier = ""
 
         if self.language_code == "ko":
-            directory_name += self.webtoon_id
+            identifier += self.webtoon_id
         else:
-            directory_name += f"{self.language_code}, {self.webtoon_id}"
+            identifier += f"{self.language_code}, {self.webtoon_id}"
 
         if self.is_shuffled:
-            directory_name += ", shuffled"
+            identifier += ", shuffled"
 
         if self.is_fhd_downloaded:
-            directory_name += ", HD"
+            identifier += ", HD"
 
-        directory_name += ")"
-
-        return self._safe_name(directory_name)
+        return identifier
 
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:

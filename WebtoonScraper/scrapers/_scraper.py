@@ -215,6 +215,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._tasks: asyncio.Queue[asyncio.Future] = asyncio.Queue()
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
 
+        self._webtoon_directory_format: str = "{title}({identifier})"
+        self._episode_directory_format: str = "{no:04d}. {episode_title}"
+
         # initialize extra info scraper
         self.extra_info_scraper
 
@@ -576,11 +579,21 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리의 이름을 결정합니다."""
+        directory_name = self._webtoon_directory_format.format(
+            title=self.title,
+            identifier=self._get_identifier(),
+            webtoon_id=self.webtoon_id,
+            author=self.author or "",
+            platform=self.PLATFORM,
+        )
+        return self._safe_name(directory_name)
+
+    def _get_identifier(self) -> str:
         webtoon_id = self.webtoon_id
         if isinstance(webtoon_id, tuple | list):  # 흔한 sequence들. 다른 사례가 있으면 추가가 필요할 수도 있음.
-            return self._safe_name(f"{self.title}({', '.join(map(str, webtoon_id))})")
+            return ', '.join(map(str, webtoon_id))
         else:  # 보통 문자열이나 정수
-            return self._safe_name(f"{self.title}({webtoon_id})")
+            return f"{webtoon_id}"
 
     async def aclose(self) -> None:
         """스크래퍼를 닫습니다. `Scraper.stop()` 메서드를 사용하기에 상당히 불안정합니다."""
@@ -705,7 +718,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             self.download_status[episode_no] = "not_downloadable"
             await self.async_callback("download_skipped", by_empty_title=True, **context)
             return
-        directory_name = self._safe_name(f"{episode_no + 1:04d}. {episode_title}")
+        directory_name = self._safe_name(self._episode_directory_format.format(
+            no=episode_no + 1,
+            no0=episode_no,
+            episode_title=episode_title,
+            title=self.title,
+            author=self.author,
+            platform=self.PLATFORM,
+        ))
         episode_directory = webtoon_directory / directory_name
         episode_at_snapshot = self._snapshot_contents_info(episode_directory)
 
