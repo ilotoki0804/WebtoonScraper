@@ -168,6 +168,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         episode_titles=None,
         author=None,
         download_status="download_status",
+        webtoon_dir_name="_webtoon_directory_format",
+        episode_dir_name="_episode_directory_format",
+        episode_dir_names=None,
     )
     information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
 
