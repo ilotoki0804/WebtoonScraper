@@ -68,7 +68,7 @@ class ExtraInfoScraper:
         )
         with open(webtoon_directory / "information.json", "w", encoding="utf-8") as f:
             # 버전은 맨 위에 오는 것이 가장 보기 좋음
-            json.dump(dict(version=version) | information, f, ensure_ascii=False, indent=2)
+            json.dump(dict(version=version) | information, f, ensure_ascii=False)
 
 
 class EpisodeRange:
