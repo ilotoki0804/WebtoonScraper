@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import html
 import json
 import os
@@ -582,12 +583,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리의 이름을 결정합니다."""
+        now = datetime.now()
         directory_name = self._webtoon_directory_format.format(
             title=self.title,
             identifier=self._get_identifier(),
             webtoon_id=self.webtoon_id,
             author=self.author or "",
             platform=self.PLATFORM,
+            datetime=now,
+            date=now.strftime("%Y-%m-%d"),
+            time=now.strftime("%H:%M:%S"),
         )
         return self._safe_name(directory_name)
 
@@ -722,13 +727,18 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             self.download_status[episode_no] = "not_downloadable"
             await self.async_callback("download_skipped", by_empty_title=True, **context)
             return
+        now = datetime.now()
         directory_name = self._safe_name(self._episode_directory_format.format(
             no=episode_no + 1,
             no0=episode_no,
             episode_title=episode_title,
             title=self.title,
+            webtoon_id=self.webtoon_id,
             author=self.author,
             platform=self.PLATFORM,
+            datetime=now,
+            date=now.strftime("%Y-%m-%d"),
+            time=now.strftime("%H:%M:%S"),
         ))
         episode_directory = webtoon_directory / directory_name
         episode_at_snapshot = self._snapshot_contents_info(episode_directory)
