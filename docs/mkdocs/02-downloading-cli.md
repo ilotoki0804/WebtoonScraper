@@ -81,6 +81,11 @@ webtoon download --option bearer="Bearer ..." "<URL>"
 webtoon download "https://<다운로드받을 웹툰 URL 1>" "https://<다운로드받을 웹툰 URL 2>" "https://<다운로드받을 웹툰 URL 3>"
 ```
 
+### 디렉토리 이름 설정
+
+디렉토리의 이름이 설정되는 방식을 변경할 수 있습니다.
+자세한 내용은 [이 문서](./11-directory-name.md)를 참고하세요.
+
 ## 다시 다운로드하기
 
 웹툰을 다운로드한 뒤 시간이 지나 에피소드를 업데이트하고 싶을 수 있습니다.
