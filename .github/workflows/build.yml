@@ -22,10 +22,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        pip install hatch simplebuilder
-        cp README.md README-build.md
         pip install -e .
-        simplebuilder -B main
 
     - name: build and publish package
       run: |
@@ -47,11 +44,8 @@ jobs:
   
       - name: install dependencies
         run: |
-          pip install hatch simplebuilder
-          cp README.md README-build.md
           pip install -e .
-          simplebuilder -B main
-  
+
       - name: build and publish package
         run: |
           hatch build

@@ -1,7 +1,7 @@
 [project]
 name = "WebtoonScraper"
 description = "Scraping webtoons with ease"
-readme = "README-build.md"  # Use `simplebuilder` to build readme
+readme = "README.md"
 authors = [{ name = "ilotoki0804", email = "ilotoki0804@gmail.com" }]
 license = "Apache-2.0"
 keywords = [
@@ -54,7 +54,6 @@ packages = ["WebtoonScraper"]
 dev-dependencies = [
     "ipykernel>=6.29.5",
     "pytest>=8.3.2",
-    "simplebuilder==0.4.0",
 ]
 
 [tool.ruff]
