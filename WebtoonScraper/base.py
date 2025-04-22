@@ -12,7 +12,7 @@ from rich.logging import RichHandler
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers import Scraper
 
-__version__ = "5.5.0"
+__version__ = "5.5.1"
 platforms: dict[str, type[Scraper]] = {}
 console = Console()
 
