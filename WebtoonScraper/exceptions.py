@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from httpx import HTTPStatusError
+from numpy import add
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -35,28 +36,33 @@ class WebtoonIdError(WebtoonScraperError):
     @classmethod
     @contextmanager
     def redirect_error(cls, scraper: _Scraper, rating_notice=False, error_type: type[BaseException] | tuple[type[BaseException], ...] = HTTPStatusError):
+        error = None
         try:
-            yield
+            try:
+                yield
+            except* error_type as exc:
+                error = exc
         except error_type as exc:
-            if isinstance(exc, HTTPStatusError):
-                response = exc.response
+            error = exc
+
+        if error:
+            if isinstance(error, HTTPStatusError):
+                response = error.response
                 reason = response.reason_phrase
 
                 if response.has_redirect_location:
                     reason += f" to {response.url}"
 
-                raise cls.from_webtoon_id(
-                    webtoon_id=scraper.webtoon_id,
-                    scraper=type(scraper),
-                    rating_notice=rating_notice,
-                    additional=f" (HTTP {exc.response.status_code}{' ' * bool(reason)}{reason})",
-                ) from None
+                additional = f" (HTTP {error.response.status_code}{' ' * bool(reason)}{reason})"
             else:
-                raise cls.from_webtoon_id(
-                    webtoon_id=scraper.webtoon_id,
-                    scraper=type(scraper),
-                    rating_notice=rating_notice,
-                ) from None
+                additional = ""
+
+            raise cls.from_webtoon_id(
+                webtoon_id=scraper.webtoon_id,
+                scraper=type(scraper),
+                rating_notice=rating_notice,
+                additional=additional,
+            ) from None
 
     @classmethod
     def from_webtoon_id(cls, webtoon_id, scraper=None, rating_notice: bool = False, additional: str = "") -> WebtoonIdError:
