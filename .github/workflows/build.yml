@@ -1,4 +1,4 @@
-name: Build Executable
+name: Build PyPI Package
 
 on:
   push:
@@ -23,6 +23,7 @@ jobs:
     - name: install dependencies
       run: |
         pip install -e .
+        pip install hatch
 
     - name: build and publish package
       run: |
