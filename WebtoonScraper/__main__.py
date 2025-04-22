@@ -45,6 +45,7 @@ def _version_info() -> str:
         # fmt: off  # 맥락상 import와 installed가 서로 붙어있는 편이 어울림
         with contextlib.suppress(Exception):
             from PIL import Image  # noqa
+
             installed.add("lezhin_comics")
         # fmt: on
 
@@ -97,9 +98,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter,
 )
 parser.register("action", "version", LazyVersionAction)
-parser.add_argument(
-    "--mock", action="store_true", help="Print argument parsing result and exit. Exist for debug or practice purpose"
-)
+parser.add_argument("--mock", action="store_true", help="Print argument parsing result and exit. Exist for debug or practice purpose")
 parser.add_argument(
     "-v",
     "--verbose",
@@ -136,10 +135,7 @@ download_subparser.add_argument(
     choices=("url", *platforms),
     metavar="PLATFORM",
     default="url",
-    help=(
-        "Webtoon platform to download. Only specify when you want to use webtoon id rather than url. "
-        f"Supported platforms: {', '.join(platforms)}"
-    ),
+    help=f"Webtoon platform to download. Only specify when you want to use webtoon id rather than url. Supported platforms: {', '.join(platforms)}",
 )
 download_subparser.add_argument("--cookie")
 download_subparser.add_argument(
@@ -262,9 +258,7 @@ async def parse_download(args: argparse.Namespace) -> None:
             table = Table(show_header=True, header_style="bold blue", box=None)
             table.add_column("Episode number [dim](ID)[/dim]", width=12)
             table.add_column("Episode Title", style="bold")
-            for i, (episode_id, episode_title) in enumerate(
-                zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1
-            ):
+            for i, (episode_id, episode_title) in enumerate(zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1):
                 table.add_row(
                     f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
                     str(episode_title),

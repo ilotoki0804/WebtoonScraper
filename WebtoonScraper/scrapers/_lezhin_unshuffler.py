@@ -81,10 +81,7 @@ def unshuffle(
 
         unshuffle_parameters.append((source_episode_directory, target_episode_directory, episode_id))
 
-    logger.info(
-        "The webtoon is being unshuffled. It takes a while and it's very CPU-intensive task. "
-        "So keep patient and wait until the process end."
-    )
+    logger.info("The webtoon is being unshuffled. It takes a while and it's very CPU-intensive task. So keep patient and wait until the process end.")
     with ThreadPool(thread_number or get_default_thread_number()) as p:
         unshuffled_episode_ids = p.imap_unordered(lambda args: unshuffle_episode(*args), unshuffle_parameters)
         if progress is None:

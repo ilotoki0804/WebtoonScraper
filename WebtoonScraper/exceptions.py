@@ -59,14 +59,8 @@ class WebtoonIdError(WebtoonScraperError):
                 ) from None
 
     @classmethod
-    def from_webtoon_id(
-        cls, webtoon_id, scraper=None, rating_notice: bool = False, additional: str = ""
-    ) -> WebtoonIdError:
-        rating_message = (
-            " It might be because rating of the webtoon is not supported. Check if the webtoon is adult-only."
-            if rating_notice
-            else ""
-        )
+    def from_webtoon_id(cls, webtoon_id, scraper=None, rating_notice: bool = False, additional: str = "") -> WebtoonIdError:
+        rating_message = " It might be because rating of the webtoon is not supported. Check if the webtoon is adult-only." if rating_notice else ""
         if scraper is None:
             return cls(f"Invalid webtoon ID: {webtoon_id!r}.{rating_message}{additional}")
         assert isinstance(scraper, type)
@@ -127,10 +121,7 @@ class DependencyError(WebtoonScraperError, ImportError):
         try:
             yield
         except ImportError as exc:
-            error_message = (
-                f"Package {package_name!r} is not installed in Python environment. "
-                f"Please install {package_name!r} though one of following command:\n"
-            )
+            error_message = f"Package {package_name!r} is not installed in Python environment. Please install {package_name!r} though one of following command:\n"
             if install_through:
                 error_message += (
                     "pip install -U WebtoonScraper[full]  (RECOMMENDED; download every extra dependency)\n"

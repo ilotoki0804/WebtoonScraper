@@ -24,6 +24,7 @@ from ._scraper import Scraper, async_reload_manager
 
 class NaverWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Naver Webtoon."""
+
     PLATFORM = "naver_webtoon"
     information_vars = (
         Scraper.information_vars
@@ -63,9 +64,7 @@ class NaverWebtoonScraper(Scraper[int]):
 
         # 심의 확인
         if not self.cookie and webtoon_json_info["age"]["type"] == "RATE_18":
-            raise RatingError(
-                f"In order to download adult webtoon {self.title}, you need valid cookie. Refer to docs to get additional info."
-            )
+            raise RatingError(f"In order to download adult webtoon {self.title}, you need valid cookie. Refer to docs to get additional info.")
 
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
@@ -91,11 +90,7 @@ class NaverWebtoonScraper(Scraper[int]):
             articles += current_articles
             previous_articles = current_articles
 
-        episode_data = {
-            article["no"]: article["subtitle"]
-            for article in articles
-            if not article.get("blindInspection")
-        }
+        episode_data = {article["no"]: article["subtitle"] for article in articles if not article.get("blindInspection")}
 
         episode_ids = []
         episode_titles = []
@@ -193,11 +188,7 @@ class NaverWebtoonScraper(Scraper[int]):
             case "naver.me", _, _:
                 resolved_url = httpc.get(f"https://naver.me{url.path}").headers["location"]
                 return cls._extract_webtoon_id(URL(resolved_url))
-            case (
-                "comic.naver.com" | "m.comic.naver.com",
-                ("/", webtoon_type, "list"),
-                {"titleId": webtoon_id_str}
-            ):
+            case ("comic.naver.com" | "m.comic.naver.com", ("/", webtoon_type, "list"), {"titleId": webtoon_id_str}):
                 return webtoon_type, int(webtoon_id_str)
             case _:
                 return None, None

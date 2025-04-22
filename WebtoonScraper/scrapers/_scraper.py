@@ -196,8 +196,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             verify=ssl.create_default_context(),
         )
         self.json_headers = httpc.HEADERS | {
-            'accept': 'application/json, text/plain, */*',
-            'content-type': 'application/json',
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
         }
 
         # settings attributes
@@ -233,8 +233,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             return
         if not override and (registered_scraper := platforms.get(platform_name)):
             warnings.warn(
-                f"Platform code {platform_name!r} has been already registered as Scraper {registered_scraper}."
-                f"To suppress this warning, set class parameter `override` to True.",
+                f"Platform code {platform_name!r} has been already registered as Scraper {registered_scraper}.To suppress this warning, set class parameter `override` to True.",
                 UserWarning,
                 stacklevel=2,
             )
@@ -513,13 +512,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 reason = (context.keys() & {"by_empty_title", "by_skip_download", "by_range"}).pop()
                 assert context.pop(reason)
                 logger.debug(f"Download skipped {reason.replace('_', ' ')} with context: {context}")
-            case (
-                "indicate"
-                | "download_skipped"
-                | "download_failed"
-                | "downloading"
-                | "download_completed"
-            ), context:
+            case "indicate" | "download_skipped" | "download_failed" | "downloading" | "download_completed", context:
                 match situation:
                     case "indicate":
                         episode_no = None
@@ -599,7 +592,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def _get_identifier(self) -> str:
         webtoon_id = self.webtoon_id
         if isinstance(webtoon_id, tuple | list):  # 흔한 sequence들. 다른 사례가 있으면 추가가 필요할 수도 있음.
-            return ', '.join(map(str, webtoon_id))
+            return ", ".join(map(str, webtoon_id))
         else:  # 보통 문자열이나 정수
             return f"{webtoon_id}"
 
@@ -681,9 +674,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 self._apply_option(option.strip().lower().replace("_", "-"), value)
 
     def _apply_option(self, option: str, value: str) -> None:
-        logger.warning(
-            f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}"
-        )
+        logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
 
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)
@@ -728,18 +719,20 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self.async_callback("download_skipped", by_empty_title=True, **context)
             return
         now = datetime.now()
-        directory_name = self._safe_name(self._episode_directory_format.format(
-            no=episode_no + 1,
-            no0=episode_no,
-            episode_title=episode_title,
-            title=self.title,
-            webtoon_id=self.webtoon_id,
-            author=self.author,
-            platform=self.PLATFORM,
-            datetime=now,
-            date=now.strftime("%Y-%m-%d"),
-            time=now.strftime("%H:%M:%S"),
-        ))
+        directory_name = self._safe_name(
+            self._episode_directory_format.format(
+                no=episode_no + 1,
+                no0=episode_no,
+                episode_title=episode_title,
+                title=self.title,
+                webtoon_id=self.webtoon_id,
+                author=self.author,
+                platform=self.PLATFORM,
+                datetime=now,
+                date=now.strftime("%Y-%m-%d"),
+                time=now.strftime("%H:%M:%S"),
+            )
+        )
         episode_directory = webtoon_directory / directory_name
         episode_at_snapshot = self._snapshot_contents_info(episode_directory)
         self.episode_dir_names[episode_no] = directory_name
@@ -772,9 +765,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     return
 
                 case "raise":
-                    raise FileExistsError(
-                        f"Directory at {episode_directory} already exists. Please delete the directory."
-                    )
+                    raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
 
         # 다운로드 직전에 메시지를 보냄
         await self.async_callback("downloading", **context)
@@ -825,11 +816,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     async def _download_episode_images(self, episode_no: int, context: dict, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
             for index, url in enumerate(image_urls, 1):
-                group.create_task(self._download_image(
+                download_task = self._download_image(
                     url,
                     episode_directory,
                     f"{index:03d}",
-                ))
+                )
+                group.create_task(download_task)
 
     def _get_information(self):
         """information.json에 탑재할 정보를 갈무리합니다.
@@ -873,9 +865,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     if value is _ABSENT:
                         if old_value is _ABSENT:
                             fetch_failed.append(original_name)
-                            logger.warning(
-                                f"{type(self).__name__}.{name} does not exist, and it'll be excluded from information.json."
-                            )
+                            logger.warning(f"{type(self).__name__}.{name} does not exist, and it'll be excluded from information.json.")
                         continue
 
                     value = self._normalize_information(value)
@@ -888,9 +878,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     value = getattr(self, to_fetch, _ABSENT)
                     if value is _ABSENT:
                         fetch_failed.append(original_name)
-                        logger.warning(
-                            f"{type(self).__name__}.{name} does not exist, and it'll be excluded from information.json."
-                        )
+                        logger.warning(f"{type(self).__name__}.{name} does not exist, and it'll be excluded from information.json.")
                     else:
                         to_store[name] = self._normalize_information(value)
 
@@ -912,10 +900,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 return value
 
             case Mapping() as mapping:
-                return {
-                    str(key): self._normalize_information(value)
-                    for key, value in mapping.items()
-                }
+                return {str(key): self._normalize_information(value) for key, value in mapping.items()}
 
             case list(seq):
                 return [self._normalize_information(item) for item in seq]
@@ -1021,9 +1006,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         directory_contents = {*real_contents, *snapshot_contents}
 
         normal_image_regex = DirectoryState.Image(is_merged=False).pattern()
-        return len(image_urls) == len(directory_contents) and all(
-            normal_image_regex.match(file) for file in directory_contents
-        )
+        return len(image_urls) == len(directory_contents) and all(normal_image_regex.match(file) for file in directory_contents)
 
     @asynccontextmanager
     async def _context_message(self, context_name: str, **contexts):
@@ -1046,13 +1029,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if not subcategory:
             return dict.fromkeys(auto_keys) | manual_keys
 
-        return {
-            f"{subcategory}/{key}": None
-            for key in auto_keys
-        } | {
-            f"{subcategory}/{key}": value
-            for key, value in manual_keys.items()
-        }
+        return {f"{subcategory}/{key}": None for key in auto_keys} | {f"{subcategory}/{key}": value for key, value in manual_keys.items()}
 
     async def _download_thumbnail(self, webtoon_directory: Path) -> None | asyncio.Task[Path]:
         if self.skip_thumbnail_download:

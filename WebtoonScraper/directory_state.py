@@ -134,9 +134,7 @@ def _directories_and_files_of(
     for path in Path(directory).iterdir():
         if ignore_snapshot and path.name.endswith(".snapshots"):
             continue
-        is_underscored = (
-            treat_underscored_directories_as_file and path.name.startswith("_") and not path.name.startswith("__")
-        )
+        is_underscored = treat_underscored_directories_as_file and path.name.startswith("_") and not path.name.startswith("__")
         if path.is_dir() and not is_underscored:
             directories.append(path)
         else:

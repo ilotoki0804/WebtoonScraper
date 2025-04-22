@@ -35,29 +35,34 @@ class LezhinComicsScraper(Scraper[str]):
 
     PLATFORM = "lezhin_comics"
     download_interval = 0
-    information_vars = Scraper.information_vars | Scraper._build_information_dict(
-        "is_shuffled",
-        "webtoon_int_id",
-        "episode_int_ids",
-        "is_adult",
-        "language_code",
-        shuffled_directory="_shuffled_directory",
-        unshuffled_directory="_unshuffled_directory",
-    ) | Scraper._build_information_dict(
-        "free_episodes",
-        "free_dates",
-        "published_dates",
-        "updated_dates",
-        "raw_data",
-        "availability",
-        "unusable_episodes",
-        "episode_dates",
-        "episode_states",
-        subcategory="extra",
-    ) | Scraper._build_information_dict(
-        "bearer",
-        "user_int_id",
-        subcategory="credentials",
+    information_vars = (
+        Scraper.information_vars
+        | Scraper._build_information_dict(
+            "is_shuffled",
+            "webtoon_int_id",
+            "episode_int_ids",
+            "is_adult",
+            "language_code",
+            shuffled_directory="_shuffled_directory",
+            unshuffled_directory="_unshuffled_directory",
+        )
+        | Scraper._build_information_dict(
+            "free_episodes",
+            "free_dates",
+            "published_dates",
+            "updated_dates",
+            "raw_data",
+            "availability",
+            "unusable_episodes",
+            "episode_dates",
+            "episode_states",
+            subcategory="extra",
+        )
+        | Scraper._build_information_dict(
+            "bearer",
+            "user_int_id",
+            subcategory="credentials",
+        )
     )
     BASE_URLS = dict(
         ko="https://www.lezhin.com",
@@ -168,13 +173,9 @@ class LezhinComicsScraper(Scraper[str]):
                     raise  # InvalidWebtoonIdError로 넘어가게 함.
                 elif location.startswith("/ko/content-mode"):
                     if self.cookie == self.default_cookie or self.cookie is None:
-                        raise RatingError(
-                            "Adult webtoon is not available since you don't set cookie. Check docs to how to download."
-                        ) from exc
+                        raise RatingError("Adult webtoon is not available since you don't set cookie. Check docs to how to download.") from exc
                     else:
-                        raise RatingError(
-                            "The account is not adult authenticated. Thus can not download adult webtoons."
-                        ) from exc
+                        raise RatingError("The account is not adult authenticated. Thus can not download adult webtoons.") from exc
                 else:
                     raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
 
@@ -251,14 +252,18 @@ class LezhinComicsScraper(Scraper[str]):
         if self.is_fhd_downloaded is None:
             self.is_fhd_downloaded = any(self.purchased_episodes)
 
-        self.information_vars = self.information_vars | Scraper._build_information_dict(  # type: ignore
-            "purchased_episodes",
-        ) | Scraper._build_information_dict(
-            "is_subscribed",
-            "does_get_notifications",
-            "is_preferred",
-            "viewed_episodes",
-            subcategory="extra",
+        self.information_vars = (
+            self.information_vars
+            | Scraper._build_information_dict(  # type: ignore
+                "purchased_episodes",
+            )
+            | Scraper._build_information_dict(
+                "is_subscribed",
+                "does_get_notifications",
+                "is_preferred",
+                "viewed_episodes",
+                subcategory="extra",
+            )
         )
 
     async def get_episode_image_urls(self, episode_no, retry: int = 3) -> list[tuple[str, str]] | None:
@@ -284,14 +289,9 @@ class LezhinComicsScraper(Scraper[str]):
         keys_response = await self.client.get(keygen_url, raise_for_status=False)
         if keys_response.status_code == 403:
             if self.bearer:
-                logger.warning(
-                    f"Can't retrieve data from {self.episode_titles[episode_no]}. "
-                    "It's probably because Episode is not available or not for free episode. "
-                )
+                logger.warning(f"Can't retrieve data from {self.episode_titles[episode_no]}. It's probably because Episode is not available or not for free episode. ")
             else:
-                logger.warning(
-                    f"Can't retrieve data from {self.episode_titles[episode_no]}. SET BEARER TO DOWNLOAD PROPERLY."
-                )
+                logger.warning(f"Can't retrieve data from {self.episode_titles[episode_no]}. SET BEARER TO DOWNLOAD PROPERLY.")
             return None
 
         response_data = keys_response.json()["data"]
@@ -321,7 +321,7 @@ class LezhinComicsScraper(Scraper[str]):
         for image_url_data in episode_info["scrollsInfo"]:
             # .replace("~", "%7E")
             image_url = (
-                f'https://rcdn.lezhin.com/v2{image_url_data["path"]}'
+                f"https://rcdn.lezhin.com/v2{image_url_data['path']}"
                 f".webp?purchased={purchased}&q={30}&updated={updated_at}"
                 f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
             )
@@ -373,10 +373,7 @@ class LezhinComicsScraper(Scraper[str]):
                 self.open_free_episode = boolean_option(value)
             case "thread-number":
                 if self.thread_number:
-                    logger.warning(
-                        f"Thread number has already been set as {self.thread_number}, "
-                        f"but thread_number option overriding it to {value!r}."
-                    )
+                    logger.warning(f"Thread number has already been set as {self.thread_number}, but thread_number option overriding it to {value!r}.")
                 if value.strip().lower() == "default":
                     self.thread_number = None
                 else:
@@ -435,8 +432,7 @@ class LezhinComicsScraper(Scraper[str]):
             updated_dates.append(episode["updatedAt"])
 
         to_downloads = [
-            (download_unusable_episode or not is_unusable) and (get_paid_episode or is_free)
-            for is_unusable, is_free in zip(unusable_episodes, free_episodes, strict=True)
+            (download_unusable_episode or not is_unusable) and (get_paid_episode or is_free) for is_unusable, is_free in zip(unusable_episodes, free_episodes, strict=True)
         ]
 
         self.availability = to_downloads
@@ -452,9 +448,7 @@ class LezhinComicsScraper(Scraper[str]):
     def _post_process_directory(self, base_webtoon_directory: Path) -> Path:
         if not self.is_shuffled or not self.unshuffle:
             if self.is_shuffled:
-                logger.warning(
-                    "This webtoon is shuffled, but since self.unshuffle is set to True, webtoon won't be unshuffled."
-                )
+                logger.warning("This webtoon is shuffled, but since self.unshuffle is set to True, webtoon won't be unshuffled.")
 
             self._shuffled_directory = base_webtoon_directory
             self._unshuffled_directory = None
