@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from httpx import HTTPStatusError
-from numpy import add
 
 if TYPE_CHECKING:
     from pathlib import Path
