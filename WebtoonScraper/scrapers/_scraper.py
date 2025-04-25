@@ -218,6 +218,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._triggers: defaultdict[tuple[Literal["sync", "async", "async_task"], str], list[Callable[..., Coroutine]] | list[Callable]] = defaultdict(list)
         self._tasks: asyncio.Queue[asyncio.Future] = asyncio.Queue()
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
+        self._cookie_set = False
+        """쿠키가 사용자에 의해 변경되었는지를 검사합니다."""
 
         self._webtoon_directory_format: str = "{title}({identifier})"
         self._episode_directory_format: str = "{no:04d}. {episode_title}"
@@ -649,6 +651,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @cookie.setter
     def cookie(self, value: str) -> None:
+        self._cookie_set = True
         self._set_cookie(value)
 
     @property

@@ -111,7 +111,11 @@ class LezhinComicsScraper(Scraper[str]):
 
         # 레진은 매우 느린 플랫폼이기에 시간을 넉넉하게 잡아야 한다.
         self.client.timeout = 50
-        self.cookie = cookie or self.default_cookie
+        if cookie:
+            self.cookie = cookie
+        else:
+            self.cookie = self.default_cookie
+            self._cookie_set = False
         self.bearer = bearer or os.environ.get("LEZHIN_BEARER", None)
         self.user_int_id = user_int_id
 
@@ -172,10 +176,10 @@ class LezhinComicsScraper(Scraper[str]):
                 if location.startswith("/404"):
                     raise  # InvalidWebtoonIdError로 넘어가게 함.
                 elif location.startswith("/ko/content-mode"):
-                    if self.cookie == self.default_cookie or self.cookie is None:
-                        raise RatingError("Adult webtoon is not available since you don't set cookie. Check docs to how to download.") from exc
-                    else:
+                    if self._cookie_set:
                         raise RatingError("The account is not adult authenticated. Thus can not download adult webtoons.") from exc
+                    else:
+                        raise RatingError("Adult webtoon is not available since you don't set cookie. Check docs to how to download.") from exc
                 else:
                     raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
 

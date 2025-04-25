@@ -63,7 +63,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self.raw_webtoon_info = webtoon_json_info
 
         # 심의 확인
-        if not self.cookie and webtoon_json_info["age"]["type"] == "RATE_18":
+        if not self._cookie_set and webtoon_json_info["age"]["type"] == "RATE_18":
             raise RatingError(f"In order to download adult webtoon {self.title}, you need valid cookie. Refer to docs to get additional info.")
 
     @async_reload_manager
