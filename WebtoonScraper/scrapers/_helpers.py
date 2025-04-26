@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
+from WebtoonScraper.exceptions import AuthenticationError
 import filetype
 from filetype.types import IMAGE
 
@@ -197,6 +198,21 @@ class EpisodeRange:
         self = cls()
         self.apply_string(episode_range, inclusive)
         return self
+
+
+class BearerMixin:
+    @property
+    def bearer(self) -> str | None:
+        return self._bearer
+
+    @bearer.setter
+    def bearer(self, value: str | None) -> None:
+        if value is not None and value and (not value.startswith("Bearer") or value == "Bearer ..."):
+            raise AuthenticationError("Invalid bearer. Please provide valid bearer.")
+        self._bearer = value
+        if value is not None:
+            self.headers.update({"Authorization": value})  # type: ignore
+            self.json_headers.update({"Authorization": value})  # type: ignore
 
 
 # code from https://discuss.python.org/t/boundedtaskgroup-to-control-parallelism/27171, with small variation

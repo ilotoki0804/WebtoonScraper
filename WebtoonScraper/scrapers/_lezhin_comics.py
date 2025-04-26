@@ -18,11 +18,11 @@ from ..exceptions import (
     UseFetchEpisode,
     WebtoonIdError,
 )
-from ._helpers import boolean_option
+from ._helpers import BearerMixin, boolean_option
 from ._scraper import Scraper, async_reload_manager
 
 
-class LezhinComicsScraper(Scraper[str]):
+class LezhinComicsScraper(BearerMixin, Scraper[str]):
     """Scrape webtoons from Lezhin Comics.
 
     ## 추가적인 속성(attribute) 설명
@@ -338,20 +338,6 @@ class LezhinComicsScraper(Scraper[str]):
         return image_urls
 
     # MARK: PROPERTIES
-
-    @property
-    def bearer(self) -> str | None:
-        return self._bearer
-
-    @bearer.setter
-    def bearer(self, value: str | None) -> None:
-        """구현상의 이유로 header는 bearer보다 더 먼저 구현되어야 합니다."""
-        if value is not None and value and (not value.startswith("Bearer") or value == "Bearer ..."):
-            raise AuthenticationError("Invalid bearer. Please provide valid bearer.")
-        self._bearer = value
-        if value is not None:
-            self.headers.update({"Authorization": value})
-            self.json_headers["authorization"] = value
 
     @property
     def default_cookie(self) -> str:
