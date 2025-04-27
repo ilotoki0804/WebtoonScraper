@@ -35,14 +35,15 @@ class WebtoonIdError(WebtoonScraperError):
     @classmethod
     @contextmanager
     def redirect_error(cls, scraper: _Scraper, rating_notice=False, error_type: type[BaseException] | tuple[type[BaseException], ...] = HTTPStatusError):
-        error = None
         try:
-            try:
-                yield
-            except* error_type as exc:
-                error = exc
-        except error_type as exc:
+            yield
+        except ExceptionGroup as exc:
+            # 마지막 exception을 오류로 사용
+            error = exc.exceptions[-1]
+        except Exception as exc:
             error = exc
+        else:
+            error = None
 
         if error:
             if isinstance(error, HTTPStatusError):
