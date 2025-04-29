@@ -248,9 +248,18 @@ def async_reload_manager(f):
     return wrapper
 
 
-def shorten(text: str):
-    shortened = textwrap.shorten(text, width=15, placeholder="...")
-    return f"'{shortened}'"
+def shorten(string: str, width: int = 30, *, ellipsis: str = "...", quote: bool = False):
+    if quote:
+        width -= 2
+    if len(string) <= width:
+        if quote:
+            string = f"'{string}'"
+        return string
+    else:
+        string = string[:width - len(ellipsis)] + ellipsis
+        if quote:
+            string = f"'{string}'"
+        return string
 
 
 def boolean_option(value: str) -> bool:
