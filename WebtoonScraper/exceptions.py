@@ -46,16 +46,18 @@ class WebtoonIdError(WebtoonScraperError):
             error = None
 
         if error:
-            if isinstance(error, HTTPStatusError):
+            if isinstance(error, HTTPStatusError) and (HTTPStatusError is error_type or (isinstance(error_type, tuple) and HTTPStatusError in error_type)):
                 response = error.response
                 reason = response.reason_phrase
 
                 if response.has_redirect_location:
-                    reason += f" to {response.url}"
+                    reason += f" to {response.headers['Location']!r}"
 
                 additional = f" (HTTP {error.response.status_code}{' ' * bool(reason)}{reason})"
-            else:
+            elif isinstance(error, error_type):
                 additional = ""
+            else:
+                raise error
 
             raise cls.from_webtoon_id(
                 webtoon_id=scraper.webtoon_id,
