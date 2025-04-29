@@ -6,7 +6,8 @@ import json
 import textwrap
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, NamedTuple, Self
+from collections.abc import Callable
 
 from WebtoonScraper.exceptions import AuthenticationError
 import filetype
@@ -27,8 +28,8 @@ class ExtraInfoScraper:
         scraper.register_callback("download_ended", self.finalizer)
 
     def unregister(self, scraper: Scraper) -> None:
-        scraper.unregister_callback("download_started", self.initializer, "sync")
-        scraper.unregister_callback("download_ended", self.finalizer, "sync")
+        scraper.unregister_callback("download_started", self.initializer)
+        scraper.unregister_callback("download_ended", self.finalizer)
 
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
@@ -198,6 +199,13 @@ class EpisodeRange:
         self = cls()
         self.apply_string(episode_range, inclusive)
         return self
+
+
+class Callback(NamedTuple):
+    function: Callable
+    is_async: bool
+    replace_default: bool
+    use_task: bool | None = None
 
 
 class BearerMixin:
