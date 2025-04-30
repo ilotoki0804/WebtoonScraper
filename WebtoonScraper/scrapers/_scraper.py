@@ -543,7 +543,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     self.progress.update(task_id, description=description)
                 else:
                     if episode_no is not None:
-                        description = f"[{episode_no:02d}/{len(self.episode_titles):02d}] {description}"
+                        description = f"[{episode_no + 1:02d}/{len(self.episode_titles):02d}] {description}"
                     logger.info(description)
 
             case "description", _:
