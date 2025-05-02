@@ -355,6 +355,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             ...
             ```
         """
+        if not self._cookie_set:
+            logger.debug("Cookie is not set")
+        if not getattr(self, "bearer", True):  # bearer가 있는데 None인 경우
+            logger.debug("Bearer is not set")
+
         async with self._context_message("setup"):
             await self.fetch_all()
 
