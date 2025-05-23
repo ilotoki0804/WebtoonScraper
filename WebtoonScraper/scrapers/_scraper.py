@@ -554,8 +554,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         description = f"{_shorten(episode_title)} download completed"
 
                 if self.use_progress_bar:
-                    task_id = context["task_id"]
-                    self.progress.update(task_id, description=description)
+                    self.progress.update(self.progress_task_id, description=description)
                 else:
                     if episode_no is not None:
                         description = f"[{episode_no + 1:02d}/{len(self.episode_titles):02d}] {description}"
@@ -697,28 +696,25 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.episode_dir_names: list[str | None] = [None] * total_episodes
         if self.use_progress_bar:
             task = self.progress.add_task("Setting up...", total=total_episodes)
+            self.progress_task_id = task
 
         try:
             for episode_no in range(total_episodes):
-                context = dict(
-                    episode_no=episode_no,
-                )
                 if self.use_progress_bar:
                     self.progress.advance(task)
-                    context.update(task_id=task)
 
                 # download_range는 1-based indexing이니 조정이 필요함
                 if episode_no in self.skip_download:
-                    await self.async_callback("download_skipped", by_skip_download=True, **context)
+                    await self.async_callback("download_skipped", by_skip_download=True)
                     self.download_status[episode_no] = "skipped_by_skip_download"
                     continue
                 if download_range is not None and episode_no + 1 not in download_range:
-                    await self.async_callback("download_skipped", by_range=True, **context)
+                    await self.async_callback("download_skipped", by_range=True)
                     self.download_status[episode_no] = "skipped_by_range"
                     continue
                 if self._download_status == "canceling":
                     raise KeyboardInterrupt
-                await self._download_episode(episode_no, webtoon_directory, context)
+                await self._download_episode(episode_no, webtoon_directory)
         finally:
             if self.use_progress_bar:
                 self.progress.remove_task(task)
@@ -727,7 +723,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 else:
                     self.progress.stop()
 
-    async def _download_episode(self, episode_no: int, webtoon_directory: Path, context: dict) -> None:
+    async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
+        context = dict(episode_no=episode_no)
         episode_title = self.episode_titles[episode_no]
         if episode_title is None:
             self.download_status[episode_no] = "not_downloadable"
