@@ -322,7 +322,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         image_urls: list[tuple[str, str]] = []
         episode_info = images_data["data"]["extra"]["episode"]
         updated_at = episode_info["updatedAt"]
-        for image_url_data in episode_info["scrollsInfo"]:
+        # 페이지형 만화는 pagesInfo에 데이터가 있음
+        for image_url_data in episode_info.get("scrollsInfo") or episode_info.get("pagesInfo") or []:
             # .replace("~", "%7E")
             image_url = (
                 f"https://rcdn.lezhin.com/v2{image_url_data['path']}"
