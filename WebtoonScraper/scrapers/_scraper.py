@@ -206,6 +206,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
         self.skip_thumbnail_download: bool = False
+        self.previous_status_to_skip: list[DownloadStatus] = []
 
         # data attributes
         self.author: str | None = None  # 스크래퍼들이 모두 author 필드를 구현하면 제거하기
@@ -343,6 +344,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     exc.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
+    def _apply_skip_previously_failed(self) -> None:
+        if to_skip := self.previous_status_to_skip:
+            prev_episode_ids = self._old_information.get("episode_ids", [])
+            download_status = self._old_information.get("download_status", [])
+            id_status = dict(zip(prev_episode_ids, download_status, strict=True))
+            self.skip_download.extend(i for i, episode_id in enumerate(self.episode_ids) if id_status.get(episode_id) in to_skip)
+
     async def async_download_webtoon(self, download_range: RangeType = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
 
@@ -368,6 +376,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._load_snapshot(webtoon_directory)
         self._load_information(webtoon_directory)
         thumbnail_task = await self._download_thumbnail(webtoon_directory)
+
+        self._apply_skip_previously_failed()
 
         try:
             if self._download_status != "nothing":

@@ -180,6 +180,12 @@ download_subparser.add_argument(
     "--episode-dir-name",
     help="Customize episode directory name.",
 )
+download_subparser.add_argument(
+    "--skip-status",
+    help="Previous status to skip. You can specify multiple values separated by comma.",
+    type=lambda value: [item.strip() for item in value.split(",")],
+    default=(),
+)
 
 
 def _register(platform_name: str, scraper=None):
@@ -278,6 +284,7 @@ async def parse_download(args: argparse.Namespace) -> None:
             scraper.thread_number = args.thread_number  # type: ignore
 
         scraper.information_to_exclude = args.excluding
+        scraper.previous_status_to_skip = args.previous_status_to_skip
         await scraper.async_download_webtoon(args.range)
 
 
