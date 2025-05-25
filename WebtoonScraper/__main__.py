@@ -186,6 +186,11 @@ download_subparser.add_argument(
     type=lambda value: [item.strip() for item in value.split(",")],
     default=(),
 )
+download_subparser.add_argument(
+    "--ignore-error",
+    help="Ignore errors on batch download.",
+    action="store_true",
+)
 
 
 def _register(platform_name: str, scraper=None):
@@ -250,42 +255,49 @@ def setup_instance(
 
 async def parse_download(args: argparse.Namespace) -> None:
     for webtoon_id in args.webtoon_ids:
-        scraper = setup_instance(
-            webtoon_id,
-            args.platform,
-            cookie=args.cookie,
-            download_directory=args.base_directory,
-            options=dict(args.option or {}),
-            existing_episode_policy=args.existing_episode,
-        )
+        try:
+            scraper = setup_instance(
+                webtoon_id,
+                args.platform,
+                cookie=args.cookie,
+                download_directory=args.base_directory,
+                options=dict(args.option or {}),
+                existing_episode_policy=args.existing_episode,
+            )
 
-        if args.list_episodes:
-            await scraper.fetch_all()
-            table = Table(show_header=True, header_style="bold blue", box=None)
-            table.add_column("Episode number [dim](ID)[/dim]", width=12)
-            table.add_column("Episode Title", style="bold")
-            for i, (episode_id, episode_title) in enumerate(zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1):
-                table.add_row(
-                    f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
-                    str(episode_title),
-                )
-            console.print(table)
-            return
+            if args.list_episodes:
+                await scraper.fetch_all()
+                table = Table(show_header=True, header_style="bold blue", box=None)
+                table.add_column("Episode number [dim](ID)[/dim]", width=12)
+                table.add_column("Episode Title", style="bold")
+                for i, (episode_id, episode_title) in enumerate(zip(scraper.episode_ids, scraper.episode_titles, strict=True), 1):
+                    table.add_row(
+                        f"[red][bold]{i:04d}[/bold][/red] [dim]({episode_id})[/dim]",
+                        str(episode_title),
+                    )
+                console.print(table)
+                return
 
-        if args.no_progress_bar:
-            scraper.use_progress_bar = False
+            if args.no_progress_bar:
+                scraper.use_progress_bar = False
 
-        if args.webtoon_dir_name:
-            scraper._webtoon_directory_format = args.webtoon_dir_name
-        if args.episode_dir_name:
-            scraper._episode_directory_format = args.episode_dir_name
+            if args.webtoon_dir_name:
+                scraper._webtoon_directory_format = args.webtoon_dir_name
+            if args.episode_dir_name:
+                scraper._episode_directory_format = args.episode_dir_name
 
-        if hasattr(scraper, "thread_number"):
-            scraper.thread_number = args.thread_number  # type: ignore
+            if hasattr(scraper, "thread_number"):
+                scraper.thread_number = args.thread_number  # type: ignore
 
-        scraper.information_to_exclude = args.excluding
-        scraper.previous_status_to_skip = args.previous_status_to_skip
-        await scraper.async_download_webtoon(args.range)
+            scraper.information_to_exclude = args.excluding
+            scraper.previous_status_to_skip = args.previous_status_to_skip
+            await scraper.async_download_webtoon(args.range)
+        except Exception as exc:
+            if args.ignore_error:
+                logger.error(f"Error occurred while downloading {webtoon_id}", exc_info=exc)
+                continue
+            else:
+                raise
 
 
 def main(argv=None, *, propagate_keyboard_interrupt: bool = False) -> Literal[0, 1]:
