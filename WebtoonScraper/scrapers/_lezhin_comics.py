@@ -18,7 +18,7 @@ from ..exceptions import (
     UseFetchEpisode,
     WebtoonIdError,
 )
-from ._helpers import BearerMixin, boolean_option
+from ._helpers import BearerMixin
 from ._scraper import Scraper, async_reload_manager
 
 
@@ -350,18 +350,18 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     def _from_string(cls, string: str, /, **kwargs):
         return cls(string, **kwargs)
 
-    def _apply_option(self, option: str, value: str) -> None:
+    def _apply_option(self, option: str, value: str, boolean_value: bool) -> None:
         match option:
             case "unshuffle":
-                self.unshuffle = boolean_option(value)
+                self.unshuffle = boolean_value
             case "delete-shuffled":
-                self.delete_shuffled = boolean_option(value)
+                self.delete_shuffled = boolean_value
             case "download-paid":
-                self.download_paid_episode = boolean_option(value)
+                self.download_paid_episode = boolean_value
             case "bearer":
                 self.bearer = value.strip()
             case "open-free-episode":
-                self.open_free_episode = boolean_option(value)
+                self.open_free_episode = boolean_value
             case "thread-number":
                 if self.thread_number:
                     logger.warning(f"Thread number has already been set as {self.thread_number}, but thread_number option overriding it to {value!r}.")
@@ -370,7 +370,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 else:
                     self.thread_number = int(value.strip())
             case _:
-                super()._apply_option(option, value)
+                super()._apply_option(option, value, boolean_value)
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> str | tuple[str, str] | None:

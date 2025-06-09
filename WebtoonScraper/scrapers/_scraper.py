@@ -45,6 +45,7 @@ from ._helpers import (
     EpisodeRange,
     ExtraInfoScraper,
     async_reload_manager,
+    boolean_option,
     infer_filetype,
 )
 from ._helpers import shorten as _shorten
@@ -685,9 +686,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def _apply_options(self, options: dict[str, str], /) -> None:
         if options:
             for option, value in options.items():
-                self._apply_option(option.strip().lower().replace("_", "-"), value)
+                self._apply_option(option.strip().lower().replace("_", "-"), value, boolean_option(value))
 
-    def _apply_option(self, option: str, value: str) -> None:
+    def _apply_option(self, option: str, value: str, boolean_value: bool) -> None:
         logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
 
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:

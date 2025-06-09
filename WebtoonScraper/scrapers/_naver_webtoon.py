@@ -228,16 +228,16 @@ class NaverWebtoonScraper(Scraper[int]):
         assert search_result is not None
         self.author_comments[episode_no] = json.loads(search_result.group("author_comments_raw"))
 
-    def _apply_option(self, option: str, value: str) -> None:
+    def _apply_option(self, option: str, value: str, boolean_value: bool) -> None:
         match option:
             case "download-comment" | "download-comments":
-                self.download_comments = boolean_option(value)
+                self.download_comments = boolean_value
             case "download-all-comment" | "download-all-comments":
-                boolean_value = boolean_option(value)
+                boolean_value = boolean_value
                 if boolean_value:
                     self.download_comments = True
                     self.top_comments_only = False
             case "download-audio" | "download-audios":
-                self.download_audio = boolean_option(value)
+                self.download_audio = boolean_value
             case _:
-                super()._apply_option(option, value)
+                super()._apply_option(option, value, boolean_value)
