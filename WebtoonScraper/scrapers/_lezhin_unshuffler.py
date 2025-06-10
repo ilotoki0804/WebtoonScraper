@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from io import BytesIO
 import json
 import os
 import shutil
@@ -114,8 +115,7 @@ def unshuffle_episode(
     shutil.rmtree(target_episode_directory, ignore_errors=True)
     target_episode_directory.mkdir()
 
-    random_numbers = generate_random(episode_id_int)
-    image_order = calculate_image_order(random_numbers)
+    image_order = get_image_order(episode_id_int)
     for image_name in os.listdir(source_episode_directory):
         source_image_path = source_episode_directory / image_name
         target_image_path = target_episode_directory / image_name
@@ -124,7 +124,13 @@ def unshuffle_episode(
     return source_episode_directory.name
 
 
-def generate_random(seed: int) -> list[int]:
+def get_image_order(episode_id_int: int) -> list[int]:
+    """Get the image order for a given episode ID."""
+    random_numbers = _generate_random(episode_id_int)
+    return _calculate_image_order(random_numbers)
+
+
+def _generate_random(seed: int) -> list[int]:
     """Imitate Lezhin's pseudorandom generator. The result is always same if given seed is same."""
     results: list[int] = []
     state = seed
@@ -137,7 +143,7 @@ def generate_random(seed: int) -> list[int]:
     return results
 
 
-def calculate_image_order(random_numbers: list[int]) -> list[int]:
+def _calculate_image_order(random_numbers: list[int]) -> list[int]:
     image_order = list(range(25))
     for i in range(25):
         shuffle_index = random_numbers[i]
@@ -173,3 +179,26 @@ def unshuffle_image_and_save(base_image_path: Path, alt_image_path: Path, image_
             assembled_image.save(alt_image_path, optimize=True, quality=95)
         else:
             assembled_image.save(alt_image_path)
+
+
+def unshuffle_from_image(image_bytes: bytes, image_order: list[int], save_to: Path, file_extension: str) -> None:
+    # TODO: 봄툰 코드 참고해서 코드 단순화하기
+    with Image.open(BytesIO(image_bytes)) as image:
+        image_x, image_y = image.size
+        margin = image_y % 5
+        image_y -= margin
+        cropped_images: list[Image.Image] = [None] * 25  # type: ignore # 이 None은 후에 image로 덮어씌워진다.
+        for index_x, left, right in ((i, i * image_x // 5, (i + 1) * image_x // 5) for i in range(5)):
+            for index_y, upper, lower in ((i, i * image_y // 5, (i + 1) * image_y // 5) for i in range(5)):
+                cropped_image: Image.Image = image.crop((left, upper, right, lower))
+                image_index = index_x + index_y * 5
+                cropped_images[image_order.index(image_index)] = cropped_image
+
+        assembled_image = image
+        for image_index, cropped_image in enumerate(cropped_images):
+            index_y, index_x = divmod(image_index, 5)
+            assembled_image.paste(cropped_image, (index_x * image_x // 5, index_y * image_y // 5))
+        if file_extension in (".jpg", ".jpeg"):
+            assembled_image.save(save_to, optimize=True, quality=95)
+        else:
+            assembled_image.save(save_to)

@@ -5,6 +5,7 @@ import os
 import random
 import re
 import shutil
+import typing
 import urllib.parse
 from contextlib import suppress
 from pathlib import Path
@@ -21,18 +22,17 @@ from ..exceptions import (
 from ._helpers import BearerMixin
 from ._scraper import Scraper, async_reload_manager
 
+if not typing.TYPE_CHECKING:
+    unshuffle = get_image_order = None
+
+
+def _load_unshuffler():
+    global unshuffle, get_image_order
+    if unshuffle is None:
+        from ._lezhin_unshuffler import unshuffle_from_image as unshuffle, get_image_order
+
 
 class LezhinComicsScraper(BearerMixin, Scraper[str]):
-    """Scrape webtoons from Lezhin Comics.
-
-    ## 추가적인 속성(attribute) 설명
-        self.do_not_unshuffle (bool): True일 경우 unshuffle을 하지 **않습니다.** 기본값은 False입니다.
-        self.delete_shuffled_file (bool): unshuffling이 끝난 후 unshuffle된 파일을 제거합니다. 기본값은 False입니다.
-        self.get_paid_episode (bool): True일 경우 자신이 소장하고 있는 유료 회차도 다운로드받습니다.
-            True로 설정할 경우 다량의 경고 메시지가 나올 수 있으나 무시하시면 됩니다. 기본값은 False입니다.
-        self.is_fhd_downloaded (bool | None): None이면 HD 다운로드가 된 에피소드가 있어도 `HD`가 붙지 않습니다.
-    """
-
     PLATFORM = "lezhin_comics"
     download_interval = 0
     information_vars = (
@@ -122,6 +122,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         # 레진코믹스의 설정들
         self.unshuffle: bool = True
         self.delete_shuffled: bool = False
+        self.unshuffle_immediately: bool = False
         self.download_paid_episode: bool = True
         self.download_unusable_episode: bool = False
         # None일 경우 상황에 따라 적절한 값으로 변경될 수 있는 값들
@@ -150,7 +151,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         else:
             identifier += f"{self.language_code}, {self.webtoon_id}"
 
-        if self.is_shuffled:
+        if self.is_shuffled and not self.unshuffle_immediately:
             identifier += ", shuffled"
 
         if self.is_fhd_downloaded:
@@ -270,7 +271,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
             )
         )
 
-    async def get_episode_image_urls(self, episode_no, retry: int = 3) -> list[tuple[str, str]] | None:
+    async def get_episode_image_urls(self, episode_no: int, retry: int = 3) -> list[tuple[int, str, str]] | None:
         if not self.availability[episode_no]:
             return None
 
@@ -319,7 +320,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
             else:
                 break
 
-        image_urls: list[tuple[str, str]] = []
+        image_urls: list[tuple[int, str, str]] = []
         episode_info = images_data["data"]["extra"]["episode"]
         updated_at = episode_info["updatedAt"]
         # 페이지형 만화는 pagesInfo에 데이터가 있음
@@ -330,11 +331,14 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 f".webp?purchased={purchased}&q={30}&updated={updated_at}"
                 f"&Policy={policy}&Signature={signature}&Key-Pair-Id={key_pair_id}"
             )
-            media_type = image_url_data["mediaType"]
+            media_type: str = image_url_data["mediaType"]
             # 경고 이미지 무시 (https://ccdn.lezhin.com/v2/comics/notice_contents/ko_warn_white.webp)
             if "notice_contents" in image_url:
                 continue
-            image_urls.append((image_url, media_type))
+            image_urls.append((episode_no, image_url, media_type))
+
+        if self.is_shuffled and self.unshuffle_immediately:
+            _load_unshuffler()
 
         return image_urls
 
@@ -356,6 +360,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 self.unshuffle = self._as_boolean(value)
             case "delete-shuffled":
                 self.delete_shuffled = self._as_boolean(value)
+            case "unshuffle-immediately":
+                self.unshuffle_immediately = self._as_boolean(value)
             case "download-paid":
                 self.download_paid_episode = self._as_boolean(value)
             case "bearer":
@@ -380,7 +386,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
 
     async def _download_image(
         self,
-        url_tuple: tuple[str, str],
+        url_tuple: tuple[int, str, str],
         /,
         directory: Path,
         name: str,
@@ -388,12 +394,26 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         if isinstance(url_tuple, str):
             return await super()._download_image(url_tuple, directory, name)
 
-        url, media_type = url_tuple
+        episode_no, url, media_type = url_tuple
         if media_type not in ("image/jpeg", "image/gif", "image/png"):
             logger.warning(f"Unknown media type: {media_type}")
         if media_type.startswith("image"):
             file_extension = media_type.removeprefix("image/")  # TODO: 이거 없이도 잘 작동하는지 확인하고 아니라면 변경하기
-        return await super()._download_image(url, directory, name)
+
+        if not self.unshuffle_immediately:
+            return await super()._download_image(url, directory, name)
+
+        try:
+            response = await self.client.get(url)
+            image_raw: bytes = response.content
+            image_path = directory / self._safe_name(f"{name}.{file_extension}")
+            episode_id_int = self.episode_int_ids[episode_no]
+            image_order = get_image_order(episode_id_int)
+            unshuffle(image_raw, image_order, image_path, file_extension)
+            return image_path
+        except Exception as exc:
+            exc.add_note(f"Exception occurred when downloading image from {url!r}")
+            raise
 
     def _parse_episode_information(self, episode_information_raw: list[dict]) -> None:
         get_paid_episode = self.download_paid_episode
@@ -437,8 +457,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         self.updated_dates = updated_dates
 
     def _post_process_directory(self, base_webtoon_directory: Path) -> Path:
-        if not self.is_shuffled or not self.unshuffle:
-            if self.is_shuffled:
+        if not self.is_shuffled or not self.unshuffle or self.unshuffle_immediately:
+            if self.is_shuffled and not self.unshuffle_immediately:
                 logger.warning("This webtoon is shuffled, but since self.unshuffle is set to True, webtoon won't be unshuffled.")
 
             self._shuffled_directory = base_webtoon_directory
