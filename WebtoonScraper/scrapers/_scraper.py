@@ -45,7 +45,6 @@ from ._helpers import (
     EpisodeRange,
     ExtraInfoScraper,
     async_reload_manager,
-    boolean_option,
     infer_filetype,
 )
 from ._helpers import shorten as _shorten
@@ -686,10 +685,22 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def _apply_options(self, options: dict[str, str], /) -> None:
         if options:
             for option, value in options.items():
-                self._apply_option(option.strip().lower().replace("_", "-"), value, boolean_option(value))
+                self._apply_option(option.strip().lower().replace("_", "-"), value)
 
-    def _apply_option(self, option: str, value: str, boolean_value: bool) -> None:
+    def _apply_option(self, option: str, value: str) -> None:
         logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
+
+    @staticmethod
+    def _as_boolean(value: str) -> bool:
+        # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
+        # https://www.sqlite.org/pragma.html
+        match value.strip().lower():
+            case "1" | "yes" | "true" | "on":
+                return True
+            case "0" | "no" | "false" | "off":
+                return False
+            case other:
+                raise ValueError(f"{other!r} can't be represented as boolean.")
 
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)
@@ -930,9 +941,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             response = await self.client.get(url)
             image_raw: bytes = response.content
             file_extension = infer_filetype(response.headers.get("content-type"), image_raw)
-
-            # NOTE: response.aiter_bytes()를 사용한 방법이 더 효율적일 수 있음.
-            # 아닐 수도 있고 현재도 딱히 문제는 없어서 그대로 둠.
             image_path = directory / self._safe_name(f"{name}.{file_extension}")
             image_path.write_bytes(image_raw)
             return image_path

@@ -270,18 +270,6 @@ def shorten(string: str, width: int = 30, *, ellipsis: str = "...", quote: bool 
         return string
 
 
-def boolean_option(value: str) -> bool:
-    # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
-    # https://www.sqlite.org/pragma.html
-    match value.strip().lower():
-        case "1" | "yes" | "true" | "on":
-            return True
-        case "0" | "no" | "false" | "off":
-            return False
-        case other:
-            raise ValueError(f"{other!r} can't be represented as boolean.")
-
-
 def infer_filetype(content_type: str | None, image_raw: bytes | None) -> str:
     if content_type:
         # content-type 헤더에서 추론
