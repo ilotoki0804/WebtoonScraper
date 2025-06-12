@@ -122,7 +122,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         # 레진코믹스의 설정들
         self.unshuffle: bool = True
         self.delete_shuffled: bool = False
-        self.unshuffle_immediately: bool = False
+        self.unshuffle_immediately: bool = True
         self.download_paid_episode: bool = True
         self.download_unusable_episode: bool = False
         # None일 경우 상황에 따라 적절한 값으로 변경될 수 있는 값들
