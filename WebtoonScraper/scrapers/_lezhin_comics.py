@@ -143,6 +143,11 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         with suppress(AuthenticationError):
             await self.fetch_user_information(reload=reload)
 
+    async def _download_episodes(self, download_range, webtoon_directory: Path) -> None:
+        if self.is_shuffled and self.unshuffle_immediately:
+            _load_unshuffler()
+        return await super()._download_episodes(download_range, webtoon_directory)
+
     def _get_identifier(self) -> str:
         identifier = ""
 
@@ -337,9 +342,6 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 continue
             image_urls.append((episode_no, image_url, media_type))
 
-        if self.is_shuffled and self.unshuffle_immediately:
-            _load_unshuffler()
-
         return image_urls
 
     # MARK: PROPERTIES
@@ -400,7 +402,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         if media_type.startswith("image"):
             file_extension = media_type.removeprefix("image/")  # TODO: 이거 없이도 잘 작동하는지 확인하고 아니라면 변경하기
 
-        if not self.unshuffle_immediately:
+        if not self.is_shuffled or not self.unshuffle_immediately:
             return await super()._download_image(url, directory, name)
 
         try:
