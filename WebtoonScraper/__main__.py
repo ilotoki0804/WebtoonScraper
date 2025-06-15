@@ -187,7 +187,7 @@ download_subparser.add_argument(
     default=(),
 )
 download_subparser.add_argument(
-    "--ignore-error",
+    "--suppress-error-on-batch",
     help="Ignore errors on batch download.",
     action="store_true",
 )
@@ -293,7 +293,7 @@ async def parse_download(args: argparse.Namespace) -> None:
             scraper.previous_status_to_skip = args.previous_status_to_skip
             await scraper.async_download_webtoon(args.range)
         except Exception as exc:
-            if args.ignore_error:
+            if args.suppress_error_on_batch:
                 logger.error(f"Error occurred while downloading {webtoon_id}", exc_info=exc)
                 continue
             else:
