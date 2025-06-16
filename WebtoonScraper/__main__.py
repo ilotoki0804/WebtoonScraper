@@ -182,10 +182,13 @@ download_subparser.add_argument(
 )
 download_subparser.add_argument(
     "--skip-status",
-    help="Previous status to skip. You can specify multiple values separated by comma.",
-    type=lambda value: [item.strip() for item in value.split(",")],
+    help="Previous episode status to skip. Specify multiple values separated by comma.",
+    type=lambda value: [stripped for item in value.split(",") if (stripped := item.strip())],
     default=(),
 )
+# 기본적으로 WebtoonScraper는 다운로드에 실패하더라도 원칙적으로는 오류를 발생시키지 않아야 함.
+# 오류가 발생한다는 건 기본적으로 스크래퍼가 잘못되었거나, 웹툰 플랫폼이 변경되었거나, 기타 오류가 발생했음을 의미함.
+# 따라서 이를 무시하고 계속 다운로드를 진행하는 것을 기본값으로 설정하는 것은 더 깊게 고민해봐야 할 문제임.
 download_subparser.add_argument(
     "--suppress-error-on-batch",
     help="Ignore errors on batch download.",
