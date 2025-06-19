@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 import html
+from http.cookies import SimpleCookie
 import json
 import os
 import shutil
@@ -1051,6 +1052,15 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             return dict.fromkeys(auto_keys) | manual_keys
 
         return {f"{subcategory}/{key}": None for key in auto_keys} | {f"{subcategory}/{key}": value for key, value in manual_keys.items()}
+
+    @staticmethod
+    def _cookie_get(cookie: str | None, key: str) -> str | None:
+        if cookie is None:
+            return None
+        parsed = SimpleCookie(cookie)
+        result = parsed.get(key, None)
+        return result if result is None else result.value
+        # return {key: morsel.value for key, morsel in parsed.items()}
 
     async def _download_thumbnail(self, webtoon_directory: Path) -> None | asyncio.Task[Path]:
         if self.skip_thumbnail_download:

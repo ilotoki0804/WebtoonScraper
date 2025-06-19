@@ -211,11 +211,11 @@ class NaverWebtoonScraper(Scraper[int]):
                 self.base_url = "https://comic.naver.com/challenge"
 
     def _set_cookie(self, value: str) -> None:
-        matched = re.search(r"XSRF-TOKEN=([^;]+);", value)
-        if not matched:
+        token = self._cookie_get(value, "XSRF-TOKEN")
+        if not token:
             raise ValueError("Cookie does not contain required data.")
-        self.headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
-        self.json_headers.update({"Cookie": value, "X-Xsrf-Token": matched[1]})
+        self.headers.update({"Cookie": value, "X-Xsrf-Token": token})
+        self.json_headers.update({"Cookie": value, "X-Xsrf-Token": token})
 
     def _gather_author_comment(self, episode_no: int, response: httpc.Response):
         script = response.single("body > script", remain_ok=True)

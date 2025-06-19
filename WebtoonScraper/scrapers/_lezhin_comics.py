@@ -363,6 +363,13 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
 
     # MARK: PRIVATE METHODS
 
+    def _set_cookie(self, value: str) -> None:
+        bearer = self._cookie_get(value, "_LZ_AT")
+        # _LZ_AT에서 직접 bearer를 추출함
+        if bearer is not None:
+            self.bearer = bearer
+        super()._set_cookie(value)
+
     @classmethod
     def _from_string(cls, string: str, /, **kwargs):
         return cls(string, **kwargs)
