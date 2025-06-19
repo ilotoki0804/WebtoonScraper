@@ -247,7 +247,8 @@ def async_reload_manager(f):
         if not hasattr(self, "_cache"):
             self._cache = {}
 
-        if reload or self._cache.get(f) is None:
+        result = self._cache.get(f)
+        if reload or result is None:
             result = await f(self, *args, reload=reload, **kwargs)
             self._cache[f] = result
         return result
