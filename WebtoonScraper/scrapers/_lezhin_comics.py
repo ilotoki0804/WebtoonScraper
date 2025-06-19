@@ -186,6 +186,17 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                         raise RatingError("The account is not adult authenticated. Thus can not download adult webtoons.") from exc
                     else:
                         raise RatingError("Adult webtoon is not available since you don't set cookie. Check docs to how to download.") from exc
+                elif location.startswith("/api/authentication/refresh-token"):
+                    res = await self.client.get(f"{self.base_url}{location}", raise_for_status=False)
+                    assert res.has_redirect_location
+                    new_location = res.headers["Location"]
+                    # https://www.lezhin.com/ko/logout?reason=TOKEN_EXPIRED
+                    if "/logout" in new_location:
+                        raise AuthenticationError("Cookie or bearer have been expired. Please update them.") from exc
+                    else:
+                        cookie_raw = "; ".join(f"{name}={value}" for name, value in res.cookies.items())
+                        logger.warning(f"Cookie and bearer have been refreshed. New cookie: {cookie_raw!r}")
+                        return await self.fetch_episode_information(reload=True)  # 다시 시도함.
                 else:
                     raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
 
