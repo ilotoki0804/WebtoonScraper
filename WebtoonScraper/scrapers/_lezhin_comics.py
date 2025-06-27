@@ -410,6 +410,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         /,
         directory: Path,
         name: str,
+        episode_no: int | None = None,  # TODO: 이 episode_no를 바탕으로 다른 정보들을 가져오기
     ) -> Path:
         if isinstance(url_tuple, str):
             return await super()._download_image(url_tuple, directory, name)

@@ -898,6 +898,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     url,
                     episode_directory,
                     f"{index:03d}",
+                    episode_no=episode_no,
                 )
                 group.create_task(download_task)
 
@@ -990,7 +991,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.warning(f"Unexpected type: {type(other).__name__} of {other!r}")
                 return other
 
-    async def _download_image(self, url: str, directory: Path, name: str) -> Path:  # TODO: episode_no를 받도록 하기
+    async def _download_image(self, url: str, directory: Path, name: str, episode_no: int | None = None) -> Path:
         try:
             response = await self.client.get(url)
             image_raw: bytes = response.content
