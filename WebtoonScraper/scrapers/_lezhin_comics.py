@@ -367,7 +367,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         bearer = self._cookie_get(value, "_LZ_AT")
         # _LZ_AT에서 직접 bearer를 추출함
         if bearer is not None:
-            self.bearer = bearer
+            self.bearer = f"Bearer {bearer}"
         super()._set_cookie(value)
 
     @classmethod
