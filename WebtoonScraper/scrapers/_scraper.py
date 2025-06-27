@@ -461,8 +461,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.callback(situation, **context)
         return tasks or None
 
-    def unregister_callback(self, trigger: str, func: Callable) -> None:
-        self._triggers[trigger][:] = (callback for callback in self._triggers[trigger] if callback.function is not func)
+    def unregister_callback(self, trigger: str, func_or_callback: Callable | Callback) -> None:
+        if isinstance(func_or_callback, Callback):
+            self._triggers[trigger].remove(func_or_callback)
+        else:
+            self._triggers[trigger][:] = (callback for callback in self._triggers[trigger] if callback.function is not func_or_callback)
 
     @overload
     def register_callback(self, trigger: str, func: CallableT, *, replace_default: bool = False) -> CallableT: ...
