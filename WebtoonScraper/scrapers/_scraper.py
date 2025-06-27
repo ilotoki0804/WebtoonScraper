@@ -751,6 +751,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             short_ep_title = _shorten(ep_title)
             msg_format = "The episode #{episode_no} '{short_ep_title}' is skipped {description}"
 
+        # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
+        # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
+        # 하고 오류가 발생함
+        context["short_ep_title"] = short_ep_title
+
         self.download_status[episode_no] = reason
 
         if debug:
@@ -762,7 +767,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 ),
                 description=description,
                 reason=reason,
-                short_ep_title=short_ep_title,
                 **context,
             )
         else:
@@ -774,13 +778,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 ),
                 description=description,
                 reason=reason,
-                short_ep_title=short_ep_title,
                 **context,
             )
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
-        context: dict = dict(episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
         episode_title = self.episode_titles[episode_no]
+        context: dict = dict(episode_no=episode_no, short_ep_title=episode_title and _shorten(episode_title))
         if episode_title is None:
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", debug=True, **context)
         now = datetime.now()
