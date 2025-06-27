@@ -746,15 +746,21 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
         if (ep_title := self.episode_titles[episode_no]) is None:
             short_ep_title = f"#{episode_no + 1}"
-            msg_format = "The episode #{episode_no} is skipped {description}"
+            msg_format = "The episode #{episode_no1} is skipped {description}"
         else:
             short_ep_title = _shorten(ep_title)
-            msg_format = "The episode #{episode_no} '{short_ep_title}' is skipped {description}"
+            msg_format = "The episode #{episode_no1} '{short_ep_title}' is skipped {description}"
 
         # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
         # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
         # 하고 오류가 발생함
-        context["short_ep_title"] = short_ep_title
+        context.update(
+            description=description,
+            reason=reason,
+            short_ep_title=short_ep_title,
+            episode_no=episode_no,
+            episode_no1=episode_no + 1,
+        )
 
         self.download_status[episode_no] = reason
 
@@ -765,8 +771,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     msg_format,
                     level="debug",
                 ),
-                description=description,
-                reason=reason,
                 **context,
             )
         else:
@@ -776,8 +780,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     msg_format,
                     progress_update="{short_ep_title} skipped",
                 ),
-                description=description,
-                reason=reason,
                 **context,
             )
 
