@@ -821,22 +821,21 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # 디렉토리가 존재하고 비어있지 않는지 확인
         if episode_at_snapshot == "directory" and self._get_snapshot_contents(episode_directory):
-            is_not_empty_directory = True
-            by_file = False
+            if self.existing_episode_policy == "raise":
+                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
+            elif self.existing_episode_policy == "skip":
+                return await self._episode_skipped("skipped_by_snapshot", "because of existing directory", by_file=False, **context)
+            else:
+                not_empty_dir = True
         elif episode_directory.is_dir() and os.listdir(episode_directory):
-            is_not_empty_directory = True
-            by_file = True
+            if self.existing_episode_policy == "raise":
+                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
+            elif self.existing_episode_policy == "skip":
+                return await self._episode_skipped("already_exist", "because of existing directory", by_file=True, **context)
+            else:
+                not_empty_dir = True
         else:
-            is_not_empty_directory = False
-
-        if is_not_empty_directory:
-            match self.existing_episode_policy:
-                case "skip":
-                    reason = "already_exist" if by_file else "skipped_by_snapshot"
-                    return await self._episode_skipped(reason, "because of existing directory", **context)
-
-                case "raise":
-                    raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
+            not_empty_dir = False
 
         # 다운로드 직전에 메시지를 보냄
         await self.async_callback("downloading", _crate_callback(progress_update="downloading {short_ep_title}"), **context)
@@ -873,7 +872,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             return
 
         # check integrity if specified
-        if is_not_empty_directory and self.existing_episode_policy == "hard_check":
+        if not_empty_dir and self.existing_episode_policy == "hard_check":
             if self._check_directory(episode_directory, image_urls):
                 with suppress(Exception):
                     episode_directory.rmdir()
