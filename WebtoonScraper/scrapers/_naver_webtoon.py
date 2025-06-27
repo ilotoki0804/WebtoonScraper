@@ -163,7 +163,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self._set_webtoon_type(webtoon_type)  # camelCase 웹툰 타입
         return self
 
-    async def _download_episode_images(self, episode_no: int, context: dict, image_urls: list[str], episode_directory: Path) -> None:
+    async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         if self.download_audio:
             audio_url = self.episode_audio_urls.get(episode_no)
             audio_name = f"{len(image_urls) + 1:03d}.mp3"
@@ -179,7 +179,7 @@ class NaverWebtoonScraper(Scraper[int]):
                     raise
                 else:
                     self.audio_names[episode_no] = audio_name
-        return await super()._download_episode_images(episode_no, context, image_urls, episode_directory)
+        return await super()._download_episode_images(episode_no, image_urls, episode_directory)
 
     @classmethod
     def _extract_webtoon_id(cls, url) -> tuple[str, int] | tuple[None, None]:
