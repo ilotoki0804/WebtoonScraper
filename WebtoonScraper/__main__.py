@@ -310,7 +310,7 @@ def main(argv=None, *, propagate_keyboard_interrupt: bool = False) -> Literal[0,
         try:
             return asyncio.run(async_main(argv))
         except KeyboardInterrupt:
-            logger.error("Aborted.")
+            logger.error("Aborted")
             return 1
 
 
@@ -359,7 +359,7 @@ async def async_main(argv=None) -> Literal[0, 1]:
                 case unknown_subparser:
                     raise NotImplementedError(f"{unknown_subparser} is not a valid command.")
         except KeyboardInterrupt:
-            logger.error("Aborted.")
+            logger.error("Aborted")
             return 1
         except SystemExit as exc:
             return exc.code  # type: ignore
