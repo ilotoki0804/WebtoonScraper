@@ -715,67 +715,74 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         try:
             for episode_no in range(total_episodes):
+                if self._download_status == "canceling":
+                    raise KeyboardInterrupt
+
                 if self.use_progress_bar:
                     self.progress.advance(task)
 
-                # download_range는 1-based indexing이니 조정이 필요함
                 if episode_no in self.skip_download:
-                    await self.async_callback(
-                        "download_skipped",
-                        _crate_callback(
-                            "The episode #{episode_no} '{short_ep_title}' is skipped because the episode is included in skip_download",
-                            level="debug",
-                        ),
-                        by_skip_download=True,
-                        episode_no=episode_no,
-                        short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"),
-                    )
-                    self.download_status[episode_no] = "skipped_by_skip_download"
+                    reason = "skipped_by_skip_download"
+                    description = "because the episode is included in skip_download"
+                    await self._episode_skipped(reason, description, episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
                     continue
+                # download_range는 1-based indexing이니 조정이 필요함
                 if download_range is not None and episode_no + 1 not in download_range:
-                    await self.async_callback(
-                        "download_skipped",
-                        _crate_callback(
-                            "The episode #{episode_no} '{short_ep_title}' is skipped because of the set range",
-                            level="debug",
-                        ),
-                        by_range=True,
-                        episode_no=episode_no,
-                        short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"),
-                    )
-                    self.download_status[episode_no] = "skipped_by_range"
+                    reason = "skipped_by_range"
+                    description = "because of the set range"
+                    await self._episode_skipped(reason, description, episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
                     continue
-                if self._download_status == "canceling":
-                    raise KeyboardInterrupt
+
                 await self._download_episode(episode_no, webtoon_directory)
         finally:
             if self.use_progress_bar:
                 self.progress.remove_task(task)
                 if self.progress.tasks:
-                    logger.warning("Progress is running. Cannot stop it.")
+                    logger.warning("Can't stop progress since it's in use.")
                 else:
                     self.progress.stop()
 
-    async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
-        skip_callback = lambda reason: _crate_callback(  # noqa: E731
-            "The episode #{episode_no} '{short_ep_title}' is skipped " + reason,
-            progress_update="{short_ep_title} skipped",
-        )
+    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, debug: bool = False, episode_no, **context):
+        """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
+        if (ep_title := self.episode_titles[episode_no]) is None:
+            short_ep_title = f"#{episode_no + 1}"
+            msg_format = "The episode #{episode_no} is skipped {description}"
+        else:
+            short_ep_title = _shorten(ep_title)
+            msg_format = "The episode #{episode_no} '{short_ep_title}' is skipped {description}"
 
+        self.download_status[episode_no] = reason
+
+        if debug:
+            await self.async_callback(
+                "download_skipped",
+                _crate_callback(
+                    msg_format,
+                    level="debug",
+                ),
+                description=description,
+                reason=reason,
+                short_ep_title=short_ep_title,
+                **context,
+            )
+        else:
+            await self.async_callback(
+                "download_skipped",
+                _crate_callback(
+                    msg_format,
+                    progress_update="{short_ep_title} skipped",
+                ),
+                description=description,
+                reason=reason,
+                short_ep_title=short_ep_title,
+                **context,
+            )
+
+    async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
         context: dict = dict(episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
         episode_title = self.episode_titles[episode_no]
         if episode_title is None:
-            self.download_status[episode_no] = "not_downloadable"
-            await self.async_callback(
-                "download_skipped",
-                _crate_callback(  # noqa: E731
-                    "The episode #{episode_no} '{short_ep_title}' is skipped because the episode has empty title",
-                    level="debug",
-                ),
-                by_empty_title=True,
-                **context
-            )
-            return
+            return await self._episode_skipped("not_downloadable", "because the episode has empty title", debug=True, **context)
         now = datetime.now()
         directory_name = self._safe_name(
             self._episode_directory_format.format(
@@ -799,17 +806,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         is_file_exists = episode_directory.is_file()
         is_file_exists_in_snapshot = episode_at_snapshot == "file"
         if is_file_exists or is_file_exists_in_snapshot:
+            context.update(is_file=is_file_exists, is_snapshot=is_file_exists_in_snapshot)
             if self.existing_episode_policy != "skip":
                 raise FileExistsError(f"A file named {episode_directory!r} exists on webtoon directory.")
-            self.download_status[episode_no] = "already_exist" if is_file_exists else "skipped_by_snapshot"
-            await self.async_callback(
-                "download_skipped",
-                skip_callback("because of existing file or the snapshot"),
-                is_file=is_file_exists,
-                is_snapshot=is_file_exists_in_snapshot,
-                **context,
-            )
-            return
+        if is_file_exists:
+            return await self._episode_skipped("already_exist", "because of existing file", **context)
+        elif is_file_exists_in_snapshot:
+            return await self._episode_skipped("skipped_by_snapshot", "because of existing file in the snapshot", **context)
 
         # 디렉토리가 존재하고 비어있지 않는지 확인
         if episode_at_snapshot == "directory" and self._get_snapshot_contents(episode_directory):
@@ -824,15 +827,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if is_not_empty_directory:
             match self.existing_episode_policy:
                 case "skip":
-                    self.download_status[episode_no] = "already_exist" if by_file else "skipped_by_snapshot"
-                    await self.async_callback(
-                        "download_skipped",
-                        skip_callback("because of existing directory"),
-                        is_file=by_file,
-                        is_snapshot=not by_file,
-                        **context,
-                    )
-                    return
+                    reason = "already_exist" if by_file else "skipped_by_snapshot"
+                    return await self._episode_skipped(reason, "because of existing directory", **context)
 
                 case "raise":
                     raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
@@ -843,7 +839,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         # fetch image urls
         time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
         try:
-            image_urls = await self.get_episode_image_urls(episode_no)
+            image_urls = await self.get_episode_image_urls(episode_no)  # TODO: Callback을 리턴할 경우 그 것을 failed의 메시지로 사용하는 것을 구현할 것
         # 기본적으로 get_episode_image_urls는 실패해서는 안 된다.
         # 그런 상황이 있을 경우 warning을 내부적으로 내보내며 None을 리턴해야 한다.
         # 따라서 다른 경우들과 달리 raise를 하는 것이다.
@@ -858,7 +854,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             self.download_status[episode_no] = "failed"
             await self.async_callback(
                 "download_failed",
-                skip_callback("because of existing directory"),
+                _crate_callback(
+                    "The episode #{episode_no} '{short_ep_title}' is failed {description}",
+                    progress_update="{short_ep_title} skipped",
+                    level="warning",
+                    log_with_progress=True,
+                ),
+                reason="gathering_images_failed",
+                description="because no images are found",
                 warning=True,  # todo
                 **context,
             )
@@ -869,9 +872,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if self._check_directory(episode_directory, image_urls):
                 with suppress(Exception):
                     episode_directory.rmdir()
-                self.download_status[episode_no] = "already_exist"
-                await self.async_callback("download_skipped", skip_callback("because of intact existing directory"), intact=True, **context)
-                return
+                return await self._episode_skipped("already_exist", "because of intact existing directory", intact=True, **context)
 
             shutil.rmtree(episode_directory)
             episode_directory.mkdir()
@@ -889,7 +890,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         # send done callback message
         self.download_status[episode_no] = "downloaded"
         await self.async_callback("download_completed", _crate_callback(progress_update="{short_ep_title} downloaded"), **context)
-        return
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
