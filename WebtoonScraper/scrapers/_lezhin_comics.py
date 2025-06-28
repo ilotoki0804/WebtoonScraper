@@ -116,7 +116,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         else:
             self.cookie = self.default_cookie
             self._cookie_set = False
-        self.bearer = bearer or os.environ.get("LEZHIN_BEARER", None)
+        self.bearer = bearer
         self.user_int_id = user_int_id
 
         # 레진코믹스의 설정들
@@ -192,10 +192,10 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                     new_location = res.headers["Location"]
                     # https://www.lezhin.com/ko/logout?reason=TOKEN_EXPIRED
                     if "/logout" in new_location:
-                        raise AuthenticationError("Cookie or bearer have been expired. Please update them.") from exc
+                        raise AuthenticationError("Cookie have been expired. Please update them.") from exc
                     else:
                         cookie_raw = "; ".join(f"{name}={value}" for name, value in res.cookies.items())
-                        logger.warning(f"Cookie and bearer have been refreshed. New cookie: {cookie_raw!r}")
+                        logger.warning(f"Cookie have been refreshed. New cookie: {cookie_raw!r}")
                         return await self.fetch_episode_information(reload=True)  # 다시 시도함.
                 else:
                     raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
@@ -255,7 +255,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         try:
             res = await self.client.get(url)
         except HTTPStatusError:
-            raise AuthenticationError("Bearer is invalid. Failed to fetch user information.") from None
+            raise AuthenticationError("Cookie is invalid. Failed to fetch user information.") from None
         data: dict = res.json()["data"]
         view_episodes_set = {int(episode_int_id) for episode_int_id in data["history"] or []}
         purchased_episodes_set = {int(episode_int_id) for episode_int_id in data["purchased"] or []}
@@ -312,7 +312,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
             if self.bearer:
                 logger.warning(f"Can't retrieve data from {self.episode_titles[episode_no]}. It's probably because Episode is not available or not for free episode. ")
             else:
-                logger.warning(f"Can't retrieve data from {self.episode_titles[episode_no]}. SET BEARER TO DOWNLOAD PROPERLY.")
+                logger.warning(f"Can't retrieve data from {self.episode_titles[episode_no]}. SET COOKIE TO DOWNLOAD PROPERLY.")
             return None
 
         response_data = keys_response.json()["data"]
