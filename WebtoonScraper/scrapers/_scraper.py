@@ -742,7 +742,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 else:
                     self.progress.stop()
 
-    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, debug: bool = False, episode_no, **context):
+    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, no_progress: bool = False, episode_no, **context):
         """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
         if (ep_title := self.episode_titles[episode_no]) is None:
             short_ep_title = f"#{episode_no + 1}"
@@ -764,7 +764,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         self.download_status[episode_no] = reason
 
-        if debug:
+        if no_progress:
             await self.async_callback(
                 "download_skipped",
                 _crate_callback(
@@ -779,6 +779,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 _crate_callback(
                     msg_format,
                     progress_update="{short_ep_title} skipped",
+                    level="debug",
                 ),
                 **context,
             )
@@ -787,7 +788,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         episode_title = self.episode_titles[episode_no]
         context: dict = dict(episode_no=episode_no, short_ep_title=episode_title and _shorten(episode_title))
         if episode_title is None:
-            return await self._episode_skipped("not_downloadable", "because the episode has empty title", debug=True, **context)
+            return await self._episode_skipped("not_downloadable", "because the episode has empty title", no_progress=True, **context)
         now = datetime.now()
         directory_name = self._safe_name(
             self._episode_directory_format.format(
