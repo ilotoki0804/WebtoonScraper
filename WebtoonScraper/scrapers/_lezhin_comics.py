@@ -249,6 +249,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     @async_reload_manager
     async def fetch_user_information(self, *, reload: bool = False) -> None:
         await self.fetch_episode_information()
+        self.purchased_episodes = [False] * len(self.episode_int_ids)
+        return  # FIXME: 현재 작동하지 않는 관계로 스킵
 
         user_int_id = self.user_int_id or random.Random(self.webtoon_id).randrange(5000000000000000, 6000000000000000)
         url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
