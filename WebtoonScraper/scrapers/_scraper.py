@@ -724,13 +724,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 if episode_no in self.skip_download:
                     reason = "skipped_by_skip_download"
                     description = "because the episode is included in skip_download"
-                    await self._episode_skipped(reason, description, episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
+                    await self._episode_skipped(reason, description, level="debug", episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
                     continue
                 # download_range는 1-based indexing이니 조정이 필요함
                 if download_range is not None and episode_no + 1 not in download_range:
                     reason = "skipped_by_range"
                     description = "because of the set range"
-                    await self._episode_skipped(reason, description, episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
+                    await self._episode_skipped(reason, description, level="debug", episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
                     continue
 
                 await self._download_episode(episode_no, webtoon_directory)
@@ -742,7 +742,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 else:
                     self.progress.stop()
 
-    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, no_progress: bool = False, episode_no, **context):
+    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, no_progress: bool = False, episode_no, level: LogLevel = "info", **context):
         """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
         if (ep_title := self.episode_titles[episode_no]) is None:
             short_ep_title = f"#{episode_no + 1}"
@@ -769,7 +769,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 "download_skipped",
                 _crate_callback(
                     msg_format,
-                    level="debug",
+                    level=level,
                 ),
                 **context,
             )
@@ -779,16 +779,16 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 _crate_callback(
                     msg_format,
                     progress_update="{short_ep_title} skipped",
-                    level="debug",
+                    level=level,
                 ),
                 **context,
             )
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
         episode_title = self.episode_titles[episode_no]
-        context: dict = dict(episode_no=episode_no, short_ep_title=episode_title and _shorten(episode_title))
+        context: dict = dict(episode_no=episode_no, episode_no1=episode_no, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
         if episode_title is None:
-            return await self._episode_skipped("not_downloadable", "because the episode has empty title", no_progress=True, **context)
+            return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
         now = datetime.now()
         directory_name = self._safe_name(
             self._episode_directory_format.format(
@@ -894,7 +894,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # send done callback message
         self.download_status[episode_no] = "downloaded"
-        await self.async_callback("download_completed", _crate_callback(progress_update="{short_ep_title} downloaded"), **context)
+        await self.async_callback("download_completed", _crate_callback("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
