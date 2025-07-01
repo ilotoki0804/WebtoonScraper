@@ -82,7 +82,6 @@ class NaverWebtoonScraper(Scraper[int]):
                 await self.fetch_webtoon_information()
                 raise
 
-            # TODO: 혹이 HTTP 304를 이용하지는 않을까? 한번 코드를 돌려 보며 확인해야 한다.
             current_articles = data["articleList"]
             if previous_articles == current_articles:
                 break

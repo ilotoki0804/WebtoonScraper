@@ -283,7 +283,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         is_purchased = self.purchased_episodes[episode_no] if hasattr(self, "purchased_episodes") else False
 
         purchased = "true" if is_purchased else "false"
-        # 스페셜 캐릭터를 포함하고 있는 이상한 웹툰이 있음.  # TODO: 테스트에 포함하기!
+        # 스페셜 캐릭터를 포함하고 있는 이상한 웹툰이 있음
         episode_id_str = urllib.parse.quote(self.episode_ids[episode_no])
         episode_id_int = self.episode_int_ids[episode_no]
 
@@ -398,7 +398,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         /,
         directory: Path,
         name: str,
-        episode_no: int | None = None,  # TODO: 이 episode_no를 바탕으로 다른 정보들을 가져오기
+        episode_no: int | None = None,
     ) -> Path:
         if isinstance(url_tuple, str):
             return await super()._download_image(url_tuple, directory, name)
@@ -406,8 +406,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         episode_no, url, media_type = url_tuple
         if media_type not in ("image/jpeg", "image/gif", "image/png"):
             logger.warning(f"Unknown media type: {media_type}")
-        if media_type.startswith("image"):
-            file_extension = media_type.removeprefix("image/")  # TODO: 이거 없이도 잘 작동하는지 확인하고 아니라면 변경하기
+        if media_type.startswith("image/"):
+            file_extension = media_type.removeprefix("image/")
 
         if not self.is_shuffled or not self.unshuffle_immediately:
             return await super()._download_image(url, directory, name)
