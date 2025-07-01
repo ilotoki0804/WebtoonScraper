@@ -786,7 +786,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
         episode_title = self.episode_titles[episode_no]
-        context: dict = dict(episode_no=episode_no, episode_no1=episode_no, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
+        context: dict = dict(episode_no=episode_no, episode_no1=episode_no + 1, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
         if episode_title is None:
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
         now = datetime.now()
