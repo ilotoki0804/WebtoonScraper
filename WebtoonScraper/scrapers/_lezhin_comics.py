@@ -138,11 +138,6 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 self._shuffled_directory / "information.json",
             )
 
-    async def fetch_all(self, reload: bool = False) -> None:
-        await super().fetch_all(reload)
-        with suppress(AuthenticationError):
-            await self.fetch_user_information(reload=reload)
-
     async def _download_episodes(self, download_range, webtoon_directory: Path) -> None:
         if self.is_shuffled and self.unshuffle_immediately:
             _load_unshuffler()
@@ -204,13 +199,16 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
 
         thumbnail_url = res.single('meta[property="og:image"]').attrs.get("content")
         assert thumbnail_url is not None
-        script_string = res.match("script")[-1].text()
-        try:
-            raw_data = re.match(r"self\.__next_.\.push\(\[\d,(.*)\]\)$", script_string)[1]  # type: ignore
-            data_raw = json.loads(json.loads(raw_data)[2:])
-            data = data_raw[1][3]["entity"]
-        except Exception as exc:
-            raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper) from exc
+        next_data = res.next_data()
+        for possible_data in next_data.values():
+            try:
+                data = possible_data[1][3]["entity"]
+            except Exception:
+                pass
+            else:
+                break
+        else:
+            raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper)
 
         selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
         episode_dates: list[str] = []
@@ -245,33 +243,21 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         self.author: str = author
 
         self._parse_episode_information(data["meta"]["episodes"])
+        self._parse_user_information(data["stateByUser"])
 
-    @async_reload_manager
-    async def fetch_user_information(self, *, reload: bool = False) -> None:
-        await self.fetch_episode_information()
-        self.purchased_episodes = [False] * len(self.episode_int_ids)
-        return  # FIXME: 현재 작동하지 않는 관계로 스킵
+    def _parse_user_information(self, data) -> None:
+        episode_data_dict = {episode['id']: episode for episode in data["episodes"]}
 
-        user_int_id = self.user_int_id or random.Random(self.webtoon_id).randrange(5000000000000000, 6000000000000000)
-        url = f"https://www.lezhin.com/lz-api/v2/users/{user_int_id}/contents/{self.webtoon_int_id}"
-        try:
-            res = await self.client.get(url)
-        except HTTPStatusError:
-            raise AuthenticationError("Cookie is invalid. Failed to fetch user information.") from None
-        data: dict = res.json()["data"]
-        view_episodes_set = {int(episode_int_id) for episode_int_id in data["history"] or []}
-        purchased_episodes_set = {int(episode_int_id) for episode_int_id in data["purchased"] or []}
-
-        raw_last_viewed_episode = data.get("latestViewedEpisode", 0)
-        self.last_viewed_episode_int_id: int | None = int(raw_last_viewed_episode) if raw_last_viewed_episode else None
+        self.last_viewed_episode_int_id: int | None = data["latestViewedEpisodeId"]
 
         # 계정 상태
-        self.is_subscribed = data["subscribed"]
+        self.is_subscribed = data["isSubscribed"]
         self.does_get_notifications = data["notification"]
         self.is_preferred: bool | None = data["preferred"] if data["preferred"] != "none" else None
         # 에피소드 관련
-        self.purchased_episodes = [episode_id in purchased_episodes_set for episode_id in self.episode_int_ids]
-        self.viewed_episodes = [episode_id in view_episodes_set for episode_id in self.episode_int_ids]
+        default = {"isCollected": False, "isViewed": False}
+        self.purchased_episodes = [episode_data_dict.get(episode_id, default)["isCollected"] for episode_id in self.episode_int_ids]
+        self.viewed_episodes = [episode_data_dict.get(episode_id, default)["isViewed"] for episode_id in self.episode_int_ids]
         if self.is_fhd_downloaded is None:
             self.is_fhd_downloaded = any(self.purchased_episodes)
 
