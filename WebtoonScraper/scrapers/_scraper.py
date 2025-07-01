@@ -273,7 +273,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         extra.register(self)
 
     @abstractmethod
-    async def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
+    async def get_episode_image_urls(self, episode_no: int) -> list[str] | None | Callback:
         """해당 회차를 구성하는 이미지들의 URL을 불러옵니다."""
         raise NotImplementedError
 
@@ -844,7 +844,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         # fetch image urls
         time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
         try:
-            image_urls = await self.get_episode_image_urls(episode_no)  # TODO: Callback을 리턴할 경우 그 것을 failed의 메시지로 사용하는 것을 구현할 것
+            image_urls = await self.get_episode_image_urls(episode_no)
         # 기본적으로 get_episode_image_urls는 실패해서는 안 된다.
         # 그런 상황이 있을 경우 warning을 내부적으로 내보내며 None을 리턴해야 한다.
         # 따라서 다른 경우들과 달리 raise를 하는 것이다.
@@ -853,13 +853,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self.async_callback("get_episode_images_failed", **context)
             raise
 
-        if not image_urls:
+        if isinstance(image_urls, Callback) or not image_urls:
+            callback = image_urls if isinstance(image_urls, Callback) else None
             with suppress(Exception):
                 episode_directory.rmdir()
             self.download_status[episode_no] = "failed"
             await self.async_callback(
                 "download_failed",
-                _crate_callback(
+                callback or _crate_callback(
                     "The episode #{episode_no} '{short_ep_title}' is failed {description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
@@ -867,7 +868,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 ),
                 reason="gathering_images_failed",
                 description="because no images are found",
-                warning=True,  # todo
                 **context,
             )
             return
