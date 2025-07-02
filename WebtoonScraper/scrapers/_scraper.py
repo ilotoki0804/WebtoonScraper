@@ -721,19 +721,22 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 if self.use_progress_bar:
                     self.progress.advance(task)
 
+                episode_title = self.episode_titles[episode_no]
+                context: dict = dict(episode_no=episode_no, episode_no1=episode_no + 1, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
+
                 if episode_no in self.skip_download:
                     reason = "skipped_by_skip_download"
                     description = "because the episode is included in skip_download"
-                    await self._episode_skipped(reason, description, level="debug", episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
+                    await self._episode_skipped(reason, description, level="debug", **context)
                     continue
                 # download_range는 1-based indexing이니 조정이 필요함
                 if download_range is not None and episode_no + 1 not in download_range:
                     reason = "skipped_by_range"
                     description = "because of the set range"
-                    await self._episode_skipped(reason, description, level="debug", episode_no=episode_no, short_ep_title=_shorten(self.episode_titles[episode_no] or "unknown episode"))
+                    await self._episode_skipped(reason, description, level="debug", **context)
                     continue
 
-                await self._download_episode(episode_no, webtoon_directory)
+                await self._download_episode(episode_no, webtoon_directory, context)
         finally:
             if self.use_progress_bar:
                 self.progress.remove_task(task)
@@ -746,10 +749,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
         if (ep_title := self.episode_titles[episode_no]) is None:
             short_ep_title = f"#{episode_no + 1}"
-            msg_format = "The episode #{episode_no1} is skipped {description}"
+            msg_format = "[{total_ep}/{episode_no1}] The episode is skipped {description}"
         else:
             short_ep_title = _shorten(ep_title)
-            msg_format = "The episode #{episode_no1} '{short_ep_title}' is skipped {description}"
+            msg_format = "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is skipped {description}"
 
         # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
         # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
@@ -784,9 +787,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 **context,
             )
 
-    async def _download_episode(self, episode_no: int, webtoon_directory: Path) -> None:
+    async def _download_episode(self, episode_no: int, webtoon_directory: Path, context: dict) -> None:
         episode_title = self.episode_titles[episode_no]
-        context: dict = dict(episode_no=episode_no, episode_no1=episode_no + 1, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
         if episode_title is None:
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
         now = datetime.now()
@@ -825,14 +827,14 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if self.existing_episode_policy == "raise":
                 raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
             elif self.existing_episode_policy == "skip":
-                return await self._episode_skipped("skipped_by_snapshot", "because of existing directory", by_file=False, **context)
+                return await self._episode_skipped("skipped_by_snapshot", "because it's downloaded already in snapshot", by_file=False, **context)
             else:
                 not_empty_dir = True
         elif episode_directory.is_dir() and os.listdir(episode_directory):
             if self.existing_episode_policy == "raise":
                 raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
             elif self.existing_episode_policy == "skip":
-                return await self._episode_skipped("already_exist", "because of existing directory", by_file=True, **context)
+                return await self._episode_skipped("already_exist", "because it's downloaded already", by_file=True, **context)
             else:
                 not_empty_dir = True
         else:
@@ -861,7 +863,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self.async_callback(
                 "download_failed",
                 callback or _crate_callback(
-                    "The episode #{episode_no} '{short_ep_title}' is failed {description}",
+                    "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
                     log_with_progress=True,
