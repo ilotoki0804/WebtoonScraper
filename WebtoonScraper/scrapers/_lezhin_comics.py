@@ -96,13 +96,21 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
 
         self._shuffled_directory = None
         self._unshuffled_directory = None
+
+        self.is_library = language_code.endswith("-library")
+        language_code = language_code.removesuffix("-library")
+
         self.language_code = language_code
         self.base_url = self.BASE_URLS[language_code]
-        referrer = f"{self.base_url}/{self.language_code}/comic/{webtoon_id}"
+        if self.is_library:
+            referrer = f"{self.base_url}/{self.language_code}/library/comic/{self.LOCALES[self.language_code]}/{webtoon_id}"
+        else:
+            referrer = f"{self.base_url}/{self.language_code}/comic/{webtoon_id}"
 
         super().__init__(webtoon_id)
         extra_headers = {
             "Referer": referrer,
+            # NOTE: 나중에 작동 안 할지도 모르니 잘 확인하기
             "X-Lz-Adult": "0",
             "X-Lz-Allowadult": "false",
             "X-Lz-Country": "kr",
@@ -168,8 +176,12 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
         with WebtoonIdError.redirect_error(self):
+            if self.is_library:
+                url = f"{self.base_url}/{self.language_code}/library/comic/{self.LOCALES[self.language_code]}/{self.webtoon_id}"
+            else:
+                url = f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}"
             try:
-                res = await self.client.get(f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}")
+                res = await self.client.get(url)
             except HTTPStatusError as exc:
                 if not exc.response.status_code == 307:
                     raise  # InvalidWebtoonIdError이거나 기타 위로 전파해야 할 오류들
@@ -219,19 +231,24 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
             else:
                 raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper)
 
-        selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
-        episode_dates: list[str] = []
-        episode_states: list[str] = []
-        for episode in res.match(selector):
-            # *_: 'N시간 후 무료' 요소의 경우 개수가 3개임
-            date_element, state_element, *_ = episode.css("a > div > div > div > div")
-            episode_dates.append(date_element.text())
-            episode_states.append(state_element.text())
+        if self.is_library:
+            self.episode_dates = None
+            self.episode_states = None
+        else:
+            selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
+            episode_dates: list[str] = []
+            episode_states: list[str] = []
+            for episode in res.match(selector):
+                # *_: 'N시간 후 무료' 요소의 경우 개수가 3개임
+                date_element, state_element, *_ = episode.css("a > div > div > div > div")
+                episode_dates.append(date_element.text())
+                episode_states.append(state_element.text())
 
-        self.episode_dates: list[str] = episode_dates
-        self.episode_states: list[str] = episode_states
-        if self.open_free_episode is None:
-            self.open_free_episode = False
+            self.episode_dates: list[str] | None = episode_dates
+            self.episode_states: list[str] | None = episode_states
+
+            if self.open_free_episode is None:
+                self.open_free_episode = False
 
         # webtoon 정보를 받아옴.
         title = data["meta"]["content"]["display"]["title"]
@@ -267,6 +284,9 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         default = {"isCollected": False, "isViewed": False}
         self.purchased_episodes = [episode_data_dict.get(episode_id, default)["isCollected"] for episode_id in self.episode_int_ids]
         self.viewed_episodes = [episode_data_dict.get(episode_id, default)["isViewed"] for episode_id in self.episode_int_ids]
+        # 라이브러리인 경우 어차피 구매한 회차만 다운로드할 수 있기 때문에 나머지를 skip_download에 저장함
+        if self.is_library and not self.skip_download:
+            self.skip_download = [i for i, purchased in enumerate(self.purchased_episodes) if not purchased]
         if self.is_fhd_downloaded is None:
             self.is_fhd_downloaded = any(self.purchased_episodes)
 
@@ -296,7 +316,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         episode_id_str = urllib.parse.quote(self.episode_ids[episode_no])
         episode_id_int = self.episode_int_ids[episode_no]
 
-        if self.open_free_episode and self.episode_states[episode_no] == "무료 공개":
+        if self.open_free_episode and self.episode_states and self.episode_states[episode_no] == "무료 공개":
             await self._open_free_episode(episode_id_str)
 
         keygen_url = (
@@ -402,6 +422,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         match url.host, url.parts:
             case "www.lezhin.com" | "www.lezhinus.com" | "www.lezhin.jp", ("/", language_code, "comic", webtoon_id):
                 return language_code, webtoon_id
+            case "www.lezhin.com" | "www.lezhinus.com" | "www.lezhin.jp", ("/", language_code, "library", "comic", locale, webtoon_id):
+                return f"{language_code}-library", webtoon_id
 
     async def _download_image(
         self,
