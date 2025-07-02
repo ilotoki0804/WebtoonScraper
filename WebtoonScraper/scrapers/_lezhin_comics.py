@@ -25,6 +25,8 @@ from ._scraper import Scraper, async_reload_manager
 if not typing.TYPE_CHECKING:
     unshuffle = get_image_order = None
 
+locale_cookie_regex = re.compile(r"(?<=x-lz-locale=)([^;]*)(?=;|$)")
+
 
 def _load_unshuffler():
     global unshuffle, get_image_order
@@ -208,7 +210,14 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
             else:
                 break
         else:
-            raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper)
+            # locale__summary__xxL_0
+            if any("locale__summary" in p.attrs.sget("class") for p in res.match("p")):
+                webtoon_locale = self.LOCALES[self.language_code]
+                matched = self.cookie and locale_cookie_regex.search(self.cookie)
+                cookie_locale = f' ({matched[0].replace("_", "-")})' if matched else ""
+                raise AuthenticationError(f"Locale of the cookie{cookie_locale} is unmatched with webtoon's locale ({webtoon_locale}). Try change the locale and get cookie again.")
+            else:
+                raise WebtoonIdError.from_webtoon_id(self.webtoon_id, LezhinComicsScraper)
 
         selector = "body > div.lzCntnr > div > div > ul > li > a"  # cspell: ignore Cntnr
         episode_dates: list[str] = []
@@ -356,6 +365,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         # _LZ_AT에서 직접 bearer를 추출함
         if bearer is not None:
             self.bearer = f"Bearer {bearer}"
+        # _LZ_FS에 locale이 저장되어 있기 때문에 이렇게 바꿔도 작동하지 않음.
+        # value = locale_cookie_regex.sub(self.LOCALES[self.language_code].replace("-", "_"), value)
         super()._set_cookie(value)
 
     @classmethod
