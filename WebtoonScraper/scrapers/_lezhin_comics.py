@@ -36,6 +36,7 @@ def _load_unshuffler():
 
 class LezhinComicsScraper(BearerMixin, Scraper[str]):
     PLATFORM = "lezhin_comics"
+    LOGIN_URL = "https://www.lezhin.com/ko/login"
     download_interval = 0
     information_vars = (
         Scraper.information_vars

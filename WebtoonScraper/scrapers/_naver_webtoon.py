@@ -25,6 +25,7 @@ class NaverWebtoonScraper(Scraper[int]):
     """Scrape webtoons from Naver Webtoon."""
 
     PLATFORM = "naver_webtoon"
+    LOGIN_URL = "https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fcomic.naver.com%2Findex"
     information_vars = (
         Scraper.information_vars
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", "episode_audio_urls", subcategory="extra")

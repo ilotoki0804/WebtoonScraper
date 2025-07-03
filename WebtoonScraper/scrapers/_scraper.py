@@ -167,6 +167,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     PLATFORM: ClassVar[str]
     download_interval: int | float = 0.5
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
+    LOGIN_URL: str
     information_vars: dict[str, None | str | Path | Callable] = dict(
         title=None,
         platform="PLATFORM",
