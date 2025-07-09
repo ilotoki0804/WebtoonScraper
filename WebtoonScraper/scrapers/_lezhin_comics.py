@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import json
-import os
-import random
 import re
 import shutil
 import typing
 import urllib.parse
-from contextlib import suppress
 from pathlib import Path
 
 from httpx import HTTPStatusError
