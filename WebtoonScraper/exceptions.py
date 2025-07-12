@@ -98,6 +98,16 @@ class AuthenticationError(WebtoonScraperError):
     """Provided authentication method is invalid, expired or corrupted."""
 
 
+class RefreshableAuthenticationError(AuthenticationError):
+    """Provided authentication method is expired, but can be refreshed automatically."""
+    location: str | None = None
+
+    def __init__(self, msg: str, location: str | None = None) -> None:
+        """Return a new instance with the location of the authentication endpoint."""
+        super().__init__(msg)
+        self.location = location
+
+
 class UseFetchEpisode(WebtoonScraperError):
     """`fetch_episode_information` do all."""
 

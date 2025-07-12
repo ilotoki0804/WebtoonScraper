@@ -12,6 +12,7 @@ from httpx import HTTPStatusError
 from ..base import logger
 from ..exceptions import (
     AuthenticationError,
+    RefreshableAuthenticationError,
     RatingError,
     UseFetchEpisode,
     WebtoonIdError,
@@ -133,6 +134,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
         self.unshuffle_immediately: bool = True
         self.download_paid_episode: bool = True
         self.download_unusable_episode: bool = False
+        self.auto_refresh_cookie: bool = True
         # None일 경우 상황에 따라 적절한 값으로 변경될 수 있는 값들
         self.thread_number: int | None = None
         self.is_fhd_downloaded: bool | None = None
@@ -167,6 +169,23 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
 
         return identifier
 
+    async def refresh_cookie(self) -> str | None:
+        """Refresh cookie if it is expired."""
+        try:
+            return await self.fetch_episode_information()
+        except RefreshableAuthenticationError as exc:
+            res = await self.client.get(f"{self.base_url}{exc.location}", raise_for_status=False)
+            assert res.has_redirect_location
+            new_location = res.headers["Location"]
+
+            # https://www.lezhin.com/ko/logout?reason=TOKEN_EXPIRED
+            if "/logout" in new_location:
+                raise AuthenticationError("Cookie have been expired. Please update them.") from exc
+
+            cookie = "; ".join(f"{name}={value}" for name, value in res.cookies.items())
+            logger.warning(f"Cookie have been refreshed. New cookie: {cookie!r}")
+            self.cookie = cookie
+
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
         raise UseFetchEpisode
@@ -194,16 +213,18 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                     else:
                         raise RatingError("Adult webtoon is not available since you don't set cookie. Check docs to how to download.") from exc
                 elif location.startswith("/api/authentication/refresh-token"):
+                    if not self.auto_refresh_cookie:
+                        raise RefreshableAuthenticationError("Cookie have been expired (although can be refreshed). Please update them.", location) from exc
                     res = await self.client.get(f"{self.base_url}{location}", raise_for_status=False)
                     assert res.has_redirect_location
                     new_location = res.headers["Location"]
                     # https://www.lezhin.com/ko/logout?reason=TOKEN_EXPIRED
                     if "/logout" in new_location:
                         raise AuthenticationError("Cookie have been expired. Please update them.") from exc
-                    else:
-                        cookie_raw = "; ".join(f"{name}={value}" for name, value in res.cookies.items())
-                        logger.warning(f"Cookie have been refreshed. New cookie: {cookie_raw!r}")
-                        return await self.fetch_episode_information(reload=True)  # 다시 시도함.
+                    cookie_raw = "; ".join(f"{name}={value}" for name, value in res.cookies.items())
+                    logger.warning(f"Cookie have been refreshed. New cookie: {cookie_raw!r}")
+                    self.cookie = cookie_raw
+                    return await self.fetch_episode_information(reload=True)  # 다시 시도함.
                 else:
                     raise  # 그 외의 경우. InvalidWebtoonIdError로 넘어가지만 그 외 알 수 없는 오류일 가능성도 있음.
 
@@ -405,6 +426,8 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
                 self.bearer = value.strip()
             case "open-free-episode":
                 self.open_free_episode = self._as_boolean(value)
+            case "auto-refresh-cookie":
+                self.auto_refresh_cookie = self._as_boolean(value)
             case "thread-number":
                 if self.thread_number:
                     logger.warning(f"Thread number has already been set as {self.thread_number}, but thread_number option overriding it to {value!r}.")
