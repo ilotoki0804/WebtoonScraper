@@ -3,12 +3,9 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
-import logging
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple, Self
-from collections.abc import Callable
-import typing
+from typing import TYPE_CHECKING, Self
 
 from WebtoonScraper.exceptions import AuthenticationError
 import filetype
@@ -17,9 +14,7 @@ from filetype.types import IMAGE
 if TYPE_CHECKING:
     from WebtoonScraper.scrapers._scraper import Scraper
 
-from ..base import __version__ as version, logger
-
-LogLevel = typing.Literal["debug", "info", "warning", "error", "critical"] | int
+from ..base import __version__ as version
 
 
 class ExtraInfoScraper:
@@ -202,13 +197,6 @@ class EpisodeRange:
         self = cls()
         self.apply_string(episode_range, inclusive)
         return self
-
-
-class Callback(NamedTuple):
-    function: Callable
-    is_async: bool
-    replace_default: bool
-    use_task: bool | None = None
 
 
 class BearerMixin:
