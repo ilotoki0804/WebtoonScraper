@@ -168,7 +168,7 @@ class NaverWebtoonScraper(Scraper[int]):
             audio_url = self.episode_audio_urls.get(episode_no)
             audio_name = f"{len(image_urls) + 1:03d}.mp3"
             audio_path = episode_directory / audio_name
-            if audio_url and not audio_path.exists() and self._snapshot_contents_info(audio_path) is None:
+            if audio_url and not audio_path.exists() and self.directory_manager._snapshot_contents_info(audio_path) is None:
                 try:
                     res = await self.client.get(audio_url)
                     with audio_path.open("wb") as f:

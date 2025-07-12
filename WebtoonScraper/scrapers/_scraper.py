@@ -36,6 +36,7 @@ from ..directory_state import (
 )
 from ..exceptions import (
     URLError,
+    Unreachable,
     UseFetchEpisode,
 )
 from ._helpers import (
@@ -225,7 +226,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._webtoon_directory_format: str = "{title}({identifier})"
         self._episode_directory_format: str = "{no:04d}. {episode_title}"
 
-        # add managers
         self.callbacks = CallbackManager(dict(scraper=self))
         # initialize extra info scraper
         self.extra_info_scraper
@@ -347,8 +347,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     def _apply_skip_previously_failed(self) -> None:
         if to_skip := self.previous_status_to_skip:
-            prev_episode_ids = self._old_information.get("episode_ids", [])
-            download_status = self._old_information.get("download_status", [])
+            prev_episode_ids = self.directory_manager._old_information.get("episode_ids", [])
+            download_status = self.directory_manager._old_information.get("download_status", [])
             id_status = dict(zip(prev_episode_ids, download_status, strict=True))
             self.skip_download.extend(i for i, episode_id in enumerate(self.episode_ids) if id_status.get(episode_id) in to_skip)
 
@@ -374,8 +374,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         webtoon_directory = self._prepare_directory()
         await self.callbacks.async_callback("download_started", webtoon_directory=webtoon_directory)
-        self._load_snapshot(webtoon_directory)
-        self._load_information(webtoon_directory)
+        self.directory_manager = WebtoonDirectory(webtoon_directory, ignore_snapshot=self.ignore_snapshot)
+        self.directory_manager.load()
         thumbnail_task = await self._download_thumbnail(webtoon_directory)
 
         self._apply_skip_previously_failed()
@@ -586,7 +586,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     await self._episode_skipped(reason, description, level="debug", **context)
                     continue
 
-                await self._download_episode(episode_no, webtoon_directory, context)
+                await self._download_episode(episode_no, context)
         finally:
             if self.use_progress_bar:
                 self.progress.remove_task(task)
@@ -637,7 +637,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 **context,
             )
 
-    async def _download_episode(self, episode_no: int, webtoon_directory: Path, context: dict) -> None:
+    async def _download_episode(self, episode_no: int, context: dict) -> None:
         episode_title = self.episode_titles[episode_no]
         if episode_title is None:
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
@@ -656,83 +656,20 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 time=now.strftime("%H:%M:%S"),
             )
         )
-        episode_directory = webtoon_directory / directory_name
-        episode_at_snapshot = self._snapshot_contents_info(episode_directory)
         self.episode_dir_names[episode_no] = directory_name
 
-        # 동명의 파일이 있는지 확인
-        is_file_exists = episode_directory.is_file()
-        is_file_exists_in_snapshot = episode_at_snapshot == "file"
-        if is_file_exists or is_file_exists_in_snapshot:
-            context.update(is_file=is_file_exists, is_snapshot=is_file_exists_in_snapshot)
-            if self.existing_episode_policy != "skip":
-                raise FileExistsError(f"A file named {episode_directory!r} exists on webtoon directory.")
-        if is_file_exists:
-            return await self._episode_skipped("already_exist", "because of existing file", **context)
-        elif is_file_exists_in_snapshot:
-            return await self._episode_skipped("skipped_by_snapshot", "because of existing file in the snapshot", **context)
-
-        # 디렉토리가 존재하고 비어있지 않는지 확인
-        if episode_at_snapshot == "directory" and self._get_snapshot_contents(episode_directory):
-            if self.existing_episode_policy == "raise":
-                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
-            elif self.existing_episode_policy == "skip":
-                return await self._episode_skipped("skipped_by_snapshot", "because it's downloaded already in snapshot", by_file=False, **context)
-            else:
-                not_empty_dir = True
-        elif episode_directory.is_dir() and os.listdir(episode_directory):
-            if self.existing_episode_policy == "raise":
-                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
-            elif self.existing_episode_policy == "skip":
-                return await self._episode_skipped("already_exist", "because it's downloaded already", by_file=True, **context)
-            else:
-                not_empty_dir = True
-        else:
-            not_empty_dir = False
-
-        # 다운로드 직전에 메시지를 보냄
-        await self.callbacks.async_callback("downloading", self.callbacks.default(progress_update="downloading {short_ep_title}"), **context)
-
-        # fetch image urls
-        time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
-        try:
-            image_urls = await self.get_episode_image_urls(episode_no)
-        # 기본적으로 get_episode_image_urls는 실패해서는 안 된다.
-        # 그런 상황이 있을 경우 warning을 내부적으로 내보내며 None을 리턴해야 한다.
-        # 따라서 다른 경우들과 달리 raise를 하는 것이다.
-        except BaseException as exc:
-            exc.add_note(f"Exception occurred when gathering images of {episode_no + 1}. {episode_title!r}")
-            await self.callbacks.async_callback("get_episode_images_failed", **context)
-            raise
-
-        if isinstance(image_urls, Callback) or not image_urls:
-            callback = image_urls if isinstance(image_urls, Callback) else None
-            with suppress(Exception):
-                episode_directory.rmdir()
-            self.download_status[episode_no] = "failed"
-            await self.callbacks.async_callback(
-                "download_failed",
-                callback or self.callbacks.default(
-                    "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
-                    progress_update="{short_ep_title} skipped",
-                    level="warning",
-                    log_with_progress=True,
-                ),
-                reason="gathering_images_failed",
-                description="because no images are found",
-                **context,
-            )
-            return
-
-        # check integrity if specified
-        if not_empty_dir and self.existing_episode_policy == "hard_check":
-            if self._check_directory(episode_directory, image_urls):
-                with suppress(Exception):
-                    episode_directory.rmdir()
-                return await self._episode_skipped("already_exist", "because of intact existing directory", intact=True, **context)
-
-            shutil.rmtree(episode_directory)
-            episode_directory.mkdir()
+        match await self.directory_manager.check_episode_directory(
+            self,
+            episode_no,
+            directory_name,
+            context,
+        ):
+            case None:
+                return
+            case episode_directory, image_urls:
+                pass
+            case _:
+                raise Unreachable
 
         # download images from urls
         try:
@@ -792,7 +729,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 to_store = information
                 name = original_name
 
-            old_information = self._old_information
+            old_information = self.directory_manager._old_information
             fetch_failed = []
             match to_fetch:
                 case None:
@@ -860,52 +797,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             exc.add_note(f"Exception occurred when downloading image from {url!r}")
             raise
 
-    def _load_snapshot(self, webtoon_directory: Path) -> None:
-        """스냅샷 정보를 불러옵니다. self.ignore_snapshot이 True이거나 스냅샷이 없거나 훼손되었다면 라면 값을 불러오지 않습니다."""
-        self._snapshot_data: dict
-        if self.ignore_snapshot:
-            self._snapshot_data = {}
-            return
-
-        snapshot_path = webtoon_directory.parent / f"{webtoon_directory.name}.snapshots"
-        try:
-            self._snapshot_data = json.loads(snapshot_path.read_text("utf-8"))
-        except Exception:
-            self._snapshot_data = {}
-
-    def _get_snapshot_contents(self, path: Path) -> str | dict | None:
-        result = self._snapshot_data.get("contents")
-        if not result:
-            return None
-        parts = path.relative_to(self.base_directory).parts
-        for part in parts[1:]:  # 웹툰 디렉토리에서 시작하기 위해 맨 첫 번째 웹툰 디렉토리 파트를 버림
-            match result:
-                case str():
-                    return None
-                case dict(result):
-                    try:
-                        result = result[part]
-                    except KeyError:
-                        return None
-        return result
-
-    def _snapshot_contents_info(self, path: Path) -> Literal["file", "directory"] | None:
-        match self._get_snapshot_contents(path):
-            case None:
-                return None
-            case dict():
-                return "directory"
-            case "exists":
-                return "file"
-            case other:
-                raise TypeError(f"Unexpected type: {type(other).__name__}")
-
-    def _load_information(self, webtoon_directory: Path) -> None:
-        old_information = load_information_json(webtoon_directory)
-        if not old_information:
-            old_information = {}
-        self._old_information = old_information
-
     def _prepare_directory(self) -> Path:
         webtoon_directory_name = self.get_webtoon_directory_name()
         webtoon_directory = Path(self.base_directory, webtoon_directory_name)
@@ -918,28 +809,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         레진코믹스의 언셔플러 구현에서 유일하게 사용됩니다.
         """
         return webtoon_directory
-
-    def _check_directory(
-        self,
-        episode_directory: Path,
-        image_urls: list,
-    ) -> bool:
-        """해당 폴더 내 내용물이 에피소드 디렉토리로 적합한지 조사합니다.
-
-        Returns:
-            False를 return한다면 회차를 다운로드해야 한다는 의미입니다.
-            True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
-        """
-
-        try:
-            real_contents = os.listdir(episode_directory)
-        except Exception:
-            real_contents = []
-        snapshot_contents = self._get_snapshot_contents(episode_directory) or ()
-        directory_contents = {*real_contents, *snapshot_contents}
-
-        normal_image_regex = DirectoryState.Image(is_merged=False).pattern()
-        return len(image_urls) == len(directory_contents) and all(normal_image_regex.match(file) for file in directory_contents)
 
     @staticmethod
     def _safe_name(name: str) -> str:
@@ -973,10 +842,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             contents = os.listdir(webtoon_directory)
         except Exception:
-            snapshot_contents = self._get_snapshot_contents(webtoon_directory)
+            snapshot_contents = self.directory_manager._get_snapshot_contents(webtoon_directory)
             contents = list(snapshot_contents) if isinstance(snapshot_contents, dict) else []
         else:
-            snapshot_contents = self._get_snapshot_contents(webtoon_directory)
+            snapshot_contents = self.directory_manager._get_snapshot_contents(webtoon_directory)
             if isinstance(snapshot_contents, dict):
                 # 중복된 컨텐츠가 나타날 수도 있지만 상관없음
                 contents += snapshot_contents
@@ -994,5 +863,164 @@ class WebtoonDirectory:
     이 클래스는 웹툰 디렉토리의 생성, 정보 불러오기, 스냅샷 관리 등을 담당합니다.
     """
 
-    def __init__(self, webtoon_directory: Path):
+    def __init__(self, webtoon_directory: Path, ignore_snapshot: bool = False) -> None:
         self.webtoon_directory = webtoon_directory
+        self.ignore_snapshot = ignore_snapshot
+
+    def load(self) -> None:
+        self._load_snapshot(self.webtoon_directory)
+        self._load_information(self.webtoon_directory)
+
+    def _get_snapshot_contents(self, path: Path) -> str | dict | None:
+        result = self._snapshot_data.get("contents")
+        if not result:
+            return None
+        parts = path.relative_to(self.webtoon_directory).parts
+        for part in parts:
+            match result:
+                case str():
+                    return None
+                case dict(result):
+                    try:
+                        result = result[part]
+                    except KeyError:
+                        return None
+        return result
+
+    def _load_snapshot(self, webtoon_directory: Path) -> None:
+        """스냅샷 정보를 불러옵니다. self.ignore_snapshot이 True이거나 스냅샷이 없거나 훼손되었다면 라면 값을 불러오지 않습니다."""
+        self._snapshot_data: dict
+        if self.ignore_snapshot:
+            self._snapshot_data = {}
+            return
+
+        snapshot_path = webtoon_directory.parent / f"{webtoon_directory.name}.snapshots"
+        try:
+            self._snapshot_data = json.loads(snapshot_path.read_text("utf-8"))
+        except Exception:
+            self._snapshot_data = {}
+
+    def _snapshot_contents_info(self, path: Path) -> Literal["file", "directory"] | None:
+        match self._get_snapshot_contents(path):
+            case None:
+                return None
+            case dict():
+                return "directory"
+            case "exists":
+                return "file"
+            case other:
+                raise TypeError(f"Unexpected type: {type(other).__name__}")
+
+    def _load_information(self, webtoon_directory: Path) -> None:
+        old_information = load_information_json(webtoon_directory)
+        if not old_information:
+            old_information = {}
+        self._old_information = old_information
+
+    def _check_directory(
+        self,
+        episode_directory: Path,
+        image_urls: list,
+    ) -> bool:
+        """해당 폴더 내 내용물이 에피소드 디렉토리로 적합한지 조사합니다.
+
+        Returns:
+            False를 return한다면 회차를 다운로드해야 한다는 의미입니다.
+            True를 return하면 해당 회차가 이미 완전히 다운로드되어 있으며, 따라서 다운로드를 지속할 이유가 없음을 의미합니다.
+        """
+
+        try:
+            real_contents = os.listdir(episode_directory)
+        except Exception:
+            real_contents = []
+        snapshot_contents = self._get_snapshot_contents(episode_directory) or ()
+        directory_contents = {*real_contents, *snapshot_contents}
+
+        normal_image_regex = DirectoryState.Image(is_merged=False).pattern()
+        return len(image_urls) == len(directory_contents) and all(normal_image_regex.match(file) for file in directory_contents)
+
+    async def check_episode_directory(
+        self,
+        scraper: Scraper,
+        episode_no: int,
+        directory_name: str,
+        context: dict,
+    ):
+        episode_directory = self.webtoon_directory / directory_name
+        episode_at_snapshot = self._snapshot_contents_info(episode_directory)
+
+        # 동명의 파일이 있는지 확인
+        is_file_exists = episode_directory.is_file()
+        is_file_exists_in_snapshot = episode_at_snapshot == "file"
+        if is_file_exists or is_file_exists_in_snapshot:
+            context.update(is_file=is_file_exists, is_snapshot=is_file_exists_in_snapshot)
+            if scraper.existing_episode_policy != "skip":
+                raise FileExistsError(f"A file named {episode_directory!r} exists on webtoon directory.")
+        if is_file_exists:
+            return await scraper._episode_skipped("already_exist", "because of existing file", **context)
+        elif is_file_exists_in_snapshot:
+            return await scraper._episode_skipped("skipped_by_snapshot", "because of existing file in the snapshot", **context)
+
+        # 디렉토리가 존재하고 비어있지 않는지 확인
+        if episode_at_snapshot == "directory" and self._get_snapshot_contents(episode_directory):
+            if scraper.existing_episode_policy == "raise":
+                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
+            elif scraper.existing_episode_policy == "skip":
+                return await scraper._episode_skipped("skipped_by_snapshot", "because it's downloaded already in snapshot", by_file=False, **context)
+            else:
+                not_empty_dir = True
+        elif episode_directory.is_dir() and os.listdir(episode_directory):
+            if scraper.existing_episode_policy == "raise":
+                raise FileExistsError(f"Directory at {episode_directory} already exists. Please delete the directory.")
+            elif scraper.existing_episode_policy == "skip":
+                return await scraper._episode_skipped("already_exist", "because it's downloaded already", by_file=True, **context)
+            else:
+                not_empty_dir = True
+        else:
+            not_empty_dir = False
+
+        # 다운로드 직전에 메시지를 보냄
+        await scraper.callbacks.async_callback("downloading", scraper.callbacks.default(progress_update="downloading {short_ep_title}"), **context)
+
+        # fetch image urls
+        time.sleep(scraper.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
+        try:
+            image_urls = await scraper.get_episode_image_urls(episode_no)
+        # 기본적으로 get_episode_image_urls는 실패해서는 안 된다.
+        # 그런 상황이 있을 경우 warning을 내부적으로 내보내며 None을 리턴해야 한다.
+        # 따라서 다른 경우들과 달리 raise를 하는 것이다.
+        except BaseException as exc:
+            exc.add_note(f"Exception occurred when gathering images of {episode_no + 1}. {scraper.episode_titles[episode_no]!r}")
+            await scraper.callbacks.async_callback("get_episode_images_failed", **context)
+            raise
+
+        if isinstance(image_urls, Callback) or not image_urls:
+            callback = image_urls if isinstance(image_urls, Callback) else None
+            with suppress(Exception):
+                episode_directory.rmdir()
+            scraper.download_status[episode_no] = "failed"
+            await scraper.callbacks.async_callback(
+                "download_failed",
+                callback or scraper.callbacks.default(
+                    "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
+                    progress_update="{short_ep_title} skipped",
+                    level="warning",
+                    log_with_progress=True,
+                ),
+                reason="gathering_images_failed",
+                description="because no images are found",
+                **context,
+            )
+            return
+
+        # check integrity if specified
+        if not_empty_dir and scraper.existing_episode_policy == "hard_check":
+            if self._check_directory(episode_directory, image_urls):
+                with suppress(Exception):
+                    episode_directory.rmdir()
+                return await scraper._episode_skipped("already_exist", "because of intact existing directory", intact=True, **context)
+
+            shutil.rmtree(episode_directory)
+            episode_directory.mkdir()
+
+        return episode_directory, image_urls
