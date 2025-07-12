@@ -27,12 +27,12 @@ class ExtraInfoScraper:
 
     def register(self, scraper: Scraper) -> None:
         # self.scraper = scraper
-        scraper.callback_manager.register_callback("download_started", self.initializer)
-        scraper.callback_manager.register_callback("download_ended", self.finalizer)
+        scraper.callbacks.register("download_started", self.initializer)
+        scraper.callbacks.register("download_ended", self.finalizer)
 
     def unregister(self, scraper: Scraper) -> None:
-        scraper.callback_manager.unregister_callback("download_started", self.initializer)
-        scraper.callback_manager.unregister_callback("download_ended", self.finalizer)
+        scraper.callbacks.remove("download_started", self.initializer)
+        scraper.callbacks.remove("download_ended", self.finalizer)
 
     def initializer(self, scraper: Scraper, webtoon_directory: Path):
         pass
@@ -209,81 +209,6 @@ class Callback(NamedTuple):
     is_async: bool
     replace_default: bool
     use_task: bool | None = None
-
-
-def crate_default_callback(
-    message: str | Callable | None = None,
-    extra_context: dict | None = None,
-    *,
-    func: Callable | None = None,
-    level: LogLevel = "info",
-    progress_update: str | Callable | None = None,
-    log_with_progress: bool = False,
-    is_async: bool = False,
-    use_task: bool = False,
-) -> Callback:
-    if func is not None:
-        return Callback(
-            func,
-            is_async=is_async,
-            use_task=use_task,
-            replace_default=False,  # no-op
-        )
-
-    if isinstance(level, str):
-        level = logging._nameToLevel[level.upper()]
-
-    if is_async:
-        async def log(**context):  # type: ignore
-            nonlocal extra_context
-            extra_context = extra_context or {}
-
-            self = context["scraper"]
-            if self.use_progress_bar and progress_update is not None:
-                if isinstance(progress_update, str):
-                    log = progress_update.format(**context, **extra_context)
-                else:
-                    log = await progress_update(**context, **extra_context)
-                self.progress.update(self.progress_task_id, description=log)
-                updated = True
-            else:
-                updated = False
-
-            if message is not None and (not updated or updated and log_with_progress):
-                if isinstance(message, str):
-                    log = message.format(**context, **extra_context)
-                else:
-                    log = await message(**context, **extra_context)
-                logger.log(level, log)
-    else:
-        def log(**context):
-            nonlocal extra_context
-            extra_context = extra_context or {}
-
-            self = context["scraper"]
-            if self.use_progress_bar and progress_update is not None:
-                if isinstance(progress_update, str):
-                    log = progress_update.format(**context, **extra_context)
-                else:
-                    log = progress_update(**context, **extra_context)
-                self.progress.update(self.progress_task_id, description=log)
-                updated = True
-            else:
-                updated = False
-
-            if message is not None and (not updated or updated and log_with_progress):
-                if isinstance(message, str):
-                    log = message.format(**context, **extra_context)
-                else:
-                    log = message(**context, **extra_context)
-                logger.log(level, log)
-
-    return Callback(
-        log,
-        is_async=is_async,
-        use_task=use_task,
-        replace_default=False,  # no-op
-    )
 
 
 class BearerMixin:

@@ -50,7 +50,6 @@ from ._helpers import (
     LogLevel,
     async_reload_manager,
     infer_filetype,
-    crate_default_callback as _crate_callback,
 )
 from ._helpers import shorten as _shorten
 
@@ -229,7 +228,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self._episode_directory_format: str = "{no:04d}. {episode_title}"
 
         # add managers
-        self.callback_manager = CallbackManager(dict(scraper=self))
+        self.callbacks = CallbackManager(dict(scraper=self))
         # initialize extra info scraper
         self.extra_info_scraper
 
@@ -372,11 +371,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if not getattr(self, "bearer", True):  # bearer가 있는데 None인 경우
             logger.debug("Bearer is not set")
 
-        async with self.callback_manager._context_message("setup", start_default=_crate_callback("Gathering data...")):
+        async with self.callbacks.context("setup", start_default=self.callbacks.default("Gathering data...")):
             await self.fetch_all()
 
         webtoon_directory = self._prepare_directory()
-        await self.callback_manager.async_callback("download_started", webtoon_directory=webtoon_directory)
+        await self.callbacks.async_callback("download_started", webtoon_directory=webtoon_directory)
         self._load_snapshot(webtoon_directory)
         self._load_information(webtoon_directory)
         thumbnail_task = await self._download_thumbnail(webtoon_directory)
@@ -387,12 +386,12 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if self._download_status != "nothing":
                 logger.warning(f"Program status is not usual: {self._download_status!r}")
             self._download_status = "downloading"
-            async with self.callback_manager._context_message("download_episode", end_default=_crate_callback("The webtoon {scraper.title} download ended.")):
+            async with self.callbacks.context("download_episode", end_default=self.callbacks.default("The webtoon {scraper.title} download ended.")):
                 await self._download_episodes(download_range, webtoon_directory)
             webtoon_directory = self._post_process_directory(webtoon_directory)
 
         except BaseException as exc:
-            async with self.callback_manager._context_message("download_ended") as context:
+            async with self.callbacks.context("download_ended") as context:
                 # cancelling all tasks
                 canceled_tasks = 0
                 tasks = self._tasks
@@ -408,7 +407,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             raise
 
         else:
-            async with self.callback_manager._context_message("download_ended") as context:
+            async with self.callbacks.context("download_ended") as context:
                 await self._tasks.join()
                 self._download_status = "nothing"
                 extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
@@ -621,18 +620,18 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.download_status[episode_no] = reason
 
         if no_progress:
-            await self.callback_manager.async_callback(
+            await self.callbacks.async_callback(
                 "download_skipped",
-                _crate_callback(
+                self.callbacks.default(
                     msg_format,
                     level=level,
                 ),
                 **context,
             )
         else:
-            await self.callback_manager.async_callback(
+            await self.callbacks.async_callback(
                 "download_skipped",
-                _crate_callback(
+                self.callbacks.default(
                     msg_format,
                     progress_update="{short_ep_title} skipped",
                     level=level,
@@ -694,7 +693,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             not_empty_dir = False
 
         # 다운로드 직전에 메시지를 보냄
-        await self.callback_manager.async_callback("downloading", _crate_callback(progress_update="downloading {short_ep_title}"), **context)
+        await self.callbacks.async_callback("downloading", self.callbacks.default(progress_update="downloading {short_ep_title}"), **context)
 
         # fetch image urls
         time.sleep(self.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
@@ -705,7 +704,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         # 따라서 다른 경우들과 달리 raise를 하는 것이다.
         except BaseException as exc:
             exc.add_note(f"Exception occurred when gathering images of {episode_no + 1}. {episode_title!r}")
-            await self.callback_manager.async_callback("get_episode_images_failed", **context)
+            await self.callbacks.async_callback("get_episode_images_failed", **context)
             raise
 
         if isinstance(image_urls, Callback) or not image_urls:
@@ -713,9 +712,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             with suppress(Exception):
                 episode_directory.rmdir()
             self.download_status[episode_no] = "failed"
-            await self.callback_manager.async_callback(
+            await self.callbacks.async_callback(
                 "download_failed",
-                callback or _crate_callback(
+                callback or self.callbacks.default(
                     "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
@@ -743,13 +742,13 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self._download_episode_images(episode_no, image_urls, episode_directory)
         except BaseException as exc:
             exc.add_note(f"Exception occurred when downloading images of {episode_no + 1}. {episode_title!r}")
-            await self.callback_manager.async_callback("cancelling", **context)
+            await self.callbacks.async_callback("cancelling", **context)
             shutil.rmtree(episode_directory)
             raise
 
         # send done callback message
         self.download_status[episode_no] = "downloaded"
-        await self.callback_manager.async_callback("download_completed", _crate_callback("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
+        await self.callbacks.async_callback("download_completed", self.callbacks.default("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
@@ -987,7 +986,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if any(content.startswith("thumbnail.") for content in contents):
             return None
 
-        async with self.callback_manager._context_message("download_thumbnail"):
+        async with self.callbacks.context("download_thumbnail"):
             return asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
 
 
@@ -1005,11 +1004,10 @@ class CallbackManager:
     """콜백을 관리합니다."""
 
     def __init__(self, default_context: dict | None = None):
-        # TODO: callbacks로 이름 변경
-        self._triggers: defaultdict[str, list[Callback]] = defaultdict(list)
+        self.callbacks: defaultdict[str, list[Callback]] = defaultdict(list)
         self.default_context = default_context or {}
 
-    def create_default_callback(
+    def default(
         self,
         message: str | Callable | None = None,
         extra_context: dict | None = None,
@@ -1021,50 +1019,104 @@ class CallbackManager:
         is_async: bool = False,
         use_task: bool = False,
     ) -> Callback:
-        return _crate_callback(
-            message,
-            extra_context=extra_context,
-            func=func,
-            level=level,
-            progress_update=progress_update,
-            log_with_progress=log_with_progress,
+        """기본 콜백을 생성합니다."""
+
+        if func is not None:
+            return Callback(
+                func,
+                is_async=is_async,
+                use_task=use_task,
+                replace_default=False,  # no-op
+            )
+
+        if isinstance(level, str):
+            level = logging._nameToLevel[level.upper()]
+
+        if is_async:
+            async def log(**context):  # type: ignore
+                nonlocal extra_context
+                extra_context = extra_context or {}
+
+                self = context["scraper"]
+                if self.use_progress_bar and progress_update is not None:
+                    if isinstance(progress_update, str):
+                        log = progress_update.format(**context, **extra_context)
+                    else:
+                        log = await progress_update(**context, **extra_context)
+                    self.progress.update(self.progress_task_id, description=log)
+                    updated = True
+                else:
+                    updated = False
+
+                if message is not None and (not updated or updated and log_with_progress):
+                    if isinstance(message, str):
+                        log = message.format(**context, **extra_context)
+                    else:
+                        log = await message(**context, **extra_context)
+                    logger.log(level, log)
+        else:
+            def log(**context):
+                nonlocal extra_context
+                extra_context = extra_context or {}
+
+                self = context["scraper"]
+                if self.use_progress_bar and progress_update is not None:
+                    if isinstance(progress_update, str):
+                        log = progress_update.format(**context, **extra_context)
+                    else:
+                        log = progress_update(**context, **extra_context)
+                    self.progress.update(self.progress_task_id, description=log)
+                    updated = True
+                else:
+                    updated = False
+
+                if message is not None and (not updated or updated and log_with_progress):
+                    if isinstance(message, str):
+                        log = message.format(**context, **extra_context)
+                    else:
+                        log = message(**context, **extra_context)
+                    logger.log(level, log)
+
+        return Callback(
+            log,
             is_async=is_async,
             use_task=use_task,
+            replace_default=False,  # no-op
         )
 
     @overload
-    def register_async_callback(self, trigger: str, func: CallableT, *, replace_default: bool = False, blocking: bool = True) -> CallableT: ...
+    def register_async(self, trigger: str, func: CallableT, *, replace_default: bool = False, blocking: bool = True) -> CallableT: ...
 
     @overload
-    def register_async_callback(self, trigger: str, *, replace_default: bool = False, blocking: bool = True) -> Callable[[CallableT], CallableT]: ...
+    def register_async(self, trigger: str, *, replace_default: bool = False, blocking: bool = True) -> Callable[[CallableT], CallableT]: ...
 
-    def register_async_callback(self, trigger: str, func: Callable[..., Coroutine] | None = None, *, replace_default: bool = False, blocking: bool = True) -> Any:
+    def register_async(self, trigger: str, func: Callable[..., Coroutine] | None = None, *, replace_default: bool = False, blocking: bool = True) -> Any:
         """특정 callback 트리거가 발생했을 때 실행할 비동기 콜백을 등록합니다."""
         if func is None:
-            return lambda func: self.register_async_callback(trigger, func, replace_default=replace_default, blocking=blocking)
+            return lambda func: self.register_async(trigger, func, replace_default=replace_default, blocking=blocking)
 
         # blocking으로 할지 말지를 callback을 등록할 때 해야 할까, 아님 부를 때 결정해야 할까?
         # 실례를 한번 봐야 할 것 같은데 아직은 잘 모르겠다.
         # 일단 지금은 callback을 등록할 때 결정하는 것으로 한다.
-        self._triggers[trigger].append(Callback(func, is_async=True, replace_default=replace_default, use_task=not blocking))
+        self.callbacks[trigger].append(Callback(func, is_async=True, replace_default=replace_default, use_task=not blocking))
         return func
 
-    def unregister_callback(self, trigger: str, func_or_callback: Callable | Callback) -> None:
+    def remove(self, trigger: str, func_or_callback: Callable | Callback) -> None:
         if isinstance(func_or_callback, Callback):
-            self._triggers[trigger].remove(func_or_callback)
+            self.callbacks[trigger].remove(func_or_callback)
         else:
-            self._triggers[trigger][:] = (callback for callback in self._triggers[trigger] if callback.function is not func_or_callback)
+            self.callbacks[trigger][:] = (callback for callback in self.callbacks[trigger] if callback.function is not func_or_callback)
 
     @overload
-    def register_callback(self, trigger: str, func: CallableT, *, replace_default: bool = False) -> CallableT: ...
+    def register(self, trigger: str, func: CallableT, *, replace_default: bool = False) -> CallableT: ...
 
     @overload
-    def register_callback(self, trigger: str, *, log_format: str, log_level: typing.Literal["info", "warning", "error", "critical"] | int = "info", replace_default: bool = False) -> None: ...
+    def register(self, trigger: str, *, log_format: str, log_level: typing.Literal["info", "warning", "error", "critical"] | int = "info", replace_default: bool = False) -> None: ...
 
     @overload
-    def register_callback(self, trigger: str, *, replace_default: bool = False) -> Callable[[CallableT], CallableT]: ...
+    def register(self, trigger: str, *, replace_default: bool = False) -> Callable[[CallableT], CallableT]: ...
 
-    def register_callback(
+    def register(
         self,
         trigger: str,
         func: Callable | None = None,
@@ -1100,14 +1152,14 @@ class CallbackManager:
             replace_default (bool, optional): 기본으로 설정되어 있는 callback을 대체할 것인지 설정합니다. True로 설정할 경우 기존 callback은 실행되지 않습니다.
         """
         if func is None and log_format is None:
-            return lambda func: self.register_callback(trigger, func, replace_default=replace_default)
+            return lambda func: self.register(trigger, func, replace_default=replace_default)
 
         if log_format is not None:
             if isinstance(log_level, str):
                 log_level = logging._nameToLevel[log_level.upper()]
             func = lambda scraper, **context: logger.log(log_level, log_format.format(context))  # noqa: E731
 
-        self._triggers[trigger].append(Callback(func, is_async=False, replace_default=replace_default))  # type: ignore
+        self.callbacks[trigger].append(Callback(func, is_async=False, replace_default=replace_default))  # type: ignore
         return func
 
     async def async_callback(
@@ -1122,13 +1174,12 @@ class CallbackManager:
         # 무조건 async_callback을 사용할 것.
         skip_default = False
         tasks = []
-        if callbacks := self._triggers.get(situation):
+        if callbacks := self.callbacks.get(situation):
             for callback in callbacks:
                 if callback.is_async:
                     if callback.use_task:
+                        # task가 제대로 종료되는지 확인하는 것은 caller의 몫
                         task = asyncio.create_task(callback.function(**self.default_context, **context))
-                        # FIXME
-                        # await self._tasks.put(task)
                         tasks.append(task)
                     else:
                         await callback.function(**self.default_context, **context)
@@ -1158,7 +1209,7 @@ class CallbackManager:
     ) -> None:
         # async_callback이 callback을 부르지 않으니 둘 다 수정하도록 할 것
         skip_default = False
-        if callbacks := self._triggers.get(situation):
+        if callbacks := self.callbacks.get(situation):
             for callback in callbacks:
                 if callback.is_async:
                     logger.error("An registered async callback is ignored. This callback does not support async callbacks.")
@@ -1179,8 +1230,14 @@ class CallbackManager:
         else:
             logger.debug(f"{situation}:")
 
+    # TODO: 실제로 유용하게 사용될 수 있는지 분석하기
     @asynccontextmanager
-    async def _context_message(self, context_name: str, *, start_default: Callback | None = None, end_default: Callback | None = None, **contexts):
+    async def with_context(self, context: dict | None = None):
+        context = context or {}
+        yield lambda *args, **kwargs: self.async_callback(*args, **context, **kwargs)
+
+    @asynccontextmanager
+    async def context(self, context_name: str, *, start_default: Callback | None = None, end_default: Callback | None = None, **contexts):
         await self.async_callback(context_name, start_default, finishing=False, **contexts)
         end_contexts: dict = dict(finishing=True, is_successful=True)
         yield end_contexts
