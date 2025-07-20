@@ -33,7 +33,7 @@ class CallbackManager:
         self.callbacks: defaultdict[str, list[Callback]] = defaultdict(list)
         self.default_context = default_context or {}
 
-    def default(
+    def create(
         self,
         message: str | Callable | None = None,
         extra_context: dict | None = None,

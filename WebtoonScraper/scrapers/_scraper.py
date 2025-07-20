@@ -369,7 +369,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if not getattr(self, "bearer", True):  # bearer가 있는데 None인 경우
             logger.debug("Bearer is not set")
 
-        async with self.callbacks.context("setup", start_default=self.callbacks.default("Gathering data...")):
+        async with self.callbacks.context("setup", start_default=self.callbacks.create("Gathering data...")):
             await self.fetch_all()
 
         webtoon_directory = self._prepare_directory()
@@ -384,7 +384,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if self._download_status != "nothing":
                 logger.warning(f"Program status is not usual: {self._download_status!r}")
             self._download_status = "downloading"
-            async with self.callbacks.context("download_episode", end_default=self.callbacks.default("The webtoon {scraper.title} download ended.")):
+            async with self.callbacks.context("download_episode", end_default=self.callbacks.create("The webtoon {scraper.title} download ended.")):
                 await self._download_episodes(download_range, webtoon_directory)
             webtoon_directory = self._post_process_directory(webtoon_directory)
 
@@ -620,7 +620,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         if no_progress:
             await self.callbacks.async_callback(
                 "download_skipped",
-                self.callbacks.default(
+                self.callbacks.create(
                     msg_format,
                     level=level,
                 ),
@@ -629,7 +629,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         else:
             await self.callbacks.async_callback(
                 "download_skipped",
-                self.callbacks.default(
+                self.callbacks.create(
                     msg_format,
                     progress_update="{short_ep_title} skipped",
                     level=level,
@@ -683,7 +683,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # send done callback message
         self.download_status[episode_no] = "downloaded"
-        await self.callbacks.async_callback("download_completed", self.callbacks.default("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
+        await self.callbacks.async_callback("download_completed", self.callbacks.create("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
@@ -980,7 +980,7 @@ class WebtoonDirectory:
             not_empty_dir = False
 
         # 다운로드 직전에 메시지를 보냄
-        await scraper.callbacks.async_callback("downloading", scraper.callbacks.default(progress_update="downloading {short_ep_title}"), **context)
+        await scraper.callbacks.async_callback("downloading", scraper.callbacks.create(progress_update="downloading {short_ep_title}"), **context)
 
         # fetch image urls
         time.sleep(scraper.download_interval)  # 실질적인 외부 요청을 보내기 직전에만 interval을 넣음.
@@ -1001,7 +1001,7 @@ class WebtoonDirectory:
             scraper.download_status[episode_no] = "failed"
             await scraper.callbacks.async_callback(
                 "download_failed",
-                callback or scraper.callbacks.default(
+                callback or scraper.callbacks.create(
                     "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
