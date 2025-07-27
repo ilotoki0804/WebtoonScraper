@@ -30,6 +30,7 @@ class CallbackManager:
     """콜백을 관리합니다."""
 
     def __init__(self, default_context: dict | None = None):
+        self.disable_default_callbacks = False
         self.callbacks: defaultdict[str, list[Callback]] = defaultdict(list)
         self.default_context = default_context or {}
 
@@ -214,7 +215,7 @@ class CallbackManager:
                 if callback.replace_default:
                     skip_default = True
 
-        if not skip_default and default_callback is not None:
+        if not self.disable_default_callbacks and not skip_default and default_callback is not None:
             if default_callback.is_async:
                 await default_callback.function(**self.default_context, **context)
             else:
