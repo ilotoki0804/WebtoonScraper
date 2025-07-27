@@ -683,7 +683,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # send done callback message
         self.download_status[episode_no] = "downloaded"
-        await self.callbacks.async_callback("download_completed", self.callbacks.create("[{total_ep}/{episode_no1}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
+        await self.callbacks.async_callback("download_completed", self.callbacks.create("[{episode_no1}/{total_ep}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
