@@ -17,7 +17,7 @@ platforms: dict[str, type[Scraper]] = {}
 console = Console()
 
 logger = logging.getLogger("WebtoonScraper")
-logger.addHandler(RichHandler(show_time=False, show_path=False))
+logger.addHandler(RichHandler(show_time=False, show_path=False, markup=True))
 logger.setLevel(logging.INFO)
 
 
