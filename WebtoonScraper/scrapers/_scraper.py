@@ -599,10 +599,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
         if (ep_title := self.episode_titles[episode_no]) is None:
             short_ep_title = f"#{episode_no + 1}"
-            msg_format = "[{total_ep}/{episode_no1}] The episode is skipped {description}"
+            msg_format = "[{episode_no1}/{total_ep}] The episode is skipped {description}"
         else:
             short_ep_title = _shorten(ep_title)
-            msg_format = "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is skipped {description}"
+            msg_format = "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is skipped {description}"
 
         # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
         # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
@@ -1002,7 +1002,7 @@ class WebtoonDirectory:
             await scraper.callbacks.async_callback(
                 "download_failed",
                 callback or scraper.callbacks.create(
-                    "[{total_ep}/{episode_no1}] The episode '{short_ep_title}' is failed {description}",
+                    "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is failed {description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
                     log_with_progress=True,
