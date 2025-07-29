@@ -164,9 +164,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     # MARK: CLASS VARIABLES
     PLATFORM: ClassVar[str]
-    download_interval: int | float = 0.5
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
     LOGIN_URL: str
+    download_interval: int | float = 0.5
     information_vars: dict[str, None | str | Path | Callable] = dict(
         title=None,
         platform="PLATFORM",
@@ -179,7 +179,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         episode_dir_name="_episode_directory_format",
         episode_dir_names=None,
     )
-    information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """스크래퍼를 웹툰 id를 받아 초기화합니다.
@@ -208,6 +207,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # settings attributes
         self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
+        self.information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
         self.skip_thumbnail_download: bool = False
@@ -218,6 +218,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.webtoon_id: WebtoonId = webtoon_id
         self.base_directory: Path | str = Path.cwd()
         self.skip_download: list[int] = []
+        self.callbacks = CallbackManager(dict(scraper=self))
+        # initialize extra info scraper
+        self.extra_info_scraper
+
+        # private data attributes
         """0-based index를 사용해 다운로드를 생략할 웹툰을 결정합니다."""
         self._download_status: Literal["downloading", "nothing", "canceling"] = "nothing"
         self._tasks: asyncio.Queue[asyncio.Future] = asyncio.Queue()
@@ -226,10 +231,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """쿠키가 사용자에 의해 변경되었는지를 검사합니다."""
         self._webtoon_directory_format: str = "{title}({identifier})"
         self._episode_directory_format: str = "{no:04d}. {episode_title}"
-
-        self.callbacks = CallbackManager(dict(scraper=self))
-        # initialize extra info scraper
-        self.extra_info_scraper
 
     def __init_subclass__(cls, register: bool = True, override: bool = False) -> None:
         if not register:
@@ -246,29 +247,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         platforms[platform_name] = cls
 
     # MARK: ABSTRACT METHODS
-
-    @property
-    def extra_info_scraper(self) -> ExtraInfoScraper:
-        try:
-            return self._extra_info_scraper
-        except AttributeError:
-            self.extra_info_scraper = self.EXTRA_INFO_SCRAPER_FACTORY()
-            return self._extra_info_scraper
-
-    @extra_info_scraper.setter
-    def extra_info_scraper(self, extra: ExtraInfoScraper | None) -> None:
-        try:
-            prev_extra = self._extra_info_scraper
-        except AttributeError:
-            pass
-        else:
-            prev_extra.unregister(self)
-
-        if extra is None:
-            extra = self.EXTRA_INFO_SCRAPER_FACTORY()
-
-        self._extra_info_scraper = extra
-        extra.register(self)
 
     @abstractmethod
     async def get_episode_image_urls(self, episode_no: int) -> list[str] | None | Callback:
@@ -319,10 +297,19 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     def _extract_webtoon_id(cls, url: URL) -> WebtoonId | None:
         raise NotImplementedError
 
+    # MARK: OVERRIDABLE PRIVATE METHODS
+
     @classmethod
     def _from_string(cls, string: str, /, **kwargs):
         """webtoon_id가 int가 아니라면 반드시 구현해야 합니다."""
         return cls(int(string), **kwargs)  # type: ignore
+
+    def _apply_option(self, option: str, value: str) -> None:
+        logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
+
+    def _set_cookie(self, value: str) -> None:
+        self.headers.update({"Cookie": value})
+        self.json_headers.update({"Cookie": value})
 
     # MARK: PUBLIC METHODS
 
@@ -345,13 +332,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 if "event loop" in exc.args[0]:
                     exc.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             raise
-
-    def _apply_skip_previously_failed(self) -> None:
-        if to_skip := self.previous_status_to_skip:
-            prev_episode_ids = self.directory_manager._old_information.get("episode_ids", [])
-            download_status = self.directory_manager._old_information.get("download_status", [])
-            id_status = dict(zip(prev_episode_ids, download_status, strict=True))
-            self.skip_download.extend(i for i, episode_id in enumerate(self.episode_ids) if id_status.get(episode_id) in to_skip)
 
     async def async_download_webtoon(self, download_range: RangeType = None) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
@@ -530,31 +510,30 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         self.json_headers.clear()
         self.json_headers.update(value)
 
+    @property
+    def extra_info_scraper(self) -> ExtraInfoScraper:
+        try:
+            return self._extra_info_scraper
+        except AttributeError:
+            self.extra_info_scraper = self.EXTRA_INFO_SCRAPER_FACTORY()
+            return self._extra_info_scraper
+
+    @extra_info_scraper.setter
+    def extra_info_scraper(self, extra: ExtraInfoScraper | None) -> None:
+        try:
+            prev_extra = self._extra_info_scraper
+        except AttributeError:
+            pass
+        else:
+            prev_extra.unregister(self)
+
+        if extra is None:
+            extra = self.EXTRA_INFO_SCRAPER_FACTORY()
+
+        self._extra_info_scraper = extra
+        extra.register(self)
+
     # MARK: PRIVATE METHODS
-
-    def _set_cookie(self, value: str) -> None:
-        self.headers.update({"Cookie": value})
-        self.json_headers.update({"Cookie": value})
-
-    def _apply_options(self, options: dict[str, str], /) -> None:
-        if options:
-            for option, value in options.items():
-                self._apply_option(option.strip().lower().replace("_", "-"), value)
-
-    def _apply_option(self, option: str, value: str) -> None:
-        logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
-
-    @staticmethod
-    def _as_boolean(value: str) -> bool:
-        # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
-        # https://www.sqlite.org/pragma.html
-        match value.strip().lower():
-            case "1" | "yes" | "true" | "on":
-                return True
-            case "0" | "no" | "false" | "off":
-                return False
-            case other:
-                raise ValueError(f"{other!r} can't be represented as boolean.")
 
     async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
         total_episodes = len(self.episode_ids)
@@ -595,48 +574,6 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     logger.warning("Can't stop progress since it's in use.")
                 else:
                     self.progress.stop()
-
-    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, no_progress: bool = False, episode_no, level: LogLevel = "info", **context):
-        """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
-        if (ep_title := self.episode_titles[episode_no]) is None:
-            short_ep_title = f"#{episode_no + 1}"
-            msg_format = "[{episode_no1}/{total_ep}] The episode is skipped {description}"
-        else:
-            short_ep_title = _shorten(ep_title)
-            msg_format = "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is skipped {description}"
-
-        # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
-        # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
-        # 하고 오류가 발생함
-        context.update(
-            description=description,
-            reason=reason,
-            short_ep_title=short_ep_title,
-            episode_no=episode_no,
-            episode_no1=episode_no + 1,
-        )
-
-        self.download_status[episode_no] = reason
-
-        if no_progress:
-            await self.callbacks.async_callback(
-                "download_skipped",
-                self.callbacks.create(
-                    msg_format,
-                    level=level,
-                ),
-                **context,
-            )
-        else:
-            await self.callbacks.async_callback(
-                "download_skipped",
-                self.callbacks.create(
-                    msg_format,
-                    progress_update="{short_ep_title} skipped",
-                    level=level,
-                ),
-                **context,
-            )
 
     async def _download_episode(self, episode_no: int, context: dict) -> None:
         episode_title = self.episode_titles[episode_no]
@@ -786,6 +723,72 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.warning(f"Unexpected type: {type(other).__name__} of {other!r}")
                 return other
 
+    def _apply_options(self, options: dict[str, str], /) -> None:
+        if options:
+            for option, value in options.items():
+                self._apply_option(option.strip().lower().replace("_", "-"), value)
+
+    def _apply_skip_previously_failed(self) -> None:
+        if to_skip := self.previous_status_to_skip:
+            prev_episode_ids = self.directory_manager._old_information.get("episode_ids", [])
+            download_status = self.directory_manager._old_information.get("download_status", [])
+            id_status = dict(zip(prev_episode_ids, download_status, strict=True))
+            self.skip_download.extend(i for i, episode_id in enumerate(self.episode_ids) if id_status.get(episode_id) in to_skip)
+
+    @staticmethod
+    def _as_boolean(value: str) -> bool:
+        # sqlite에서 boolean pragma statement를 처리하는 방식을 참고함
+        # https://www.sqlite.org/pragma.html
+        match value.strip().lower():
+            case "1" | "yes" | "true" | "on":
+                return True
+            case "0" | "no" | "false" | "off":
+                return False
+            case other:
+                raise ValueError(f"{other!r} can't be represented as boolean.")
+
+    async def _episode_skipped(self, reason: DownloadStatus, description: str, *, no_progress: bool = False, episode_no, level: LogLevel = "info", **context):
+        """에피소드 다운로드를 건너뛸 때 사용하는 콜백입니다."""
+        if (ep_title := self.episode_titles[episode_no]) is None:
+            short_ep_title = f"#{episode_no + 1}"
+            msg_format = "[{episode_no1}/{total_ep}] The episode is skipped {description}"
+        else:
+            short_ep_title = _shorten(ep_title)
+            msg_format = "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is skipped {description}"
+
+        # 원래대로면 context를 더럽히면 안 되지만 어차피 skip이 끝나면 context는 더 이상 사용되지 않으니 괜찮음
+        # 이 방식이 아리나 직접 async_callback에 넣으면 "got multiple values for keyword argument 'short_ep_title'"
+        # 하고 오류가 발생함
+        context.update(
+            description=description,
+            reason=reason,
+            short_ep_title=short_ep_title,
+            episode_no=episode_no,
+            episode_no1=episode_no + 1,
+        )
+
+        self.download_status[episode_no] = reason
+
+        if no_progress:
+            await self.callbacks.async_callback(
+                "download_skipped",
+                self.callbacks.create(
+                    msg_format,
+                    level=level,
+                ),
+                **context,
+            )
+        else:
+            await self.callbacks.async_callback(
+                "download_skipped",
+                self.callbacks.create(
+                    msg_format,
+                    progress_update="{short_ep_title} skipped",
+                    level=level,
+                ),
+                **context,
+            )
+
     async def _download_image(self, url: str, directory: Path, name: str, episode_no: int | None = None) -> Path:
         try:
             response = await self.client.get(url)
@@ -816,7 +819,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         """일반 문자열을 파일명으로 사용 가능한 문자열로 변경합니다.
 
         이 함수는 파일 '경로'를 처리하도록 설계되지 않았기에
-        경로가 파일 이름을 받는다는 점을 유의하세요.
+        인자로 파일 이름을 받는다는 점을 유의하세요.
         """
         return pf.convert(html.unescape(name))
 

@@ -169,7 +169,7 @@ download_subparser.add_argument(
 download_subparser.add_argument(
     "--excluding",
     type=_parse_excluding,
-    default=Scraper.information_to_exclude,
+    default=("extra/", "credentials/"),
     help="Exclude specific information from information.json. Defaults to `extra/,credentials/`.",
 )
 download_subparser.add_argument(
