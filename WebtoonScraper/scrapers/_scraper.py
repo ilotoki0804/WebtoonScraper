@@ -9,6 +9,7 @@ import os
 import shutil
 import ssl
 import time
+import typing
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Container, Mapping
@@ -376,7 +377,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         await self.callbacks.async_callback("download_started", webtoon_directory=webtoon_directory)
         self.directory_manager = WebtoonDirectory(webtoon_directory, ignore_snapshot=self.ignore_snapshot)
         self.directory_manager.load()
-        thumbnail_task = await self._download_thumbnail(webtoon_directory)
+        thumbnail_task = await self._download_thumbnail()
 
         self._apply_skip_previously_failed()
 
@@ -835,10 +836,11 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         return result if result is None else result.value
         # return {key: morsel.value for key, morsel in parsed.items()}
 
-    async def _download_thumbnail(self, webtoon_directory: Path) -> None | asyncio.Task[Path]:
+    async def _download_thumbnail(self) -> None | asyncio.Task[Path]:
         if self.skip_thumbnail_download:
             return None
 
+        webtoon_directory = self.directory_manager.webtoon_directory
         try:
             contents = os.listdir(webtoon_directory)
         except Exception:
