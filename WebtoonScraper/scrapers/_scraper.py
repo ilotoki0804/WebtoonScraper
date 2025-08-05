@@ -24,6 +24,9 @@ from typing import (
     TypeVar,
 )
 
+# httpx가 certifi를 기본 의존성으로 사용하기 때문에
+# 별도의 의존성 추가로 간주되지 않음.
+import certifi
 import httpc
 import httpx
 import pyfilename as pf
@@ -198,7 +201,10 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             follow_redirects=False,
             # 어차피 업스트림에서 복사되기에 복사 없이 보내도 괜찮음.
             headers=httpc.HEADERS,
-            verify=ssl.create_default_context(),
+            # 아주 드문 경우 certifi를 사용하지 않을 때 ssl 관련 오류가 보고되는 경우가 있어
+            # 문제를 피하기 위해 certifi를 사용. 그러나 이를 사용하지 않아도 99%의 경우는 상관 없고,
+            # 실제로 제거해도 문제 없음.
+            verify=ssl.create_default_context(cafile=certifi.where()),  # cspell: ignore cafile
         )
         self.json_headers = httpc.HEADERS | {
             "accept": "application/json, text/plain, */*",
