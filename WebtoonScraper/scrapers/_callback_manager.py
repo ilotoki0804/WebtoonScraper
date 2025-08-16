@@ -23,6 +23,7 @@ class Callback(NamedTuple):
     function: Callable
     is_async: bool
     replace_default: bool
+    # must_execute: bool = True  # 미래에 모든 콜백이 종료되는 기능이 생기면 추가할 것.
     use_task: bool | None = None
 
 

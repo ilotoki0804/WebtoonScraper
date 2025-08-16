@@ -29,7 +29,7 @@ class ExtraInfoScraper:
         scraper.callbacks.remove("download_started", self.initializer)
         scraper.callbacks.remove("download_ended", self.finalizer)
 
-    def initializer(self, scraper: Scraper, webtoon_directory: Path):
+    def initializer(self, scraper: Scraper):
         pass
 
     def finalizer(self, finishing: bool, **context):
@@ -40,7 +40,7 @@ class ExtraInfoScraper:
         extras: dict = context["extras"]
         scraper: Scraper = context["scraper"]
 
-        webtoon_directory: Path = extras["webtoon_directory"]
+        webtoon_directory: Path = scraper.directory_manager.webtoon_directory
         thumbnail_path: Path | None = extras.get("thumbnail_path")
 
         if thumbnail_path is None:

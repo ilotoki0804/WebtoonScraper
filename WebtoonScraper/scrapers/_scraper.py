@@ -360,9 +360,9 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             await self.fetch_all()
 
         webtoon_directory = self._prepare_directory()
-        await self.callbacks.async_callback("download_started", webtoon_directory=webtoon_directory)
         self.directory_manager = WebtoonDirectory(webtoon_directory, ignore_snapshot=self.ignore_snapshot)
         self.directory_manager.load()
+        await self.callbacks.async_callback("download_started")
         thumbnail_task = await self._download_thumbnail()
 
         self._apply_skip_previously_failed()
@@ -372,8 +372,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.warning(f"Program status is not usual: {self._download_status!r}")
             self._download_status = "downloading"
             async with self.callbacks.context("download_episode", end_default=self.callbacks.create("The webtoon {scraper.title} download ended.")):
-                await self._download_episodes(download_range, webtoon_directory)
-            webtoon_directory = self._post_process_directory(webtoon_directory)
+                await self._download_episodes(download_range)
 
         except BaseException as exc:
             async with self.callbacks.context("download_ended") as context:
@@ -384,7 +383,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                     task = tasks.get_nowait()
                     canceled_tasks += task.cancel()
 
-                extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
+                extras: dict = dict(download_range=download_range)
                 if thumbnail_task and not self.skip_thumbnail_download and not thumbnail_task.cancel():
                     extras["thumbnail_path"] = await thumbnail_task
                 self._download_status = "nothing"
@@ -395,7 +394,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             async with self.callbacks.context("download_ended") as context:
                 await self._tasks.join()
                 self._download_status = "nothing"
-                extras = dict(webtoon_directory=webtoon_directory, download_range=download_range)
+                extras: dict = dict(download_range=download_range)
                 if thumbnail_task and not self.skip_thumbnail_download:
                     extras["thumbnail_path"] = await thumbnail_task
                 context.update(exc=None, extras=extras)
@@ -541,7 +540,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     # MARK: PRIVATE METHODS
 
-    async def _download_episodes(self, download_range: RangeType, webtoon_directory: Path) -> None:
+    async def _download_episodes(self, download_range: RangeType) -> None:
         total_episodes = len(self.episode_ids)
         self.download_status: list[DownloadStatus | None] = [None] * total_episodes
         self.episode_dir_names: list[str | None] = [None] * total_episodes
