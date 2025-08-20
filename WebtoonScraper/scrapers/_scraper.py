@@ -876,10 +876,28 @@ class WebtoonDirectory:
     def __init__(self, webtoon_directory: Path, ignore_snapshot: bool = False) -> None:
         self.webtoon_directory = webtoon_directory
         self.ignore_snapshot = ignore_snapshot
+        self.live_directory_detection = True
 
     def load(self) -> None:
         self._load_snapshot(self.webtoon_directory)
         self._load_information(self.webtoon_directory)
+
+    def _load_directory_tree(self) -> None:
+        def traverse(tree, paths):
+            data: dict = tree
+            for name in paths:
+                data = data[name]
+            return data
+
+        webtoon = self.webtoon_directory
+        tree = {}
+        for dirpath, dirnames, filenames in os.walk(webtoon):
+            relative_path = Path(dirpath).relative_to(webtoon).parts
+            to_insert = traverse(tree, relative_path)
+            for dirname in dirnames:
+                to_insert[dirname] = {}
+            for filename in filenames:
+                to_insert[filename] = "exists"
 
     def _get_snapshot_contents(self, path: Path) -> str | dict | None:
         result = self._snapshot_data.get("contents")
