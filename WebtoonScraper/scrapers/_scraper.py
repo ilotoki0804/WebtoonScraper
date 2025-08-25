@@ -665,14 +665,15 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             if remains in to_exclude:
                 continue
 
+            old_information = self.directory_manager._old_information
             if sep:
-                to_store = information[subcategory] = information.get(subcategory, {})
+                to_store = information.setdefault(subcategory, {})
+                old_information = old_information.get(subcategory, {})
                 name = remains
             else:
                 to_store = information
                 name = original_name
 
-            old_information = self.directory_manager._old_information
             fetch_failed = []
             match to_fetch:
                 case None:
@@ -682,6 +683,8 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
                         if old_value is _ABSENT:
                             fetch_failed.append(original_name)
                             logger.warning(f"{type(self).__name__}.{name} does not exist, and it'll be excluded from information.json.")
+                        else:
+                            to_store[name] = old_value
                         continue
 
                     value = self._normalize_information(value)
