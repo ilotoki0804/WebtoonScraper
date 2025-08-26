@@ -33,15 +33,34 @@ class NaverWebtoonScraper(Scraper[int]):
     )
     comment_counts: dict
     comments: dict
+    comment_headers: dict
 
     def __init__(self, webtoon_id: int) -> None:
-        self.download_comments = False
-        self.top_comments_only = True
+        self.download_comments_option: Literal["best", "new"] | None = None
+        self.comment_download_limit: int | None = None
         self.download_audio = True
         self.episode_audio_urls: dict[int, str] = {}
         self.audio_names: dict[int, str] = {}
         super().__init__(webtoon_id)
         self.headers.update({"Referer": "https://comic.naver.com/webtoon/"})
+        # self.comment_headers = httpc.HEADERS | {
+        self.comment_headers = httpc.HEADERS | {
+            "Accept": "*/*",
+            "Accept-Language": "ko",
+            "Connection": "keep-alive",
+            "Referer": "https://comic.naver.com/webtoon/detail?titleId=702435&no=1&week=finish",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0",
+            "credentials": "include",
+            "language": "KOREAN",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"99\", \"Microsoft Edge\";v=\"139\", \"Chromium\";v=\"139\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "service-ticket-id": "comic_webtoon",
+            "service-type": "KW"
+        }
 
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
@@ -141,9 +160,14 @@ class NaverWebtoonScraper(Scraper[int]):
         except AttributeError:
             pass
         else:
+            # TODO: 댓글 다운로드에 callback을 사용하기
             # 댓글을 asynchronously 다운로드하고 싶은 경우.
             # await self._tasks.put(asyncio.create_task(get_episode_comments(episode_no, self)))
-            await get_episode_comments(episode_no, self)
+            try:
+                await get_episode_comments(episode_no, self)
+            except Exception as exc:
+                exc.add_note("Exception occurred when getting comments.")
+                raise
 
         return episode_image_urls
 
@@ -216,6 +240,7 @@ class NaverWebtoonScraper(Scraper[int]):
             raise ValueError("Cookie does not contain required data.")
         self.headers.update({"Cookie": value, "X-Xsrf-Token": token})
         self.json_headers.update({"Cookie": value, "X-Xsrf-Token": token})
+        self.comment_headers.update({"Cookie": value})  # comment에서는 X-Xsrf-Token을 사용하지 않는 것 같음
 
     def _gather_author_comment(self, episode_no: int, response: httpc.Response):
         script = response.single("body > script", remain_ok=True)
@@ -230,11 +255,17 @@ class NaverWebtoonScraper(Scraper[int]):
     def _apply_option(self, option: str, value: str) -> None:
         match option:
             case "download-comment" | "download-comments":
-                self.download_comments = self._as_boolean(value)
-            case "download-all-comment" | "download-all-comments":
-                if self._as_boolean(value):
-                    self.download_comments = True
-                    self.top_comments_only = False
+                match value.lower():
+                    case "false":
+                        self.download_comments_option = None
+                    case "best" | "true":
+                        self.download_comments_option = "best"
+                    case "all" | "new" | "latest":
+                        self.download_comments_option = "new"
+                    case other:
+                        raise ValueError(f"Invalid value for download-comment option. A value must be among 'false', 'best', or 'new'. Value: {other!r}")
+            case "comment-download-limit":
+                self.comment_download_limit = int(value)
             case "download-audio" | "download-audios":
                 self.download_audio = self._as_boolean(value)
             case _:
