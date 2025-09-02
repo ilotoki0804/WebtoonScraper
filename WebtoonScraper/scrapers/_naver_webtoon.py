@@ -265,7 +265,7 @@ class NaverWebtoonScraper(Scraper[int]):
                     case other:
                         raise ValueError(f"Invalid value for download-comment option. A value must be among 'false', 'best', or 'new'. Value: {other!r}")
             case "comment-download-limit":
-                self.comment_download_limit = int(value)
+                self.comment_download_limit = int(value) if value else None
             case "download-audio" | "download-audios":
                 self.download_audio = self._as_boolean(value)
             case _:
