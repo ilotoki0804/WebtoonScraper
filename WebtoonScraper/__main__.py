@@ -293,7 +293,7 @@ async def parse_download(args: argparse.Namespace) -> None:
                 scraper.thread_number = args.thread_number  # type: ignore
 
             scraper.information_to_exclude = args.excluding
-            scraper.previous_status_to_skip = args.previous_status_to_skip
+            scraper.previous_status_to_skip = args.skip_status
             await scraper.async_download_webtoon(args.range)
         except Exception as exc:
             if args.suppress_error_on_batch:
