@@ -68,7 +68,7 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     BASE_URLS = dict(
         ko="https://www.lezhin.com",
         en="https://www.lezhinus.com",
-        ja="https://www.lezhin.jp",
+        ja="https://lezhin.jp",
     )
     LOCALES = dict(
         ko="ko-KR",
@@ -190,10 +190,12 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     @async_reload_manager
     async def fetch_episode_information(self, *, reload: bool = False) -> None:
         with WebtoonIdError.redirect_error(self):
+            language_code = f"/{self.language_code}" * (self.language_code != "ja")
             if self.is_library:
-                url = f"{self.base_url}/{self.language_code}/library/comic/{self.LOCALES[self.language_code]}/{self.webtoon_id}"
+                url = f"{self.base_url}{language_code}/library/comic/{self.LOCALES[self.language_code]}/{self.webtoon_id}"
             else:
-                url = f"{self.base_url}/{self.language_code}/comic/{self.webtoon_id}"
+                url = f"{self.base_url}{language_code}/comic/{self.webtoon_id}"
+
             try:
                 res = await self.client.get(url)
             except HTTPStatusError as exc:
@@ -438,6 +440,12 @@ class LezhinComicsScraper(BearerMixin, Scraper[str]):
     @classmethod
     def _extract_webtoon_id(cls, url) -> str | tuple[str, str] | None:
         match url.host, url.parts:
+            case "lezhin.jp" | "www.lezhin.jp", _:
+                logger.error("Lezhin comics JP is not yet supported.")
+                return None
+            case "lezhin.jp", ("/", "comic", webtoon_id):
+                return "ja", webtoon_id
+            # www.lezhin.jp는 나중에 지원을 제거할 것
             case "www.lezhin.com" | "www.lezhinus.com" | "www.lezhin.jp", ("/", language_code, "comic", webtoon_id):
                 return language_code, webtoon_id
             case "www.lezhin.com" | "www.lezhinus.com" | "www.lezhin.jp", ("/", language_code, "library", "comic", locale, webtoon_id):
