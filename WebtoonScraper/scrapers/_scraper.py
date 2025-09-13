@@ -501,8 +501,22 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
     @cookie.setter
     def cookie(self, value: str) -> None:
+        "value는 headers string이어도 되고, json이어도 됩니다."
+        try:
+            cookie_data = json.loads(value)
+        except json.JSONDecodeError:
+            cookie_value = value
+        else:
+            # TODO: 나중에는 json으로 오는 cookie를 기본값으로 하기!!!
+            cookies_text = []
+            for cookie in cookie_data:
+                # 아마? 셀레니움에서 추가하는 쿠키 같음. 제거함.
+                if cookie["name"].startswith("ttcsid"):
+                    continue
+                cookies_text.append(f"{cookie['name']}={cookie['value']}")
+            cookie_value = "; ".join(cookies_text)
         self._cookie_set = True
-        self._set_cookie(value)
+        self._set_cookie(cookie_value)
 
     @property
     def headers(self) -> httpx.Headers:
