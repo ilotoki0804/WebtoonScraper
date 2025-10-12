@@ -15,14 +15,6 @@ from abc import abstractmethod
 from collections.abc import Callable, Container, Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    ClassVar,
-    Generic,
-    Literal,
-    Self,
-    TypeVar,
-)
 
 # httpx가 certifi를 기본 의존성으로 사용하기 때문에
 # 별도의 의존성 추가로 간주되지 않음.
@@ -56,13 +48,13 @@ from ._callback_manager import (
 )
 from ._helpers import shorten as _shorten
 
-WebtoonId = TypeVar("WebtoonId")
-CallableT = TypeVar("CallableT", bound=Callable)
+WebtoonId = typing.TypeVar("WebtoonId")
+CallableT = typing.TypeVar("CallableT", bound=Callable)
 RangeType = EpisodeRange | Container[WebtoonId] | None
-DownloadStatus = Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable", "skipped_by_skip_download", "skipped_by_range"]
+DownloadStatus = typing.Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable", "skipped_by_skip_download", "skipped_by_range"]
 
 
-class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
+class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
     """Abstract base class of scrapers.
 
     WebtoonScraper는 ABC인 이 Scraper 클래스와 이 클래스를 상속한 여러 다른 클래스들로 구성됩니다.
@@ -70,7 +62,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     Scraper 클래스에는 여러 속성이 있어 작동 방식을 tweak하거나 다운로드와 관련한 정보를 확인할 수 있습니다.
 
     Attributes:
-        existing_episode_policy (Literal["skip", "raise", "download_again", "hard_check"], "skip"):
+        existing_episode_policy (typing.Literal["skip", "raise", "download_again", "hard_check"], "skip"):
             다운로드받을 에피소드와 동일한 이름의 디렉토리가 이미 존재할 때 어떤 작업을 취할 지를 결정합니다.
             * skip: 조건 없이 다운로드를 건너뜁니다.
             * raise: 예외를 발생시킵니다.
@@ -166,7 +158,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
     """
 
     # MARK: CLASS VARIABLES
-    PLATFORM: ClassVar[str]
+    PLATFORM: typing.ClassVar[str]
     EXTRA_INFO_SCRAPER_FACTORY: type[ExtraInfoScraper] = ExtraInfoScraper
     LOGIN_URL: str
     download_interval: int | float = 0.5
@@ -212,7 +204,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         }
 
         # settings attributes
-        self.existing_episode_policy: Literal["skip", "raise", "download_again", "hard_check"] = "skip"
+        self.existing_episode_policy: typing.Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
@@ -230,7 +222,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
 
         # private data attributes
         """0-based index를 사용해 다운로드를 생략할 웹툰을 결정합니다."""
-        self._download_status: Literal["downloading", "nothing", "canceling"] = "nothing"
+        self._download_status: typing.Literal["downloading", "nothing", "canceling"] = "nothing"
         self._tasks: asyncio.Queue[asyncio.Future] = asyncio.Queue()
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
         self._cookie_set = False
@@ -413,7 +405,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         await self.fetch_episode_information(reload=reload)
 
     @classmethod
-    def from_url(cls, url: str) -> Self:
+    def from_url(cls, url: str) -> typing.Self:
         # NaverWebtoonScraper와 KakaoWebtoonScraper에 복사된 코드가 있음.
         """URL을 통해 스크래퍼를 초기화합니다."""
         try:
@@ -456,7 +448,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
         await self.client.aclose()
         if getattr(self, "_progress", None):
             self._progress.stop()
-            if not TYPE_CHECKING:
+            if not typing.TYPE_CHECKING:
                 self._progress = None
 
     def stop(self) -> None:
@@ -511,7 +503,7 @@ class Scraper(Generic[WebtoonId]):  # MARK: SCRAPER
             cookies_text = []
             for cookie in cookie_data:
                 # 아마? 셀레니움에서 추가하는 쿠키 같음. 제거함.
-                if cookie["name"].startswith("ttcsid"):
+                if cookie["name"].startswith("ttcsid"):  # cspell: ignore ttcsid
                     continue
                 cookies_text.append(f"{cookie['name']}={cookie['value']}")
             cookie_value = "; ".join(cookies_text)
@@ -945,7 +937,7 @@ class WebtoonDirectory:
         except Exception:
             self._snapshot_data = {}
 
-    def _snapshot_contents_info(self, path: Path) -> Literal["file", "directory"] | None:
+    def _snapshot_contents_info(self, path: Path) -> typing.Literal["file", "directory"] | None:
         match self._get_snapshot_contents(path):
             case None:
                 return None
