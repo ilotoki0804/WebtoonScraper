@@ -23,6 +23,8 @@ import httpc
 import httpx
 import pyfilename as pf
 from rich import progress
+from wbtn import Webtoon, ConversionType, JsonType, PrimitiveType, JsonData
+from wbtn.conversion import ValueType, load_value, get_conversion_query_value
 from yarl import URL
 
 from ..base import console, logger, platforms
@@ -48,10 +50,168 @@ from ._callback_manager import (
 )
 from ._helpers import shorten as _shorten
 
-WebtoonId = typing.TypeVar("WebtoonId")
+InfoType = typing.TypeVar("InfoType", bound=JsonData[JsonType] | PrimitiveType)
+T = typing.TypeVar("T")
+WebtoonId = typing.TypeVar("WebtoonId", bound=JsonData[JsonType] | PrimitiveType)
 CallableT = typing.TypeVar("CallableT", bound=Callable)
 RangeType = EpisodeRange | Container[WebtoonId] | None
 DownloadStatus = typing.Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable", "skipped_by_skip_download", "skipped_by_range"]
+TypeChecker: typing.TypeAlias = "Callable[[ValueType], typing.TypeIs[InfoType]]"
+
+
+class WbtnEpisodeInfoMappingProxy(typing.MutableMapping[int, InfoType]):
+    def __init__(self, name: str, webtoon: Webtoon, type_checker: TypeChecker | None = None):
+        self.name = name
+        self.webtoon = webtoon
+        self.type_checker = type_checker
+
+    def __getitem__(self, episode_no: int) -> InfoType:
+        with self.webtoon.execute_with("SELECT conversion, value FROM episodes_extra WHERE episode_no = ? AND purpose = ?", (episode_no, self.name)) as cur:
+            for conversion, value in cur:
+                result = load_value(conversion, value)
+                if self.type_checker is None:
+                    return result  # type: ignore # type_checker가 None인 경우엔 별도의 타입 확인이 없음.
+                elif self.type_checker(result):
+                    return result
+                else:
+                    raise TypeError(f"Data of column {self.name!r} of episode #{episode_no} does not have a valid type.")
+            else:
+                raise KeyError(episode_no)
+
+    def __setitem__(self, episode_no: int, value: InfoType) -> None:
+        conversion, query, dumped_value = get_conversion_query_value(value)
+        self.webtoon.execute(f"UPDATE episodes_extra SET conversion = ?, value = {query} WHERE episode_no = ? AND purpose = ?", (conversion, dumped_value, episode_no, self.name))
+
+    def __delitem__(self, episode_no: int) -> None:
+        result = self.webtoon.execute("DELETE FROM episodes_extra WHERE episode_no = ? AND purpose = ? RETURNING ROWID", (episode_no, self.name))
+        if result is None:
+            raise KeyError(episode_no)
+
+    def __len__(self) -> int:
+        count, = self.webtoon.execute("SELECT count() FROM episodes_extra")
+        return count
+
+    def __iter__(self) -> typing.Iterator[int]:
+        with self.webtoon.execute_with("SELECT episode_no FROM episodes_extra WHERE purpose = ?", (self.name,)) as cur:
+            for episode_no, in cur:
+                yield episode_no
+
+
+class WbtnEpisodeOriginalColumnMappingProxy(WbtnEpisodeInfoMappingProxy[InfoType]):
+    name: typing.LiteralString
+
+    def __init__(self, name: str, webtoon: Webtoon, type_checker: TypeChecker | None = None):
+        # name initialization 자체는 allowlist로 관리되니 상관없지만 나중에 self.name이 수정되면 sql injection이 일어날 수도 있기 때문에 주의해야 함.
+        if name in ("episode_no", "name", "state", "id", "added_at"):
+            super().__init__(name, webtoon, type_checker)
+        else:
+            raise ValueError(f"Unknown natural column: {name!r}. Use WbtnEpisodeInfoMappingProxy for custom episode column data.")
+
+    def __getitem__(self, episode_no: int) -> InfoType:
+        with self.webtoon.execute_with(f"SELECT {self.name} FROM episodes WHERE episode_no = ?", (episode_no,)) as cur:
+            for result in cur:  # natural column에 있는 값들은 별도의 conversion을 적용하지 못함
+                if self.type_checker is None:
+                    return result  # type: ignore # type_checker가 None인 경우엔 별도의 타입 확인이 없음.
+                elif self.type_checker(result):
+                    return result
+                else:
+                    raise TypeError(f"Data of column {self.name!r} of episode #{episode_no} does not have a valid type.")
+            else:
+                raise KeyError(episode_no)
+
+    def __setitem__(self, episode_no: int, value: InfoType) -> None:
+        self.webtoon.execute(f"UPDATE episodes SET {self.name} = ? WHERE episode_no = ?", (value, episode_no))
+
+    def __delitem__(self, episode_no: int) -> None:
+        raise TypeError(f"Deleting natural column {self.name!r} is prohibited.")
+
+    def __len__(self) -> int:
+        count, = self.webtoon.execute("SELECT count() FROM episodes")
+        return count
+
+    def __iter__(self) -> typing.Iterator[int]:
+        with self.webtoon.execute_with("SELECT episode_no FROM episodes") as cur:
+            for episode_no, in cur:
+                yield episode_no
+
+
+class WbtnEpisodeInfo(typing.Generic[InfoType]):
+    name: str | None
+    type_checker: TypeChecker | None
+
+    def __init__(
+        self,
+        name: str | None = None,
+        type_checker: TypeChecker | None = None,
+        natural_column: bool = False,
+    ) -> None:
+        self.name = name
+        self.type_checker = type_checker
+        self.natural_column = natural_column
+
+    def __set_name__(self, scraper, name) -> None:
+        self.name = name
+
+    def __get__(self, scraper: Scraper, objtype=None) -> WbtnEpisodeInfoMappingProxy[InfoType]:
+        if scraper is None:
+            return self  # type: ignore
+        assert self.name
+        if self.natural_column:
+            return WbtnEpisodeOriginalColumnMappingProxy(self.name, scraper.wbtn, self.type_checker)  # type: ignore
+        else:
+            return WbtnEpisodeInfoMappingProxy(self.name, scraper.wbtn, self.type_checker)
+
+    def __set__(self, scraper: Scraper, value) -> typing.NoReturn:
+        raise ValueError("Cannot set directly to episode information.")
+
+
+class WbtnInfo(typing.Generic[InfoType]):
+    name: str | None
+
+    def __init__(
+        self,
+        name: str | None = None,
+        *,
+        caching: bool = False,
+    ) -> None:
+        self.name = name
+        self.caching = caching
+
+    def __set_name__(self, scraper, name) -> None:
+        if not self.name:
+            self.name = name
+        if not hasattr(scraper, "_cache"):
+            scraper._cache = {}
+
+    def __get__(self, scraper: Scraper, objtype=None) -> InfoType:
+        if scraper is None:
+            return self  # type: ignore
+        # caching이 명시적으로 참으로 설정되고 Scraper.caching이 참인 경우에만 캐싱이 발생함.
+        # Scraper.caching의 기본값은 False.
+        caching = self.caching and scraper.cache_data
+        if caching:
+            if self.name in scraper._cache:
+                return scraper._cache[self.name]
+        else:
+            # 조금 더 엄말하게 하려면 caching이 disable될 때마다 cache를 제거해야 하지만
+            # 일단은 이렇게 간단하게 구현해놓음
+            # __set__에도 같은 코드 있음
+            scraper._cache.pop(self.name, None)
+        assert self.name is not None
+        value = scraper.wbtn.info[self.name]
+        if caching:
+            scraper._cache[self.name] = value
+        return value  # type: ignore
+
+    def __set__(self, scraper: Scraper, value: InfoType):
+        assert self.name is not None
+        scraper.wbtn.info.set(self.name, value)
+        if self.caching:
+            scraper._cache[self.name] = value
+        else:
+            # 조금 더 엄말하게 하려면 caching이 disable될 때마다 cache를 제거해야 하지만
+            # 일단은 이렇게 간단하게 구현해놓음
+            scraper._cache.pop(self.name, None)
 
 
 class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
@@ -170,10 +330,22 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         episode_titles=None,
         author=None,
         download_status="download_status",
-        webtoon_dir_name="webtoon_dir_format",
-        episode_dir_name="episode_dir_format",
+        webtoon_dir_name="_webtoon_directory_format",
+        episode_dir_name="_episode_directory_format",
         episode_dir_names=None,
     )
+    _cache: dict
+    webtoon_id = WbtnInfo[WebtoonId]("webtoon_id")
+    title = WbtnInfo[str]("title")
+    platform = WbtnInfo[str]("platform")
+    webtoon_thumbnail_url = WbtnInfo[str]("webtoon_thumbnail_url")
+    authors = WbtnInfo[JsonData[list[str]]]("authors")
+    download_status = WbtnInfo[JsonData[list[DownloadStatus | None]]]("download_status")
+    webtoon_dir_name = WbtnInfo[str]("webtoon_dir_name")
+    episode_dir_name = WbtnInfo[str]("episode_dir_names")
+
+    episode_titles = WbtnEpisodeInfo("name")
+    episode_ids = WbtnEpisodeInfo("id")
 
     def __init__(self, webtoon_id: WebtoonId) -> None:
         """스크래퍼를 웹툰 id를 받아 초기화합니다.
@@ -202,23 +374,27 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             "accept": "application/json, text/plain, */*",
             "content-type": "application/json",
         }
+        self.wbtn = Webtoon(":memory:").connect()
 
-        # settings attributes
+        # data attributes (stored in wbtn)
+        self.author = None  # 스크래퍼들이 모두 author 필드를 구현하면 제거하기
+        self.webtoon_id = webtoon_id
+        self.base_directory: Path | str = Path.cwd()
+        self.skip_download: list[int] = []
+        self.callbacks = CallbackManager(dict(scraper=self))
+        # initialize extra info scraper
+        self.extra_info_scraper
+        self.webtoon_dir_name = "{title}({identifier})"
+        self.episode_dir_name = "{no:04d}. {episode_title}"
+
+        # settings attributes (not stored in wbtn)
         self.existing_episode_policy: typing.Literal["skip", "raise", "download_again", "hard_check"] = "skip"
         self.information_to_exclude: tuple[str, ...] = "extra/", "credentials/"
         self.use_progress_bar: bool = True
         self.ignore_snapshot: bool = False
         self.skip_thumbnail_download: bool = False
         self.previous_status_to_skip: list[DownloadStatus] = []
-
-        # data attributes
-        self.author: str | None = None  # 스크래퍼들이 모두 author 필드를 구현하면 제거하기
-        self.webtoon_id: WebtoonId = webtoon_id
-        self.base_directory: Path | str = Path.cwd()
-        self.skip_download: list[int] = []
-        self.callbacks = CallbackManager(dict(scraper=self))
-        # initialize extra info scraper
-        self.extra_info_scraper
+        self.cache_data: bool = False  # 이 값과 WebtoonInfo.caching가 모두 True인 경우에만 데이터가 캐시됨
 
         # private data attributes
         """0-based index를 사용해 다운로드를 생략할 웹툰을 결정합니다."""
@@ -227,8 +403,6 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         """_tasks에 값을 등록해 두면 스크래퍼가 종료될 때 해당 task들을 완료하거나 취소합니다."""
         self._cookie_set = False
         """쿠키가 사용자에 의해 변경되었는지를 검사합니다."""
-        self.webtoon_dir_format: str = "{title}({identifier})"
-        self.episode_dir_format: str = "{no:04d}. {episode_title}"
 
     def __init_subclass__(cls, register: bool = True, override: bool = False) -> None:
         if not register:
@@ -272,9 +446,9 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             잘못된 인증 정보라면 InvalidAuthenticationError을 발생시킬 수 있지만 이외에도 저 많은 예외를 발생시킬 수 있으며 이는
             완전히 구현에 달려 있습니다.
         """
-        self.webtoon_thumbnail_url: str
-        self.title: str
-        self.author: str | None
+        # self.webtoon_thumbnail_url: str
+        # self.title: str
+        # self.author: str | None
         raise NotImplementedError
 
     @async_reload_manager
@@ -286,8 +460,8 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             이 함수를 실행했을 때 반드시 episode_titles과 episode_ids가 할당되어야 합니다.
         """
         # list is invariant!
-        self.episode_titles: list[str | None] | list[str]
-        self.episode_ids: list[int | None] | list[int]
+        # self.episode_titles: list[str | None] | list[str]
+        # self.episode_ids: list[int | None] | list[int]
         raise NotImplementedError
 
     @classmethod
@@ -421,7 +595,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
     def get_webtoon_directory_name(self) -> str:
         """웹툰 디렉토리의 이름을 결정합니다."""
         now = datetime.now()
-        directory_name = self.webtoon_dir_format.format(
+        directory_name = self.webtoon_dir_name.format(
             title=self.title,
             identifier=self._get_identifier(),
             webtoon_id=self.webtoon_id,
@@ -548,7 +722,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
 
     async def _download_episodes(self, download_range: RangeType) -> None:
         total_episodes = len(self.episode_ids)
-        self.download_status: list[DownloadStatus | None] = [None] * total_episodes
+        self.download_status = [None] * total_episodes
         self.episode_dir_names: list[str | None] = [None] * total_episodes
         if self.use_progress_bar:
             task = self.progress.add_task("Setting up...", total=total_episodes)
@@ -592,7 +766,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
         now = datetime.now()
         directory_name = self._safe_name(
-            self.episode_dir_format.format(
+            self.episode_dir_name.format(
                 no=episode_no + 1,
                 no0=episode_no,
                 episode_title=episode_title,
