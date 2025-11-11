@@ -9,10 +9,8 @@ __all__ = [
     "EpisodeRange",
     "ExtraInfoScraper",
     "NaverWebtoonScraper",
-    "LezhinComicsScraper",
 ]
 
 from ._helpers import EpisodeRange, ExtraInfoScraper
-from ._lezhin_comics import LezhinComicsScraper
 from ._naver_webtoon import NaverWebtoonScraper
 from ._scraper import Scraper
