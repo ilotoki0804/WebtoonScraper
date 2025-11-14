@@ -37,6 +37,7 @@ class NaverWebtoonScraper(Scraper[int]):
 
     def __init__(self, webtoon_id: int) -> None:
         self.download_comments_option: Literal["best", "new"] | None = None
+        self.always_refresh_comments = False
         self.comment_download_limit: int | None = None
         self.download_audio = True
         self.episode_audio_urls: dict[int, str] = {}
@@ -155,20 +156,7 @@ class NaverWebtoonScraper(Scraper[int]):
                 continue
             episode_image_urls.append(image_url)
 
-        try:
-            get_episode_comments = self.extra_info_scraper.get_episode_comments  # type: ignore
-        except AttributeError:
-            pass
-        else:
-            # TODO: 댓글 다운로드에 callback을 사용하기
-            # 댓글을 asynchronously 다운로드하고 싶은 경우.
-            # await self._tasks.put(asyncio.create_task(get_episode_comments(episode_no, self)))
-            try:
-                await get_episode_comments(episode_no, self)
-            except Exception as exc:
-                exc.add_note("Exception occurred when getting comments.")
-                raise
-
+        await self.callbacks.async_callback("image_loaded", None, episode_no=episode_no)
         return episode_image_urls
 
     @classmethod
@@ -264,6 +252,8 @@ class NaverWebtoonScraper(Scraper[int]):
                         self.download_comments_option = "new"
                     case other:
                         raise ValueError(f"Invalid value for download-comment option. A value must be among 'false', 'best', or 'new'. Value: {other!r}")
+            case "always-refresh-comments":
+                self.always_refresh_comments = self._as_boolean(value)
             case "comment-download-limit":
                 self.comment_download_limit = int(value) if value else None
             case "download-audio" | "download-audios":

@@ -587,6 +587,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                     self.progress.stop()
 
     async def _download_episode(self, episode_no: int, context: dict) -> None:
+        await self.callbacks.async_callback("check_episode_download", None, episode_no=episode_no)
         episode_title = self.episode_titles[episode_no]
         if episode_title is None:
             return await self._episode_skipped("not_downloadable", "because the episode has empty title", level="debug", no_progress=True, **context)
