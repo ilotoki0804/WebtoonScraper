@@ -804,9 +804,12 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 **context,
             )
 
-    async def _download_image(self, url: str, directory: Path, name: str, episode_no: int | None = None) -> Path:
+    async def _download_image(self, url: str, directory: Path, name: str, episode_no: int | None = None) -> Path | None:
         try:
-            response = await self.client.get(url)
+            response = await self.client.get(url, raise_for_status=False)
+            if not response.is_success:
+                logger.warning(f"Failed to fetch an image {name!r}. The image won't be downloaded. (HTTP {response.status_code}): {url}")
+                return
             image_raw: bytes = response.content
             file_extension = infer_filetype(response.headers.get("content-type"), image_raw)
             image_path = directory / self._safe_name(f"{name}.{file_extension}")
@@ -854,7 +857,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         return result if result is None else result.value
         # return {key: morsel.value for key, morsel in parsed.items()}
 
-    async def _download_thumbnail(self) -> None | asyncio.Task[Path]:
+    async def _download_thumbnail(self) -> None | asyncio.Task[Path | None]:
         if self.skip_thumbnail_download:
             return None
 
