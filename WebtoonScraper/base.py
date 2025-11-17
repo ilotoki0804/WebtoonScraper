@@ -33,3 +33,11 @@ def get_default_thread_number() -> int:
     cpu_count = os.cpu_count()
     process_number = 1 if cpu_count is None or cpu_count < 2 else max(cpu_count // 2, 10)
     return process_number
+
+
+def _stop_progress_hook(scraper=None):
+    import pdb
+
+    if scraper is not None:
+        scraper.progress.stop()
+    return pdb.set_trace()
