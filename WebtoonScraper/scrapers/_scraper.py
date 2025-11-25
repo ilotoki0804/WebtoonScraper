@@ -303,7 +303,11 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         return cls(int(string), **kwargs)  # type: ignore
 
     def _apply_option(self, option: str, value: str) -> None:
-        logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
+        match option:
+            case "cookie":
+                self.cookie = value
+            case _:
+                logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
 
     def _set_cookie(self, value: str) -> None:
         self.headers.update({"Cookie": value})
@@ -1043,13 +1047,13 @@ class WebtoonDirectory:
             await scraper.callbacks.async_callback(
                 "download_failed",
                 callback or scraper.callbacks.create(
-                    "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is failed {description}",
+                    "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is failed{description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
                     log_with_progress=True,
                 ),
                 reason="gathering_images_failed",
-                description="because no images are found",
+                description="" if image_urls is None else " because no images are found",
                 **context,
             )
             return
