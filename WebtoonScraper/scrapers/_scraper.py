@@ -305,7 +305,8 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
     def _apply_option(self, option: str, value: str) -> None:
         match option:
             case "cookie":
-                self.cookie = value
+                if value:
+                    self.cookie = value
             case _:
                 logger.warning(f"Unknown option {option!r} for {self.PLATFORM} scraper with value: {value!r}")
 
