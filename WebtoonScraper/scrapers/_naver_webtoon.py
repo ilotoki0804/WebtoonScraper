@@ -44,6 +44,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self.audio_names: dict[int, str] = {}
         super().__init__(webtoon_id)
         self.headers.update({"Referer": "https://comic.naver.com/webtoon/"})
+        self.json_headers.update({"Referer": "https://comic.naver.com/webtoon/"})
         # self.comment_headers = httpc.HEADERS | {
         self.comment_headers = httpc.HEADERS | {
             "Accept": "*/*",
@@ -65,11 +66,9 @@ class NaverWebtoonScraper(Scraper[int]):
 
     @async_reload_manager
     async def fetch_webtoon_information(self, *, reload: bool = False) -> None:
-        headers = self.headers.copy()
-        headers.update({"Accept": "application/json, text/plain, */*"})
         with WebtoonIdError.redirect_error(self, error_type=(JSONDecodeError, HTTPStatusError)):
             url = f"https://comic.naver.com/api/article/list/info?titleId={self.webtoon_id}"
-            res = await self.client.get(url, headers=headers)
+            res = await self.client.get(url, headers=self.json_headers)
             webtoon_json_info: dict = res.json()
 
         # 정보 저장
@@ -82,7 +81,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self._set_webtoon_type(self.webtoon_type)  # SCREAMING_CASE 웹툰 타입
         self.raw_webtoon_info = webtoon_json_info
 
-        # 심의 확인
+        # 연령 제한 확인
         if not self._cookie_set and webtoon_json_info["age"]["type"] == "RATE_18":
             raise RatingError(f"In order to download adult webtoon {self.title}, you need valid cookie. Refer to docs to get additional info.")
 
