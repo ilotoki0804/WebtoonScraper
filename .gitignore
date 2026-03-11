@@ -5,6 +5,9 @@ _ignore*
 README-build.md
 webtoon/
 
+# macOS special file
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
