@@ -247,7 +247,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
     # MARK: ABSTRACT METHODS
 
     @abstractmethod
-    async def get_episode_image_urls(self, episode_no: int) -> list[str] | None | Callback:
+    async def get_episode_image_urls(self, episode_no: int) -> list[str] | dict | None:
         """해당 회차를 구성하는 이미지들의 URL을 불러옵니다."""
         raise NotImplementedError
 
@@ -1040,22 +1040,23 @@ class WebtoonDirectory:
             await scraper.callbacks.async_callback("get_episode_images_failed", **context)
             raise
 
-        if isinstance(image_urls, Callback) or not image_urls:
-            callback = image_urls if isinstance(image_urls, Callback) else None
+        # TODO: 제너릭한 dict 대신 Context라는 별도의 클래스 사용하기
+        if isinstance(image_urls, dict) or not image_urls:
             with suppress(Exception):
                 episode_directory.rmdir()
             scraper.download_status[episode_no] = "failed"
             await scraper.callbacks.async_callback(
                 "download_failed",
-                callback or scraper.callbacks.create(
+                scraper.callbacks.create(
                     "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is failed{description}",
                     progress_update="{short_ep_title} skipped",
                     level="warning",
                     log_with_progress=True,
                 ),
-                reason="gathering_images_failed",
-                description="" if image_urls is None else " because no images are found",
-                **context,
+                **context | dict(
+                    reason="gathering_images_failed",
+                    description="" if image_urls is None else " because no images are found",
+                ) | (image_urls if isinstance(image_urls, dict) else {}),
             )
             return
 
