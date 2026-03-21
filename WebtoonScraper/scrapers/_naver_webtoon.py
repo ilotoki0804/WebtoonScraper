@@ -43,6 +43,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self.episode_audio_urls: dict[int, str] = {}
         self.audio_names: dict[int, str] = {}
         super().__init__(webtoon_id)
+        self.client.retry = 6
         self.headers.update({"Referer": "https://comic.naver.com/webtoon/"})
         self.json_headers.update({"Referer": "https://comic.naver.com/webtoon/"})
         # self.comment_headers = httpc.HEADERS | {
