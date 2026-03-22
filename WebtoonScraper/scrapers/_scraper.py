@@ -316,7 +316,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
 
     # MARK: PUBLIC METHODS
 
-    def download_webtoon(self, download_range: RangeType = None) -> None:
+    def download_webtoon(self) -> None:
         """웹툰을 다운로드합니다.
 
         Jupyter 등 async 환경에서는 제대로 동작하지 않을 수 있습니다. 그럴 경우 async_download_webtoon을 사용하세요.
@@ -328,7 +328,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             download_range: 다운로드할 회차의 범위를 정합니다.
         """
         try:
-            asyncio.run(self.async_download_webtoon(download_range=download_range))
+            asyncio.run(self.async_download_webtoon())
         except RuntimeError as exc:
             # 부가적인 기능이니 문제가 생기더라도 무시하고 진행함.
             with suppress(Exception):
@@ -336,7 +336,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                     exc.add_note("Use `scraper.async_download_webtoon` in Jupyter or asyncio environment.")
             raise
 
-    async def async_download_webtoon(self, download_range: RangeType = None) -> None:
+    async def async_download_webtoon(self) -> None:
         """download_webtoon의 async 버전입니다. 자세한 설명은 download_webtoon의 문서를 참조하세요.
 
         Example:
@@ -369,7 +369,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 logger.warning(f"Program status is not usual: {self._download_status!r}")
             self._download_status = "downloading"
             async with self.callbacks.context("download_episode", end_default=self.callbacks.create("The webtoon {scraper.title} download ended.")):
-                await self._download_episodes(download_range)
+                await self._download_episodes()
 
         except BaseException as exc:
             async with self.callbacks.context("download_ended") as context:
@@ -380,7 +380,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                     task = tasks.get_nowait()
                     canceled_tasks += task.cancel()
 
-                extras: dict = dict(download_range=download_range)
+                extras: dict = dict()
                 if thumbnail_task and not self.skip_thumbnail_download and not thumbnail_task.cancel():
                     extras["thumbnail_path"] = await thumbnail_task
                 self._download_status = "nothing"
@@ -391,7 +391,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             async with self.callbacks.context("download_ended") as context:
                 await self._tasks.join()
                 self._download_status = "nothing"
-                extras: dict = dict(download_range=download_range)
+                extras: dict = dict()
                 if thumbnail_task and not self.skip_thumbnail_download:
                     extras["thumbnail_path"] = await thumbnail_task
                 context.update(exc=None, extras=extras)
@@ -549,9 +549,28 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         self._extra_info_scraper = extra
         extra.register(self)
 
+    @property
+    def download_range(self) -> EpisodeRange:
+        try:
+            return self._download_range
+        except AttributeError:
+            self._download_range = EpisodeRange.all()
+            return self._download_range
+
+    @download_range.setter
+    def download_range(self, download_range: RangeType) -> None:
+        if isinstance(download_range, EpisodeRange):
+            self._download_range = download_range
+        elif download_range is None:
+            self._download_range = EpisodeRange.all()
+        else:
+            capsuled_download_range = EpisodeRange()
+            capsuled_download_range.add_opaque_container(download_range)
+            self._download_range = capsuled_download_range
+
     # MARK: PRIVATE METHODS
 
-    async def _download_episodes(self, download_range: RangeType) -> None:
+    async def _download_episodes(self) -> None:
         total_episodes = len(self.episode_ids)
         self.download_status: list[DownloadStatus | None] = [None] * total_episodes
         self.episode_dir_names: list[str | None] = [None] * total_episodes
@@ -576,7 +595,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                     await self._episode_skipped(reason, description, level="debug", **context)
                     continue
                 # download_range는 1-based indexing이니 조정이 필요함
-                if download_range is not None and episode_no + 1 not in download_range:
+                if episode_no + 1 not in self.download_range:
                     reason = "skipped_by_range"
                     description = "because of the set range"
                     await self._episode_skipped(reason, description, level="debug", **context)

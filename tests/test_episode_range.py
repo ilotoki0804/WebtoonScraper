@@ -49,3 +49,12 @@ def test_episode_range():
     assert 1 not in e
     assert 3 not in e
     assert 300 not in e
+
+
+def test_opaque_container():
+    e = EpisodeRange()
+    e.add_opaque_container(range(10, 100, 2))
+    assert 1 not in e
+    assert 10 in e
+    assert 34 in e
+    assert 100 not in e

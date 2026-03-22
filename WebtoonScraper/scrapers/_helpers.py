@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
-from collections.abc import Iterable
+from collections.abc import Container, Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
@@ -109,8 +109,10 @@ class EpisodeRange:
                 case slice():
                     raise ValueError(f"Invalid slice value: {range_!r}")
 
-                case _:
-                    raise ValueError(f"Invalid range value: {range_!r}")
+                case container:
+                    # opaque conatiner type으로 가정
+                    if index in container:
+                        return True ^ invert
 
         return False
 
@@ -144,6 +146,12 @@ class EpisodeRange:
                 normalized_item = self._normalize_item(item)
                 self._ranges.append((not_invert, normalized_item))
 
+    def add_opaque_container(self, item: Container[int]):
+        self._ranges.append((True, item))
+
+    def add_not_opaque_container(self, item: Container[int]):
+        self._ranges.append((True, item))
+
     def add(self, item: slice | range | Iterable[int] | int):
         self._add(item, not_invert=True)
 
@@ -172,6 +180,12 @@ class EpisodeRange:
                 adder(slice(start, end))
             elif start:
                 adder(start)
+
+    @classmethod
+    def all(cls) -> Self:
+        self = cls()
+        self.add(slice(None))
+        return self
 
     @classmethod
     def from_string(cls, episode_range: str, inclusive: bool = True) -> Self:
