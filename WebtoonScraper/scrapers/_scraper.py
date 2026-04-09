@@ -381,8 +381,11 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                     canceled_tasks += task.cancel()
 
                 extras: dict = dict()
-                if thumbnail_task and not self.skip_thumbnail_download and not thumbnail_task.cancel():
-                    extras["thumbnail_path"] = await thumbnail_task
+                if thumbnail_task:
+                    if isinstance(thumbnail_task, Path):
+                        extras["thumbnail_path"] = thumbnail_task
+                    elif not self.skip_thumbnail_download and not thumbnail_task.cancel():
+                        extras["thumbnail_path"] = await thumbnail_task
                 self._download_status = "nothing"
                 context.update(exc=exc, extras=extras, canceled=canceled_tasks, is_successful=False)
             raise
@@ -392,8 +395,11 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 await self._tasks.join()
                 self._download_status = "nothing"
                 extras: dict = dict()
-                if thumbnail_task and not self.skip_thumbnail_download:
-                    extras["thumbnail_path"] = await thumbnail_task
+                if thumbnail_task:
+                    if isinstance(thumbnail_task, Path):
+                        extras["thumbnail_path"] = thumbnail_task
+                    elif not self.skip_thumbnail_download:
+                        extras["thumbnail_path"] = await thumbnail_task
                 context.update(exc=None, extras=extras)
 
     async def fetch_all(self, reload: bool = False) -> None:
@@ -881,7 +887,7 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         return result if result is None else result.value
         # return {key: morsel.value for key, morsel in parsed.items()}
 
-    async def _download_thumbnail(self) -> None | asyncio.Task[Path | None]:
+    async def _download_thumbnail(self) -> None | Path | asyncio.Task[Path | None]:
         if self.skip_thumbnail_download:
             return None
 
@@ -897,8 +903,9 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 # 중복된 컨텐츠가 나타날 수도 있지만 상관없음
                 contents += snapshot_contents
 
-        if any(content.startswith("thumbnail.") for content in contents):
-            return None
+        for content in contents:
+            if content.startswith("thumbnail."):
+                return webtoon_directory / content
 
         async with self.callbacks.context("download_thumbnail"):
             return asyncio.create_task(self._download_image(self.webtoon_thumbnail_url, webtoon_directory, "thumbnail"))
