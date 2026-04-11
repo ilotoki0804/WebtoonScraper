@@ -10,8 +10,8 @@
 
 쉽고 빠르게 많은 웹사이트에서 웹툰을 다운로드받는 프로그램입니다.
 
-자세한 설명은 [문서](https://webtoonscraper.readthedocs.io/)를 참고해 주세요.
+자세한 설명은 [문서](https://docs.wbtn.org/)를 참고해 주세요.
 
 This program provides a quick and easy way to download webtoons from many websites.
 
-For detailed information, see the [documentation](https://webtoonscraper.readthedocs.io/).
+For detailed information, see the [documentation](https://docs.wbtn.org/).
