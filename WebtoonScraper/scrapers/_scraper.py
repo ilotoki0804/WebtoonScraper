@@ -842,6 +842,11 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 return
             image_raw: bytes = response.content
             file_extension = infer_filetype(response.headers.get("content-type"), image_raw)
+            # 이 내용은 다른 내가 손으로 옮긴 코드에는 없음!!
+            # image_raw가 null로만 채워져 있을 경우 재시작
+            if image_raw.startswith(b"\0" * min(100, len(image_raw))) and not image_raw.lstrip(b'\0'):
+                logger.warning("received emtpy bytes. retrying...")
+                return await self._download_image(url, directory, name, episode_no)
             image_path = directory / self._safe_name(f"{name}.{file_extension}")
             image_path.write_bytes(image_raw)
             return image_path
