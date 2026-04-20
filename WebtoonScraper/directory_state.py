@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import typing
 from collections import defaultdict
@@ -128,17 +129,21 @@ def _directories_and_files_of(
     directory: PathOrStr,
     treat_underscored_directories_as_file: bool = True,
     ignore_snapshot: bool = True,
+    ignore_dot_underscored: bool = True,
 ) -> tuple[list[Path], list[Path]]:
     directories: list[Path] = []
     files: list[Path] = []
-    for path in Path(directory).iterdir():
-        if ignore_snapshot and path.name.endswith(".snapshots"):
-            continue
-        is_underscored = treat_underscored_directories_as_file and path.name.startswith("_") and not path.name.startswith("__")
-        if path.is_dir() and not is_underscored:
-            directories.append(path)
-        else:
-            files.append(path)
+    with os.scandir(directory) as scanned:
+        for entry in scanned:
+            if ignore_snapshot and entry.name.endswith(".snapshots"):
+                continue
+            if ignore_dot_underscored and entry.is_file() and entry.name.startswith("._"):
+                continue
+            is_underscored = treat_underscored_directories_as_file and entry.name.startswith("_") and not entry.name.startswith("__")
+            if entry.is_dir() and not is_underscored:
+                directories.append(Path(entry.path))
+            else:
+                files.append(Path(entry.path))
     return sorted(directories), sorted(files)
 
 
