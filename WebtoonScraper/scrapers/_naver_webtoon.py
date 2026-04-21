@@ -13,6 +13,7 @@ import httpc
 from httpx import HTTPStatusError
 from yarl import URL
 
+from WebtoonScraper.base import logger
 from ..exceptions import (
     RatingError,
     URLError,
@@ -109,10 +110,11 @@ class NaverWebtoonScraper(Scraper[int]):
             articles += current_articles
             previous_articles = current_articles
 
-        episode_data = {article["no"]: article["subtitle"] for article in articles if not article.get("blindInspection")}
+        episode_data = {article["no"]: article for article in articles if not article.get("blindInspection")}
 
         episode_ids = []
         episode_titles = []
+        is_episode_charged_list = []
         for zero_index in range(max(episode_data) if episode_data else 0):
             index = zero_index + 1
             # 1. 인덱스가 있는지 확인, 2. subtitle이 존재하는지 확인
@@ -120,14 +122,21 @@ class NaverWebtoonScraper(Scraper[int]):
             # 이 코드도 subtitle이 존재하는지를 확인하는 코드로 재정의되어야 함!
             if episode_data.get(index):
                 episode_ids.append(index)
-                episode_titles.append(episode_data[index])
+                episode_titles.append(episode_data[index]["subtitle"])
+                is_episode_charged_list.append(episode_data[index]["charge"])
             else:
                 episode_ids.append(None)
                 episode_titles.append(None)
+                is_episode_charged_list.append(None)
         self.episode_titles = episode_titles
         self.episode_ids = episode_ids
         self.raw_articles = articles
         self.author_comments = {}
+        self.is_episode_charged_list = is_episode_charged_list
+        charged_episodes = [no for no, is_charged in enumerate(is_episode_charged_list) if is_charged]
+        self.skip_download.extend(charged_episodes)
+        if charged_count := len(charged_episodes):
+            logger.warning(f"{charged_count} episodes won't be downloaded because it's charged")
 
     async def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         episode_id = self.episode_ids[episode_no]
