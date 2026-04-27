@@ -595,13 +595,18 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
                 episode_title = self.episode_titles[episode_no]
                 context: dict = dict(episode_no=episode_no, episode_no1=episode_no + 1, short_ep_title=episode_title and _shorten(episode_title), total_ep=len(self.episode_ids))
 
-                if episode_no in self.skip_download:
+                skip_download = episode_no in self.skip_download
+                # download_range는 1-based indexing이니 조정이 필요함
+                skip_range = episode_no + 1 not in self.download_range
+
+                await self.callbacks.async_callback("episode_download_before_skipping", skip_download=skip_download, skip_range=skip_range, **context)
+
+                if skip_download:
                     reason = "skipped_by_skip_download"
                     description = "because the episode is included in skip_download"
                     await self._episode_skipped(reason, description, level="debug", **context)
                     continue
-                # download_range는 1-based indexing이니 조정이 필요함
-                if episode_no + 1 not in self.download_range:
+                if skip_range:
                     reason = "skipped_by_range"
                     description = "because of the set range"
                     await self._episode_skipped(reason, description, level="debug", **context)
