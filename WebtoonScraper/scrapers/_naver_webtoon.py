@@ -135,8 +135,17 @@ class NaverWebtoonScraper(Scraper[int]):
         self.is_episode_charged_list = is_episode_charged_list
         charged_episodes = [no for no, is_charged in enumerate(is_episode_charged_list) if is_charged]
         self.skip_download.extend(charged_episodes)
-        if charged_count := len(charged_episodes):
-            logger.warning(f"{charged_count} episodes won't be downloaded because it's charged")
+        if (charged_count := len(charged_episodes)) and (
+            skipping_episodes := [episode for episode in charged_episodes if episode + 1 in self.download_range]
+        ):
+            await self.callbacks.async_callback(
+                "consist_charged_episode",
+                self.callbacks.create("{charged_count} episode(s) can't be downloaded and {skipping_episodes_len} episode(s) will be skipped because they are charged", level="warning"),
+                charged_count=charged_count,
+                charged_episodes=charged_episodes,
+                skipping_episodes_len=len(skipping_episodes),
+                skipping_episodes=skipping_episodes,
+            )
 
     async def get_episode_image_urls(self, episode_no: int) -> list[str] | None:
         episode_id = self.episode_ids[episode_no]
