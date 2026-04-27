@@ -253,8 +253,9 @@ def async_reload_manager(f):
         if not hasattr(self, "_cache"):
             self._cache = {}
 
-        result = self._cache.get(f)
-        if reload or result is None:
+        _NOT_EXISTS = object()  # result 결과가 어떨지 모르기 때문에 반드시!!!!!!!!! 센티넬을 사용해야 함!!!!!!
+        result = self._cache.get(f, _NOT_EXISTS)  # type: ignore
+        if reload or result is _NOT_EXISTS:
             result = await f(self, *args, reload=reload, **kwargs)
             self._cache[f] = result
         return result
