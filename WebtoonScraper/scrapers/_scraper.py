@@ -843,8 +843,8 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             response = await self.client.get(url, raise_for_status=False)
             if not response.is_success:
-                logger.warning(f"Failed to fetch an image {name!r}. The image won't be downloaded. (HTTP {response.status_code}): {url}")
-                return
+                msg = f"Failed to fetch an image {name!r}. The image won't be downloaded. (HTTP {response.status_code}): {url}"
+                raise HTTPStatusError(msg, request=None, response=response)  # type: ignore
             image_raw: bytes = response.content
             file_extension = infer_filetype(response.headers.get("content-type"), image_raw)
             # 이 내용은 다른 내가 손으로 옮긴 코드에는 없음!!
