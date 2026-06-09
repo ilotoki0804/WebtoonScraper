@@ -659,15 +659,33 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
         try:
             episode_directory.mkdir(exist_ok=True)
             await self._download_episode_images(episode_no, image_urls, episode_directory)
+        except Exception as exc:
+            logger.error(f"download failed when download images of {episode_no + 1}. {episode_title!r}. {type(exc).__name__}: {exc}")
+            self.download_status[episode_no] = "failed"
+            shutil.rmtree(episode_directory)
+            await self.callbacks.async_callback(
+                "download_failed",
+                self.callbacks.create(
+                    "[{episode_no1}/{total_ep}] The episode '{short_ep_title}' is failed beacuse of the error. {exc_name}: {exc}",
+                    progress_update="{short_ep_title} skipped",
+                    level="warning",
+                    log_with_progress=True,
+                ),
+                **context | dict(
+                    reason="gathering_images_failed",
+                    exc_name=type(exc).__name__,
+                    exc=str(exc),
+                ) | (image_urls if isinstance(image_urls, dict) else {}),
+            )
         except BaseException as exc:
             exc.add_note(f"Exception occurred when downloading images of {episode_no + 1}. {episode_title!r}")
             await self.callbacks.async_callback("cancelling", **context)
             shutil.rmtree(episode_directory)
             raise
-
-        # send done callback message
-        self.download_status[episode_no] = "downloaded"
-        await self.callbacks.async_callback("download_completed", self.callbacks.create("[{episode_no1}/{total_ep}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
+        else:
+            # send done callback message
+            self.download_status[episode_no] = "downloaded"
+            await self.callbacks.async_callback("download_completed", self.callbacks.create("[{episode_no1}/{total_ep}] {short_ep_title!r} downloaded", progress_update="{short_ep_title} downloaded"), **context)
 
     async def _download_episode_images(self, episode_no: int, image_urls: list[str], episode_directory: Path) -> None:
         async with asyncio.TaskGroup() as group:
