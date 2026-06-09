@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 import html
-from http.cookies import SimpleCookie
 import json
 import os
 import shutil
@@ -14,6 +12,8 @@ import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Container, Mapping
 from contextlib import suppress
+from datetime import datetime
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 # httpx가 certifi를 기본 의존성으로 사용하기 때문에
@@ -31,20 +31,19 @@ from ..directory_state import (
     load_information_json,
 )
 from ..exceptions import (
-    URLError,
     Unreachable,
+    URLError,
     UseFetchEpisode,
+)
+from ._callback_manager import (
+    CallbackManager,
+    LogLevel,
 )
 from ._helpers import (
     EpisodeRange,
     ExtraInfoScraper,
     async_reload_manager,
     infer_filetype,
-)
-from ._callback_manager import (
-    Callback,
-    CallbackManager,
-    LogLevel,
 )
 from ._helpers import shorten as _shorten
 
