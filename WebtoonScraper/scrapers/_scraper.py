@@ -660,7 +660,12 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             episode_directory.mkdir(exist_ok=True)
             await self._download_episode_images(episode_no, image_urls, episode_directory)
         except Exception as exc:
-            logger.error(f"download failed when download images of {episode_no + 1}. {episode_title!r}. {type(exc).__name__}: {exc}")
+            if isinstance(exc, ExceptionGroup):
+                logger.error(f"download failed when download images of {episode_no + 1}. {episode_title!r}. ({exc})")
+                for exception in exc.exceptions:
+                    logger.error(f"{type(exception).__name__}: {exception}")
+            else:
+                logger.error(f"download failed when download images of {episode_no + 1}. {episode_title!r}. {type(exc).__name__}: {exc}")
             self.download_status[episode_no] = "failed"
             shutil.rmtree(episode_directory)
             await self.callbacks.async_callback(
