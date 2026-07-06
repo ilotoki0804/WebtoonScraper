@@ -13,7 +13,6 @@ import httpc
 from httpx import HTTPStatusError
 from yarl import URL
 
-from WebtoonScraper.base import logger
 from ..exceptions import (
     RatingError,
     URLError,

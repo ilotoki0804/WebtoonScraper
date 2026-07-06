@@ -53,7 +53,7 @@ RangeType = EpisodeRange | Container[WebtoonId] | None
 DownloadStatus = typing.Literal["failed", "downloaded", "already_exist", "skipped_by_snapshot", "not_downloadable", "skipped_by_skip_download", "skipped_by_range"]
 
 
-class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
+class Scraper[WebtoonId]:  # MARK: SCRAPER
     """Abstract base class of scrapers.
 
     WebtoonScraper는 ABC인 이 Scraper 클래스와 이 클래스를 상속한 여러 다른 클래스들로 구성됩니다.
@@ -649,6 +649,8 @@ class Scraper(typing.Generic[WebtoonId]):  # MARK: SCRAPER
             context,
         ):
             case None:
+                # if episode_no < 2:
+                #     raise ValueError("episode not downloadable")
                 return
             case episode_directory, image_urls:
                 pass
@@ -1129,3 +1131,19 @@ class WebtoonDirectory:
             episode_directory.mkdir()
 
         return episode_directory, image_urls
+
+
+class WebtoonInformation[Episode: EpisodeInformation = EpisodeInformation]:
+    title: str
+    episodes: list[Episode | None]
+    thumbnail: str
+    author: str
+    authors: list[str]
+    schema: int = 0  # schema version
+
+
+class EpisodeInformation:
+    title: str
+    status: str | None
+    # id: Id
+    # urls: list[Url]
