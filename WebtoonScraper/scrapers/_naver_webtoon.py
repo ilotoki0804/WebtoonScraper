@@ -29,7 +29,7 @@ class NaverWebtoonScraper(Scraper[int]):
     information_vars = (
         Scraper.information_vars
         | Scraper._build_information_dict("raw_articles", "raw_webtoon_info", "episode_audio_urls", subcategory="extra")
-        | Scraper._build_information_dict("webtoon_type", "authors", "author_comments", "download_audio", "audio_names")
+        | Scraper._build_information_dict("webtoon_type", "authors", "author_comments", "download_audio", "audio_names", "description")
     )
     comment_counts: dict
     comments: dict
@@ -79,6 +79,7 @@ class NaverWebtoonScraper(Scraper[int]):
         self.author = "/".join(self.authors)
         # 정사각형 썸네일은 thumbnailUrl이고, 긴 비율의 썸네일은 sharedThumbnailUrl이다.
         self.webtoon_type: Literal["WEBTOON", "BEST_CHALLENGE", "CHALLENGE"] = webtoon_json_info["webtoonLevelCode"]
+        self.description = webtoon_json_info["synopsis"]
         self._set_webtoon_type(self.webtoon_type)  # SCREAMING_CASE 웹툰 타입
         self.raw_webtoon_info = webtoon_json_info
 
