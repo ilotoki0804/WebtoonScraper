@@ -15,3 +15,9 @@
 This program provides a quick and easy way to download webtoons from many websites.
 
 For detailed information, see the [documentation](https://docs.wbtn.org/).
+
+
+## TODO
+
+- runner들 클래스로 바꾸기
+- autonomus mode 완전화시키기
